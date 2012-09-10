@@ -82,12 +82,17 @@ int main()
 	  }
 		cout<<"Energie: "<<Fluide.Energie()<<"  "<<"Masse : "<<"  "<< Fluide.Masse()<<endl;
 		double dt = Fluide.pas_temps(t, T);
+		Fluide.affiche("avant Solve");
 		Fluide.Solve(dt, t, n);
 		Fluide.affiche("Solve");
 		Fluide.modif_fnum(dt);
+		Fluide.affiche("modif_fnum");
 		Fluide.mixage();
+		Fluide.affiche("mixage");
 		Fluide.fill_cel(S);
+		Fluide.affiche("fill_cell");
 		Fluide.BC();
+		Fluide.affiche("BC");
 		out<< n << " temps actuel "<<t<<" dt "<<dt<<"\n";
 		cout<<"iteration="<<n<< " dt="<<dt<<" t="<<t<<endl;
 		t+= dt;
