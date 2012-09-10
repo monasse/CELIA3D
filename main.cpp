@@ -87,10 +87,8 @@ int main()
 		Fluide.mixage();
 		Fluide.fill_cel(S);
 		Fluide.BC();
-		out<<"temps actuel "<<t<<"\n";
-		out<<"dt "<<dt<<"\n";
-		cout<<"dt="<<dt<<endl;
-		cout<<"t="<<t<<endl;
+		out<< i << " temps actuel "<<t<<" dt "<<dt<<"\n";
+		cout<<"iteration="<<i<< " dt="<<dt<<" t="<<t<<endl;
 		t+= dt;
 		iter++;
 		
