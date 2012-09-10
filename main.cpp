@@ -83,6 +83,7 @@ int main()
 		cout<<"Energie: "<<Fluide.Energie()<<"  "<<"Masse : "<<"  "<< Fluide.Masse()<<endl;
 		double dt = Fluide.pas_temps(t, T);
 		Fluide.Solve(dt, t, n);
+		Fluide.affiche("Solve");
 		Fluide.modif_fnum(dt);
 		Fluide.mixage();
 		Fluide.fill_cel(S);
@@ -95,7 +96,7 @@ int main()
 	}
 	end=clock();
 	
-	Fluide.impression(iter);
+	Fluide.impression(kimp);
 	
 	out<< "Temps final  "<< t<<endl;
 	out<<"nb iter= "<< iter<<endl;    

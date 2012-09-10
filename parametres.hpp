@@ -24,9 +24,9 @@ const double X0 = 0;              //pozition de l'origine
 const double Y0 = 0;
 const double Z0 = 0;
 
-const int Nx =113;                 //nombre de cellules de fluide selon x
-const int Ny =90;                 //nombre de cellules de fluide selon y
-const int Nz =45;                 //nombre de cellules de fluide selon z
+const int Nx =30;                 //nombre de cellules de fluide selon x
+const int Ny =30;                 //nombre de cellules de fluide selon y
+const int Nz =10;                 //nombre de cellules de fluide selon z
 
 const double domainex = 2.5;            //Largeur du domaine fluide selon x
 const double domainey = 2.;          //Largeur du domaine fluide selon y
@@ -52,8 +52,8 @@ const int BC_x_in =  3;                 // Inner Boundary Condition for x
 const int BC_x_out = 3;                 // Outer Boundary Condition for x
 const int BC_y_in =  3;                 // Inner Boundary Condition for y
 const int BC_y_out = 3;                 // Outer Boundary Condition for y
-const int BC_z_in =  3;                 // Inner Boundary Condition for z
-const int BC_z_out = 3;                 // Outer Boundary Condition for z
+const int BC_z_in =  2;                 // Inner Boundary Condition for z
+const int BC_z_out = 2;                 // Outer Boundary Condition for z
 
 double Rho(double x = 0.,double y = 0., double z = 0.);
 

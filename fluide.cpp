@@ -485,6 +485,25 @@ void Grille:: affiche()
    cout<<"volume solide := "<<vol<<endl;
 }
 
+void Grille:: affiche(string r)
+{
+    int s=0;
+		double vol=0.;
+		for(int i=marge;i<Nx+marge;i++){
+		  for(int j=marge;j<Ny+marge;j++){
+			Cellule cb = grille[i][j][marge];
+            for(int k=marge;k<Nz+marge;k++){ 
+			  s++;
+			  Cellule c = grille[i][j][k];
+			  if(abs(c.p-cb.p)>eps){
+				cout << r << " " << c.x << " " << c.y << " " << c.z << " " << c.p-cb.p << endl;
+				getchar();
+			  }
+			}
+		  }
+		}
+}
+
 //Accss a une cellule i 
 Cellule Grille::cellule(int i,int j, int k){ 
     return grille[i][j][k]; 
