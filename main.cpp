@@ -75,7 +75,7 @@ int main()
 	
 	for (int n=0; (t<T) && n<Nmax; n++){
 		
-	  if(t>timp){
+	  if(t>next_timp){
 		Fluide.impression(kimp);
 		kimp++;
 		next_timp += dtimp;
@@ -87,8 +87,8 @@ int main()
 		Fluide.mixage();
 		Fluide.fill_cel(S);
 		Fluide.BC();
-		out<< i << " temps actuel "<<t<<" dt "<<dt<<"\n";
-		cout<<"iteration="<<i<< " dt="<<dt<<" t="<<t<<endl;
+		out<< n << " temps actuel "<<t<<" dt "<<dt<<"\n";
+		cout<<"iteration="<<n<< " dt="<<dt<<" t="<<t<<endl;
 		t+= dt;
 		iter++;
 		
