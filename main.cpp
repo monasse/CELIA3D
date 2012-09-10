@@ -66,9 +66,20 @@ int main()
 	clock_t start,end;
 	
 	start =clock();
+
+	int kimp = 0; //Numero de suivi de l'impression
+	double next_timp = dtimp; //Instant de la prochaine impression
+	Fluide.impression(kimp);
+	kimp++;
+	
+	
 	for (int n=0; (t<T) && n<Nmax; n++){
 		
-		if(n%10==0) {Fluide.impression(n);}
+	  if(t>timp){
+		Fluide.impression(kimp);
+		kimp++;
+		next_timp += dtimp;
+	  }
 		cout<<"Energie: "<<Fluide.Energie()<<"  "<<"Masse : "<<"  "<< Fluide.Masse()<<endl;
 		double dt = Fluide.pas_temps(t, T);
 		Fluide.Solve(dt, t, n);
