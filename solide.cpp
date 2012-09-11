@@ -548,6 +548,9 @@ void Solide::Affiche(){
 // 	std::cout<<" Point max := "<< max_x<<std::endl;
 }
 
+
+
+
 double Solide::volume(){
 	
 	double vol = 0.;
@@ -570,7 +573,75 @@ double Solide::volume(){
 	return vol;
 }
 
-		
+
+void impression(std::vector<Solide>& S, int n){ //Sortie au format vtk
+  int nb_part = S.size();
+
+  int nb_triangles = 0.;
+  for(int it=0; it<S.size(); it++){
+	nb_triangles += S[it].triangles.size();
+  }
+  
+  const char* solidevtk;
+  {
+	std::ostringstream oss;
+	oss << "resultats/solide" << n << ".vtk";
+	string s = oss.str();
+	//cout << s << endl;
+	solidevtk = s.c_str();
+  }
+  
+   //Ouverture des flux en donne en ecriture
+    std::ofstream vtk(solidevtk,ios::out);
+    if(vtk)
+    {
+        // cout <<"ouverture de xt.vtk reussie" << endl;
+    } else {
+        cout <<"ouverture de solide" << n << ".vtk rate" << endl;
+    }
+    //Initialisation du fichier vtk
+    vtk << "# vtk DataFile Version 3.0" << endl;
+    vtk << "#Simulation Euler" << endl;
+    vtk << "ASCII" << endl;
+    vtk<<"\n";
+    vtk << "DATASET UNSTRUCTURED_GRID" << endl;
+    vtk << "POINTS " << 3*nb_triangles << " DOUBLE" << endl;
+
+	for(int it=0; it<S.size(); it++){
+	  for(int l= 0; l<S[it].triangles.size(); l++){
+		vtk << S[it].triangles[l].operator[](0).operator[](0) << " " << S[it].triangles[l].operator[](0).operator[](1) << " " << S[it].triangles[l].operator[](0).operator[](2) << endl;
+		vtk << S[it].triangles[l].operator[](1).operator[](0) << " " << S[it].triangles[l].operator[](1).operator[](1) << " " << S[it].triangles[l].operator[](1).operator[](2) << endl;
+		vtk << S[it].triangles[l].operator[](2).operator[](0) << " " << S[it].triangles[l].operator[](2).operator[](1) << " " << S[it].triangles[l].operator[](2).operator[](2) << endl;
+	  }
+	}
+	vtk<<"\n";
+	vtk << "CELLS " << nb_triangles << " " << 4*nb_triangles<< endl;
+	int num=0;
+	for(int it=0; it<S.size(); it++){
+	  for(int l= 0; l<S[it].triangles.size(); l++){
+		vtk << 3 << " " << 3*num << " " << 3*num+1 << " " << 3*num+2 << endl;
+		num++;
+	  }
+	}
+	vtk << "\n";
+	vtk << "CELL_TYPES " << nb_triangles << endl;
+	for(int l= 0; l<nb_triangles; l++)
+	{
+	  vtk << 5 << endl;
+	}
+	vtk << "\n";
+	vtk << "CELL_DATA " << nb_triangles << endl;
+	//Deplacement
+	vtk << "SCALARS pression double 1" << endl;
+    vtk << "LOOKUP_TABLE default" << endl;
+	for(int it=0; it<S.size(); it++){
+	  for(int l= 0; l<S[it].triangles.size(); l++)
+		{
+		  vtk << 0. << endl;
+		}
+	}
+}
+
 	
 bool inside_convex_polygon(const Solide& S, const Point_3& P){
 	

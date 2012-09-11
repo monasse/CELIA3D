@@ -2786,7 +2786,7 @@ void Grille::impression(int n){
     {
         // cout <<"ouverture de xt.vtk reussie" << endl;
     } else {
-        cout <<"ouverture de xt" << n << ".vtk rate" << endl;
+        cout <<"ouverture de fluide" << n << ".vtk rate" << endl;
     }
     //Initialisation du fichier vtk
     vtk << "# vtk DataFile Version 3.0" << endl;

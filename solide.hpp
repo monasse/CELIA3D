@@ -21,9 +21,9 @@ class Solide
  
  bool box_inside_convex_polygon(const Solide& S, const Bbox& cell);  
  bool inside_convex_polygon(const Solide& S, const Point_3& P);  
- bool inside_box(const Bbox& cell, const Point_3& P); 
- void Affiche(); 
- double volume(); 
+ bool inside_box(const Bbox& cell, const Point_3& P);
+  void Affiche();
+  double volume(); 
   
 	int nb_faces;
     
