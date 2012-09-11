@@ -199,6 +199,8 @@ class Grille
 
   void affiche(); //fonction auxilaire utile pour les test :)
 
+  void affiche(string r); //fonction auxilaire utile pour les test :)
+
   //Acces a une cellule i,j, k
    Cellule cellule(int i, int j, int k);
 

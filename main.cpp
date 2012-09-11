@@ -66,27 +66,42 @@ int main()
 	clock_t start,end;
 	
 	start =clock();
+
+	int kimp = 0; //Numero de suivi de l'impression
+	double next_timp = dtimp; //Instant de la prochaine impression
+	Fluide.impression(kimp);
+	kimp++;
+	
+	
 	for (int n=0; (t<T) && n<Nmax; n++){
 		
-		if(n%10==0) {Fluide.impression(n);}
+	  if(t>next_timp){
+		Fluide.impression(kimp);
+		kimp++;
+		next_timp += dtimp;
+	  }
 		cout<<"Energie: "<<Fluide.Energie()<<"  "<<"Masse : "<<"  "<< Fluide.Masse()<<endl;
 		double dt = Fluide.pas_temps(t, T);
+		Fluide.affiche("avant Solve");
 		Fluide.Solve(dt, t, n);
+		Fluide.affiche("Solve");
 		Fluide.modif_fnum(dt);
+		Fluide.affiche("modif_fnum");
 		Fluide.mixage();
+		Fluide.affiche("mixage");
 		Fluide.fill_cel(S);
+		Fluide.affiche("fill_cell");
 		Fluide.BC();
-		out<<"temps actuel "<<t<<"\n";
-		out<<"dt "<<dt<<"\n";
-		cout<<"dt="<<dt<<endl;
-		cout<<"t="<<t<<endl;
+		Fluide.affiche("BC");
+		out<< n << " temps actuel "<<t<<" dt "<<dt<<"\n";
+		cout<<"iteration="<<n<< " dt="<<dt<<" t="<<t<<endl;
 		t+= dt;
 		iter++;
 		
 	}
 	end=clock();
 	
-	Fluide.impression(iter);
+	Fluide.impression(kimp);
 	
 	out<< "Temps final  "<< t<<endl;
 	out<<"nb iter= "<< iter<<endl;    

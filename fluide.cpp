@@ -485,6 +485,25 @@ void Grille:: affiche()
    cout<<"volume solide := "<<vol<<endl;
 }
 
+void Grille:: affiche(string r)
+{
+    int s=0;
+		double vol=0.;
+		for(int i=marge;i<Nx+marge;i++){
+		  for(int j=marge;j<Ny+marge;j++){
+			Cellule cb = grille[i][j][marge];
+            for(int k=marge;k<Nz+marge;k++){ 
+			  s++;
+			  Cellule c = grille[i][j][k];
+			  if(abs(c.w)>eps){
+				cout << r << " " << c.x << " " << c.y << " " << c.z << " w=" << c.w << endl;
+				//getchar();
+			  }
+			}
+		  }
+		}
+}
+
 //Accss a une cellule i 
 Cellule Grille::cellule(int i,int j, int k){ 
     return grille[i][j][k]; 
@@ -2785,27 +2804,40 @@ void Grille::impression(int n){
         }
     }
     vtk<<"\n";
+
+	//Calcul du nombre de cellules vraiment fluides
+	int Nfluides = 0;
+	for(int i=marge; i<Nx+marge; i++){
+        for(int j=marge; j<Ny+marge; j++){ 
+            for(int k=marge; k<Nz+marge; k++){
+			  Cellule c = grille[i][j][k]; 
+			  if(abs(c.alpha-1.)>eps){
+                Nfluides++;
+			  }
+			}
+        }
+    }
+	
+    vtk << "CELLS " << Nfluides << " " << 9*Nfluides<< endl;
     
-    vtk << "CELLS " << (Nx)*(Ny)*(Nz) << " " << 9*(Nx)*(Ny)*(Nz)<< endl;
-    
-    for(int i=0; i<Nx; i++){
-        for(int j=0; j<Ny; j++){ 
-            for(int k=0; k<Nz; k++){ 
-                vtk << 8 << " " << k+j*(Nz+1)+i*(Nz+1)*(Ny+1) << " " << (k+1)+j*(Nz+1)+i*(Nz+1)*(Ny+1) << " " 
-                << (k+1)+(j+1)*(Nz+1) + i*(Nz+1)*(Ny+1) << " "<< k+(j+1)*(Nz+1) + i*(Nz+1)*(Ny+1)<< " " 
-                <<  k+j*(Nz+1)+(i+1)*(Nz+1)*(Ny+1)<< " "<< (k+1)+j*(Nz+1) + (i+1)*(Nz+1)*(Ny+1) << " " 
-                <<  (k+1)+(j+1)*(Nz+1)+(i+1)*(Nz+1)*(Ny+1)<< " " << k+(j+1)*(Nz+1)+(i+1)*(Nz+1)*(Ny+1)<< endl;                
-            }
+    for(int i=marge; i<Nx+marge; i++){
+        for(int j=marge; j<Ny+marge; j++){ 
+            for(int k=marge; k<Nz+marge; k++){
+			  Cellule c = grille[i][j][k]; 
+			  if(abs(c.alpha-1.)>eps){
+                vtk << 8 << " " << (k-marge)+(j-marge)*(Nz+1)+(i-marge)*(Nz+1)*(Ny+1) << " " << ((k-marge)+1)+(j-marge)*(Nz+1)+(i-marge)*(Nz+1)*(Ny+1) << " " << ((k-marge)+1)+((j-marge)+1)*(Nz+1) + (i-marge)*(Nz+1)*(Ny+1) << " "<< (k-marge)+((j-marge)+1)*(Nz+1) + (i-marge)*(Nz+1)*(Ny+1)<< " " <<  (k-marge)+(j-marge)*(Nz+1)+((i-marge)+1)*(Nz+1)*(Ny+1)<< " "<< ((k-marge)+1)+(j-marge)*(Nz+1) + ((i-marge)+1)*(Nz+1)*(Ny+1) << " " <<  ((k-marge)+1)+((j-marge)+1)*(Nz+1)+((i-marge)+1)*(Nz+1)*(Ny+1)<< " " << (k-marge)+((j-marge)+1)*(Nz+1)+((i-marge)+1)*(Nz+1)*(Ny+1)<< endl;
+			  }
+			}
         }
     }
     vtk<<"\n";
-    vtk << "CELL_TYPES " <<(Nx)*(Ny)*(Nz)<<endl;
-    for(int k=0; k<(Nx)*(Ny)*(Nz); k++){ 
+    vtk << "CELL_TYPES " <<Nfluides<<endl;
+    for(int k=0; k<Nfluides; k++){ 
         vtk<<12<<endl;
     }
     
     vtk<<"\n";
-    vtk << "CELL_DATA " << Nx*Ny*Nz << endl;
+    vtk << "CELL_DATA " << Nfluides << endl;
     //Pression
     vtk << "SCALARS pression double 1" << endl;
     vtk << "LOOKUP_TABLE default" << endl;
@@ -2816,7 +2848,7 @@ void Grille::impression(int n){
 							if(abs(c.alpha-1.)>eps){ 
 								vtk << grille[i][j][k].p << endl;
 							} else {
-								vtk << 0. << endl;
+							  //vtk << 0. << endl;
 							}
 				
             }
@@ -2834,7 +2866,7 @@ void Grille::impression(int n){
 							if(abs(c.alpha-1.)>eps){ 
 								vtk << grille[i][j][k].rho << endl;
 							} else {
-								vtk << 0. << endl;
+							  //vtk << 0. << endl;
 							}
 						
             }
@@ -2852,7 +2884,7 @@ void Grille::impression(int n){
 							if(abs(c.alpha-1.)>eps){ 
 								vtk << grille[i][j][k].u << endl;
 							} else {
-								vtk << 0. << endl;
+							  //vtk << 0. << endl;
 							}
                 
             }
@@ -2869,7 +2901,7 @@ void Grille::impression(int n){
 							if(abs(c.alpha-1.)>eps){ 
 								vtk << grille[i][j][k].v << endl;
 							} else {
-								vtk << 0. << endl;
+							  //vtk << 0. << endl;
 							}
                 
             }
@@ -2886,7 +2918,7 @@ void Grille::impression(int n){
 							if(abs(c.alpha-1.)>eps){ 
 								vtk << grille[i][j][k].w << endl;
 							} else {
-								vtk << 0. << endl;
+							  //vtk << 0. << endl;
 							}
                 
             }
