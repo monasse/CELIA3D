@@ -10,6 +10,7 @@ void Grille::parois(std::vector<Solide>& S) {
 	
 	const double eps_relat = numeric_limits<double>::epsilon( );
 	
+	//cout<<"Eps relative :"<<1- 100/100<<endl;
 	std::vector<Bbox> box_grille;
 	const int nx_m=Nx+2*marge;
 	const int ny_m=Ny+2*marge;
@@ -71,6 +72,7 @@ void Grille::parois(std::vector<Solide>& S) {
 	
 	
 	int count=0;
+	double aire=0.;
 	double volume_s=0.;
 	
 	Cellule cel;
@@ -81,18 +83,19 @@ void Grille::parois(std::vector<Solide>& S) {
 		for (int b=0; b< ny_m; b++){
 			for (int c=0; c< nz_m; c++){
 				cel = grille[a][b][c]; 
-				cel.phi_x = 0.; cel.phi_y = 0.; cel.phi_z = 0.;
-				cel.alpha =0.; cel.kappai =0.; cel.kappaj =0.; cel.kappak =0.;
+				cel.phi_x = 0.;
+				cel.phi_y = 0.;
+				cel.phi_z = 0.;
+				std::vector<Point_3> Points_poly; 
+				double alpha = 0.0;
+				std::vector<double>  kappa(6,0.0);
+				bool intersection = false;
+				bool exterieur = true;
+				bool box_in_solide = false;
+				bool point_in_solide = false;
+				bool point_in_cell = false;
 				Triangles trianglesB;
 				for(int iter_s=0; iter_s<nb_particules; iter_s++){
-					bool intersection = false;
-					bool exterieur = true;
-					bool box_in_solide = false;
-					bool point_in_solide = false;
-					bool point_in_cell = false;
-					std::vector<Point_3> Points_poly; 
-					double alpha = 0.0;
-					std::vector<double>  kappa(6,0.0);
 					if (CGAL::do_intersect(box_grille[i],solide[iter_s]) ) {	
 						intersection = true;
 						box_in_solide = box_inside_convex_polygon(S[iter_s],box_grille[i]);
@@ -176,158 +179,158 @@ void Grille::parois(std::vector<Solide>& S) {
 						} //else 
 						
 					} // if inter grille[i] et solide[iter_s]  
-					
-					
-					//traitement calcul de alpha et kappa pour la cellule=grille[i]!!!!!!
-					if(intersection && exterieur){
-						Triangulation T(Points_poly.begin(), Points_poly.end());
-						
-						std::vector<double>  v_lambda;
-						std::vector<Vector_3> v_n_lambda;
-						///////////////////////////////////////////////////////////////////////////////	  
-						if (T.dimension() == 3){
-							Polyhedron_3 poly;
-							CGAL::convex_hull_3(T.points_begin(), T.points_end(), poly);
-							int l=0, n=0;
-							double norm2=0.;
-							Vector_3 norm;
-							Finite_cells_iterator cit;
-							for (cit = T.finite_cells_begin(); cit!= T.finite_cells_end(); cit++){
-								alpha+= CGAL::to_double(T.tetrahedron( cit).volume());
-							}
-							
-							Facet_iterator fiter;
-							for (fiter = poly.facets_begin(); fiter!= poly.facets_end(); fiter++){
-								
-								Triangle_3 K((*fiter).halfedge()->vertex()->point(),(*fiter).halfedge()->next()->vertex()->point(),
-														 (*fiter).halfedge()->opposite()->vertex()->point());
-														 
-														 if (abs(trianglesB[0].operator[](0).operator[](2) -  K.operator[](0).operator[](2))<=eps_relat && abs(trianglesB[0].operator[](0).operator[](2) - K.operator[](1).operator[](2))<=eps_relat && abs(trianglesB[0].operator[](0).operator[](2) -  K.operator[](2).operator[](2))<=eps_relat )
-														 { 
-															 kappa[0] +=sqrt(CGAL::to_double(K.squared_area()));
-														 }
-														 
-														 else if (abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](0).operator[](2))<=eps_relat && abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](1).operator[](2))<=eps_relat && abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](2).operator[](2))<=eps_relat )
-														 { 
-															 kappa[1] +=sqrt(CGAL::to_double(K.squared_area()));
-														 }
-														 
-														 else if (abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](0).operator[](0))<=eps_relat && abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](1).operator[](0))<=eps_relat && abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](2).operator[](0))<=eps_relat)
-														 { 
-															 kappa[2] +=sqrt(CGAL::to_double(K.squared_area()));
-														 }
-														 
-														 else if (abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](0).operator[](0))<=eps_relat && abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](1).operator[](0))<=eps_relat && abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](2).operator[](0))<=eps_relat)
-														 { 
-															 kappa[3] +=sqrt(CGAL::to_double(K.squared_area()));
-														 }
-														 
-														 else if (abs(trianglesB[8].operator[](0).operator[](1) -  K.operator[](0).operator[](1))<=eps_relat && abs(trianglesB[8].operator[](0).operator[](1) -  K.operator[](1).operator[](1))<=eps_relat && abs(trianglesB[8].operator[](0).operator[](1) - K.operator[](2).operator[](1))<=eps_relat)
-														 { 
-															 kappa[4] +=sqrt(CGAL::to_double(K.squared_area()));
-														 }
-														 
-														 else if (abs(trianglesB[10].operator[](0).operator[](1) -  K.operator[](0).operator[](1))<=eps_relat && abs(trianglesB[10].operator[](0).operator[](1) -  K.operator[](1).operator[](1))<=eps_relat && abs(trianglesB[10].operator[](0).operator[](1) - K.operator[](2).operator[](1))<=eps_relat)
-														 { 
-															 kappa[5] +=sqrt(CGAL::to_double(K.squared_area()));
-														 }
-														 
-														 else{
-															 
-															 v_lambda.push_back(sqrt(CGAL::to_double(K.squared_area())) );
-															 norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
-															 norm2= sqrt(CGAL::to_double(norm*norm));
-															 v_n_lambda.push_back(norm/norm2);
-														 } //calcul des aires parietales
-														 
-							}
-						}
-						
-						if (T.dimension() == 2){
-							int l=0, n=0;
-							double norm2=0.;
-							Vector_3 norm;
-							Finite_faces_iterator it;
-							for (it = T.finite_facets_begin(); it != T.finite_facets_end(); it++){
-								Triangle_3 K= T.triangle(*it);
-								
-								if (abs(trianglesB[0].operator[](0).operator[](2) -  K.operator[](0).operator[](2))<=eps_relat && abs(trianglesB[0].operator[](0).operator[](2) -  K.operator[](1).operator[](2))<=eps_relat && abs(trianglesB[0].operator[](0).operator[](2) -  K.operator[](2).operator[](2))<=eps_relat)
-								{ 
-									kappa[0] +=sqrt(CGAL::to_double(K.squared_area()));
-									v_lambda.push_back(sqrt(CGAL::to_double(K.squared_area())));
-									norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
-									norm2= sqrt(CGAL::to_double(norm*norm));
-									v_n_lambda.push_back(norm/norm2);
-								}
-								
-								else if (abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](0).operator[](2))<=eps_relat && abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](1).operator[](2))<=eps_relat && abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](2).operator[](2))<=eps_relat)
-								{ 
-									kappa[1] +=sqrt(CGAL::to_double(K.squared_area()));
-									v_lambda.push_back(sqrt(CGAL::to_double(K.squared_area())));
-									norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
-									norm2= sqrt(CGAL::to_double(norm*norm));
-									v_n_lambda.push_back(norm/norm2);
-								}
-								
-								else if (abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](0).operator[](0))<=eps_relat && abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](1).operator[](0))<=eps_relat && abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](2).operator[](0))<=eps_relat)
-								{ 
-									kappa[2] +=sqrt(CGAL::to_double(K.squared_area()));
-									v_lambda.push_back(sqrt(CGAL::to_double(K.squared_area())));
-									norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
-									norm2= sqrt(CGAL::to_double(norm*norm));
-									v_n_lambda.push_back(norm/norm2);
-								}
-								
-								else if (abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](0).operator[](0))<=eps_relat && abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](1).operator[](0))<=eps_relat && abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](2).operator[](0))<=eps_relat)
-								{ 
-									kappa[3] +=sqrt(CGAL::to_double(K.squared_area()));
-									v_lambda.push_back(sqrt(CGAL::to_double(K.squared_area())));
-									norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
-									norm2= sqrt(CGAL::to_double(norm*norm));
-									v_n_lambda.push_back(norm/norm2);
-								}
-								
-								else if (abs(trianglesB[8].operator[](0).operator[](1) -  K.operator[](0).operator[](1))<=eps_relat && abs(trianglesB[8].operator[](0).operator[](1) -  K.operator[](1).operator[](1))<=eps_relat && abs(trianglesB[8].operator[](0).operator[](1) -  K.operator[](2).operator[](1))<=eps_relat)
-								{ 
-									kappa[4] +=sqrt(CGAL::to_double(K.squared_area()));
-									v_lambda.push_back(sqrt(CGAL::to_double(K.squared_area())));
-									norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
-									norm2= sqrt(CGAL::to_double(norm*norm));
-									v_n_lambda.push_back(norm/norm2);
-								}
-								
-								else 
-								{ 
-									kappa[5] +=sqrt(CGAL::to_double(K.squared_area()));
-									v_lambda.push_back(sqrt(CGAL::to_double(K.squared_area())));
-									norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
-									norm2= sqrt(CGAL::to_double(norm*norm));
-									v_n_lambda.push_back(norm/norm2);
-									
-								}
-							}
-							
-						}
-						
-						
-						for (int it= 0; it< v_lambda.size(); it++)
-						{
-							if(abs(v_lambda[it])> eps_relat){
-							cel.phi_x += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].x()))/volume_cel;
-							cel.phi_y += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].y()))/volume_cel;
-							cel.phi_z += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].z()))/volume_cel;
-							}
-						}
-						
-						cel.alpha += alpha/volume_cel;
-						cel.kappai += kappa[3]/(deltay * deltaz);
-						cel.kappaj += kappa[4]/(deltax * deltaz);
-						cel.kappak += kappa[1]/(deltax * deltay);
-						volume_s +=alpha;
-						
-					} //fin if intersect 
-					
 				} //fin boucle sur les particules
+				
+				//traitement calcul de alpha et kappa pour la cellule=grille[i]!!!!!!
+				if(intersection && exterieur){
+					Triangulation T(Points_poly.begin(), Points_poly.end());
+					
+					std::vector<double>  v_lambda;
+					std::vector<Vector_3> v_n_lambda;
+					///////////////////////////////////////////////////////////////////////////////	  
+					if (T.dimension() == 3){
+						Polyhedron_3 poly;
+						CGAL::convex_hull_3(T.points_begin(), T.points_end(), poly);
+						int l=0, n=0;
+						double norm2=0.;
+						Vector_3 norm;
+						Finite_cells_iterator cit;
+						for (cit = T.finite_cells_begin(); cit!= T.finite_cells_end(); cit++){
+							alpha+= CGAL::to_double(T.tetrahedron( cit).volume());
+						}
+						
+						Facet_iterator fiter;
+						for (fiter = poly.facets_begin(); fiter!= poly.facets_end(); fiter++){
+							
+							Triangle_3 K((*fiter).halfedge()->vertex()->point(),(*fiter).halfedge()->next()->vertex()->point(),
+													 (*fiter).halfedge()->opposite()->vertex()->point());
+													 
+													 if (abs(trianglesB[0].operator[](0).operator[](2) -  K.operator[](0).operator[](2))<=eps_relat && abs(trianglesB[0].operator[](0).operator[](2) - K.operator[](1).operator[](2))<=eps_relat && abs(trianglesB[0].operator[](0).operator[](2) -  K.operator[](2).operator[](2))<=eps_relat )
+													 { 
+														 kappa[0] +=sqrt(CGAL::to_double(K.squared_area()));
+													 }
+													 
+													 else if (abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](0).operator[](2))<=eps_relat && abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](1).operator[](2))<=eps_relat && abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](2).operator[](2))<=eps_relat )
+													 { 
+														 kappa[1] +=sqrt(CGAL::to_double(K.squared_area()));
+													 }
+													 
+													 else if (abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](0).operator[](0))<=eps_relat && abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](1).operator[](0))<=eps_relat && abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](2).operator[](0))<=eps_relat)
+													 { 
+														 kappa[2] +=sqrt(CGAL::to_double(K.squared_area()));
+													 }
+													 
+													 else if (abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](0).operator[](0))<=eps_relat && abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](1).operator[](0))<=eps_relat && abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](2).operator[](0))<=eps_relat)
+													 { 
+														 kappa[3] +=sqrt(CGAL::to_double(K.squared_area()));
+													 }
+													 
+													 else if (abs(trianglesB[8].operator[](0).operator[](1) -  K.operator[](0).operator[](1))<=eps_relat && abs(trianglesB[8].operator[](0).operator[](1) -  K.operator[](1).operator[](1))<=eps_relat && abs(trianglesB[8].operator[](0).operator[](1) - K.operator[](2).operator[](1))<=eps_relat)
+													 { 
+														 kappa[4] +=sqrt(CGAL::to_double(K.squared_area()));
+													 }
+													 
+													 else if (abs(trianglesB[10].operator[](0).operator[](1) -  K.operator[](0).operator[](1))<=eps_relat && abs(trianglesB[10].operator[](0).operator[](1) -  K.operator[](1).operator[](1))<=eps_relat && abs(trianglesB[10].operator[](0).operator[](1) - K.operator[](2).operator[](1))<=eps_relat)
+													 { 
+														 kappa[5] +=sqrt(CGAL::to_double(K.squared_area()));
+													 }
+													 
+													 else{
+														 
+														 v_lambda.push_back(sqrt(CGAL::to_double(K.squared_area())) );
+														 norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
+														 norm2= sqrt(CGAL::to_double(norm*norm));
+														 v_n_lambda.push_back(norm/norm2);
+													 } //calcul des aires parietales
+													 
+						}
+					}
+					
+					if (T.dimension() == 2){
+						int l=0, n=0;
+						double norm2=0.;
+						Vector_3 norm;
+						Finite_faces_iterator it;
+						for (it = T.finite_facets_begin(); it != T.finite_facets_end(); it++){
+							Triangle_3 K= T.triangle(*it);
+							
+							if (abs(trianglesB[0].operator[](0).operator[](2) -  K.operator[](0).operator[](2))<=eps_relat && abs(trianglesB[0].operator[](0).operator[](2) -  K.operator[](1).operator[](2))<=eps_relat && abs(trianglesB[0].operator[](0).operator[](2) -  K.operator[](2).operator[](2))<=eps_relat)
+							{ 
+								kappa[0] +=sqrt(CGAL::to_double(K.squared_area()));
+								v_lambda.push_back(sqrt(CGAL::to_double(K.squared_area())));
+								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
+								norm2= sqrt(CGAL::to_double(norm*norm));
+								v_n_lambda.push_back(norm/norm2);
+							}
+							
+							else if (abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](0).operator[](2))<=eps_relat && abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](1).operator[](2))<=eps_relat && abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](2).operator[](2))<=eps_relat)
+							{ 
+								kappa[1] +=sqrt(CGAL::to_double(K.squared_area()));
+								v_lambda.push_back(sqrt(CGAL::to_double(K.squared_area())));
+								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
+								norm2= sqrt(CGAL::to_double(norm*norm));
+								v_n_lambda.push_back(norm/norm2);
+							}
+							
+							else if (abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](0).operator[](0))<=eps_relat && abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](1).operator[](0))<=eps_relat && abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](2).operator[](0))<=eps_relat)
+							{ 
+								kappa[2] +=sqrt(CGAL::to_double(K.squared_area()));
+								v_lambda.push_back(sqrt(CGAL::to_double(K.squared_area())));
+								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
+								norm2= sqrt(CGAL::to_double(norm*norm));
+								v_n_lambda.push_back(norm/norm2);
+							}
+							
+							else if (abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](0).operator[](0))<=eps_relat && abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](1).operator[](0))<=eps_relat && abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](2).operator[](0))<=eps_relat)
+							{ 
+								kappa[3] +=sqrt(CGAL::to_double(K.squared_area()));
+								v_lambda.push_back(sqrt(CGAL::to_double(K.squared_area())));
+								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
+								norm2= sqrt(CGAL::to_double(norm*norm));
+								v_n_lambda.push_back(norm/norm2);
+							}
+							
+							else if (abs(trianglesB[8].operator[](0).operator[](1) -  K.operator[](0).operator[](1))<=eps_relat && abs(trianglesB[8].operator[](0).operator[](1) -  K.operator[](1).operator[](1))<=eps_relat && abs(trianglesB[8].operator[](0).operator[](1) -  K.operator[](2).operator[](1))<=eps_relat)
+							{ 
+								kappa[4] +=sqrt(CGAL::to_double(K.squared_area()));
+								v_lambda.push_back(sqrt(CGAL::to_double(K.squared_area())));
+								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
+								norm2= sqrt(CGAL::to_double(norm*norm));
+								v_n_lambda.push_back(norm/norm2);
+							}
+							
+							else 
+							{ 
+								kappa[5] +=sqrt(CGAL::to_double(K.squared_area()));
+								v_lambda.push_back(sqrt(CGAL::to_double(K.squared_area())));
+								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
+								norm2= sqrt(CGAL::to_double(norm*norm));
+								v_n_lambda.push_back(norm/norm2);
+								
+							}
+						}
+						
+					}
+					
+					
+					for (int it= 0; it< v_lambda.size(); it++)
+					{
+						cel.phi_x += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].x()))/volume_cel;
+						cel.phi_y += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].y()))/volume_cel;
+						cel.phi_z += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].z()))/volume_cel;
+						aire+=v_lambda[it];
+					}
+					
+					if (abs(cel.phi_x)<=eps_relat) {cel.phi_x = 0.;} 
+					if (abs(cel.phi_y)<=eps_relat) {cel.phi_y = 0.;} 
+					if (abs(cel.phi_z)<=eps_relat) {cel.phi_z = 0.;} 
+					
+					cel.alpha = alpha/volume_cel;
+					cel.kappai = kappa[3]/(deltay * deltaz);
+					cel.kappaj = kappa[4]/(deltax * deltaz);
+					cel.kappak = kappa[1]/(deltax * deltay);
+					volume_s +=alpha;
+				}
 				grille[a][b][c] = cel;
 				i++; 
 			} //fin boucle sur grille
@@ -339,6 +342,7 @@ void Grille::parois(std::vector<Solide>& S) {
 	cout<<"count triangles degenerate is : "<<count<<endl;
 	user_time.reset();
 	
+	// 	cout<<"aire solide := "<<aire<<endl;
 	cout<<"volume solide := "<<volume_s<<endl;
 	
 }
