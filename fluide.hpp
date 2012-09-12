@@ -251,10 +251,10 @@ class Grille
    
   void Solve(const double dt, double t, int n);
   
-  void parois(std::vector<Solide>& S);  // Mise a jour de Kappai,kappaj,kappak et alpha   
+  void parois(Solide& S);  // Mise a jour de Kappai,kappaj,kappak et alpha   
   void modif_fnum(const double dt);  //Modification du flux
   void mixage(); //Procedure de mixage pour le cellules avec c.alpha>0.5
-	void fill_cel(std::vector<Solide>& S); // Remplissage de cellules fantomes (c.alpha = 1.)
+	void fill_cel(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.)
   
 private :
 

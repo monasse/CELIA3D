@@ -5,7 +5,7 @@
 
 //const double eps_relat = numeric_limits<double>::epsilon();
 const double eps_relat =0.000001;
-Solide::Solide()
+Particule::Particule()
 {   
 	min_x = 0.; 
 	min_y = 0.;
@@ -179,7 +179,7 @@ Solide::Solide()
 	
 }
 
-Solide::Solide(const double x_min, const double y_min, const double z_min, 
+Particule::Particule(const double x_min, const double y_min, const double z_min, 
 							 const double x_max, const double y_max,const double z_max)
 {   
 	min_x = x_min; 
@@ -356,7 +356,7 @@ Solide::Solide(const double x_min, const double y_min, const double z_min,
 }
 
 
-Solide::Solide(const double x_min, const double y_min, const double z_min, 
+Particule::Particule(const double x_min, const double y_min, const double z_min, 
 							 const double x_max, const double y_max,const double z_max, 
 							 const Point_3 s1, const Point_3 r1, const Point_3 t1,const Point_3 v1,
 							 const Point_3 s2, const Point_3 r2, const Point_3 t2, const Point_3 v2)
@@ -535,13 +535,13 @@ Solide::Solide(const double x_min, const double y_min, const double z_min,
 
 }
 //Destructeur
-Solide::~Solide(){
+Particule::~Particule(){
 	
 }
 
 
 
-void Solide::Affiche(){
+void Particule::Affiche(){
 	
 //	std::cout<<" volume of solide := "<<volume()<<std::endl;
 // 	std::cout<<" Point min := "<< min_x<<std::endl;
@@ -551,7 +551,7 @@ void Solide::Affiche(){
 
 
 
-double Solide::volume(){
+double Particule::volume(){
 	
 	double vol = 0.;
 	std::vector<Point_3> Points_poly; 
@@ -574,76 +574,75 @@ double Solide::volume(){
 }
 
 
-void impression(std::vector<Solide>& S, int n){ //Sortie au format vtk
-  int nb_part = S.size();
+void Solide::impression(int n){ //Sortie au format vtk
+int nb_part = solide.size();
 
-  int nb_triangles = 0.;
-  for(int it=0; it<S.size(); it++){
-	nb_triangles += S[it].triangles.size();
-  }
-  
-  const char* solidevtk;
-  {
+int nb_triangles = 0.;
+for(int it=0; it<nb_part; it++){
+	nb_triangles += solide[it].triangles.size();
+}
+
+const char* solidevtk;
+{
 	std::ostringstream oss;
 	oss << "resultats/solide" << n << ".vtk";
 	string s = oss.str();
 	//cout << s << endl;
 	solidevtk = s.c_str();
-  }
-  
-   //Ouverture des flux en donne en ecriture
-    std::ofstream vtk(solidevtk,ios::out);
-    if(vtk)
-    {
-        // cout <<"ouverture de xt.vtk reussie" << endl;
-    } else {
-        cout <<"ouverture de solide" << n << ".vtk rate" << endl;
-    }
-    //Initialisation du fichier vtk
-    vtk << "# vtk DataFile Version 3.0" << endl;
-    vtk << "#Simulation Euler" << endl;
-    vtk << "ASCII" << endl;
-    vtk<<"\n";
-    vtk << "DATASET UNSTRUCTURED_GRID" << endl;
-    vtk << "POINTS " << 3*nb_triangles << " DOUBLE" << endl;
-
-	for(int it=0; it<S.size(); it++){
-	  for(int l= 0; l<S[it].triangles.size(); l++){
-		vtk << S[it].triangles[l].operator[](0).operator[](0) << " " << S[it].triangles[l].operator[](0).operator[](1) << " " << S[it].triangles[l].operator[](0).operator[](2) << endl;
-		vtk << S[it].triangles[l].operator[](1).operator[](0) << " " << S[it].triangles[l].operator[](1).operator[](1) << " " << S[it].triangles[l].operator[](1).operator[](2) << endl;
-		vtk << S[it].triangles[l].operator[](2).operator[](0) << " " << S[it].triangles[l].operator[](2).operator[](1) << " " << S[it].triangles[l].operator[](2).operator[](2) << endl;
-	  }
-	}
-	vtk<<"\n";
-	vtk << "CELLS " << nb_triangles << " " << 4*nb_triangles<< endl;
-	int num=0;
-	for(int it=0; it<S.size(); it++){
-	  for(int l= 0; l<S[it].triangles.size(); l++){
-		vtk << 3 << " " << 3*num << " " << 3*num+1 << " " << 3*num+2 << endl;
-		num++;
-	  }
-	}
-	vtk << "\n";
-	vtk << "CELL_TYPES " << nb_triangles << endl;
-	for(int l= 0; l<nb_triangles; l++)
-	{
-	  vtk << 5 << endl;
-	}
-	vtk << "\n";
-	vtk << "CELL_DATA " << nb_triangles << endl;
-	//Deplacement
-	vtk << "SCALARS pression double 1" << endl;
-    vtk << "LOOKUP_TABLE default" << endl;
-	for(int it=0; it<S.size(); it++){
-	  for(int l= 0; l<S[it].triangles.size(); l++)
-		{
-		  vtk << 0. << endl;
-		}
-	}
 }
 
+//Ouverture des flux en donne en ecriture
+std::ofstream vtk(solidevtk,ios::out);
+if(vtk)
+{
+	// cout <<"ouverture de xt.vtk reussie" << endl;
+} else {
+	cout <<"ouverture de solide" << n << ".vtk rate" << endl;
+}
+//Initialisation du fichier vtk
+vtk << "# vtk DataFile Version 3.0" << endl;
+vtk << "#Simulation Euler" << endl;
+vtk << "ASCII" << endl;
+vtk<<"\n";
+vtk << "DATASET UNSTRUCTURED_GRID" << endl;
+vtk << "POINTS " << 3*nb_triangles << " DOUBLE" << endl;
+
+for(int it=0; it<nb_part; it++){
+	for(int l= 0; l<solide[it].triangles.size(); l++){
+		vtk << solide[it].triangles[l].operator[](0).operator[](0) << " " << solide[it].triangles[l].operator[](0).operator[](1) << " " << solide[it].triangles[l].operator[](0).operator[](2) << endl;
+		vtk << solide[it].triangles[l].operator[](1).operator[](0) << " " << solide[it].triangles[l].operator[](1).operator[](1) << " " << solide[it].triangles[l].operator[](1).operator[](2) << endl;
+		vtk << solide[it].triangles[l].operator[](2).operator[](0) << " " << solide[it].triangles[l].operator[](2).operator[](1) << " " << solide[it].triangles[l].operator[](2).operator[](2) << endl;
+	}
+}
+vtk<<"\n";
+vtk << "CELLS " << nb_triangles << " " << 4*nb_triangles<< endl;
+int num=0;
+for(int it=0; it<nb_part; it++){
+	for(int l= 0; l<solide[it].triangles.size(); l++){
+		vtk << 3 << " " << 3*num << " " << 3*num+1 << " " << 3*num+2 << endl;
+		num++;
+	}
+}
+vtk << "\n";
+vtk << "CELL_TYPES " << nb_triangles << endl;
+for(int l= 0; l<nb_triangles; l++)
+{
+	vtk << 5 << endl;
+}
+vtk << "\n";
+vtk << "CELL_DATA " << nb_triangles << endl;
+//Deplacement
+vtk << "SCALARS pression double 1" << endl;
+vtk << "LOOKUP_TABLE default" << endl;
+for(int it=0; it<nb_part; it++){
+	for(int l= 0; l<solide[it].triangles.size(); l++)
+	{
+		vtk << 0. << endl;
+	}
+}
+}
 	
-bool inside_convex_polygon(const Solide& S, const Point_3& P){
+bool inside_convex_polygon(const Particule& S, const Point_3& P){
 	
 	bool in = false;
 	
@@ -665,7 +664,7 @@ bool inside_convex_polygon(const Solide& S, const Point_3& P){
 	return in;
 }	
 
-bool box_inside_convex_polygon(const Solide& S, const Bbox& cell){
+bool box_inside_convex_polygon(const Particule& S, const Bbox& cell){
 	
 	bool in = false;
 	
@@ -728,6 +727,26 @@ bool inside_box(const Bbox& cell, const Point_3& P){
 	  { in = true; }
 	
 	return in;
+}
+
+
+Solide::Solide(std::vector<Particule> & Part){
+	
+	for(int i=0; i<Part.size(); i++){
+		solide.push_back(Part[i]);
+	}
+	
+}
+
+Solide::~Solide(){   
+}
+
+
+void Solide::Affiche(){
+	
+	for(int i=0; i<solide.size(); i++){
+		solide[i].Affiche();
+	}
 }
 
 #endif

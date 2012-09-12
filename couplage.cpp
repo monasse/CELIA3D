@@ -719,7 +719,7 @@ void Grille:: mixage(){
 	}
 	
 } 
-void Grille::fill_cel(std::vector<Solide>& S){
+void Grille::fill_cel(Solide& S){
 	
 	Cellule c, cm;
 	int nb_part = S.size();
@@ -733,12 +733,12 @@ void Grille::fill_cel(std::vector<Solide>& S){
 
 	Point_3 center_faces[6][nb_part];
 	for(int it=0; it<S.size(); it++){
-			center_faces[0][it]= S[it].centre[0]; 
-			center_faces[1][it]= S[it].centre[1]; 
-			center_faces[2][it]= S[it].centre[2]; 
-			center_faces[3][it]= S[it].centre[3]; 
-			center_faces[4][it]= S[it].centre[4]; 
-			center_faces[5][it]= S[it].centre[5]; 
+			center_faces[0][it]= S.solide[it].centre[0]; 
+			center_faces[1][it]= S.solide[it].centre[1]; 
+			center_faces[2][it]= S.solide[it].centre[2]; 
+			center_faces[3][it]= S.solide[it].centre[3]; 
+			center_faces[4][it]= S.solide[it].centre[4]; 
+			center_faces[5][it]= S.solide[it].centre[5]; 
 	}
 
    Point_3 ref(100., 100., 100.);
