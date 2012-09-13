@@ -79,6 +79,8 @@ int main()
 		  maillage >> p;
 		  Vertex[k] = Points[p];
 		}
+		int voisin;
+		maillage >> voisin;
 		
 	  }
 	  
