@@ -29,9 +29,61 @@ int main()
 	
 	
 	double t=0.;
-	const int nb_particule = 4;
+
+	std::ifstream maillage("maillage.dat",ios::in);
+	if(maillage)
+	{
+		// cout <<"ouverture de xt.vtk reussie" << endl;
+	} else {
+		cout <<"ouverture de maillage.dat ratee" << endl;
+	}
+
+	//Recuperation du maillage solide
+	int Npoint;
+	string sp;
+	maillage >> sp >> Npoint;
+	const int nb_points = Npoint;
+
+	vector<Point_3> Points(nb_points);
+
+	for(int i=0;i<nb_points;i++){
+	  double x,y,z;
+	  maillage >> x >> y >> z;
+	  Points[i] = Point_3(x,y,z);
+	}
+
+	int Npart;
+	string sP;
+	maillage >> sP >> Npart;
+	const int nb_particule = Npart;
 	
 	vector<Particule> P(nb_particule);
+
+	for(int i=0;i<nb_particule;i++){
+	  int Nfaces;
+	  bool fixe;
+	  double X,Y,Z,u,v,w,theta,phi,psi;
+	  string s;
+	  maillage >> s >> Nfaces >> fixe;
+	  maillage >> s >> X >> Y >> Z;
+	  maillage >> s >> u >> v >> w;
+	  maillage >> s >> theta >> phi >> psi;
+	  const int nb_faces = Nfaces;
+	  for(int j=0;j<nb_faces;j++){
+		int Nvertex;
+		maillage >> Nvertex;
+		const int nb_vertex = Nvertex;
+		vector<Point_3> Vertex(nb_vertex);
+		for(int k=0;k<nb_vertex;k++){
+		  int p;
+		  maillage >> p;
+		  Vertex[k] = Points[p];
+		}
+		
+	  }
+	  
+	}
+
 	
 	
 	
