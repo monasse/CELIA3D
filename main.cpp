@@ -13,7 +13,7 @@ using namespace std;          // espace de nom standard
 
 
 int main()
-{	
+{		cout << "test" << endl;
 	char tempsF[]="resultats/tempsF.dat";
 	
 	//Ouverture des flux en donne en ecriture
@@ -30,6 +30,8 @@ int main()
 	
 	double t=0.;
 
+
+	
 	std::ifstream maillage("maillage.dat",ios::in);
 	if(maillage)
 	{
@@ -38,6 +40,7 @@ int main()
 		cout <<"ouverture de maillage.dat ratee" << endl;
 	}
 
+	
 	//Recuperation du maillage solide
 	int Npoint;
 	string sp;
@@ -59,55 +62,75 @@ int main()
 	
 	vector<Particule> P(nb_particule);
 
+	bool points_particules[nb_points][nb_particule];
+
+	for(int i=0;i<nb_particule;i++){
+	  for(int j=0;j<nb_points;j++){
+		//Remise a zero du tableau
+		points_particules[j][i] = false;
+	  }
+	}
 	for(int i=0;i<nb_particule;i++){
 	  int Nfaces;
 	  bool fixe;
-	  double X,Y,Z,u,v,w,theta,phi,psi;
+	  double X,Y,Z,u,v,w,theta,phi,psi,xmin,ymin,zmin,xmax,ymax,zmax;
 	  string s;
 	  maillage >> s >> Nfaces >> fixe;
 	  maillage >> s >> X >> Y >> Z;
 	  maillage >> s >> u >> v >> w;
 	  maillage >> s >> theta >> phi >> psi;
+	  xmin = X;
+	  ymin = Y;
+	  zmin = Z;
 	  const int nb_faces = Nfaces;
+	  std::vector<Face> Faces(nb_faces);
 	  for(int j=0;j<nb_faces;j++){
 		int Nvertex;
 		maillage >> Nvertex;
 		const int nb_vertex = Nvertex;
-		vector<Point_3> Vertex(nb_vertex);
+		std::vector<Vertex> Vertex(nb_vertex);
 		for(int k=0;k<nb_vertex;k++){
 		  int p;
 		  maillage >> p;
-		  Vertex[k] = Points[p];
+		  Vertex[k].pos = Points[p];
+		  Vertex[k].num = p;
+		  points_particules[p][i] = true;
+		  double x = CGAL::to_double(Points[p].operator[](0));
+		  double y = CGAL::to_double(Points[p].operator[](1));
+		  double z = CGAL::to_double(Points[p].operator[](2));
+		  xmin = min(x,xmin);
+		  xmax = max(x,xmax);
+		  ymin = min(y,ymin);
+		  ymax = max(y,ymax);
+		  zmin = min(z,zmin);
+		  zmax = max(z,zmax);
 		}
 		int voisin;
 		maillage >> voisin;
-		
+		Faces[j] = Face::Face(Vertex, voisin);
 	  }
 	  
+	  P[i] = Particule::Particule(xmin, ymin, zmin, xmax, ymax, zmax, Faces);
+	  
 	}
+	//Boucle de mise a jour des particules sur les sommets du maillage
+	for(int i=0;i<P.size();i++){
+	  for(int j=0;j<P[i].size();j++){
+		for(int k=0;k<P[i].faces[j].size();k++){
+		  for(int l=0;l<P.size();l++){
+			if(points_particules[P[i].faces[j].vertex[k].num][l]){
+			  P[i].faces[j].vertex[k].particules.push_back(l);
+			}
+		  }
+		}
+	  }
+	}
+	
+	
+	
+	
+	
 
-	
-	
-	
-	//rampe
-	Point_3 p1_s1(-1.,-1.10, -0.5), p1_r1(0.25, -1.10, -0.5), p1_t1(0.25, 0.15, -0.5), p1_v1(-1, 0.15, -0.5);
-	Point_3 p1_s2(-1.,-1.10, 1.5), p1_r2(0.25, -1.10, 1.5), p1_t2(0.25, 0.15, 1.5), p1_v2(-1, 0.15, 1.5);
-	P[0] = Particule(-1.,-1.10, -0.5, 0.25, 0.15, 1.5, p1_s1, p1_r1, p1_t1, p1_v1, p1_s2, p1_r2, p1_t2, p1_v2);
-	//P[0].Affiche();
-	
-	
-	Point_3 p2_s1(0.25, -1.10, -0.5), p2_r1(1., -1.10, -0.5), p2_t1(1., 0.5829, -0.5), p2_v1(0.25, 0.15, -0.5);
-	Point_3 p2_s2(0.25, -1.10, 1.5), p2_r2(1., -1.10, 1.5), p2_t2(1., 0.5829, 1.5), p2_v2(0.25, 0.15, 1.5);
-	P[1] = Particule(0.25, -1.10, -0.5, 1., 0.5829, 1.5,p2_s1, p2_r1, p2_t1, p2_v1, p2_s2, p2_r2, p2_t2, p2_v2);
-	//S[1].Affiche();
-	Point_3 p3_s1(1., -1.10, -0.5), p3_r1(2., -1.10, -0.5), p3_t1(2., 1.1602, -0.5), p3_v1(1., 0.5829, -0.5);
-	Point_3 p3_s2(1., -1.10, 1.5), p3_r2(2., -1.10, 1.5), p3_t2(2., 1.1602, 1.5), p3_v2(1., 0.5829, 1.5);
-	P[2] =Particule(1., -1.10, -0.5, 2., 1.1602, 1.5,p3_s1, p3_r1, p3_t1, p3_v1, p3_s2, p3_r2, p3_t2, p3_v2);
-	//S[2].Affiche();
-	Point_3 p4_s1(2., -1.10, -0.5), p4_r1(3.4543, -1.10, -0.5), p4_t1(3.4543, 2., -0.5), p4_v1(2., 1.1602, -0.5);
-	Point_3 p4_s2(2., -1.10, 1.5), p4_r2(3.4543, -1.10, 1.5), p4_t2(3.4543, 2., 1.5), p4_v2(2., 1.1602, 1.5);
-	P[3] = Particule(2., -1.10, -0.5, 3.4543, 2., 1.5,p4_s1, p4_r1, p4_t1, p4_v1, p4_s2, p4_r2, p4_t2, p4_v2);
-	//S[3].Affiche();
 	
 	Solide S(P);
 	//S.Affiche();

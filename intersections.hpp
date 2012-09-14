@@ -17,6 +17,7 @@
 #include <CGAL/convex_hull_3.h>
 #include <CGAL/squared_distance_3.h>
 #include <CGAL/box_intersection_d.h>
+#include <CGAL/centroid.h>
 
 
 typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;

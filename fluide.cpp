@@ -507,7 +507,34 @@ void Grille:: affiche(string r)
 //Accss a une cellule i 
 Cellule Grille::cellule(int i,int j, int k){ 
     return grille[i][j][k]; 
-} 
+}
+
+Cellule Grille::in_cell(Point_3 p){
+  int i,j,k;
+  i = (int) (floor(CGAL::to_double((p.operator[](0)-x)/dx))+marge);
+  j = (int) (floor(CGAL::to_double((p.operator[](1)-y)/dy))+marge);
+  k = (int) (floor(CGAL::to_double((p.operator[](2)-z)/dz))+marge);
+  if(i<0){
+	i = 0;
+  }
+  if(i>Nx+2*marge-1){
+	i = Nx+2*marge-1;
+  }
+  if(j<0){
+	j = 0;
+  }
+  if(j>Ny+2*marge-1){
+	j = Ny+2*marge-1;
+  }
+  if(k<0){
+	k = 0;
+  }
+  if(k>Nz+2*marge-1){
+	k = Nz+2*marge-1;
+  }
+  return cellule(i,j,k);
+}
+
 
 //Sous-programme de definition des conditions initiales 
 void Grille::init(){

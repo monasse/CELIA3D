@@ -203,6 +203,8 @@ class Grille
 
   //Acces a une cellule i,j, k
    Cellule cellule(int i, int j, int k);
+  //Acces a la cellule contenant le point (x,y,z)
+  Cellule in_cell(Point_3 p);
 
   //Sous-programme de definition des conditions initiales 
   void init();
@@ -254,7 +256,7 @@ class Grille
   void parois(Solide& S);  // Mise a jour de Kappai,kappaj,kappak et alpha   
   void modif_fnum(const double dt);  //Modification du flux
   void mixage(); //Procedure de mixage pour le cellules avec c.alpha>0.5
-	void fill_cel(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.)
+  void fill_cel(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.)
   
 private :
 

@@ -728,10 +728,12 @@ void Grille::fill_cel(Solide& S){
 	int poz=0;
 	double x_min=0., y_min=0., z_min = 0., x_max = 0., y_max=0., z_max=0.;
 
+	
+	
 	//Solide solide(x_min,y_min,z_min,x_max,y_max,z_max);
 	
-
-	Point_3 center_faces[6][nb_part];
+	/*
+	vector<Point_3> center_faces[6][nb_part];
 	for(int it=0; it<S.size(); it++){
 			center_faces[0][it]= S.solide[it].centre[0]; 
 			center_faces[1][it]= S.solide[it].centre[1]; 
@@ -754,7 +756,8 @@ void Grille::fill_cel(Solide& S){
 				}
 				count++;
 			}
-		}
+			}
+	*/
 	//std::cout<<"center faces number: " <<count<<std::endl;
 	for(int i=marge;i<Nx+marge;i++){
 		for(int j=marge;j<Ny+marge;j++){ 
@@ -762,95 +765,39 @@ void Grille::fill_cel(Solide& S){
 				c = grille[i][j][k];
 				if((std::abs(c.alpha-1.)<eps))
 				{
-					Point_3 center_cell(c.x, c.y, c.z);
+				  Point_3 center_cell(c.x, c.y, c.z);
 				  int nbx=0, nby=0,nbz=0;
-					double dist_min = 100;
-					double nb=0.;
-					count = 0;
-					for(int it=0; it<6; it++){
-						for(int iter=0; iter<nb_part; iter++){
-							dist[count] = CGAL::to_double(squared_distance(center_cell, center_faces[it][iter]));
-							if(dist[count]< dist_min) {
-								dist_min = dist[count];
-								poz = it;
-							}
-							count++;
+				  Point_3 centre_face(0.,0.,0.);
+				  Vector_3 normale_face(-1.,0.,0.);
+				  double dist_min = 10000000.;
+				  for(int iter=0; iter<nb_part; iter++){
+					Particule P = S.solide[iter];
+					for(int it=0;it<P.size();it++){
+					  Face F = P.faces[it];
+					  if(F.voisin==-1){
+						Vector_3 vect0(center_cell,F.centre);
+						//Cas convexe
+						if(abs(CGAL::to_double(vect0*F.normale))<dist_min){
+						  dist_min = abs(CGAL::to_double(vect0*F.normale));
+						  centre_face = F.centre;
+						  normale_face = F.normale;
 						}
+					  }
 					}
-					if (poz == 0){
-						nb = dist_min/c.dx;
-						if (nb != (int)(nb)){ nbx= (int)(nb)+1;}
-						else {nbx = nb;}
-						if(i-2*nbx>0){
-						cm = grille[i-2*nbx][j][k]; // a definir la cellule mirroir par rapport à l'interface
-						while(cm.alpha>eps && (i-2*nbx)>marge){nbx++; cm = grille[i-2*nbx][j][k]; }
-						}
-						else {cm = grille[0][j][k]; }
-					}
-					else if (poz == 1){
-						nb = dist_min/c.dx;
-						if (nb != (int)(nb)){ nbx= (int)(nb)+1;}
-						else {nbx = nb;}
-						if(i+2*nbx <Nx+2*marge){
-						cm = grille[i+2*nbx][j][k]; // a definir la cellule mirroir par rapport à l'interface
-						while(cm.alpha>eps && (i+2*nbx)<Nx+marge){nbx++; cm = grille[i+2*nbx][j][k]; }
-						}
-						else{cm = grille[Nx+marge][j][k];}
-					}
-					
-					else if (poz == 2){
-						nb = dist_min/c.dy;
-						if (nb != (int)(nb)){ nby= (int)(nb)+1;}
-						else {nby = nb;}
-						if(j-2*nby>0){
-						cm = grille[i][j-2*nby][k]; // a definir la cellule mirroir par rapport à l'interface
-						while(cm.alpha>eps && (j-2*nby)>marge){nby++; cm = grille[i][j-2*nby][k]; }
-						}
-						else{cm = grille[i][0][k];}
-					}
-					
-					else if (poz == 3){
-						nb = dist_min/c.dy;
-						if (nb != (int)(nb)){ nby= (int)(nb)+1;}
-						else {nby = nb;}
-						if(j+2*nby<Ny+2*marge){
-						cm = grille[i][j+2*nby][k]; // a definir la cellule mirroir par rapport à l'interface
-						while(cm.alpha>eps && (j+2*nby)<Ny+marge){nby++; cm = grille[i][j+2*nby][k]; }
-						}
-						else{cm = grille[i][Ny+marge][k];}
-					}
-					else if (poz == 4){
-						nb = dist_min/c.dz;
-						if (nb != (int)(nb)){ nbz= (int)(nb)+1;}
-						else {nbz = nb;}
-						if(k-2*nbz>0){
-						cm = grille[i][j][k-2*nbz]; // a definir la cellule mirroir par rapport à l'interface
-						while(cm.alpha>eps && (k-2*nbz)>marge){nbz++; cm = grille[i][j][k-2*nbz]; }
-						}
-						else{cm = grille[i][j][0];}
-					}
-					else{
-						nb = dist_min/c.dz;
-						if (nb != (int)(nb)){ nbz= (int)(nb)+1;}
-						else {nbz = nb;}
-						if(k+2*nbz<Nz+2*marge){
-						cm = grille[i][j][k+2*nbz]; // a definir la cellule mirroir par rapport à l'interface
-						while(cm.alpha>eps && (k+2*nbz)<Nz+marge){nbz++; cm = grille[i][j][k+2*nbz]; }
-						}
-						else{cm = grille[i][j][Nz+marge];}
-					}
-					c.rho = cm.rho;
-					c.impx = cm.impx;
-					c.impy = cm.impy;
-					c.impz = cm.impz;
-					c.rhoE = cm.rhoE;
-					c.u = cm.u ;
-					c.v = cm.v;
-					c.w = cm.w;
-					c.p = cm.p;
-// 					{std::cout<<" center cell "<< center_cell<< "distance min "<< dist_min<< "position "<<poz<<std::endl;
-// 					std::cout<<"cellule miroir "<<std::endl; cm.Affiche();}
-					grille[i][j][k] = c;
+				  }
+				  //Calcul du symetrique par rapport au plan defini par centre_face et normale_face
+				  Point_3 symm_center = center_cell + 2*dist_min*normale_face;
+				  cm = in_cell(symm_center);
+				  c.rho = cm.rho;
+				  c.u = cm.u;
+				  c.v = cm.v;
+				  c.w = cm.w;
+				  c.p = cm.p;
+				  c.impx = cm.impx;
+				  c.impy = cm.impy;
+				  c.impz = cm.impz;
+				  c.rhoE = cm.rhoE;
+				  grille[i][j][k] = c;
 				}
 			}
 		}
