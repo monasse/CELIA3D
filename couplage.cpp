@@ -858,3 +858,207 @@ void Grille::fill_cel(Solide& S){
 }
 
 
+
+Point_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn){
+	
+	
+	double lambda = 0., mu = 0.;
+	
+	
+	double dom = CGAL::to_double((Tn.operator[](0).operator[](0) - Tn.operator[](2).operator[](0)) * 
+	           (Tn.operator[](1).operator[](1) - Tn.operator[](2).operator[](1))-
+	           (Tn.operator[](0).operator[](1) - Tn.operator[](2).operator[](1)) * 
+	           (Tn.operator[](1).operator[](0) - Tn.operator[](2).operator[](0)));
+						 
+						 
+	double num1 = CGAL::to_double((Xn.operator[](0) - Tn.operator[](2).operator[](0)) * 
+						    (Tn.operator[](1).operator[](1) - Tn.operator[](2).operator[](1)) -
+						    (Xn.operator[](1) - Tn.operator[](2).operator[](1)) * 
+						    (Tn.operator[](1).operator[](0) - Tn.operator[](2).operator[](0)));
+								
+	double num2 = CGAL::to_double((Xn.operator[](0) - Tn.operator[](2).operator[](0)) * 
+								(Tn.operator[](0).operator[](1) - Tn.operator[](2).operator[](1)) -
+								(Xn.operator[](1) - Tn.operator[](2).operator[](1)) * 
+								(Tn.operator[](0).operator[](0) - Tn.operator[](2).operator[](0)));
+	if(dom>eps){							
+	lambda =  num1/dom;
+	mu = num2/dom;
+	}
+	else {std::cout<<"Oupps division par zero dans la fonction tr "<<std::endl;}
+	
+	double x = CGAL::to_double(lambda * Tn1.operator[](0).operator[](0) + mu*Tn1.operator[](1).operator[](0) 
+	                           + (1- lambda- mu)*Tn1.operator[](2).operator[](0));
+														 
+	double y = CGAL::to_double(lambda * Tn1.operator[](0).operator[](1) + mu*Tn1.operator[](1).operator[](1) 
+	                           + (1- lambda- mu)*Tn1.operator[](2).operator[](1));
+	double z = CGAL::to_double(lambda * Tn1.operator[](0).operator[](2) + mu*Tn1.operator[](1).operator[](2) 
+														 + (1- lambda- mu)*Tn1.operator[](2).operator[](2));		
+														 
+	Point_3 Xn1(x, y, z);
+	
+	return Xn1;
+}
+
+
+
+Triangle_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Triangle_3 T){
+	
+	Point_3 s = tr( Tn,Tn1, T.operator[](0) );
+	Point_3 r = tr( Tn,Tn1, T.operator[](1) );
+	Point_3 v = tr( Tn,Tn1, T.operator[](2) );
+	Triangle_3 Ttr(s, r, v);
+	
+	return Ttr;
+}
+
+
+Triangle_2 tr(Triangle_3 T){
+	
+	Triangle_2 Ttr;
+	
+	return Ttr;
+}	
+
+
+
+CDT sous_maillage_face(Triangles_2 Tn1, Triangles_2 Tn_n1){
+	
+	CDT cdt;
+	
+	std::vector<Bbox_2> boxesTn1(Tn1.size()), boxesTn_n1(Tn_n1.size());
+	
+	for(Triangle2_iterator it= Tn1.begin(); it!= Tn1.end(); ++it){
+		boxesTn1.push_back(Bbox_2(it->bbox()));
+	}
+	
+	for(Triangle2_iterator it= Tn_n1.begin(); it!= Tn_n1.end(); ++it){
+		boxesTn_n1.push_back(Bbox_2(it->bbox()));
+	}
+	
+	Triangle_2 t;
+	Point_2 P;
+	Segment_2 seg;
+	std::vector<Point_2> vPoints; 
+	std::vector<Point_2> intPoints;
+	std::vector<Segment_2> intSeg;
+	
+	
+	for(int i=0; i<boxesTn1.size(); i++ ){
+		for(int j=0; j<boxesTn_n1.size(); j++ ){
+			if (CGAL::do_overlap( boxesTn1[i],boxesTn_n1[j]) )
+			{
+					if (CGAL::do_intersect(Tn1[i],Tn_n1[j]) ){
+						
+						CGAL::Object result = CGAL::intersection(Tn1[i],Tn_n1[j]);
+						
+						if(CGAL::assign(P,result)){
+							intPoints.push_back(P);
+						}
+						else if(CGAL::assign(seg,result)){
+							intSeg.push_back(seg);
+							
+						}
+						else if(CGAL::assign(t,result)){
+							Segment_2 s1(t.operator[](0), t.operator[](1));
+							Segment_2 s2(t.operator[](1), t.operator[](2));
+							Segment_2 s3(t.operator[](2), t.operator[](0));
+							intSeg.push_back(s1);	
+							intSeg.push_back(s2);	
+							intSeg.push_back(s3);							
+						}
+						else if(CGAL::assign(vPoints,result)){ 
+							for(int l= 0; l<vPoints.size(); l++)
+							{
+								intPoints.push_back(vPoints[l]);
+							}
+							
+						}
+						else {cout<<"Intersection type: ? "<<endl;}
+						
+					}
+				}
+			}
+		}
+	
+	 cdt.insert(intPoints.begin(), intPoints.end());
+	 
+	 for(int i = 0; i<intSeg.size(); i++){
+		 cdt.insert_constraint(intSeg[i].operator[](0), intSeg[i].operator[](1));
+	 }
+	
+	return cdt;
+}	
+
+
+/*Triangulation sous_maillage_face(Triangles Tn1, Triangles Tn_n1){
+
+	CDT cdt;
+	
+	std::vector<Bbox> boxesTn1(Tn1.size()), boxesTn_n1(Tn_n1.size());
+	
+	for(Tri_iterator it= Tn1.begin(); it!= Tn1.end(); ++it){
+		boxesTn1.push_back(Bbox(it->bbox()));
+		}
+		
+		for(Tri_iterator it= Tn_n1.begin(); it!= Tn_n1.end(); ++it){
+			boxesTn_n1.push_back(Bbox(it->bbox()));
+		}
+		
+		Triangle_3 t;
+		Point_3 P;
+		Segment_3 seg;
+		std::vector<Point_3> vPoints; 
+		
+		std::vector<Point_3> intPoints;
+		std::vector<Segment_3> intSeg;
+		
+		
+		for(int i=0; i<boxesTn1.size(); i++ ){
+			for(int j=0; j<boxesTn_n1.size(); j++ ){
+				if (CGAL::do_intersect( boxesTn1[i],boxesTn_n1[j]) )
+				{
+					if (CGAL::do_intersect(boxesTn1[i],Tn_n1[j]) ){
+						if (CGAL::do_intersect(Tn1[i],Tn_n1[j]) ){
+							
+							CGAL::Object result = CGAL::intersection(Tn1[i],Tn_n1[j]);
+							
+							if(CGAL::assign(P,result)){
+								intPoints.push_back(P);
+							}
+							else if(CGAL::assign(seg,result)){
+								intSeg.push_back(seg);
+								
+							}
+							else if(CGAL::assign(t,result)){
+								Segment_3 s1(t.operator[](0), t.operator[](1));
+								Segment_3 s2(t.operator[](1), t.operator[](2));
+								Segment_3 s3(t.operator[](2), t.operator[](0));
+								intSeg.push_back(s1);	
+								intSeg.push_back(s2);	
+								intSeg.push_back(s3);							
+							}
+							else if(CGAL::assign(vPoints,result)){ 
+								for(int l= 0; l<vPoints.size(); l++)
+								{
+									intPoints.push_back(vPoints[l]);
+								}
+								
+						}
+						else {cout<<"Intersection type: ? "<<endl;}
+						
+						}
+					}
+				}
+			}
+		}
+		
+		Triangulation T(intPoints.begin(), intPoints.end());
+		//assert( T.dimension() == 2);
+		
+		if (T.dimension() == 2){
+			//cdt.insert();
+		}
+		else {std::cout<<"il y a un probleme dans la construction du sous-maillage triangulaire de l'interface"<<std::cout;}
+		
+		return T;
+		}*/	
