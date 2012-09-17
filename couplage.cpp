@@ -728,36 +728,6 @@ void Grille::fill_cel(Solide& S){
 	int poz=0;
 	double x_min=0., y_min=0., z_min = 0., x_max = 0., y_max=0., z_max=0.;
 
-	
-	
-	//Solide solide(x_min,y_min,z_min,x_max,y_max,z_max);
-	
-	/*
-	vector<Point_3> center_faces[6][nb_part];
-	for(int it=0; it<S.size(); it++){
-			center_faces[0][it]= S.solide[it].centre[0]; 
-			center_faces[1][it]= S.solide[it].centre[1]; 
-			center_faces[2][it]= S.solide[it].centre[2]; 
-			center_faces[3][it]= S.solide[it].centre[3]; 
-			center_faces[4][it]= S.solide[it].centre[4]; 
-			center_faces[5][it]= S.solide[it].centre[5]; 
-	}
-
-   Point_3 ref(100., 100., 100.);
-		int count=0;
-		for(int i=0; i<6; i++){	
-			for(int j=0; j<nb_part; j++){
-				for(int k=i+1; k<6; k++){
-					for(int l=0; l<nb_part; l++){	
-					if(CGAL::to_double(squared_distance(center_faces[i][j], center_faces[k][l]))<eps) 
-					{ center_faces[i][j] = ref ;
-					center_faces[k][l] = ref;}
-				 }
-				}
-				count++;
-			}
-			}
-	*/
 	//std::cout<<"center faces number: " <<count<<std::endl;
 	for(int i=marge;i<Nx+marge;i++){
 		for(int j=marge;j<Ny+marge;j++){ 
@@ -766,26 +736,85 @@ void Grille::fill_cel(Solide& S){
 				if((std::abs(c.alpha-1.)<eps)){
 				  Point_3 center_cell(c.x, c.y, c.z);
 				  int nbx=0, nby=0,nbz=0;
-				  Point_3 centre_face(0.,0.,0.);
-				  Vector_3 normale_face(-1.,0.,0.);
+				  Point_3 projete(0.,0.,0.); //Projeté sur la face la plus proche
 				  double dist_min = 10000000.;
 				  for(int iter=0; iter<nb_part; iter++){
 					Particule P = S.solide[iter];
 					for(int it=0;it<P.size();it++){
 					  Face F = P.faces[it];
 					  if(F.voisin==-1){
-						Vector_3 vect0(center_cell,F.centre);
-						//Cas convexe
-						if(abs(CGAL::to_double(vect0*F.normale))<dist_min && CGAL::to_double(vect0*F.normale)>=0.){
-						  dist_min = abs(CGAL::to_double(vect0*F.normale));
-						  centre_face = F.centre;
-						  normale_face = F.normale;
+						Plane_3 P(F.vertex[0].pos,F.vertex[1].pos,F.vertex[2].pos);
+						for(int k=3;k<F.size() && P.is_degenerate();k++){//Test si le plan est degenere
+						  P = Plane_3(F.vertex[0].pos,F.vertex[1].pos,F.vertex[k].pos);
 						}
+						Point_3 xP = P.projection(center_cell);
+						//Test pour savoir si le projete est dans la face
+						bool test = true;
+						for(int k=0;k<F.size()-1 && test;k++){
+						  Point_3 x1 = F.vertex[k].pos;
+						  Point_3 x2 = F.vertex[k+1].pos;
+						  Vector_3 vect1(xP,x1);
+						  Vector_3 vect2(xP,x2);
+						  if(CGAL::to_double(CGAL::cross_product(vect1,vect2)*F.normale)<0.){
+							test = false;
+						  }
+						}
+						//1er cas : on est dans la face
+						if(test){
+						  double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,xP)));
+						  if(d<dist_min){
+							dist_min = d;
+							projete = xP;
+						  }
+						}
+						//2eme cas : on est hors de la face
+						else{
+						  //Recherche des deux points les plus proches de xP sur la face
+						  Point_3 x1 = F.vertex[0].pos; //Point le plus proche
+						  Point_3 x2; // deuxieme point le plus proche
+						  double d1 = sqrt(CGAL::to_double(CGAL::squared_distance(xP,x1)));
+						  double d2 = 10000000.;
+						  for(int k=1;k<F.size();k++){
+							Point_3 x = F.vertex[k].pos;
+							double d = sqrt(CGAL::to_double(CGAL::squared_distance(xP,x)));
+							if(d<d2){
+							  if(d<d1){
+								x2 = x1;
+								d2 = d1;
+								x1 = x;
+								d1 = d;
+							  } else {
+								x2 = x;
+								d2 = d;
+							  }
+							}
+						  }
+						  double d12 = sqrt(CGAL::to_double(CGAL::squared_distance(x1,x2)));
+						  if(d1*d1+d12*d12<d2*d2){
+							//Le projete est le point le plus proche dans ce cas
+							double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,xP)));
+							if(d<dist_min){
+							  dist_min = d;
+							  projete = x1;
+							}
+						  } else {
+							//Le projete est la projection sur (x1,x2)
+							Line_3 L(x1,x2);
+							double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,L)));
+							if(d<dist_min){
+							  dist_min = d;
+							  projete = L.projection(center_cell);
+							}
+						  }
+						  
+						  
+						}
+
 					  }
 					}
 				  }
 				  //Calcul du symetrique par rapport au plan defini par centre_face et normale_face
-				  Point_3 symm_center = center_cell + 2*dist_min*normale_face;
+				  Point_3 symm_center = center_cell + Vector_3(center_cell,projete)*2;
 				  cm = in_cell(symm_center);
 				  c.rho = cm.rho;
 				  c.u = cm.u;
