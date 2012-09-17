@@ -763,8 +763,7 @@ void Grille::fill_cel(Solide& S){
 		for(int j=marge;j<Ny+marge;j++){ 
 			for(int k=marge;k<Nz+marge;k++){
 				c = grille[i][j][k];
-				if((std::abs(c.alpha-1.)<eps))
-				{
+				if((std::abs(c.alpha-1.)<eps)){
 				  Point_3 center_cell(c.x, c.y, c.z);
 				  int nbx=0, nby=0,nbz=0;
 				  Point_3 centre_face(0.,0.,0.);
@@ -777,7 +776,7 @@ void Grille::fill_cel(Solide& S){
 					  if(F.voisin==-1){
 						Vector_3 vect0(center_cell,F.centre);
 						//Cas convexe
-						if(abs(CGAL::to_double(vect0*F.normale))<dist_min){
+						if(abs(CGAL::to_double(vect0*F.normale))<dist_min && CGAL::to_double(vect0*F.normale)>=0.){
 						  dist_min = abs(CGAL::to_double(vect0*F.normale));
 						  centre_face = F.centre;
 						  normale_face = F.normale;
