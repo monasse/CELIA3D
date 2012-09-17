@@ -67,13 +67,13 @@ Particule::Particule()
 	//Face 1
 	std::vector<Vertex> vert1(4);
 	vert1[0].pos = s1;
-	vert1[0].particules[0] = -1;
+	vert1[0].particules.push_back(-1);
 	vert1[1].pos = v1;
-	vert1[1].particules[0] = -1;
+	vert1[1].particules.push_back(-1);
 	vert1[2].pos = t1;
-	vert1[2].particules[0] = -1;
+	vert1[2].particules.push_back(-1);
 	vert1[3].pos = r1;
-	vert1[3].particules[0] = -1;
+	vert1[3].particules.push_back(-1);
 	vector<Point_3> points1(4);
 	for(int i=0;i<4;i++){
 	  points1[i] = vert1[i].pos;
@@ -85,13 +85,13 @@ Particule::Particule()
 	//Face 2
 	std::vector<Vertex> vert2(4);
 	vert2[0].pos = s1;
-	vert2[0].particules[0] = -1;
+	vert2[0].particules.push_back(-1);
 	vert2[1].pos = r1;
-	vert2[1].particules[0] = -1;
+	vert2[1].particules.push_back(-1);
 	vert2[2].pos = r2;
-	vert2[2].particules[0] = -1;
+	vert2[2].particules.push_back(-1);
 	vert2[3].pos = s2;
-	vert2[3].particules[0] = -1;
+	vert2[3].particules.push_back(-1);
 	vector<Point_3> points2(4);
 	for(int i=0;i<4;i++){
 	  points2[i] = vert2[i].pos;
@@ -103,13 +103,13 @@ Particule::Particule()
 	//Face 3
 	std::vector<Vertex> vert3(4);
 	vert3[0].pos = r1;
-	vert3[0].particules[0] = -1;
+	vert3[0].particules.push_back(-1);
 	vert3[1].pos = t1;
-	vert3[1].particules[0] = -1;
+	vert3[1].particules.push_back(-1);
 	vert3[2].pos = t2;
-	vert3[2].particules[0] = -1;
+	vert3[2].particules.push_back(-1);
 	vert3[3].pos = r2;
-	vert3[3].particules[0] = -1;
+	vert3[3].particules.push_back(-1);
 	vector<Point_3> points3(4);
 	for(int i=0;i<4;i++){
 	  points3[i] = vert3[i].pos;
@@ -121,13 +121,13 @@ Particule::Particule()
 	//Face 4
 	std::vector<Vertex> vert4(4);
 	vert4[0].pos = t1;
-	vert4[0].particules[0] = -1;
+	vert4[0].particules.push_back(-1);
 	vert4[1].pos = v1;
-	vert4[1].particules[0] = -1;
+	vert4[1].particules.push_back(-1);
 	vert4[2].pos = v2;
-	vert4[2].particules[0] = -1;
+	vert4[2].particules.push_back(-1);
 	vert4[3].pos = t2;
-	vert4[3].particules[0] = -1;
+	vert4[3].particules.push_back(-1);
 	vector<Point_3> points4(4);
 	for(int i=0;i<4;i++){
 	  points4[i] = vert4[i].pos;
@@ -139,13 +139,13 @@ Particule::Particule()
 	//Face 5
 	std::vector<Vertex> vert5(4);
 	vert5[0].pos = s1;
-	vert5[0].particules[0] = -1;
+	vert5[0].particules.push_back(-1);
 	vert5[1].pos = r1;
-	vert5[1].particules[0] = -1;
+	vert5[1].particules.push_back(-1);
 	vert5[2].pos = r2;
-	vert5[2].particules[0] = -1;
+	vert5[2].particules.push_back(-1);
 	vert5[3].pos = s2;
-	vert5[3].particules[0] = -1;
+	vert5[3].particules.push_back(-1);
 	vector<Point_3> points5(4);
 	for(int i=0;i<4;i++){
 	  points5[i] = vert5[i].pos;
@@ -157,13 +157,13 @@ Particule::Particule()
 	//Face 6
 	std::vector<Vertex> vert6(4);
 	vert6[0].pos = s1;
-	vert6[0].particules[0] = -1;
+	vert6[0].particules.push_back(-1);
 	vert6[1].pos = r1;
-	vert6[1].particules[0] = -1;
+	vert6[1].particules.push_back(-1);
 	vert6[2].pos = r2;
-	vert6[2].particules[0] = -1;
+	vert6[2].particules.push_back(-1);
 	vert6[3].pos = s2;
-	vert6[3].particules[0] = -1;
+	vert6[3].particules.push_back(-1);
 	vector<Point_3> points6(4);
 	for(int i=0;i<4;i++){
 	  points6[i] = vert6[i].pos;
@@ -264,13 +264,13 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	//Face 1
 	std::vector<Vertex> vert1(4);
 	vert1[0].pos = s1;
-	vert1[0].particules[0] = -1;
+	vert1[0].particules.push_back(-1);
 	vert1[1].pos = v1;
-	vert1[1].particules[0] = -1;
+	vert1[1].particules.push_back(-1);
 	vert1[2].pos = t1;
-	vert1[2].particules[0] = -1;
+	vert1[2].particules.push_back(-1);
 	vert1[3].pos = r1;
-	vert1[3].particules[0] = -1;
+	vert1[3].particules.push_back(-1);
 	vector<Point_3> points1(4);
 	for(int i=0;i<4;i++){
 	  points1[i] = vert1[i].pos;
@@ -282,13 +282,13 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	//Face 2
 	std::vector<Vertex> vert2(4);
 	vert2[0].pos = s1;
-	vert2[0].particules[0] = -1;
+	vert2[0].particules.push_back(-1);
 	vert2[1].pos = r1;
-	vert2[1].particules[0] = -1;
+	vert2[1].particules.push_back(-1);
 	vert2[2].pos = r2;
-	vert2[2].particules[0] = -1;
+	vert2[2].particules.push_back(-1);
 	vert2[3].pos = s2;
-	vert2[3].particules[0] = -1;
+	vert2[3].particules.push_back(-1);
 	vector<Point_3> points2(4);
 	for(int i=0;i<4;i++){
 	  points2[i] = vert2[i].pos;
@@ -300,13 +300,13 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	//Face 3
 	std::vector<Vertex> vert3(4);
 	vert3[0].pos = r1;
-	vert3[0].particules[0] = -1;
+	vert3[0].particules.push_back(-1);
 	vert3[1].pos = t1;
-	vert3[1].particules[0] = -1;
+	vert3[1].particules.push_back(-1);
 	vert3[2].pos = t2;
-	vert3[2].particules[0] = -1;
+	vert3[2].particules.push_back(-1);
 	vert3[3].pos = r2;
-	vert3[3].particules[0] = -1;
+	vert3[3].particules.push_back(-1);
 	vector<Point_3> points3(4);
 	for(int i=0;i<4;i++){
 	  points3[i] = vert3[i].pos;
@@ -318,13 +318,13 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	//Face 4
 	std::vector<Vertex> vert4(4);
 	vert4[0].pos = t1;
-	vert4[0].particules[0] = -1;
+	vert4[0].particules.push_back(-1);
 	vert4[1].pos = v1;
-	vert4[1].particules[0] = -1;
+	vert4[1].particules.push_back(-1);
 	vert4[2].pos = v2;
-	vert4[2].particules[0] = -1;
+	vert4[2].particules.push_back(-1);
 	vert4[3].pos = t2;
-	vert4[3].particules[0] = -1;
+	vert4[3].particules.push_back(-1);
 	vector<Point_3> points4(4);
 	for(int i=0;i<4;i++){
 	  points4[i] = vert4[i].pos;
@@ -336,13 +336,13 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	//Face 5
 	std::vector<Vertex> vert5(4);
 	vert5[0].pos = s1;
-	vert5[0].particules[0] = -1;
+	vert5[0].particules.push_back(-1);
 	vert5[1].pos = r1;
-	vert5[1].particules[0] = -1;
+	vert5[1].particules.push_back(-1);
 	vert5[2].pos = r2;
-	vert5[2].particules[0] = -1;
+	vert5[2].particules.push_back(-1);
 	vert5[3].pos = s2;
-	vert5[3].particules[0] = -1;
+	vert5[3].particules.push_back(-1);
 	vector<Point_3> points5(4);
 	for(int i=0;i<4;i++){
 	  points5[i] = vert5[i].pos;
@@ -354,13 +354,13 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	//Face 6
 	std::vector<Vertex> vert6(4);
 	vert6[0].pos = s1;
-	vert6[0].particules[0] = -1;
+	vert6[0].particules.push_back(-1);
 	vert6[1].pos = r1;
-	vert6[1].particules[0] = -1;
+	vert6[1].particules.push_back(-1);
 	vert6[2].pos = r2;
-	vert6[2].particules[0] = -1;
+	vert6[2].particules.push_back(-1);
 	vert6[3].pos = s2;
-	vert6[3].particules[0] = -1;
+	vert6[3].particules.push_back(-1);
 	vector<Point_3> points6(4);
 	for(int i=0;i<4;i++){
 	  points6[i] = vert6[i].pos;
@@ -452,9 +452,11 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	faces = F;
 
 	for(int i=0;i<faces.size();i++){
+	  cout << "test particule() " << i << endl;
 	  Point_3 s,r,v;
 	  s = faces[i].vertex[0].pos;
-	  for(int k=1;k<faces[i].size();k++){
+	  for(int k=1;k<faces[i].size()-1;k++){
+		//cout << "test particule() " << i << endl;
 		r = faces[i].vertex[k].pos;
 		v = faces[i].vertex[k+1].pos;
 		Vector_3 vect0(s,r);
