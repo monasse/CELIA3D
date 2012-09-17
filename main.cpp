@@ -70,7 +70,6 @@ int main(){
 	  }
 	}
 	for(int i=0;i<nb_particule;i++){
-	  //cout << "test " << i << endl;
 	  int Nfaces;
 	  bool fixe;
 	  double X,Y,Z,u,v,w,theta,phi,psi,xmin,ymin,zmin,xmax,ymax,zmax;
@@ -85,13 +84,11 @@ int main(){
 	  const int nb_faces = Nfaces;
 	  std::vector<Face> Faces(nb_faces);
 	  for(int j=0;j<nb_faces;j++){
-		//cout << "test " << i << " " << j << endl;
 		int Nvertex;
 		maillage >> Nvertex;
 		const int nb_vertex = Nvertex;
 		std::vector<Vertex> Vertex(nb_vertex);
 		for(int k=0;k<nb_vertex;k++){
-		  //cout << "test " << i << " " << j << " " << k << endl;
 		  int p;
 		  maillage >> p;
 		  Vertex[k].pos = Points[p];
@@ -111,9 +108,7 @@ int main(){
 		maillage >> voisin;
 		Faces[j] = Face::Face(Vertex, voisin);
 	  }
-	  cout << "test avant " << i << endl;
 	  P[i] = Particule::Particule(xmin, ymin, zmin, xmax, ymax, zmax, Faces);
-	  cout << "test apres " << i << endl;
 	}
 	//Boucle de mise a jour des particules sur les sommets du maillage
 	for(int i=0;i<P.size();i++){

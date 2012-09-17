@@ -452,11 +452,9 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	faces = F;
 
 	for(int i=0;i<faces.size();i++){
-	  cout << "test particule() " << i << endl;
 	  Point_3 s,r,v;
 	  s = faces[i].vertex[0].pos;
 	  for(int k=1;k<faces[i].size()-1;k++){
-		//cout << "test particule() " << i << endl;
 		r = faces[i].vertex[k].pos;
 		v = faces[i].vertex[k+1].pos;
 		Vector_3 vect0(s,r);
