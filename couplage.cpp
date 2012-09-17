@@ -858,7 +858,7 @@ void Grille::fill_cel(Solide& S){
 }
 
 
-
+//Transformation barycentrique du point Xn
 Point_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn){
 	
 	
@@ -894,40 +894,98 @@ Point_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn){
 	double z = CGAL::to_double(lambda * Tn1.operator[](0).operator[](2) + mu*Tn1.operator[](1).operator[](2) 
 														 + (1- lambda- mu)*Tn1.operator[](2).operator[](2));		
 														 
-	Point_3 Xn1(x, y, z);
+	//Point_3 Xn1(x, y, z);
 	
-	return Xn1;
+	return Point_3(x, y, z);
 }
 
 
-
+// Transormation barycentrique du Triangle T 
 Triangle_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Triangle_3 T){
 	
 	Point_3 s = tr( Tn,Tn1, T.operator[](0) );
 	Point_3 r = tr( Tn,Tn1, T.operator[](1) );
 	Point_3 v = tr( Tn,Tn1, T.operator[](2) );
-	Triangle_3 Ttr(s, r, v);
+	//Triangle_3 Ttr(s, r, v);
 	
-	return Ttr;
+	return Triangle_3(s, r, v);
 }
 
-
-Triangle_2 tr(Triangle_3 T){
+// Transformation d'un vector contenant de Triangle_3 en vector de Triangle_2
+Triangles_2 tr(Triangle_3 Ref, Triangles T, Triangles_2 &Ttr){
 	
-	Triangle_2 Ttr;
+	//Ref est le triangle Principal de la surface du solide
+	
+	Vector_3 AB(Ref.operator[](0), Ref.operator[](1));
+	Vector_3 AC(Ref.operator[](0), Ref.operator[](2));
+	Vector_3 N = cross_product(AC, AB);
+	Vector_3 Np = cross_product(N, AB);
+	
+	double ABnorm= std::sqrt(CGAL::to_double(AB.squared_length() ));
+	double Npnorm= std::sqrt(CGAL::to_double(Np.squared_length() ));
+	
+	double Hx= (CGAL::to_double(AC*AB))/(ABnorm);
+	double Hy= (CGAL::to_double(AC*Np))/(Npnorm);
+	
+	Point_2 Ap(0., 0.); 
+	Point_2 Bp(ABnorm, 0.);
+	Point_2 Cp(Hx, Hy);
+	
+	
+	Triangle_2 Refp(Ap,Bp,Cp);
+	Ttr.push_back(Refp);
+	
+	for(int it= 0; it<T.size(); it++){
+		
+		double Mx= 0., My=0. ;
+		double C[3][2];
+		for(int j= 0; j<3; j++){
+			
+			if(abs(T[it].operator[](j).operator[](0) - Ref.operator[](0).operator[](0))<eps &&
+				abs(T[it].operator[](j).operator[](1) - Ref.operator[](0).operator[](1))<eps &&
+				abs(T[it].operator[](j).operator[](2) - Ref.operator[](0).operator[](2))<eps){
+				Mx= 0.;
+			  My= 0.;
+			}
+			
+			
+			else if(abs(T[it].operator[](j).operator[](0) - Ref.operator[](1).operator[](0))<eps &&
+				abs(T[it].operator[](j).operator[](1) - Ref.operator[](1).operator[](1))<eps &&
+				abs(T[it].operator[](j).operator[](2) - Ref.operator[](1).operator[](2))<eps){
+				Mx= ABnorm;
+			  My= 0.;
+			}
+			
+			else if(abs(T[it].operator[](j).operator[](0) - Ref.operator[](2).operator[](0))<eps &&
+				abs(T[it].operator[](j).operator[](1) - Ref.operator[](2).operator[](1))<eps &&
+				abs(T[it].operator[](j).operator[](2) - Ref.operator[](2).operator[](2))<eps){
+				Mx= Hx;
+			  My= Hy;
+			}
+			
+			else {
+				Vector_3 AM (Ref.operator[](0), T[it].operator[](j)); 
+				Mx= (CGAL::to_double(AM*AB))/(ABnorm);
+				My= (CGAL::to_double(AM*Np))/(Npnorm);
+				
+			}
+			C[j][0]= Mx; C[j][1]= My; 
+		}
+		
+		Ttr.push_back(Triangle_2(Point_2(C[0][0],C[0][1]),Point_2(C[1][0],C[1][1]),Point_2(C[2][0],C[2][1])));
+	}
+	
 	
 	return Ttr;
 }	
 
 
 
-CDT sous_maillage_face(Triangles_2 Tn1, Triangles_2 Tn_n1){
+CDT sous_maillage_face(Triangles_2 Tn1, Triangles_2 Tn_n1, CDT &cdt){
+		
+	std::vector<Bbox_2> boxesTn1(Tn1.size()), boxesTn_n1(Tn_n1.size()); //tres outil pour les intersection 
 	
-	CDT cdt;
-	
-	std::vector<Bbox_2> boxesTn1(Tn1.size()), boxesTn_n1(Tn_n1.size());
-	
-	for(Triangle2_iterator it= Tn1.begin(); it!= Tn1.end(); ++it){
+	for(Triangle2_iterator it= Tn1.begin(); it!= Tn1.end(); ++it){  //on associe a chaque triangle un Box(une boite contenant le triangle)
 		boxesTn1.push_back(Bbox_2(it->bbox()));
 	}
 	
@@ -939,19 +997,20 @@ CDT sous_maillage_face(Triangles_2 Tn1, Triangles_2 Tn_n1){
 	Point_2 P;
 	Segment_2 seg;
 	std::vector<Point_2> vPoints; 
-	std::vector<Point_2> intPoints;
-	std::vector<Segment_2> intSeg;
+	
+	std::vector<Point_2> intPoints; //vector de Point_2 d'intersection
+	std::vector<Segment_2> intSeg;  //vector de Segment_2 d'intersection
 	
 	
-	for(int i=0; i<boxesTn1.size(); i++ ){
+	for(int i=0; i<boxesTn1.size(); i++ ){ 
 		for(int j=0; j<boxesTn_n1.size(); j++ ){
-			if (CGAL::do_overlap( boxesTn1[i],boxesTn_n1[j]) )
+			if (CGAL::do_overlap( boxesTn1[i],boxesTn_n1[j]) ) //test d'intersection des Box 
 			{
-					if (CGAL::do_intersect(Tn1[i],Tn_n1[j]) ){
+					if (CGAL::do_intersect(Tn1[i],Tn_n1[j]) ){ // test d'intersection des triangles contenues dans les Box
 						
-						CGAL::Object result = CGAL::intersection(Tn1[i],Tn_n1[j]);
+						CGAL::Object result = CGAL::intersection(Tn1[i],Tn_n1[j]); //calcul d'intersection entre les deux triangles
 						
-						if(CGAL::assign(P,result)){
+						if(CGAL::assign(P,result)){ 
 							intPoints.push_back(P);
 						}
 						else if(CGAL::assign(seg,result)){
@@ -980,14 +1039,63 @@ CDT sous_maillage_face(Triangles_2 Tn1, Triangles_2 Tn_n1){
 			}
 		}
 	
-	 cdt.insert(intPoints.begin(), intPoints.end());
+   	
+	 cdt.insert(intPoints.begin(), intPoints.end()); //insertion des points d'intersection dans le maillage
 	 
 	 for(int i = 0; i<intSeg.size(); i++){
+		 //construction du maillage 2d sous la contrainte "intSeg[i] est une arrete dans le maillage"
 		 cdt.insert_constraint(intSeg[i].operator[](0), intSeg[i].operator[](1));
 	 }
 	
 	return cdt;
 }	
+
+
+double swap (Triangle_3 Tn, Triangles tn, Triangle_3 Tn1, Triangles tn1){
+
+	double swap=0.;
+	// transf barycentrique de tn 
+	Triangles tn_n1(tn.size());
+	for(int i=0; i<tn.size(); i++){
+		tn_n1.push_back(tr(Tn, Tn1, tn[i]));
+	}
+	Triangle_3 Tn_n1= tr(Tn, Tn1, Tn); // transf barycentrique de Tn
+	
+	// Transf du Triangles_3 en Triangle_2
+	
+	Triangles_2 Tn_n1_2(1+tn_n1.size());
+	tr(Tn_n1, tn_n1, Tn_n1_2);
+	Triangles_2 Tn1_2(1+tn1.size());
+	tr(Tn1, tn1, Tn1_2);
+	
+	// sous maillage triangulaire de l'interface
+	CDT cdt = sous_maillage_face(Tn1_2, Tn_n1_2, cdt);
+	
+	
+	return swap;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /*Triangulation sous_maillage_face(Triangles Tn1, Triangles Tn_n1){
