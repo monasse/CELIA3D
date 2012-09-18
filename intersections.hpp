@@ -24,9 +24,7 @@
 #include <CGAL/Constrained_triangulation_2.h>
 #include <CGAL/Triangulation_hierarchy_2.h>
 #include <CGAL/Constrained_triangulation_plus_2.h>
-#include <CGAL/Triangulation_euclidean_traits_xy_3.h>
-#include <CGAL/Triangulation_euclidean_traits_xz_3.h>
-#include <CGAL/Triangulation_euclidean_traits_yz_3.h>
+
 //
 
 typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
@@ -49,9 +47,14 @@ typedef Triangles::iterator            Triangle3_iterator;
 ////Constrained Triangulation
 typedef CGAL::Triangulation_vertex_base_2<Kernel>                     Vb;
 typedef CGAL::Constrained_triangulation_face_base_2<Kernel>           Fb;
-typedef CGAL::Triangulation_data_structure_2<Vb,Fb>              TDS;
-typedef CGAL::Exact_predicates_tag                               Itag;
+typedef CGAL::Triangulation_data_structure_2<Vb,Fb>                   TDS;
+typedef CGAL::Exact_predicates_tag                                    Itag;
 typedef CGAL::Constrained_Delaunay_triangulation_2<Kernel, TDS, Itag> CDT;
+typedef CDT::Vertex  	                                             Vertex_cdt;  	 
+typedef CDT::Face 	                                               Face_cdt; 
+
+typedef CDT::Face_handle 	                                           Face_cdt_handle; 
+typedef CDT::Vertex_handle  	                                       Vertex_cdt_handle; 
 
 typedef Kernel::Point_2                  Point_2;
 typedef CGAL::Triangle_2<Kernel>         Triangle_2;
@@ -61,8 +64,6 @@ typedef Kernel::Segment_2                Segment_2;
 typedef CGAL::Bbox_2                     Bbox_2;
 typedef Triangles_2::iterator            Triangle2_iterator;
 
-//typedef CGAL::Projection_traits_xy_3<Kernel>  Pxy;
-//
 
 void triang_cellule(const Bbox& cel, Triangles& trianglesB){
   

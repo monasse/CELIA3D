@@ -910,74 +910,79 @@ Triangle_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Triangle_3 T){
 	
 	return Triangle_3(s, r, v);
 }
+//transformation inverse tr(Tn1,Tn, tr(Tn,Tn1,T))
 
-// Transformation d'un vector contenant de Triangle_3 en vector de Triangle_2
-Triangles_2 tr(Triangle_3 Ref, Triangles T, Triangles_2 &Ttr){
-	
-	//Ref est le triangle Principal de la surface du solide
-	
-	Vector_3 AB(Ref.operator[](0), Ref.operator[](1));
-	Vector_3 AC(Ref.operator[](0), Ref.operator[](2));
-	Vector_3 N = cross_product(AC, AB);
-	Vector_3 Np = cross_product(N, AB);
-	
-	double ABnorm= std::sqrt(CGAL::to_double(AB.squared_length() ));
-	double Npnorm= std::sqrt(CGAL::to_double(Np.squared_length() ));
-	
-	double Hx= (CGAL::to_double(AC*AB))/(ABnorm);
-	double Hy= (CGAL::to_double(AC*Np))/(Npnorm);
-	
-	Point_2 Ap(0., 0.); 
-	Point_2 Bp(ABnorm, 0.);
-	Point_2 Cp(Hx, Hy);
-	
-	
-	Triangle_2 Refp(Ap,Bp,Cp);
-	Ttr.push_back(Refp);
-	
-	for(int it= 0; it<T.size(); it++){
+//Transformation d'un Point_3 en Point_2
+Point_2 tr(Triangle_3 Tn1, Point_3 Xn){
 		
-		double Mx= 0., My=0. ;
-		double C[3][2];
-		for(int j= 0; j<3; j++){
-			
-			if(abs(T[it].operator[](j).operator[](0) - Ref.operator[](0).operator[](0))<eps &&
-				abs(T[it].operator[](j).operator[](1) - Ref.operator[](0).operator[](1))<eps &&
-				abs(T[it].operator[](j).operator[](2) - Ref.operator[](0).operator[](2))<eps){
-				Mx= 0.;
-			  My= 0.;
-			}
-			
-			
-			else if(abs(T[it].operator[](j).operator[](0) - Ref.operator[](1).operator[](0))<eps &&
-				abs(T[it].operator[](j).operator[](1) - Ref.operator[](1).operator[](1))<eps &&
-				abs(T[it].operator[](j).operator[](2) - Ref.operator[](1).operator[](2))<eps){
-				Mx= ABnorm;
-			  My= 0.;
-			}
-			
-			else if(abs(T[it].operator[](j).operator[](0) - Ref.operator[](2).operator[](0))<eps &&
-				abs(T[it].operator[](j).operator[](1) - Ref.operator[](2).operator[](1))<eps &&
-				abs(T[it].operator[](j).operator[](2) - Ref.operator[](2).operator[](2))<eps){
-				Mx= Hx;
-			  My= Hy;
-			}
-			
-			else {
-				Vector_3 AM (Ref.operator[](0), T[it].operator[](j)); 
-				Mx= (CGAL::to_double(AM*AB))/(ABnorm);
-				My= (CGAL::to_double(AM*Np))/(Npnorm);
-				
-			}
-			C[j][0]= Mx; C[j][1]= My; 
-		}
-		
-		Ttr.push_back(Triangle_2(Point_2(C[0][0],C[0][1]),Point_2(C[1][0],C[1][1]),Point_2(C[2][0],C[2][1])));
-	}
+ double lambda = 0., mu = 0.;
+  
+ double dom = CGAL::to_double((Tn1.operator[](0).operator[](0) - Tn1.operator[](2).operator[](0)) * 
+ (Tn1.operator[](1).operator[](1) - Tn1.operator[](2).operator[](1))-
+ (Tn1.operator[](0).operator[](1) - Tn1.operator[](2).operator[](1)) * 
+ (Tn1.operator[](1).operator[](0) - Tn1.operator[](2).operator[](0)));
+ 
+ double num1 = CGAL::to_double((Xn.operator[](0) - Tn1.operator[](2).operator[](0)) * 
+ (Tn1.operator[](1).operator[](1) - Tn1.operator[](2).operator[](1)) -
+ (Xn.operator[](1) - Tn1.operator[](2).operator[](1)) * 
+ (Tn1.operator[](1).operator[](0) - Tn1.operator[](2).operator[](0)));
+ 
+ double num2 = CGAL::to_double((Xn.operator[](0) - Tn1.operator[](2).operator[](0)) * 
+ (Tn1.operator[](0).operator[](1) - Tn1.operator[](2).operator[](1)) -
+ (Xn.operator[](1) - Tn1.operator[](2).operator[](1)) * 
+ (Tn1.operator[](0).operator[](0) - Tn1.operator[](2).operator[](0)));
+ if(dom>eps){							
+	 lambda =  num1/dom;
+	 mu = num2/dom;
+ }
+ else {std::cout<<"Oupps division par zero dans la fonction tr "<<std::endl;}
 	
+	Point_2 M(mu, (1-lambda-mu));
 	
-	return Ttr;
+	return M;
 }	
+
+// Transormation d'un Triangle_3 en Triangle_2 
+Triangle_2 tr(Triangle_3 Tn1, Triangle_3 T){
+	
+	Point_2 s = tr( Tn1, T.operator[](0) );
+	Point_2 r = tr( Tn1, T.operator[](1) );
+	Point_2 v = tr( Tn1, T.operator[](2) );
+	
+	return Triangle_2(s, r, v);
+}
+
+
+
+//Transformation d'un Point_2 en Point_3
+Point_3 tr(Triangle_3 Tn1, Point_2 Xn){
+	
+	double lambda = CGAL::to_double(1.- Xn.operator[](0) -  Xn.operator[](1));
+	double mu = -1.*CGAL::to_double(Xn.operator[](0));
+	
+	
+	
+	double x = CGAL::to_double(lambda * Tn1.operator[](0).operator[](0) + mu*Tn1.operator[](1).operator[](0) 
+	+ (1- lambda- mu)*Tn1.operator[](2).operator[](0));
+	
+	double y = CGAL::to_double(lambda * Tn1.operator[](0).operator[](1) + mu*Tn1.operator[](1).operator[](1) 
+	+ (1- lambda- mu)*Tn1.operator[](2).operator[](1));
+	double z = CGAL::to_double(lambda * Tn1.operator[](0).operator[](2) + mu*Tn1.operator[](1).operator[](2) 
+	+ (1- lambda- mu)*Tn1.operator[](2).operator[](2));		
+	
+	
+	return Point_3(x,y,z);
+}	
+
+// Transormation d'un Triangle_2 en Triangle_3
+Triangle_3 tr(Triangle_3 Tn1, Triangle_2 T){
+	
+	Point_3 s = tr( Tn1, T.operator[](0) );
+	Point_3 r = tr( Tn1, T.operator[](1) );
+	Point_3 v = tr( Tn1, T.operator[](2) );
+	
+	return Triangle_3(s, r, v);
+}
 
 
 
@@ -1059,43 +1064,149 @@ double swap (Triangle_3 Tn, Triangles tn, Triangle_3 Tn1, Triangles tn1){
 	for(int i=0; i<tn.size(); i++){
 		tn_n1.push_back(tr(Tn, Tn1, tn[i]));
 	}
-	Triangle_3 Tn_n1= tr(Tn, Tn1, Tn); // transf barycentrique de Tn
 	
-	// Transf du Triangles_3 en Triangle_2
+	// Transf du Triangles_3  tn_n1 en Triangle_2
+	Triangles_2 Tn_n1_2(tn_n1.size());
+	for(int i=0; i<tn_n1.size(); i++){
+		Tn_n1_2.push_back(tr(Tn1, tn_n1[i]));
+	}
 	
-	Triangles_2 Tn_n1_2(1+tn_n1.size());
-	tr(Tn_n1, tn_n1, Tn_n1_2);
+	
+	Point_2 Ap(0., 0.); 
+	Point_2 Bp(1., 0.);
+	Point_2 Cp(0., 1.);
+	Triangle_2 Ref(Ap,Bp,Cp);
+	
 	Triangles_2 Tn1_2(1+tn1.size());
-	tr(Tn1, tn1, Tn1_2);
+	Tn1_2.push_back(Ref);
+	
+	// Transf du Triangles_3  tn1 en Triangle_2
+	for(int i=0; i<tn1.size(); i++){
+		Tn1_2.push_back(tr(Tn1, tn1[i]));
+	}
+		
 	
 	// sous maillage triangulaire de l'interface
 	CDT cdt = sous_maillage_face(Tn1_2, Tn_n1_2, cdt);
+	assert(cdt.is_valid());
+	
+	Triangles_2 T2d; //recuperation faces du maillage Triangle_2
 	
 	
+	
+// 	int count = 0; 
+// 	for (CDT::Finite_edges_iterator eit = cdt.finite_edges_begin();
+// 	eit != cdt.finite_edges_end();
+// 	++eit)
+// 	if (cdt.is_constrained(*eit)) ++count;
+
+// Vertex_cdt v;
+// for (CDT::Vertex_iterator ver=cdt.vertices_begin();
+// ver!=cdt.vertices_end();++ver){
+// 	
+// 	v= *ver;
+// 	std::cout<<v.point()<<std::endl;
+// }
+	
+	
+	for (CDT::Finite_faces_iterator fit=cdt.finite_faces_begin();
+	          fit!=cdt.finite_faces_end();++fit)
+	{
+		Point_2 s = fit->vertex(0)->point();
+		Point_2 v = fit->vertex(1)->point();
+		Point_2 r = fit->vertex(2)->point();
+		T2d.push_back(Triangle_2(s,v,r));
+		
+	}
+	
+
+
+
+	//transf des Triangle_2 en Triangle_3
+	Triangles T3d(T2d.size());
+	for(int i=0; i<T2d.size(); i++){ 
+		T3d.push_back(tr(Tn1,T2d[i]));
+	}
+	
+	
+	//transf inverse 
+	Triangles T3d_n(T3d.size());
+	for(int i=0; i<T3d.size(); i++){ 
+		T3d_n.push_back(tr(Tn1,Tn,T3d[i]));
+	}
 	return swap;
 }
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/*
+Triangles_2 tr(Triangle_3 Ref, Triangles T, Triangles_2 &Ttr){
+	
+	//Ref est le triangle Principal de la surface du solide
+	
+	Vector_3 AB(Ref.operator[](0), Ref.operator[](1));
+	Vector_3 AC(Ref.operator[](0), Ref.operator[](2));
+	Vector_3 N = cross_product(AB, AC);
+	Vector_3 Np = cross_product(N, AB);
+	
+	double ABnorm= std::sqrt(CGAL::to_double(AB.squared_length() ));
+	double Npnorm= std::sqrt(CGAL::to_double(Np.squared_length() ));
+	
+	double Hx= (CGAL::to_double(AC*AB))/(ABnorm);
+	double Hy= (CGAL::to_double(AC*Np))/(Npnorm);
+	
+	Point_2 Ap(0., 0.); 
+	Point_2 Bp(ABnorm, 0.);
+	Point_2 Cp(Hx, Hy);
+	
+	
+	Triangle_2 Refp(Ap,Bp,Cp);
+	Ttr.push_back(Refp);
+	
+	for(int it= 0; it<T.size(); it++){
+		
+		double Mx= 0., My=0. ;
+		double C[3][2];
+		for(int j= 0; j<3; j++){
+			
+			if(abs(T[it].operator[](j).operator[](0) - Ref.operator[](0).operator[](0))<eps &&
+				abs(T[it].operator[](j).operator[](1) - Ref.operator[](0).operator[](1))<eps &&
+				abs(T[it].operator[](j).operator[](2) - Ref.operator[](0).operator[](2))<eps){
+				Mx= 0.;
+			My= 0.;
+			}
+			
+			
+			else if(abs(T[it].operator[](j).operator[](0) - Ref.operator[](1).operator[](0))<eps &&
+				abs(T[it].operator[](j).operator[](1) - Ref.operator[](1).operator[](1))<eps &&
+				abs(T[it].operator[](j).operator[](2) - Ref.operator[](1).operator[](2))<eps){
+				Mx= ABnorm;
+			My= 0.;
+			}
+			
+			else if(abs(T[it].operator[](j).operator[](0) - Ref.operator[](2).operator[](0))<eps &&
+				abs(T[it].operator[](j).operator[](1) - Ref.operator[](2).operator[](1))<eps &&
+				abs(T[it].operator[](j).operator[](2) - Ref.operator[](2).operator[](2))<eps){
+				Mx= Hx;
+			My= Hy;
+			}
+			
+			else {
+				Vector_3 AM (Ref.operator[](0), T[it].operator[](j)); 
+				Mx= (CGAL::to_double(AM*AB))/(ABnorm);
+				My= (CGAL::to_double(AM*Np))/(Npnorm);
+				
+			}
+			C[j][0]= Mx; C[j][1]= My; 
+		}
+		
+		Ttr.push_back(Triangle_2(Point_2(C[0][0],C[0][1]),Point_2(C[1][0],C[1][1]),Point_2(C[2][0],C[2][1])));
+	}
+	
+	
+	return Ttr;
+}	*/
 
 
 /*Triangulation sous_maillage_face(Triangles Tn1, Triangles Tn_n1){
