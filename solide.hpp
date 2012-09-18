@@ -3,41 +3,71 @@
 #ifndef SOLIDE_HPP
 #define SOLIDE_HPP
 
+class Vertex 
+{
+public:
+  Vertex();
+  Vertex(const Point_3 p, std::vector<int> & parts);
+  Point_3 pos;
+  int num;// numero du point dans le maillage de construction
+  int size(){
+	return particules.size();
+  }
+  std::vector<int> particules;
+};
+
+class Face
+{
+public:
+  Face();//:vertex(std::vector<Vertex>(1)){}
+  Face(std::vector<Vertex> & v, int part);
+  int size(){
+	return vertex.size();
+  }
+  Point_3 centre;
+  Vector_3 normale;
+  std::vector<Vertex> vertex;
+  int voisin;
+};
+
+  
+
 class Particule
 {
 
  public:
    
-  Particule();
-	
-	Particule(const double x_min, const double y_min, const double z_min, 
-				 const double x_max, const double y_max,const double z_max);
-
-	Particule(const double x_min, const double y_min, const double z_min, 
-				const double x_max, const double y_max,const double z_max, 
-				const Point_3 s1, const Point_3 r1, const Point_3 t1, const Point_3 v1,
-				const Point_3 s2, const Point_3 r2, const Point_3 t2, const Point_3 v2);
- ~Particule();
- 
- bool box_inside_convex_polygon(const Particule& S, const Bbox& cell);  
- bool inside_convex_polygon(const Particule& S, const Point_3& P);  
- bool inside_box(const Bbox& cell, const Point_3& P);
+  Particule();//:faces(std::vector<Face>(1)){}
+  
+  Particule(const double x_min, const double y_min, const double z_min, 
+			const double x_max, const double y_max,const double z_max);
+  
+  Particule(const double x_min, const double y_min, const double z_min, 
+			const double x_max, const double y_max,const double z_max, 
+			std::vector<Face> & F);
+  ~Particule();
+  
+  bool box_inside_convex_polygon(const Particule& S, const Bbox& cell);  
+  bool inside_convex_polygon(const Particule& S, const Point_3& P);  
+  bool inside_box(const Bbox& cell, const Point_3& P);
   void Affiche();
   double volume(); 
   
-	int nb_faces;
-    
-	double min_x;
-	double min_y;
-	double min_z;
-	double max_x;
-	double max_y;
-	double max_z;
-	bool cube;
-	
-	Point_3 centre[6];	
-	Triangles triangles;
-	Vector_3 normales[12];    
+  double min_x;
+  double min_y;
+  double min_z;
+  double max_x;
+  double max_y;
+  double max_z;
+  bool cube;
+
+  int size(){
+	return faces.size();
+  }
+  std::vector<Face> faces;
+  Triangles triangles;
+  std::vector<Vector_3> normales;
+  std::vector<bool> fluide;
 };  
   
 class Solide

@@ -728,129 +728,104 @@ void Grille::fill_cel(Solide& S){
 	int poz=0;
 	double x_min=0., y_min=0., z_min = 0., x_max = 0., y_max=0., z_max=0.;
 
-	//Solide solide(x_min,y_min,z_min,x_max,y_max,z_max);
-	
-
-	Point_3 center_faces[6][nb_part];
-	for(int it=0; it<S.size(); it++){
-			center_faces[0][it]= S.solide[it].centre[0]; 
-			center_faces[1][it]= S.solide[it].centre[1]; 
-			center_faces[2][it]= S.solide[it].centre[2]; 
-			center_faces[3][it]= S.solide[it].centre[3]; 
-			center_faces[4][it]= S.solide[it].centre[4]; 
-			center_faces[5][it]= S.solide[it].centre[5]; 
-	}
-
-   Point_3 ref(100., 100., 100.);
-		int count=0;
-		for(int i=0; i<6; i++){	
-			for(int j=0; j<nb_part; j++){
-				for(int k=i+1; k<6; k++){
-					for(int l=0; l<nb_part; l++){	
-					if(CGAL::to_double(squared_distance(center_faces[i][j], center_faces[k][l]))<eps) 
-					{ center_faces[i][j] = ref ;
-					center_faces[k][l] = ref;}
-				 }
-				}
-				count++;
-			}
-		}
 	//std::cout<<"center faces number: " <<count<<std::endl;
 	for(int i=marge;i<Nx+marge;i++){
 		for(int j=marge;j<Ny+marge;j++){ 
 			for(int k=marge;k<Nz+marge;k++){
 				c = grille[i][j][k];
-				if((std::abs(c.alpha-1.)<eps))
-				{
-					Point_3 center_cell(c.x, c.y, c.z);
+				if((std::abs(c.alpha-1.)<eps)){
+				  Point_3 center_cell(c.x, c.y, c.z);
 				  int nbx=0, nby=0,nbz=0;
-					double dist_min = 100;
-					double nb=0.;
-					count = 0;
-					for(int it=0; it<6; it++){
-						for(int iter=0; iter<nb_part; iter++){
-							dist[count] = CGAL::to_double(squared_distance(center_cell, center_faces[it][iter]));
-							if(dist[count]< dist_min) {
-								dist_min = dist[count];
-								poz = it;
+				  Point_3 projete(0.,0.,0.); //Projet� sur la face la plus proche
+				  double dist_min = 10000000.;
+				  for(int iter=0; iter<nb_part; iter++){
+					Particule P = S.solide[iter];
+					for(int it=0;it<P.size();it++){
+					  Face F = P.faces[it];
+					  if(F.voisin==-1){
+						Plane_3 P(F.vertex[0].pos,F.vertex[1].pos,F.vertex[2].pos);
+						for(int k=3;k<F.size() && P.is_degenerate();k++){//Test si le plan est degenere
+						  P = Plane_3(F.vertex[0].pos,F.vertex[1].pos,F.vertex[k].pos);
+						}
+						Point_3 xP = P.projection(center_cell);
+						//Test pour savoir si le projete est dans la face
+						bool test = true;
+						for(int k=0;k<F.size()-1 && test;k++){
+						  Point_3 x1 = F.vertex[k].pos;
+						  Point_3 x2 = F.vertex[k+1].pos;
+						  Vector_3 vect1(xP,x1);
+						  Vector_3 vect2(xP,x2);
+						  if(CGAL::to_double(CGAL::cross_product(vect1,vect2)*F.normale)<0.){
+							test = false;
+						  }
+						}
+						//1er cas : on est dans la face
+						if(test){
+						  double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,xP)));
+						  if(d<dist_min){
+							dist_min = d;
+							projete = xP;
+						  }
+						}
+						//2eme cas : on est hors de la face
+						else{
+						  //Recherche des deux points les plus proches de xP sur la face
+						  Point_3 x1 = F.vertex[0].pos; //Point le plus proche
+						  Point_3 x2; // deuxieme point le plus proche
+						  double d1 = sqrt(CGAL::to_double(CGAL::squared_distance(xP,x1)));
+						  double d2 = 10000000.;
+						  for(int k=1;k<F.size();k++){
+							Point_3 x = F.vertex[k].pos;
+							double d = sqrt(CGAL::to_double(CGAL::squared_distance(xP,x)));
+							if(d<d2){
+							  if(d<d1){
+								x2 = x1;
+								d2 = d1;
+								x1 = x;
+								d1 = d;
+							  } else {
+								x2 = x;
+								d2 = d;
+							  }
 							}
-							count++;
+						  }
+						  double d12 = sqrt(CGAL::to_double(CGAL::squared_distance(x1,x2)));
+						  if(d1*d1+d12*d12<d2*d2){
+							//Le projete est le point le plus proche dans ce cas
+							double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,xP)));
+							if(d<dist_min){
+							  dist_min = d;
+							  projete = x1;
+							}
+						  } else {
+							//Le projete est la projection sur (x1,x2)
+							Line_3 L(x1,x2);
+							double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,L)));
+							if(d<dist_min){
+							  dist_min = d;
+							  projete = L.projection(center_cell);
+							}
+						  }
+						  
+						  
 						}
+
+					  }
 					}
-					if (poz == 0){
-						nb = dist_min/c.dx;
-						if (nb != (int)(nb)){ nbx= (int)(nb)+1;}
-						else {nbx = nb;}
-						if(i-2*nbx>0){
-						cm = grille[i-2*nbx][j][k]; // a definir la cellule mirroir par rapport à l'interface
-						while(cm.alpha>eps && (i-2*nbx)>marge){nbx++; cm = grille[i-2*nbx][j][k]; }
-						}
-						else {cm = grille[0][j][k]; }
-					}
-					else if (poz == 1){
-						nb = dist_min/c.dx;
-						if (nb != (int)(nb)){ nbx= (int)(nb)+1;}
-						else {nbx = nb;}
-						if(i+2*nbx <Nx+2*marge){
-						cm = grille[i+2*nbx][j][k]; // a definir la cellule mirroir par rapport à l'interface
-						while(cm.alpha>eps && (i+2*nbx)<Nx+marge){nbx++; cm = grille[i+2*nbx][j][k]; }
-						}
-						else{cm = grille[Nx+marge][j][k];}
-					}
-					
-					else if (poz == 2){
-						nb = dist_min/c.dy;
-						if (nb != (int)(nb)){ nby= (int)(nb)+1;}
-						else {nby = nb;}
-						if(j-2*nby>0){
-						cm = grille[i][j-2*nby][k]; // a definir la cellule mirroir par rapport à l'interface
-						while(cm.alpha>eps && (j-2*nby)>marge){nby++; cm = grille[i][j-2*nby][k]; }
-						}
-						else{cm = grille[i][0][k];}
-					}
-					
-					else if (poz == 3){
-						nb = dist_min/c.dy;
-						if (nb != (int)(nb)){ nby= (int)(nb)+1;}
-						else {nby = nb;}
-						if(j+2*nby<Ny+2*marge){
-						cm = grille[i][j+2*nby][k]; // a definir la cellule mirroir par rapport à l'interface
-						while(cm.alpha>eps && (j+2*nby)<Ny+marge){nby++; cm = grille[i][j+2*nby][k]; }
-						}
-						else{cm = grille[i][Ny+marge][k];}
-					}
-					else if (poz == 4){
-						nb = dist_min/c.dz;
-						if (nb != (int)(nb)){ nbz= (int)(nb)+1;}
-						else {nbz = nb;}
-						if(k-2*nbz>0){
-						cm = grille[i][j][k-2*nbz]; // a definir la cellule mirroir par rapport à l'interface
-						while(cm.alpha>eps && (k-2*nbz)>marge){nbz++; cm = grille[i][j][k-2*nbz]; }
-						}
-						else{cm = grille[i][j][0];}
-					}
-					else{
-						nb = dist_min/c.dz;
-						if (nb != (int)(nb)){ nbz= (int)(nb)+1;}
-						else {nbz = nb;}
-						if(k+2*nbz<Nz+2*marge){
-						cm = grille[i][j][k+2*nbz]; // a definir la cellule mirroir par rapport à l'interface
-						while(cm.alpha>eps && (k+2*nbz)<Nz+marge){nbz++; cm = grille[i][j][k+2*nbz]; }
-						}
-						else{cm = grille[i][j][Nz+marge];}
-					}
-					c.rho = cm.rho;
-					c.impx = cm.impx;
-					c.impy = cm.impy;
-					c.impz = cm.impz;
-					c.rhoE = cm.rhoE;
-					c.u = cm.u ;
-					c.v = cm.v;
-					c.w = cm.w;
-					c.p = cm.p;
-// 					{std::cout<<" center cell "<< center_cell<< "distance min "<< dist_min<< "position "<<poz<<std::endl;
-// 					std::cout<<"cellule miroir "<<std::endl; cm.Affiche();}
-					grille[i][j][k] = c;
+				  }
+				  //Calcul du symetrique par rapport au plan defini par centre_face et normale_face
+				  Point_3 symm_center = center_cell + Vector_3(center_cell,projete)*2;
+				  cm = in_cell(symm_center);
+				  c.rho = cm.rho;
+				  c.u = cm.u;
+				  c.v = cm.v;
+				  c.w = cm.w;
+				  c.p = cm.p;
+				  c.impx = cm.impx;
+				  c.impy = cm.impy;
+				  c.impz = cm.impz;
+				  c.rhoE = cm.rhoE;
+				  grille[i][j][k] = c;
 				}
 			}
 		}

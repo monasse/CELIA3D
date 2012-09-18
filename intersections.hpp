@@ -19,6 +19,7 @@
 #include <CGAL/convex_hull_3.h>
 #include <CGAL/squared_distance_3.h>
 #include <CGAL/box_intersection_d.h>
+#include <CGAL/centroid.h>
 
 //Constrained Triangulation
 #include <CGAL/Constrained_triangulation_2.h>
@@ -30,6 +31,8 @@
 typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
 typedef Kernel::Point_3                  Point_3;
 typedef Kernel::Vector_3                 Vector_3;
+typedef Kernel::Line_3                   Line_3;
+typedef Kernel::Plane_3                  Plane_3;
 typedef CGAL::Triangle_3<Kernel>         Triangle_3;
 typedef CGAL::Plane_3<Kernel>            Plane_3;
 typedef std::vector<Triangle_3>          Triangles;
