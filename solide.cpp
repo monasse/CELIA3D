@@ -26,6 +26,7 @@ Face::Face()
   centre = Point_3(0.,0.,0.);
   normale = Vector_3(1.,0.,0.);
   voisin = -1;
+  D0 = 1.;
 }
 
 
@@ -41,6 +42,22 @@ Face::Face(std::vector<Vertex> & v, int part)
   double norm = sqrt(CGAL::to_double(normale.squared_length()));
   normale = normale*1./norm;
   voisin = part;
+  D0 = 1.;
+}
+
+Face::Face(std::vector<Vertex> & v, int part, double dist)
+{
+  std::vector<Point_3> points;
+  for(int i=0; i<v.size(); i++){
+	vertex.push_back(v[i]);
+	points.push_back(v[i].pos);
+  }
+  centre = centroid(points.begin(),points.end());
+  normale = orthogonal_vector(points[0],points[1],points[2]);
+  double norm = sqrt(CGAL::to_double(normale.squared_length()));
+  normale = normale*1./norm;
+  voisin = part;
+  D0 = dist;
 }
 
 
@@ -52,6 +69,8 @@ Particule::Particule()
 	max_x = 1. ;
 	max_y = 1.;
 	max_z = 1.;
+
+	centre = Point_3(0.5,0.5,0.5);
 	
 	cube = true;
 	
@@ -80,7 +99,7 @@ Particule::Particule()
 	for(int i=0;i<4;i++){
 	  points1[i] = vert1[i].pos;
 	}
-	Face face1 = Face(vert1,-1);
+	Face face1 = Face(vert1,-1,1.);
 	face1.centre = centroid(points1.begin(),points1.end());
 	face1.normale = orthogonal_vector(points1[0],points1[1],points1[2]);
 	double norm1 = sqrt(CGAL::to_double(face1.normale.squared_length()));
@@ -100,7 +119,7 @@ Particule::Particule()
 	for(int i=0;i<4;i++){
 	  points2[i] = vert2[i].pos;
 	}
-	Face face2 = Face(vert2,-1);
+	Face face2 = Face(vert2,-1,1.);
 	face2.centre = centroid(points2.begin(),points2.end());
 	face2.normale = orthogonal_vector(points2[0],points2[1],points2[2]);
 	double norm2 = sqrt(CGAL::to_double(face2.normale.squared_length()));
@@ -120,7 +139,7 @@ Particule::Particule()
 	for(int i=0;i<4;i++){
 	  points3[i] = vert3[i].pos;
 	}
-	Face face3 = Face(vert3,-1);
+	Face face3 = Face(vert3,-1,1.);
 	face3.centre = centroid(points3.begin(),points3.end());
 	face3.normale = orthogonal_vector(points3[0],points3[1],points3[2]);
 	double norm3 = sqrt(CGAL::to_double(face3.normale.squared_length()));
@@ -140,7 +159,7 @@ Particule::Particule()
 	for(int i=0;i<4;i++){
 	  points4[i] = vert4[i].pos;
 	}
-	Face face4 = Face(vert4,-1);
+	Face face4 = Face(vert4,-1,1.);
 	face4.centre = centroid(points4.begin(),points4.end());
 	face4.normale = orthogonal_vector(points4[0],points4[1],points4[2]);
 	double norm4 = sqrt(CGAL::to_double(face4.normale.squared_length()));
@@ -160,7 +179,7 @@ Particule::Particule()
 	for(int i=0;i<4;i++){
 	  points5[i] = vert5[i].pos;
 	}
-	Face face5 = Face(vert5,-1);
+	Face face5 = Face(vert5,-1,1.);
 	face5.centre = centroid(points5.begin(),points5.end());
 	face5.normale = orthogonal_vector(points5[0],points5[1],points5[2]);
 	double norm5 = sqrt(CGAL::to_double(face5.normale.squared_length()));
@@ -180,7 +199,7 @@ Particule::Particule()
 	for(int i=0;i<4;i++){
 	  points6[i] = vert6[i].pos;
 	}
-	Face face6 = Face(vert6,-1);
+	Face face6 = Face(vert6,-1,1.);
 	face6.centre = centroid(points6.begin(),points6.end());
 	face6.normale = orthogonal_vector(points6[0],points6[1],points6[2]);
 	double norm6 = sqrt(CGAL::to_double(face6.normale.squared_length()));
@@ -261,6 +280,8 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	max_x = x_max ;
 	max_y = y_max;
 	max_z = z_max;
+
+	centre = Point_3((x_min+x_max)/2.,(y_min+y_max)/2.,(z_min+z_max)/2.);
 	
 	cube = true;
 	
@@ -289,7 +310,7 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	for(int i=0;i<4;i++){
 	  points1[i] = vert1[i].pos;
 	}
-	Face face1 = Face(vert1,-1);
+	Face face1 = Face(vert1,-1,1.);
 	face1.centre = centroid(points1.begin(),points1.end());
 	face1.normale = orthogonal_vector(points1[0],points1[1],points1[2]);
 	double norm1 = sqrt(CGAL::to_double(face1.normale.squared_length()));
@@ -309,7 +330,7 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	for(int i=0;i<4;i++){
 	  points2[i] = vert2[i].pos;
 	}
-	Face face2 = Face(vert2,-1);
+	Face face2 = Face(vert2,-1,1.);
 	face2.centre = centroid(points2.begin(),points2.end());
 	face2.normale = orthogonal_vector(points2[0],points2[1],points2[2]);
 	double norm2 = sqrt(CGAL::to_double(face2.normale.squared_length()));
@@ -329,7 +350,7 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	for(int i=0;i<4;i++){
 	  points3[i] = vert3[i].pos;
 	}
-	Face face3 = Face(vert3,-1);
+	Face face3 = Face(vert3,-1,1.);
 	face3.centre = centroid(points3.begin(),points3.end());
 	face3.normale = orthogonal_vector(points3[0],points3[1],points3[2]);
 	double norm3 = sqrt(CGAL::to_double(face3.normale.squared_length()));
@@ -349,7 +370,7 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	for(int i=0;i<4;i++){
 	  points4[i] = vert4[i].pos;
 	}
-	Face face4 = Face(vert4,-1);
+	Face face4 = Face(vert4,-1,1.);
 	face4.centre = centroid(points4.begin(),points4.end());
 	face4.normale = orthogonal_vector(points4[0],points4[1],points4[2]);
 	double norm4 = sqrt(CGAL::to_double(face4.normale.squared_length()));
@@ -369,7 +390,7 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	for(int i=0;i<4;i++){
 	  points5[i] = vert5[i].pos;
 	}
-	Face face5 = Face(vert5,-1);
+	Face face5 = Face(vert5,-1,1.);
 	face5.centre = centroid(points5.begin(),points5.end());
 	face5.normale = orthogonal_vector(points5[0],points5[1],points5[2]);
 	double norm5 = sqrt(CGAL::to_double(face5.normale.squared_length()));
@@ -389,7 +410,7 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	for(int i=0;i<4;i++){
 	  points6[i] = vert6[i].pos;
 	}
-	Face face6 = Face(vert6,-1);
+	Face face6 = Face(vert6,-1,1.);
 	face6.centre = centroid(points6.begin(),points6.end());
 	face6.normale = orthogonal_vector(points6[0],points6[1],points6[2]);
 	double norm6 = sqrt(CGAL::to_double(face6.normale.squared_length()));
@@ -462,7 +483,7 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 }
 
 
-Particule::Particule(const double x_min, const double y_min, const double z_min, 
+Particule::Particule(Point_3 c, const double x_min, const double y_min, const double z_min, 
 							 const double x_max, const double y_max,const double z_max, 
 					 std::vector<Face> & F)
 {   
@@ -472,6 +493,8 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	max_x = x_max ;
 	max_y = y_max;
 	max_z = z_max;
+
+	centre = c;
 	
 	cube = false;
 

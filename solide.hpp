@@ -21,6 +21,7 @@ class Face
 public:
   Face();//:vertex(std::vector<Vertex>(1)){}
   Face(std::vector<Vertex> & v, int part);
+  Face(std::vector<Vertex> & v, int part, double dist);
   int size(){
 	return vertex.size();
   }
@@ -28,6 +29,7 @@ public:
   Vector_3 normale;
   std::vector<Vertex> vertex;
   int voisin;
+  double D0; //Distance a l'equilibre avec la particule voisine
 };
 
   
@@ -42,7 +44,7 @@ class Particule
   Particule(const double x_min, const double y_min, const double z_min, 
 			const double x_max, const double y_max,const double z_max);
   
-  Particule(const double x_min, const double y_min, const double z_min, 
+  Particule(Point_3 c, const double x_min, const double y_min, const double z_min, 
 			const double x_max, const double y_max,const double z_max, 
 			std::vector<Face> & F);
   ~Particule();
@@ -68,6 +70,7 @@ class Particule
   Triangles triangles;
   std::vector<Vector_3> normales;
   std::vector<bool> fluide;
+  Point_3 centre;
 };  
   
 class Solide

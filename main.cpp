@@ -76,6 +76,7 @@ int main(){
 	  string s;
 	  maillage >> s >> Nfaces >> fixe;
 	  maillage >> s >> X >> Y >> Z;
+	  Point_3 centre(X,Y,Z);
 	  maillage >> s >> u >> v >> w;
 	  maillage >> s >> theta >> phi >> psi;
 	  xmin = X;
@@ -108,9 +109,10 @@ int main(){
 		maillage >> voisin;
 		Faces[j] = Face::Face(Vertex, voisin);
 	  }
-	  P[i] = Particule::Particule(xmin, ymin, zmin, xmax, ymax, zmax, Faces);
+	  P[i] = Particule::Particule(centre, xmin, ymin, zmin, xmax, ymax, zmax, Faces);
 	}
 	//Boucle de mise a jour des particules sur les sommets du maillage
+	//Mise a jour des distances a l'equilibre entre particules en meme temps
 	for(int i=0;i<P.size();i++){
 	  for(int j=0;j<P[i].size();j++){
 		for(int k=0;k<P[i].faces[j].size();k++){
@@ -118,6 +120,9 @@ int main(){
 			if(points_particules[P[i].faces[j].vertex[k].num][l]){
 			  P[i].faces[j].vertex[k].particules.push_back(l);
 			}
+		  }
+		  if(P[i].faces[j].voisin>=0){
+			P[i].faces[j].D0 = sqrt(CGAL::to_double(CGAL::squared_distance(P[i].centre,P[P[i].faces[j].voisin].centre)));
 		  }
 		}
 	  }
