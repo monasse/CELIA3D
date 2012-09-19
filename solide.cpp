@@ -70,7 +70,7 @@ Particule::Particule()
 	max_y = 1.;
 	max_z = 1.;
 
-	centre = Point_3(0.5,0.5,0.5);
+	x0 = Point_3(0.5,0.5,0.5);
 	
 	cube = true;
 	
@@ -281,7 +281,7 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	max_y = y_max;
 	max_z = z_max;
 
-	centre = Point_3((x_min+x_max)/2.,(y_min+y_max)/2.,(z_min+z_max)/2.);
+	x0 = Point_3((x_min+x_max)/2.,(y_min+y_max)/2.,(z_min+z_max)/2.);
 	
 	cube = true;
 	
@@ -494,7 +494,7 @@ Particule::Particule(Point_3 c, const double x_min, const double y_min, const do
 	max_y = y_max;
 	max_z = z_max;
 
-	centre = c;
+	x0 = c;
 	
 	cube = false;
 
@@ -720,12 +720,13 @@ bool inside_box(const Bbox& cell, const Point_3& P){
 	return in;
 }
 
+Solide::Solide(){
+}
 
 Solide::Solide(std::vector<Particule> & Part){
-	
-	for(int i=0; i<Part.size(); i++){
-		solide.push_back(Part[i]);
-	}
+  for(int i=0; i<Part.size(); i++){
+	solide.push_back(Part[i]);
+  }
 	
 }
 
@@ -739,5 +740,113 @@ void Solide::Affiche(){
 		solide[i].Affiche();
 	}
 }
+
+void Solide::init(const char* s){
+  std::ifstream maillage(s,ios::in);
+  if(maillage){
+	// cout <<"ouverture de xt.vtk reussie" << endl;
+  } else {
+	cout <<"ouverture de " << s << " ratee" << endl;
+  }
+
+  //Recuperation du maillage solide
+  int Npoint;
+  string sp;
+  maillage >> sp >> Npoint;
+  const int nb_points = Npoint;
+  
+  vector<Point_3> Points(nb_points);
+  
+  for(int i=0;i<nb_points;i++){
+	double x,y,z;
+	maillage >> x >> y >> z;
+	Points[i] = Point_3(x,y,z);
+  }
+  
+  int Npart;
+  string sP;
+  maillage >> sP >> Npart;
+  const int nb_particule = Npart;
+  
+  vector<Particule> P(nb_particule);
+  
+  bool points_particules[nb_points][nb_particule];
+  
+  for(int i=0;i<nb_particule;i++){
+	for(int j=0;j<nb_points;j++){
+	  //Remise a zero du tableau
+	  points_particules[j][i] = false;
+	}
+  }
+  for(int i=0;i<nb_particule;i++){
+	int Nfaces;
+	bool fixe;
+	double X,Y,Z,u,v,w,theta,phi,psi,xmin,ymin,zmin,xmax,ymax,zmax;
+	string s;
+	maillage >> s >> Nfaces >> fixe;
+	maillage >> s >> X >> Y >> Z;
+	Point_3 centre(X,Y,Z);
+	maillage >> s >> u >> v >> w;
+	maillage >> s >> theta >> phi >> psi;
+	xmin = X;
+	ymin = Y;
+	zmin = Z;
+	const int nb_faces = Nfaces;
+	std::vector<Face> Faces(nb_faces);
+	for(int j=0;j<nb_faces;j++){
+	  int Nvertex;
+	  maillage >> Nvertex;
+	  const int nb_vertex = Nvertex;
+	  std::vector<Vertex> Vertex(nb_vertex);
+	  for(int k=0;k<nb_vertex;k++){
+		int p;
+		maillage >> p;
+		Vertex[k].pos = Points[p];
+		Vertex[k].num = p;
+		points_particules[p][i] = true;
+		double x = CGAL::to_double(Points[p].operator[](0));
+		double y = CGAL::to_double(Points[p].operator[](1));
+		double z = CGAL::to_double(Points[p].operator[](2));
+		xmin = min(x,xmin);
+		xmax = max(x,xmax);
+		ymin = min(y,ymin);
+		ymax = max(y,ymax);
+		zmin = min(z,zmin);
+		zmax = max(z,zmax);
+	  }
+	  int voisin;
+	  maillage >> voisin;
+	  Faces[j] = Face::Face(Vertex, voisin);
+	}
+	P[i] = Particule::Particule(centre, xmin, ymin, zmin, xmax, ymax, zmax, Faces);
+  }
+  //Boucle de mise a jour des particules sur les sommets du maillage
+  //Mise a jour des distances a l'equilibre entre particules en meme temps
+  for(int i=0;i<P.size();i++){
+	for(int j=0;j<P[i].size();j++){
+	  for(int k=0;k<P[i].faces[j].size();k++){
+		for(int l=0;l<P.size();l++){
+		  if(points_particules[P[i].faces[j].vertex[k].num][l]){
+			P[i].faces[j].vertex[k].particules.push_back(l);
+		  }
+		}
+		if(P[i].faces[j].voisin>=0){
+		  P[i].faces[j].D0 = sqrt(CGAL::to_double(CGAL::squared_distance(P[i].x0,P[P[i].faces[j].voisin].x0)));
+		}
+	  }
+	}
+  }
+
+  for(int i=0; i<P.size(); i++){
+	solide.push_back(P[i]);
+  }
+  
+  //Initialisation de la position du solide
+  for(int i=0; i<solide.size(); i++){
+	solide[i].x = solide[i].x0;
+	solide[i].xprev = solide[i].x0;
+  }
+}
+
 
 #endif

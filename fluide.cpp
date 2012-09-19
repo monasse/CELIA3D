@@ -662,7 +662,7 @@ void Grille::melange(const double dt){
 		for(int j=marge;j<Ny+marge;j++){
 			for(int k=marge;k<Nz+marge;k++){
 				Cellule c = grille[i][j][k];
-				if(c.rho<0.){
+				if(c.rho<0. && abs(c.alpha-1.)>eps){
 					cout << "densite negative en : " << c.x << " " << c.y << " " << c.z <<" rho " << c.rho << endl;
 					c.rho = c.rho0;
 					c.u = c.impx0/c.rho;
@@ -674,7 +674,7 @@ void Grille::melange(const double dt){
 					c.impz = c.impz0;
 					c.rhoE = c.rhoE0;
 				}
-				if(c.p<0.){
+				if(c.p<0. && abs(c.alpha-1.)>eps){
 					cout << "pression negative en : " << c.x << " " << c.y << " " << c.z << " p " << c.p << endl;
 					c.rho = c.rho0;
 					c.u = c.impx0/c.rho;
@@ -1168,18 +1168,18 @@ void Grille::fnumx(const double sigma, double t){
                 double cr2 = (gam-1.)*(Hr-ur2/2.-vr2/2.-wr2/2.); 
                 
                 //Test sur la vitesse du son 
-                
-                if(cr2<=0.){
-                    cout << "calcul des flux selon x" << endl;
-                    cout << "i=" << i << " j=" << j << " k=" << k<< " vitesse du son negative : c2=" << cr2 << endl;
-                    cout << "t=" << t << endl; 
-                    cout << "c.p=" << c.p << endl; 
-                    cout << "c.rho=" << c.rho << endl; 
-                    cout << "c.u=" << c.u << endl; 
-                    cout << "c.v=" << c.v << endl; 
-                    cout << "c.w=" << c.w << endl; 
-                    cout << "ci.p=" << ci.p << endl; 
-                    cout << "ci.rho=" << ci.rho << endl; 
+                if(cr2<=0. && abs(c.alpha-1.)>eps){
+				  cout << "calcul des flux selon x" << endl;
+				  cout << "i=" << i << " j=" << j << " k=" << k<< " vitesse du son negative : c2=" << cr2 << endl;
+				  cout << "x=" << c.x << " y=" << c.y << " z=" << c.z<< " alpha=" << c.alpha << endl;
+				  cout << "t=" << t << endl; 
+				  cout << "c.p=" << c.p << endl; 
+				  cout << "c.rho=" << c.rho << endl; 
+				  cout << "c.u=" << c.u << endl; 
+				  cout << "c.v=" << c.v << endl; 
+				  cout << "c.w=" << c.w << endl; 
+				  cout << "ci.p=" << ci.p << endl; 
+				  cout << "ci.rho=" << ci.rho << endl; 
                     cout << "ci.u=" << ci.u << endl;
                     cout << "ci.v=" << ci.v << endl;
                     cout << "ci.w=" << ci.w << endl;
@@ -1572,10 +1572,10 @@ void Grille::fnumy(const double sigma, double t){
                 
                 //Test sur la vitesse du son 
                 //if((cr2<=0.) && (c.alpha<1.) && (cd.alpha<1.)){
-                if(cr2<=0.){
+                if(cr2<=0. && abs(c.alpha-1.)>eps){
                     cout << "calcul des flux selon y" << endl;
                     cout << "i=" << i << " j=" << j <<" k = "<<k<< " vitesse du son negative : c2=" << cr2 << endl;
-                    //cout << "x=" << c.x << " y=" << c.y << " alpha=" << c.alpha << endl;
+                    cout << "x=" << c.x << " y=" << c.y << " z=" << c.z << " alpha=" << c.alpha << endl;
                     cout << "t=" << t << endl; 
                     cout << "c.p=" << c.p << endl; 
                     cout << "c.rho=" << c.rho << endl; 
@@ -1977,10 +1977,10 @@ void Grille::fnumz(const double sigma, double t){
                 
                 //Test sur la vitesse du son 
                 //if((cr2<=0.) && (c.alpha<1.) && (cd.alpha<1.)){
-                if(cr2<=0.){
+                if(cr2<=0. && abs(c.alpha-1.)>eps){
                     cout << "calcul des flux selon y" << endl;
                     cout << "i=" << i << " j=" << j << " vitesse du son negative : c2=" << cr2 << endl;
-                    //cout << "x=" << c.x << " y=" << c.y << " alpha=" << c.alpha << endl;
+                    cout << "x=" << c.x << " y=" << c.y << " z=" << c.z << " alpha=" << c.alpha << endl;
                     cout << "t=" << t << endl; 
                     cout << "c.p=" << c.p << endl; 
                     cout << "c.rho=" << c.rho << endl; 
@@ -2348,12 +2348,12 @@ void Grille::Solve(const double dt, double t, int n){
 	
     if(n%6==0){
         fnumx(dt/dx,t);     //Calcul des flux numeriques pour le fluide seul selon x
-        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x 
-        BC();           //Imposition des conditions aux limites pour le fluide
+        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
+		BC();           //Imposition des conditions aux limites pour le fluide
         
         fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
-        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y 
-        BC();           //Imposition des conditions aux limites pour le fluide
+        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
+		BC();           //Imposition des conditions aux limites pour le fluide
         
         fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
         solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
@@ -2362,28 +2362,28 @@ void Grille::Solve(const double dt, double t, int n){
     } 
     else if(n%6==1){
         fnumx(dt/dx,t);     //Calcul des flux numeriques pour le fluide seul selon x
-        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x 
-        BC();           //Imposition des conditions aux limites pour le fluide
+        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
+		BC();           //Imposition des conditions aux limites pour le fluide
         
         fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
         solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
-        BC();           //Imposition des conditions aux limites pour le fluide
+		BC();           //Imposition des conditions aux limites pour le fluide
         
         fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
-        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y 
-        BC();           //Imposition des conditions aux limites pour le fluide
+        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
+		BC();           //Imposition des conditions aux limites pour le fluide
         
     } 
     
     else if(n%6==2){
         
         fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
-        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y 
-        BC();           //Imposition des conditions aux limites pour le fluide
+        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
+		BC();           //Imposition des conditions aux limites pour le fluide
         
         fnumx(dt/dx,t);     //Calcul des flux numeriques pour le fluide seul selon x
-        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x 
-        BC();           //Imposition des conditions aux limites pour le fluide
+        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
+		BC();           //Imposition des conditions aux limites pour le fluide
         
         fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
         solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
@@ -2394,27 +2394,27 @@ void Grille::Solve(const double dt, double t, int n){
     else if(n%6==3){
         
         fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
-        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y 
-        BC();           //Imposition des conditions aux limites pour le fluide
+        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
+		BC();           //Imposition des conditions aux limites pour le fluide
         
         fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
-        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z 
-        BC();           //Imposition des conditions aux limites pour le fluide
+        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
+		BC();           //Imposition des conditions aux limites pour le fluide
         
         fnumx(dt/dx,t);     //Calcul des flux numeriques pour le fluide seul selon x
         solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
-        BC();           //Imposition des conditions aux limites pour le fluide
+		BC();           //Imposition des conditions aux limites pour le fluide
         
     }
     else if(n%6==4){
         
         fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
-        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z 
-        BC();           //Imposition des conditions aux limites pour le fluide
+        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
+		BC();           //Imposition des conditions aux limites pour le fluide
         
         fnumx(dt/dx,t);     //Calcul des flux numeriques pour le fluide seul selon x
         solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
-        BC();           //Imposition des conditions aux limites pour le fluide
+		BC();           //Imposition des conditions aux limites pour le fluide
         
         fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
         solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y 
@@ -2425,16 +2425,16 @@ void Grille::Solve(const double dt, double t, int n){
     else if(n%6==5){
         
         fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
-        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z 
-        BC();           //Imposition des conditions aux limites pour le fluide
+        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
+		BC();           //Imposition des conditions aux limites pour le fluide
         
         fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
-        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y 
-        BC();           //Imposition des conditions aux limites pour le fluide
+        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
+		BC();           //Imposition des conditions aux limites pour le fluide
         
         fnumx(dt/dx,t);     //Calcul des flux numeriques pour le fluide seul selon x
         solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
-        BC();           //Imposition des conditions aux limites pour le fluide
+		BC();           //Imposition des conditions aux limites pour le fluide
         
     }
   

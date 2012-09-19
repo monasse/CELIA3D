@@ -14,7 +14,7 @@ void Grille::modif_fnum(const double dt){
 					cj = grille[i][j-1][k];    //Cellule  j-1
 					ck = grille[i][j][k-1];    //Cellule  k-1
            
-          c.flux_modif[0] = 0.;
+					c.flux_modif[0] = 0.;
 					c.flux_modif[1] = c.pdtx * c.phi_x;
 					c.flux_modif[2] = c.pdty * c.phi_y;
 					c.flux_modif[3] = c.pdtz * c.phi_z;
@@ -769,62 +769,65 @@ void Grille::fill_cel(Solide& S){
 						}
 						//2eme cas : on est hors de la face
 						else{
-						  //Recherche des deux points les plus proches de xP sur la face
-						  Point_3 x1 = F.vertex[0].pos; //Point le plus proche
-						  Point_3 x2; // deuxieme point le plus proche
-						  double d1 = sqrt(CGAL::to_double(CGAL::squared_distance(xP,x1)));
-						  double d2 = 10000000.;
-						  for(int k=1;k<F.size();k++){
-							Point_3 x = F.vertex[k].pos;
-							double d = sqrt(CGAL::to_double(CGAL::squared_distance(xP,x)));
-							if(d<d2){
-							  if(d<d1){
-								x2 = x1;
-								d2 = d1;
-								x1 = x;
-								d1 = d;
-							  } else {
-								x2 = x;
-								d2 = d;
+						  //Recherche du point le plus proche sur toutes les aretes
+						  for(int k=0;k<F.size();k++){
+							int kp = (k+1)%(F.size());
+							Point_3 x1 = F.vertex[k].pos;
+							Point_3 x2 = F.vertex[kp].pos;
+							double d1 = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,x1)));
+							double d2 = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,x2)));
+							double d12 = sqrt(CGAL::to_double(CGAL::squared_distance(x1,x2)));
+							//1er sous-cas : on est plus proche du point x1
+							if(d1*d1+d12*d12<d2*d2){
+							  if(d1<dist_min){
+								dist_min = d1;
+								projete = x1;
+							  }
+							}
+							//2eme sous-cas : on est plus proche du point x2
+							else if(d2*d2+d12*d12<d1*d1){
+							  if(d2<dist_min){
+								dist_min = d2;
+								projete = x2;
+							  }
+							}
+							//3eme sous-cas : on prend le projete sur (x1,x2)
+							else {
+							  Line_3 L(x1,x2);
+							  double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,L)));
+							  if(d<dist_min){
+								dist_min = d;
+								projete = L.projection(center_cell);
 							  }
 							}
 						  }
-						  double d12 = sqrt(CGAL::to_double(CGAL::squared_distance(x1,x2)));
-						  if(d1*d1+d12*d12<d2*d2){
-							//Le projete est le point le plus proche dans ce cas
-							double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,xP)));
-							if(d<dist_min){
-							  dist_min = d;
-							  projete = x1;
-							}
-						  } else {
-							//Le projete est la projection sur (x1,x2)
-							Line_3 L(x1,x2);
-							double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,L)));
-							if(d<dist_min){
-							  dist_min = d;
-							  projete = L.projection(center_cell);
-							}
-						  }
-						  
-						  
 						}
-
 					  }
 					}
 				  }
 				  //Calcul du symetrique par rapport au plan defini par centre_face et normale_face
 				  Point_3 symm_center = center_cell + Vector_3(center_cell,projete)*2;
+				  Vector_3 normale(center_cell,projete);
+				  double norm = sqrt(CGAL::to_double(normale.squared_length()));
+				  Vector_3 vit_m(cm.u,cm.v,cm.w); //Vitesse au point miroir
+				  Vector_3 vit;
+				  if(norm>eps){
+					normale = normale*1./norm;
+					vit = vit_m -2.*(vit_m*normale)*normale;
+				  } else {
+					normale = Vector_3(1.,0.,0.);
+					vit = vit_m;
+				  }
 				  cm = in_cell(symm_center);
 				  c.rho = cm.rho;
-				  c.u = cm.u;
-				  c.v = cm.v;
-				  c.w = cm.w;
+				  c.u = CGAL::to_double(vit.operator[](0));
+				  c.v = CGAL::to_double(vit.operator[](1));
+				  c.w = CGAL::to_double(vit.operator[](2));
 				  c.p = cm.p;
-				  c.impx = cm.impx;
-				  c.impy = cm.impy;
-				  c.impz = cm.impz;
-				  c.rhoE = cm.rhoE;
+				  c.impx = c.rho*c.u;
+				  c.impy = c.rho*c.v;
+				  c.impz = c.rho*c.w;
+				  c.rhoE = c.rho/2.*(c.u*c.u+c.v*c.v+c.w*c.w)+c.p/(gam-1.);
 				  grille[i][j][k] = c;
 				}
 			}

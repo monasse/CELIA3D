@@ -70,24 +70,28 @@ class Particule
   Triangles triangles;
   std::vector<Vector_3> normales;
   std::vector<bool> fluide;
-  Point_3 centre;
+  Point_3 x0; //Position du centre de la particule a t=0
+  Point_3 x; //Position du centre de la particule a t
+  Point_3 xprev; //Position du centre de la particule a t-dt
+  
 };  
   
 class Solide
 {
 	
-	public:
-		
-		Solide():solide(std::vector<Particule>(1)){}
-		Solide(std::vector<Particule> & Part);
-		~Solide();
-		void Affiche();
-		int size(){
-			return solide.size();
-		}
-		void impression(int n);
-		// private :
-		std::vector<Particule> solide;
+public:
+  
+  Solide();//:solide(std::vector<Particule>(1)){}
+  Solide(std::vector<Particule> & Part);
+  ~Solide();
+  void Affiche();
+  int size(){
+	return solide.size();
+  }
+  void impression(int n);
+  void init(const char* s);
+  // private :
+  std::vector<Particule> solide;
 };
 
 #endif
