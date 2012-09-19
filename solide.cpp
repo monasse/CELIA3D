@@ -843,8 +843,21 @@ void Solide::init(const char* s){
   
   //Initialisation de la position du solide
   for(int i=0; i<solide.size(); i++){
-	solide[i].x = solide[i].x0;
-	solide[i].xprev = solide[i].x0;
+	solide[i].Dx = Point_3(0.,0.,0.);
+	solide[i].Dxprev = Point_3(0.,0.,0.);
+	solide[i].Fi = Vector_3(0.,0.,0.);
+	solide[i].Ff = Vector_3(0.,0.,0.);
+	solide[i].Mi = Vector_3(0.,0.,0.);
+	solide[i].Mf = Vector_3(0.,0.,0.);
+	solide[i].rot[0][0] = 1.;
+	solide[i].rot[1][1] = 1.;
+	solide[i].rot[2][2] = 1.;
+	solide[i].rot[0][1] = 0.;
+	solide[i].rot[0][2] = 0.;
+	solide[i].rot[1][0] = 0.;
+	solide[i].rot[1][2] = 0.;
+	solide[i].rot[2][0] = 0.;
+	solide[i].rot[2][1] = 0.;
   }
 }
 

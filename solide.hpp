@@ -71,8 +71,13 @@ class Particule
   std::vector<Vector_3> normales;
   std::vector<bool> fluide;
   Point_3 x0; //Position du centre de la particule a t=0
-  Point_3 x; //Position du centre de la particule a t
-  Point_3 xprev; //Position du centre de la particule a t-dt
+  Point_3 Dx; //Deplacement du centre de la particule a t
+  Point_3 Dxprev; //Deplacement du centre de la particule a t-dt
+  Vector_3 Fi; //Forces interieures du solide
+  Vector_3 Ff; //Forces fluides exercees sur le solide
+  Vector_3 Mi; //Moments interieurs du solide
+  Vector_3 Mf; //Moments fluides exerces sur le solide
+  double rot[3][3]; //Matrice de rotation de la particule
   
 };  
   
