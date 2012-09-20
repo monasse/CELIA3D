@@ -70,6 +70,7 @@ void Grille::parois(Solide& S) {
 	
 	
 	
+	Triangles interface;
 	
 	int count=0;
 	double volume_s=0.;
@@ -240,6 +241,7 @@ void Grille::parois(Solide& S) {
 														 norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
 														 norm2= sqrt(CGAL::to_double(norm*norm));
 														 v_n_lambda.push_back(norm/norm2);
+														 interface.push_back(K);
 													 } //calcul des aires parietales
 													 
 						}
@@ -260,6 +262,7 @@ void Grille::parois(Solide& S) {
 								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
 								norm2= sqrt(CGAL::to_double(norm*norm));
 								v_n_lambda.push_back(norm/norm2);
+								interface.push_back(K);
 							}
 							
 							else if (abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](0).operator[](2))<=eps_relat && abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](1).operator[](2))<=eps_relat && abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](2).operator[](2))<=eps_relat)
@@ -269,6 +272,8 @@ void Grille::parois(Solide& S) {
 								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
 								norm2= sqrt(CGAL::to_double(norm*norm));
 								v_n_lambda.push_back(norm/norm2);
+								interface.push_back(K);
+								
 							}
 							
 							else if (abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](0).operator[](0))<=eps_relat && abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](1).operator[](0))<=eps_relat && abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](2).operator[](0))<=eps_relat)
@@ -278,6 +283,8 @@ void Grille::parois(Solide& S) {
 								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
 								norm2= sqrt(CGAL::to_double(norm*norm));
 								v_n_lambda.push_back(norm/norm2);
+								interface.push_back(K);
+								
 							}
 							
 							else if (abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](0).operator[](0))<=eps_relat && abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](1).operator[](0))<=eps_relat && abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](2).operator[](0))<=eps_relat)
@@ -287,6 +294,8 @@ void Grille::parois(Solide& S) {
 								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
 								norm2= sqrt(CGAL::to_double(norm*norm));
 								v_n_lambda.push_back(norm/norm2);
+								interface.push_back(K);
+								
 							}
 							
 							else if (abs(trianglesB[8].operator[](0).operator[](1) -  K.operator[](0).operator[](1))<=eps_relat && abs(trianglesB[8].operator[](0).operator[](1) -  K.operator[](1).operator[](1))<=eps_relat && abs(trianglesB[8].operator[](0).operator[](1) -  K.operator[](2).operator[](1))<=eps_relat)
@@ -296,6 +305,8 @@ void Grille::parois(Solide& S) {
 								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
 								norm2= sqrt(CGAL::to_double(norm*norm));
 								v_n_lambda.push_back(norm/norm2);
+								interface.push_back(K);
+								
 							}
 							
 							else 
@@ -305,6 +316,8 @@ void Grille::parois(Solide& S) {
 								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
 								norm2= sqrt(CGAL::to_double(norm*norm));
 								v_n_lambda.push_back(norm/norm2);
+								interface.push_back(K);
+								
 								
 							}
 						}

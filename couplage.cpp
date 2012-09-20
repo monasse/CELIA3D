@@ -736,7 +736,7 @@ void Grille::fill_cel(Solide& S){
 				if((std::abs(c.alpha-1.)<eps)){
 				  Point_3 center_cell(c.x, c.y, c.z);
 				  int nbx=0, nby=0,nbz=0;
-				  Point_3 projete(0.,0.,0.); //Projeté sur la face la plus proche
+				  Point_3 projete(0.,0.,0.); //Projetï¿½ sur la face la plus proche
 				  double dist_min = 10000000.;
 				  for(int iter=0; iter<nb_part; iter++){
 					Particule P = S.solide[iter];
@@ -851,10 +851,10 @@ Point_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn){
 						    (Xn.operator[](1) - Tn.operator[](2).operator[](1)) * 
 						    (Tn.operator[](1).operator[](0) - Tn.operator[](2).operator[](0)));
 								
-	double num2 = CGAL::to_double((Xn.operator[](0) - Tn.operator[](2).operator[](0)) * 
+	double num2 =-1*( CGAL::to_double((Xn.operator[](0) - Tn.operator[](2).operator[](0)) * 
 								(Tn.operator[](0).operator[](1) - Tn.operator[](2).operator[](1)) -
 								(Xn.operator[](1) - Tn.operator[](2).operator[](1)) * 
-								(Tn.operator[](0).operator[](0) - Tn.operator[](2).operator[](0)));
+								(Tn.operator[](0).operator[](0) - Tn.operator[](2).operator[](0))));
 	if(dom>eps){							
 	lambda =  num1/dom;
 	mu = num2/dom;
@@ -869,7 +869,6 @@ Point_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn){
 	double z = CGAL::to_double(lambda * Tn1.operator[](0).operator[](2) + mu*Tn1.operator[](1).operator[](2) 
 														 + (1- lambda- mu)*Tn1.operator[](2).operator[](2));		
 														 
-	//Point_3 Xn1(x, y, z);
 	
 	return Point_3(x, y, z);
 }
@@ -881,7 +880,6 @@ Triangle_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Triangle_3 T){
 	Point_3 s = tr( Tn,Tn1, T.operator[](0) );
 	Point_3 r = tr( Tn,Tn1, T.operator[](1) );
 	Point_3 v = tr( Tn,Tn1, T.operator[](2) );
-	//Triangle_3 Ttr(s, r, v);
 	
 	return Triangle_3(s, r, v);
 }
@@ -902,10 +900,10 @@ Point_2 tr(Triangle_3 Tn1, Point_3 Xn){
  (Xn.operator[](1) - Tn1.operator[](2).operator[](1)) * 
  (Tn1.operator[](1).operator[](0) - Tn1.operator[](2).operator[](0)));
  
- double num2 = CGAL::to_double((Xn.operator[](0) - Tn1.operator[](2).operator[](0)) * 
+ double num2 = -1*(CGAL::to_double((Xn.operator[](0) - Tn1.operator[](2).operator[](0)) * 
  (Tn1.operator[](0).operator[](1) - Tn1.operator[](2).operator[](1)) -
  (Xn.operator[](1) - Tn1.operator[](2).operator[](1)) * 
- (Tn1.operator[](0).operator[](0) - Tn1.operator[](2).operator[](0)));
+ (Tn1.operator[](0).operator[](0) - Tn1.operator[](2).operator[](0))));
  if(dom>eps){							
 	 lambda =  num1/dom;
 	 mu = num2/dom;
@@ -933,7 +931,7 @@ Triangle_2 tr(Triangle_3 Tn1, Triangle_3 T){
 Point_3 tr(Triangle_3 Tn1, Point_2 Xn){
 	
 	double lambda = CGAL::to_double(1.- Xn.operator[](0) -  Xn.operator[](1));
-	double mu = -1.*CGAL::to_double(Xn.operator[](0));
+	double mu = CGAL::to_double(Xn.operator[](0));
 	
 	
 	
@@ -963,7 +961,7 @@ Triangle_3 tr(Triangle_3 Tn1, Triangle_2 T){
 
 CDT sous_maillage_face(Triangles_2 Tn1, Triangles_2 Tn_n1, CDT &cdt){
 		
-	std::vector<Bbox_2> boxesTn1(Tn1.size()), boxesTn_n1(Tn_n1.size()); //tres outil pour les intersection 
+	std::vector<Bbox_2> boxesTn1, boxesTn_n1; //tres outil pour les intersection 
 	
 	for(Triangle2_iterator it= Tn1.begin(); it!= Tn1.end(); ++it){  //on associe a chaque triangle un Box(une boite contenant le triangle)
 		boxesTn1.push_back(Bbox_2(it->bbox()));
@@ -981,9 +979,9 @@ CDT sous_maillage_face(Triangles_2 Tn1, Triangles_2 Tn_n1, CDT &cdt){
 	std::vector<Point_2> intPoints; //vector de Point_2 d'intersection
 	std::vector<Segment_2> intSeg;  //vector de Segment_2 d'intersection
 	
-	
 	for(int i=0; i<boxesTn1.size(); i++ ){ 
 		for(int j=0; j<boxesTn_n1.size(); j++ ){
+			//cout<<"Triangle 1: "<<Tn1[i]<<" Triangle 2: "<<Tn_n1[j]<<endl;
 			if (CGAL::do_overlap( boxesTn1[i],boxesTn_n1[j]) ) //test d'intersection des Box 
 			{
 					if (CGAL::do_intersect(Tn1[i],Tn_n1[j]) ){ // test d'intersection des triangles contenues dans les Box
@@ -1012,14 +1010,15 @@ CDT sous_maillage_face(Triangles_2 Tn1, Triangles_2 Tn_n1, CDT &cdt){
 							}
 							
 						}
-						else {cout<<"Intersection type: ? "<<endl;}
+						else {cout<<"Intersection type: ? "<<endl;
+									cout<<"Triangle 1: "<<Tn1[i]<<" Triangle 2: "<<Tn_n1[j]<<endl;
+						}
 						
 					}
 				}
 			}
 		}
 	
-   	
 	 cdt.insert(intPoints.begin(), intPoints.end()); //insertion des points d'intersection dans le maillage
 	 
 	 for(int i = 0; i<intSeg.size(); i++){
@@ -1037,13 +1036,7 @@ double swap (Triangle_3 Tn, Triangles tn, Triangle_3 Tn1, Triangles tn1){
 	// transf barycentrique de tn 
 	Triangles tn_n1(tn.size());
 	for(int i=0; i<tn.size(); i++){
-		tn_n1.push_back(tr(Tn, Tn1, tn[i]));
-	}
-	
-	// Transf du Triangles_3  tn_n1 en Triangle_2
-	Triangles_2 Tn_n1_2(tn_n1.size());
-	for(int i=0; i<tn_n1.size(); i++){
-		Tn_n1_2.push_back(tr(Tn1, tn_n1[i]));
+		tn_n1[i] = tr(Tn, Tn1, tn[i]);
 	}
 	
 	
@@ -1052,17 +1045,28 @@ double swap (Triangle_3 Tn, Triangles tn, Triangle_3 Tn1, Triangles tn1){
 	Point_2 Cp(0., 1.);
 	Triangle_2 Ref(Ap,Bp,Cp);
 	
+	// Transf du Triangles_3  tn_n1 en Triangle_2
+	Triangles_2 Tn_n1_2(1+tn_n1.size());
+	Tn_n1_2[0] = Ref;
+	for(int i=0; i<tn_n1.size(); i++){
+		Tn_n1_2[i+1] = tr(Tn1, tn_n1[i]);
+	}
+	
+	
+	
 	Triangles_2 Tn1_2(1+tn1.size());
-	Tn1_2.push_back(Ref);
+	Tn1_2[0] = Ref;
 	
 	// Transf du Triangles_3  tn1 en Triangle_2
 	for(int i=0; i<tn1.size(); i++){
-		Tn1_2.push_back(tr(Tn1, tn1[i]));
+		Tn1_2[i+1] =tr(Tn1, tn1[i]);
 	}
-		
+	
 	
 	// sous maillage triangulaire de l'interface
-	CDT cdt = sous_maillage_face(Tn1_2, Tn_n1_2, cdt);
+	CDT cdt;
+	cdt.insert(Ap); cdt.insert(Bp); cdt.insert(Cp);
+	sous_maillage_face(Tn1_2, Tn_n1_2, cdt);
 	assert(cdt.is_valid());
 	
 	Triangles_2 T2d; //recuperation faces du maillage Triangle_2
@@ -1083,7 +1087,7 @@ double swap (Triangle_3 Tn, Triangles tn, Triangle_3 Tn1, Triangles tn1){
 // 	std::cout<<v.point()<<std::endl;
 // }
 	
-	
+	int i=0;
 	for (CDT::Finite_faces_iterator fit=cdt.finite_faces_begin();
 	          fit!=cdt.finite_faces_end();++fit)
 	{
@@ -1091,7 +1095,8 @@ double swap (Triangle_3 Tn, Triangles tn, Triangle_3 Tn1, Triangles tn1){
 		Point_2 v = fit->vertex(1)->point();
 		Point_2 r = fit->vertex(2)->point();
 		T2d.push_back(Triangle_2(s,v,r));
-		
+		//cout<<"triangle intersect "<<T2d[i]<<endl;
+		//i++;
 	}
 	
 
@@ -1100,14 +1105,16 @@ double swap (Triangle_3 Tn, Triangles tn, Triangle_3 Tn1, Triangles tn1){
 	//transf des Triangle_2 en Triangle_3
 	Triangles T3d(T2d.size());
 	for(int i=0; i<T2d.size(); i++){ 
-		T3d.push_back(tr(Tn1,T2d[i]));
+		T3d[i] = tr(Tn1,T2d[i]);
+		//cout<<"triangle 3d "<<T3d[i]<<endl;
 	}
 	
 	
 	//transf inverse 
 	Triangles T3d_n(T3d.size());
 	for(int i=0; i<T3d.size(); i++){ 
-		T3d_n.push_back(tr(Tn1,Tn,T3d[i]));
+		T3d_n[i] = tr(Tn1,Tn,T3d[i]);
+		//cout<<"triangle 3d n "<<T3d_n[i]<<endl;
 	}
 	return swap;
 }
