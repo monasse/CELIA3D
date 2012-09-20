@@ -730,8 +730,8 @@ void Grille::fill_cel(Solide& S){
 
 	//std::cout<<"center faces number: " <<count<<std::endl;
 	for(int i=marge;i<Nx+marge;i++){
-		for(int j=marge;j<Ny+marge;j++){ 
-			for(int k=marge;k<Nz+marge;k++){
+		for(int j=marge;j<Ny+marge;j++){
+		  for(int k=marge;k<Nz+marge;k++){
 				c = grille[i][j][k];
 				if((std::abs(c.alpha-1.)<eps)){
 				  Point_3 center_cell(c.x, c.y, c.z);
@@ -808,17 +808,11 @@ void Grille::fill_cel(Solide& S){
 				  //Calcul du symetrique par rapport au plan defini par centre_face et normale_face
 				  Point_3 symm_center = center_cell + Vector_3(center_cell,projete)*2;
 				  Vector_3 normale(center_cell,projete);
-				  double norm = sqrt(CGAL::to_double(normale.squared_length()));
-				  Vector_3 vit_m(cm.u,cm.v,cm.w); //Vitesse au point miroir
-				  Vector_3 vit;
-				  if(norm>eps){
-					normale = normale*1./norm;
-					vit = vit_m -2.*(vit_m*normale)*normale;
-				  } else {
-					normale = Vector_3(1.,0.,0.);
-					vit = vit_m;
-				  }
+				  double norme = sqrt(CGAL::to_double(normale.squared_length()));
+				  normale = normale*1./norme;
 				  cm = in_cell(symm_center);
+				  Vector_3 vit_m(cm.u,cm.v,cm.w); //Vitesse au point miroir
+				  Vector_3 vit = vit_m - normale*2.*(vit_m*normale);
 				  c.rho = cm.rho;
 				  c.u = CGAL::to_double(vit.operator[](0));
 				  c.v = CGAL::to_double(vit.operator[](1));
