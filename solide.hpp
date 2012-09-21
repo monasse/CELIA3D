@@ -52,7 +52,7 @@ class Particule
   bool box_inside_convex_polygon(const Particule& S, const Bbox& cell);  
   bool inside_convex_polygon(const Particule& S, const Point_3& P);  
   bool inside_box(const Bbox& cell, const Point_3& P);
-  void Affiche();
+	void Affiche();  //fonction auxilaire utile pour les tests
   double volume(); 
   
   double min_x;
@@ -70,6 +70,8 @@ class Particule
   Triangles triangles;
   std::vector<Vector_3> normales;
   std::vector<bool> fluide;
+	std::vector< std::vector<Point_3> > Points_interface;
+	std::vector< std::vector<Triangle_3> > Triangles_interface;
   Point_3 x0; //Position du centre de la particule a t=0
   Point_3 Dx; //Deplacement du centre de la particule a t
   Point_3 Dxprev; //Deplacement du centre de la particule a t-dt
@@ -89,7 +91,7 @@ public:
   Solide();//:solide(std::vector<Particule>(1)){}
   Solide(std::vector<Particule> & Part);
   ~Solide();
-  void Affiche();
+	void Affiche();  //fonction auxilaire utile pour les test
   int size(){
 	return solide.size();
   }

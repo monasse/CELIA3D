@@ -736,7 +736,7 @@ void Grille::fill_cel(Solide& S){
 				if((std::abs(c.alpha-1.)<eps)){
 				  Point_3 center_cell(c.x, c.y, c.z);
 				  int nbx=0, nby=0,nbz=0;
-				  Point_3 projete(0.,0.,0.); //Projet� sur la face la plus proche
+				  Point_3 projete(0.,0.,0.); //Projete sur la face la plus proche
 				  double dist_min = 10000000.;
 				  for(int iter=0; iter<nb_part; iter++){
 					Particule P = S.solide[iter];
@@ -958,7 +958,7 @@ Triangle_3 tr(Triangle_3 Tn1, Triangle_2 T){
 
 CDT sous_maillage_face(Triangles_2 Tn1, Triangles_2 Tn_n1, CDT &cdt){
 		
-	std::vector<Bbox_2> boxesTn1, boxesTn_n1; //tres outil pour les intersection 
+	std::vector<Bbox_2> boxesTn1, boxesTn_n1; //tres outil pour les intersections 
 	
 	for(Triangle2_iterator it= Tn1.begin(); it!= Tn1.end(); ++it){  //on associe a chaque triangle un Box(une boite contenant le triangle)
 		boxesTn1.push_back(Bbox_2(it->bbox()));
@@ -974,7 +974,7 @@ CDT sous_maillage_face(Triangles_2 Tn1, Triangles_2 Tn_n1, CDT &cdt){
 	std::vector<Point_2> vPoints; 
 	
 	std::vector<Point_2> intPoints; //vector de Point_2 d'intersection
-	std::vector<Segment_2> intSeg;  //vector de Segment_2 d'intersection
+	std::vector<Segment_2> intSeg;  //vector de Segment_2 d'intersection a conserver dans la triangularisation de la face 
 	
 	for(int i=0; i<boxesTn1.size(); i++ ){ 
 		for(int j=0; j<boxesTn_n1.size(); j++ ){
@@ -1027,9 +1027,8 @@ CDT sous_maillage_face(Triangles_2 Tn1, Triangles_2 Tn_n1, CDT &cdt){
 }	
 
 
-double swap (Triangle_3 Tn, Triangles tn, Triangle_3 Tn1, Triangles tn1){
+void sous_maillage_faceTn_faceTn1(Triangle_3 Tn, Triangles tn, Triangle_3 Tn1, Triangles tn1,Triangles& T3d_n,Triangles& T3d_n1){
 
-	double swap=0.;
 	// transf barycentrique de tn 
 	Triangles tn_n1(tn.size());
 	for(int i=0; i<tn.size(); i++){
@@ -1069,22 +1068,6 @@ double swap (Triangle_3 Tn, Triangles tn, Triangle_3 Tn1, Triangles tn1){
 	Triangles_2 T2d; //recuperation faces du maillage Triangle_2
 	
 	
-	
-// 	int count = 0; 
-// 	for (CDT::Finite_edges_iterator eit = cdt.finite_edges_begin();
-// 	eit != cdt.finite_edges_end();
-// 	++eit)
-// 	if (cdt.is_constrained(*eit)) ++count;
-
-// Vertex_cdt v;
-// for (CDT::Vertex_iterator ver=cdt.vertices_begin();
-// ver!=cdt.vertices_end();++ver){
-// 	
-// 	v= *ver;
-// 	std::cout<<v.point()<<std::endl;
-// }
-	
-	int i=0;
 	for (CDT::Finite_faces_iterator fit=cdt.finite_faces_begin();
 	          fit!=cdt.finite_faces_end();++fit)
 	{
@@ -1092,30 +1075,166 @@ double swap (Triangle_3 Tn, Triangles tn, Triangle_3 Tn1, Triangles tn1){
 		Point_2 v = fit->vertex(1)->point();
 		Point_2 r = fit->vertex(2)->point();
 		T2d.push_back(Triangle_2(s,v,r));
-		//cout<<"triangle intersect "<<T2d[i]<<endl;
-		//i++;
 	}
 	
 
-
-
 	//transf des Triangle_2 en Triangle_3
-	Triangles T3d(T2d.size());
+	T3d_n1.resize(T2d.size());
 	for(int i=0; i<T2d.size(); i++){ 
-		T3d[i] = tr(Tn1,T2d[i]);
+		T3d_n1[i] = tr(Tn1,T2d[i]);
 		//cout<<"triangle 3d "<<T3d[i]<<endl;
 	}
 	
 	
 	//transf inverse 
-	Triangles T3d_n(T3d.size());
-	for(int i=0; i<T3d.size(); i++){ 
-		T3d_n[i] = tr(Tn1,Tn,T3d[i]);
+	T3d_n.resize(T3d_n1.size());
+	for(int i=0; i<T3d_n1.size(); i++){ 
+		T3d_n[i] = tr(Tn1,Tn,T3d_n1[i]);
 		//cout<<"triangle 3d n "<<T3d_n[i]<<endl;
 	}
-	return swap;
+	
 }
 
+
+
+
+// void Grille::fill_cel_old(Solide& S){
+// 	
+// 	Cellule c, cm;
+// 	int nb_part = S.size();
+// 	double dist[6*nb_part];
+// 	double dist_min = 100;
+// 	int poz=0;
+// 	
+// 	Point_3 center_faces[6][nb_part];
+// 	Point_3 ref(10000., 10000., 10000.);
+// 	
+// 	for(int it=0; it<nb_part; it++){
+// 		if(S.solide[it].fluide[0])
+// 		{ center_faces[0][it]= S.solide[it].faces[0].centre; }
+// 		else {center_faces[0][it] = ref;}
+// 		
+// 		if(S.solide[it].fluide[2])
+// 		{center_faces[1][it]= S.solide[it].faces[1].centre; }
+// 		else {center_faces[1][it] = ref;}
+// 		
+// 		if(S.solide[it].fluide[4])
+// 		{center_faces[2][it]= S.solide[it].faces[2].centre;} 
+// 		else {center_faces[2][it] = ref;}
+// 		
+// 		if(S.solide[it].fluide[6])
+// 		{center_faces[3][it]= S.solide[it].faces[3].centre;} 
+// 		else {center_faces[3][it] = ref;}
+// 		
+// 		if(S.solide[it].fluide[8])
+// 		{center_faces[4][it]= S.solide[it].faces[4].centre; }
+// 		else {center_faces[4][it]=ref;}
+// 		
+// 		if(S.solide[it].fluide[10])
+// 		{center_faces[5][it]= S.solide[it].faces[5].centre;}
+// 		else {center_faces[5][it]=ref;}
+// 	}
+// 	
+// 
+// 
+// 	for(int i=marge;i<Nx+marge;i++){
+// 		for(int j=marge;j<Ny+marge;j++){ 
+// 			for(int k=marge;k<Nz+marge;k++){
+// 				c = grille[i][j][k];
+// 				if((std::abs(c.alpha-1.)<eps))
+// 				{
+// 					Point_3 center_cell(c.x, c.y, c.z);
+// 					int nbx=0, nby=0,nbz=0;
+// 					double dist_min = 100;
+// 					double nb=0.;
+// 					int count = 0;
+// 					for(int it=0; it<6; it++){
+// 						for(int iter=0; iter<nb_part; iter++){
+// 							dist[count] = CGAL::to_double(squared_distance(center_cell, center_faces[it][iter]));
+// 							if(dist[count]< dist_min) {
+// 								dist_min = dist[count];
+// 								poz = it;
+// 							}
+// 							count++;
+// 						}
+// 					}
+// 					if (poz == 0){
+// 						nb = dist_min/c.dx;
+// 						if (nb != (int)(nb)){ nbx= (int)(nb)+1;}
+// 						else {nbx = nb;}
+// 						if(i-2*nbx>0){
+// 							cm = grille[i-2*nbx][j][k]; // a definir la cellule mirroir par rapport à l'interface
+// 							while(cm.alpha>eps && (i-2*nbx)>marge){nbx++; cm = grille[i-2*nbx][j][k]; }
+// 						}
+// 						else {cm = grille[0][j][k]; }
+// 					}
+// 					else if (poz == 1){
+// 						nb = dist_min/c.dx;
+// 						if (nb != (int)(nb)){ nbx= (int)(nb)+1;}
+// 						else {nbx = nb;}
+// 						if(i+2*nbx <Nx+2*marge){
+// 							cm = grille[i+2*nbx][j][k]; // a definir la cellule mirroir par rapport à l'interface
+// 							while(cm.alpha>eps && (i+2*nbx)<Nx+marge){nbx++; cm = grille[i+2*nbx][j][k]; }
+// 						}
+// 						else{cm = grille[Nx+marge][j][k];}
+// 					}
+// 					
+// 					else if (poz == 2){
+// 						nb = dist_min/c.dy;
+// 						if (nb != (int)(nb)){ nby= (int)(nb)+1;}
+// 						else {nby = nb;}
+// 						if(j-2*nby>0){
+// 							cm = grille[i][j-2*nby][k]; // a definir la cellule mirroir par rapport à l'interface
+// 							while(cm.alpha>eps && (j-2*nby)>marge){nby++; cm = grille[i][j-2*nby][k]; }
+// 						}
+// 						else{cm = grille[i][0][k];}
+// 					}
+// 					
+// 					else if (poz == 3){
+// 						nb = dist_min/c.dy;
+// 						if (nb != (int)(nb)){ nby= (int)(nb)+1;}
+// 						else {nby = nb;}
+// 						if(j+2*nby<Ny+2*marge){
+// 							cm = grille[i][j+2*nby][k]; // a definir la cellule mirroir par rapport à l'interface
+// 							while(cm.alpha>eps && (j+2*nby)<Ny+marge){nby++; cm = grille[i][j+2*nby][k]; }
+// 						}
+// 						else{cm = grille[i][Ny+marge][k];}
+// 					}
+// 					else if (poz == 4){
+// 						nb = dist_min/c.dz;
+// 						if (nb != (int)(nb)){ nbz= (int)(nb)+1;}
+// 						else {nbz = nb;}
+// 						if(k-2*nbz>0){
+// 							cm = grille[i][j][k-2*nbz]; // a definir la cellule mirroir par rapport à l'interface
+// 							while(cm.alpha>eps && (k-2*nbz)>marge){nbz++; cm = grille[i][j][k-2*nbz]; }
+// 						}
+// 						else{cm = grille[i][j][0];}
+// 					}
+// 					else{
+// 						nb = dist_min/c.dz;
+// 						if (nb != (int)(nb)){ nbz= (int)(nb)+1;}
+// 						else {nbz = nb;}
+// 						if(k+2*nbz<Nz+2*marge){
+// 							cm = grille[i][j][k+2*nbz]; // a definir la cellule mirroir par rapport à l'interface
+// 							while(cm.alpha>eps && (k+2*nbz)<Nz+marge){nbz++; cm = grille[i][j][k+2*nbz]; }
+// 						}
+// 						else{cm = grille[i][j][Nz+marge];}
+// 					}
+// 					c.rho = cm.rho;
+// 					c.impx = cm.impx;
+// 					c.impy = cm.impy;
+// 					c.impz = cm.impz;
+// 					c.rhoE = cm.rhoE;
+// 					c.u = cm.u ;
+// 					c.v = cm.v;
+// 					c.w = cm.w;
+// 					c.p = cm.p;
+// 					grille[i][j][k] = c;
+// 			}
+// 		}
+// 	}
+// }
+// }
 
 
 
