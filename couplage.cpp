@@ -727,6 +727,7 @@ void Grille::fill_cel(Solide& S){
 	double dist_min = 100;
 	int poz=0;
 	double x_min=0., y_min=0., z_min = 0., x_max = 0., y_max=0., z_max=0.;
+	Bbox Fluide(X0,Y0,Z0,X0+domainex,Y0+domainey,Z0+domainez);
 
 	//std::cout<<"center faces number: " <<count<<std::endl;
 	for(int i=marge;i<Nx+marge;i++){
@@ -762,7 +763,7 @@ void Grille::fill_cel(Solide& S){
 						//1er cas : on est dans la face
 						if(test){
 						  double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,xP)));
-						  if(d<dist_min){
+						  if(d<dist_min && inside_box(Fluide,xP)){
 							dist_min = d;
 							projete = xP;
 						  }
@@ -779,14 +780,14 @@ void Grille::fill_cel(Solide& S){
 							double d12 = sqrt(CGAL::to_double(CGAL::squared_distance(x1,x2)));
 							//1er sous-cas : on est plus proche du point x1
 							if(d1*d1+d12*d12<d2*d2){
-							  if(d1<dist_min){
+							  if(d1<dist_min && inside_box(Fluide,x1)){
 								dist_min = d1;
 								projete = x1;
 							  }
 							}
 							//2eme sous-cas : on est plus proche du point x2
 							else if(d2*d2+d12*d12<d1*d1){
-							  if(d2<dist_min){
+							  if(d2<dist_min && inside_box(Fluide,x2)){
 								dist_min = d2;
 								projete = x2;
 							  }
@@ -795,9 +796,10 @@ void Grille::fill_cel(Solide& S){
 							else {
 							  Line_3 L(x1,x2);
 							  double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,L)));
-							  if(d<dist_min){
+							  Point_3 proj = L.projection(center_cell);
+							  if(d<dist_min && inside_box(Fluide,proj)){
 								dist_min = d;
-								projete = L.projection(center_cell);
+								projete = proj;
 							  }
 							}
 						  }

@@ -2360,7 +2360,7 @@ void Grille::Solve(const double dt, double t, int n){
         BC();           //Imposition des conditions aux limites pour le fluide
         
     } 
-    else if(n%6==1){
+    else if(n%6==2){
         fnumx(dt/dx,t);     //Calcul des flux numeriques pour le fluide seul selon x
         solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
 		BC();           //Imposition des conditions aux limites pour le fluide
@@ -2375,7 +2375,7 @@ void Grille::Solve(const double dt, double t, int n){
         
     } 
     
-    else if(n%6==2){
+    else if(n%6==1){
         
         fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
         solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
