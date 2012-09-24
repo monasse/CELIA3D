@@ -269,6 +269,8 @@ Particule::Particule()
 	normales.push_back(face6.normale);
 	fluide.push_back(true);
 	fluide.push_back(true);
+	Points_interface.resize(triangles.size(), std::vector<Point_3>(0));
+	Triangles_interface.resize(triangles.size(), std::vector<Triangle_3>(0));
 }
 
 Particule::Particule(const double x_min, const double y_min, const double z_min, 
@@ -480,6 +482,8 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 	normales.push_back(face6.normale);
 	fluide.push_back(true);
 	fluide.push_back(true);
+	Points_interface.resize(triangles.size(), std::vector<Point_3>(0));
+	Triangles_interface.resize(triangles.size(), std::vector<Triangle_3>(0));
 }
 
 
@@ -524,7 +528,8 @@ Particule::Particule(Point_3 c, const double x_min, const double y_min, const do
 		}
 	  }
 	}
-	
+	Points_interface.resize(triangles.size(), std::vector<Point_3>(0));
+	Triangles_interface.resize(triangles.size(), std::vector<Triangle_3>(0));
 }
 //Destructeur
 Particule::~Particule(){
@@ -538,6 +543,17 @@ void Particule::Affiche(){
 //	std::cout<<" volume of solide := "<<volume()<<std::endl;
 // 	std::cout<<" Point min := "<< min_x<<std::endl;
 // 	std::cout<<" Point max := "<< max_x<<std::endl;
+
+// std::cout<<" triangles size := "<< triangles.size()<<std::endl;
+//std::cout<<" P interface size := "<< Points_interface.size()<<std::endl;
+// std::cout<<" T interface size := "<< Triangles_interface.size()<<std::endl;
+
+//  for(int i=0; i<Triangles_interface.size(); i++){
+// 	if(!fluide[i])
+// 	//std::cout<<"nr triangle "<<j<<" contact fluide "<<fluide[j]<<"  points interface:= "<<interface[j][i]<<std::endl;
+// 	std::cout<<"triangles size"<<Triangles_interface[i].size()<<std::endl;
+// }
+
 }
 
 
@@ -739,6 +755,7 @@ void Solide::Affiche(){
 	for(int i=0; i<solide.size(); i++){
 		solide[i].Affiche();
 	}
+
 }
 
 void Solide::init(const char* s){

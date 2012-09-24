@@ -5,10 +5,12 @@
 #include <stdio.h>
 #include <vector>
 #include <math.h>
+#include <cassert>
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/intersections.h>
 #include <CGAL/Bbox_3.h>
+#include <CGAL/Bbox_2.h>
 #include <CGAL/Timer.h>
 #include <CGAL/Triangulation_3.h>
 #include <CGAL/Polyhedron_3.h>
@@ -19,6 +21,12 @@
 #include <CGAL/box_intersection_d.h>
 #include <CGAL/centroid.h>
 
+//Constrained Triangulation
+#include <CGAL/Constrained_triangulation_2.h>
+#include <CGAL/Triangulation_hierarchy_2.h>
+#include <CGAL/Constrained_triangulation_plus_2.h>
+
+//
 
 typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
 typedef Kernel::Point_3                  Point_3;
@@ -29,16 +37,35 @@ typedef CGAL::Triangle_3<Kernel>         Triangle_3;
 typedef CGAL::Plane_3<Kernel>            Plane_3;
 typedef std::vector<Triangle_3>          Triangles;
 typedef std::vector<Point_3>             Points;
-typedef Kernel::Segment_3 Segment_3;
+typedef Kernel::Segment_3                Segment_3;
 typedef CGAL::Bbox_3                     Bbox;
 typedef CGAL::Polyhedron_3<Kernel>       Polyhedron_3;
 typedef CGAL::Triangulation_3<Kernel>    Triangulation;
 
-
 typedef Triangulation::Finite_facets_iterator Finite_faces_iterator;
 typedef Triangulation::Finite_cells_iterator Finite_cells_iterator;
-//typedef Triangulation::Tetrahedron Tetrahedron;
 typedef Polyhedron_3::Facet_iterator   Facet_iterator;
+typedef Triangles::iterator            Triangle3_iterator;
+
+////Constrained Triangulation
+typedef CGAL::Triangulation_vertex_base_2<Kernel>                     Vb;
+typedef CGAL::Constrained_triangulation_face_base_2<Kernel>           Fb;
+typedef CGAL::Triangulation_data_structure_2<Vb,Fb>                   TDS;
+typedef CGAL::Exact_predicates_tag                                    Itag;
+typedef CGAL::Constrained_Delaunay_triangulation_2<Kernel, TDS, Itag> CDT;
+typedef CDT::Vertex  	                                             Vertex_cdt;  	 
+typedef CDT::Face 	                                               Face_cdt; 
+
+typedef CDT::Face_handle 	                                           Face_cdt_handle; 
+typedef CDT::Vertex_handle  	                                       Vertex_cdt_handle; 
+
+typedef Kernel::Point_2                  Point_2;
+typedef CGAL::Triangle_2<Kernel>         Triangle_2;
+typedef std::vector<Triangle_2>          Triangles_2;
+typedef std::vector<Point_2>             Points_2;
+typedef Kernel::Segment_2                Segment_2;
+typedef CGAL::Bbox_2                     Bbox_2;
+typedef Triangles_2::iterator            Triangle2_iterator;
 
 
 void triang_cellule(const Bbox& cel, Triangles& trianglesB){
