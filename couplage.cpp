@@ -740,23 +740,21 @@ void Grille::fill_cel(Solide& S){
 				  Point_3 projete(0.,0.,0.); //Projete sur la face la plus proche
 				  double dist_min = 10000000.;
 				  for(int iter=0; iter<nb_part; iter++){
-					Particule Part = S.solide[iter];
-					for(int it=0;it<Part.size();it++){
-					  Face F = Part.faces[it];
-					  if(F.voisin==-1){
-						Plane_3 P(F.vertex[0].pos,F.vertex[1].pos,F.vertex[2].pos);
-						for(int k=3;k<F.size() && P.is_degenerate();k++){//Test si le plan est degenere
-						  P = Plane_3(F.vertex[0].pos,F.vertex[1].pos,F.vertex[k].pos);
+					for(int it=0;it<S.solide[iter].size();it++){
+					  if(S.solide[iter].faces[it].voisin==-1){
+						Plane_3 P(S.solide[iter].faces[it].vertex[0].pos,S.solide[iter].faces[it].vertex[1].pos,S.solide[iter].faces[it].vertex[2].pos);
+						for(int k=3;k<S.solide[iter].faces[it].size() && P.is_degenerate();k++){//Test si le plan est degenere
+						  P = Plane_3(S.solide[iter].faces[it].vertex[0].pos,S.solide[iter].faces[it].vertex[1].pos,S.solide[iter].faces[it].vertex[k].pos);
 						}
 						Point_3 xP = P.projection(center_cell);
 						//Test pour savoir si le projete est dans la face
 						bool test = true;
-						for(int k=0;k<F.size()-1 && test;k++){
-						  Point_3 x1 = F.vertex[k].pos;
-						  Point_3 x2 = F.vertex[k+1].pos;
+						for(int k=0;k<S.solide[iter].faces[it].size()-1 && test;k++){
+						  Point_3 x1 = S.solide[iter].faces[it].vertex[k].pos;
+						  Point_3 x2 = S.solide[iter].faces[it].vertex[k+1].pos;
 						  Vector_3 vect1(xP,x1);
 						  Vector_3 vect2(xP,x2);
-						  if(CGAL::to_double(CGAL::cross_product(vect1,vect2)*F.normale)<0.){
+						  if(CGAL::to_double(CGAL::cross_product(vect1,vect2)*S.solide[iter].faces[it].normale)<0.){
 							test = false;
 						  }
 						}
@@ -771,10 +769,10 @@ void Grille::fill_cel(Solide& S){
 						//2eme cas : on est hors de la face
 						else{
 						  //Recherche du point le plus proche sur toutes les aretes
-						  for(int k=0;k<F.size();k++){
-							int kp = (k+1)%(F.size());
-							Point_3 x1 = F.vertex[k].pos;
-							Point_3 x2 = F.vertex[kp].pos;
+						  for(int k=0;k<S.solide[iter].faces[it].size();k++){
+							int kp = (k+1)%(S.solide[iter].faces[it].size());
+							Point_3 x1 = S.solide[iter].faces[it].vertex[k].pos;
+							Point_3 x2 = S.solide[iter].faces[it].vertex[kp].pos;
 							double d1 = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,x1)));
 							double d2 = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,x2)));
 							double d12 = sqrt(CGAL::to_double(CGAL::squared_distance(x1,x2)));
