@@ -21,6 +21,16 @@ Vertex::Vertex(const Point_3 p, std::vector<int> & parts)
   }
 }
 
+// Vertex & Vertex:: operator=(const Vertex &V){
+// 	
+// 	assert(this != &V);
+// 	pos = V.pos;
+// 	num = V.num;
+// 	for(int i=0; i<V.particules.size(); i++){
+// 	particules[i]= V.particules[i];
+// 	}
+// }
+
 Face::Face()
 {
   centre = Point_3(0.,0.,0.);
@@ -60,6 +70,18 @@ Face::Face(std::vector<Vertex> & v, int part, double dist)
   D0 = dist;
 }
 
+// Face & Face:: operator=(const Face &F){
+// 	
+// 	assert(this != &F);
+//   centre = F.centre;
+//   normale = F.normale;
+//   voisin = F.voisin;
+//   D0  = F.D0; 
+// 	
+// 	for(int i= 0; i<F.vertex.size(); i++){
+// 	vertex[i] = F.vertex[i];
+// 	}
+// }
 
 Particule::Particule()
 {   
@@ -536,8 +558,56 @@ Particule::~Particule(){
 	
 }
 
-
-
+// Particule & Particule:: operator=(const Particule &P){
+// 	
+// 	assert(this != &P);
+// // 	vector< vector<int> >::iterator iter_ii;
+// // 	vector<int>::iterator                 iter_jj;
+// 	
+// 	min_x = P.min_x;
+// 	min_y = P.min_y;
+// 	min_z = P.min_z;
+// 	max_x = P.max_x;
+// 	max_y = P.max_y;
+// 	max_z = P.max_z;
+// 	cube  = P.cube;
+// 	
+// 	//faces.resize(P.faces.size());
+// 	faces = P.faces;
+// // 	triangles.resize(P.triangles);
+// // 	normales.resize(P.normales);
+// // 	fluide.resize(P.fluide);
+// // 	assert(triangles.size()==normales.size());
+// 	for(int i=0; i<triangles.size(); i++){
+// 		triangles[i] = P.triangles[i];
+// 		normales[i] = P.normales[i];
+// 		fluide[i] = P.fluide[i];
+// 	}
+// 	
+// 	x0 = P.x0; Dx = P.Dx; Dxprev = P.Dxprev; Fi = P.Fi; Ff=P.Ff; Mi= P.Mi; Mf=P.Mf;
+// 	
+// 	for(int i= 0; i<3;i++){
+// 		for(int j= 0; j<3;j++){
+// 			rot[i][j] = P.rot[i][j];
+// 		}
+// 	}
+// 	
+// // 	Points_interface.resize(P.Points_interface.size(), std::vector<Point_3>(0));
+// // 	Triangles_interface.resize(P.Triangles_interface.size(), std::vector<Triangle_3>(0));
+// 	
+// 	for(int i=0; i<Points_interface.size(); i++ ){
+// 		for(int j=0; j<Points_interface[i].size(); j++ ){
+// 		Points_interface[i][j]= P.Points_interface[i][j];
+// 		}
+// 	}
+// 	
+// 	for(int i=0; i<Triangles_interface.size(); i++ ){
+// 		for(int j=0; j<Triangles_interface[i].size(); j++ ){
+// 		Triangles_interface[i][j]= P.Triangles_interface[i][j];
+// 		}
+// 	}
+// 
+// }
 void Particule::Affiche(){
 	
 //	std::cout<<" volume of solide := "<<volume()<<std::endl;
