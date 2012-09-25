@@ -740,9 +740,9 @@ void Grille::fill_cel(Solide& S){
 				  Point_3 projete(0.,0.,0.); //Projete sur la face la plus proche
 				  double dist_min = 10000000.;
 				  for(int iter=0; iter<nb_part; iter++){
-					Particule P = S.solide[iter];
-					for(int it=0;it<P.size();it++){
-					  Face F = P.faces[it];
+					Particule Part = S.solide[iter];
+					for(int it=0;it<Part.size();it++){
+					  Face F = Part.faces[it];
 					  if(F.voisin==-1){
 						Plane_3 P(F.vertex[0].pos,F.vertex[1].pos,F.vertex[2].pos);
 						for(int k=3;k<F.size() && P.is_degenerate();k++){//Test si le plan est degenere
