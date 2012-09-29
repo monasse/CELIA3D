@@ -650,6 +650,341 @@ double Particule::volume(){
 	return vol;
 }
 
+void Face::compProjectionIntegrals(double &P1, double &Pa, double &Pb, double &Paa, double &Pab, double &Pbb, double &Paaa, double &Paab, double &Pabb, double &Pbbb, int a, int b, int c){
+  //Utilisation de la fonction decrite par Brian Mirtich 1996 (cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar)
+  P1 = Pa = Pb = Paa = Pab = Pbb = Paaa = Paab = Pabb = Pbbb = 0.;
+  for(int i=0;i<size();i++){
+    int j= (i+1)%(size());
+    double a0 = CGAL::to_double(vertex[i].pos.operator[](a));
+    double b0 = CGAL::to_double(vertex[i].pos.operator[](b));
+    double a1 = CGAL::to_double(vertex[j].pos.operator[](a));
+    double b1 = CGAL::to_double(vertex[j].pos.operator[](b));
+    double Da = a1-a0;
+    double Db = b1-b0;
+    double a02 = a0*a0;
+    double a03 = a0*a02;
+    double a04 = a0*a03;
+    double b02 = b0*b0;
+    double b03 = b0*b02;
+    double b04 = b0*b03;
+    double a12 = a1*a1;
+    double a13 = a1*a12;
+    double b12 = b1*b1;
+    double b13 = b1*b12;
+    double C1 = a1+a0;
+    double Ca = a1*C1+a02;
+    double Caa = a1*Ca+a03;
+    double Caaa = a1*Caa+a04;
+    double Cb = b12+b1*b0+b02;
+    double Cbb = b1*Cb+b03;
+    double Cbbb = b1*Cbb+b04;
+    double Cab = 3*a12+2*a1*a0+a02;
+    double Kab = a12+2*a1*a0+3*a02;
+    double Caab = a0*Cab+4*a13;
+    double Kaab = a1*Kab+4*a03;
+    double Cabb = 4*b13+3*b12*b0+2*b1*b02+b03;
+    double Kabb = b13+2*b12*b0+3*b1*b02+4*b03;
+    P1 += Db*C1;
+    Pa += Db*Ca; Paa += Db*Caa; Paaa += Db*Caaa;
+    Pb += Da*Cb; Pbb += Da*Cbb; Pbbb += Da*Cbbb;
+    Pab += Db*(b1*Cab+b0*Kab);
+    Paab += Db*(b1*Caab+b0*Kaab);
+    Pabb += Da*(a1*Cabb+a0*Kabb);
+  }
+  P1 /= 2.;
+  Pa /= 6.; Paa /= 12.; Paaa /= 20.;
+  Pb /=-6.; Pbb /=-12.; Pbbb /=-20.;
+  Pab /= 24.;
+  Paab /= 60.;
+  Pabb /= 60.;
+}
+
+void Face::compFaceIntegrals(double &Fa, double &Fb, double &Fc, double &Faa, double &Fbb, double &Fcc, double &Faaa, double &Fbbb, double &Fccc, double &Faab, double &Fbbc, double &Fcca, double na, double nb, double nc, int a, int b, int c){
+  //Utilisation de la fonction decrite par Brian Mirtich 1996 (cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar)
+  double P1,Pa,Pb,Paa,Pab,Pbb,Paaa,Paab,Pabb,Pbbb;
+  Vector_3 p(Point_3(0,0,0),vertex[0].pos);
+  double w = -CGAL::to_double(normale*p);
+  double k1 = 1./nc;
+  double k2 = k1*k1;
+  double k3 = k1*k2;
+  double k4 = k1*k3;
+  compProjectionIntegrals(P1, Pa, Pb, Paa, Pab, Pbb, Paaa, Paab, Pabb, Pbbb, a, b, c);
+  Fa = k1*Pa;
+  Fb = k1*Pb;
+  Fc = -k2*(na*Pa+nb*Pb+w*P1);
+  Faa = k1*Paa;
+  Fbb = k1*Pbb;
+  Fcc = k3*(na*na*Paa+2*na*nb*Pab+nb*nb*Pbb+2*na*w*Pa+2*nb*w*Pb+w*w*P1);
+  Faaa = k1*Paaa;
+  Fbbb = k1*Pbbb;
+  Fccc = -k4*(na*na*na*Paaa+3*na*na*nb*Paab+3*na*nb*nb*Pabb+nb*nb*nb*Pbbb+3*na*na*w*Paa+6*na*nb*w*Pab+3*nb*nb*w*Pbb+3*na*w*w*Pa+3*nb*w*w*Pb+w*w*w*P1);
+  Faab = k1*Paab;
+  Fbbc = -k2*(na*Pabb+nb*Pbbb+w*Pbb);
+  Fcca = k3*(na*na*Paaa+2*na*nb*Paab+nb*nb*Pabb+2*na*w*Paa+2*nb*w*Pab+w*w*Pa);
+}
+
+void Particule::CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &Tz, double &Txx, double &Tyy, double &Tzz, double &Txy, double &Tyz, double &Tzx){
+  //Utilisation de la fonction decrite par Brian Mirtich 1996 (cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar)
+  T1 = Tx=Ty=Tz=Txx=Tyy=Tzz=Txy=Tyz=Tzx=0.;
+  for(int i=0;i<size();i++){
+    double Fx,Fy,Fz,Fxx,Fyy,Fzz,Fxxx,Fyyy,Fzzz,Fxxy,Fyyz,Fzzx;
+    double nx,ny,nz,na,nb,nc;
+    nx=CGAL::to_double(faces[i].normale.operator[](0));
+    ny=CGAL::to_double(faces[i].normale.operator[](1));
+    nz=CGAL::to_double(faces[i].normale.operator[](2));
+    //Choix d'une permutation orientee abc telle que nc soit maximale
+    if(abs(nx)>abs(ny)){
+      if(abs(nx)>abs(nz)){
+	//Cas a=y,b=z,c=x
+	na = ny; nb = nz; nc = nx;
+	faces[i].compFaceIntegrals(Fy, Fz, Fx, Fyy, Fzz, Fxx, Fyyy, Fzzz, Fxxx, Fyyz, Fzzx, Fxxy,na,nb,nc,1,2,0);
+      }
+      else {
+	//Cas a=x,b=y,c=z
+	na = nx; nb = ny; nc = nz;
+	faces[i].compFaceIntegrals(Fx, Fy, Fz, Fxx, Fyy, Fzz, Fxxx, Fyyy, Fzzz, Fxxy, Fyyz, Fzzx,na,nb,nc,0,1,2);
+      }
+    }
+    else {
+      if(abs(ny)>abs(nz)){
+	//Cas a=z,b=x,c=y
+	na = nz; nb = nx; nc = ny;
+	faces[i].compFaceIntegrals(Fz, Fx, Fy, Fzz, Fxx, Fyy, Fzzz, Fxxx, Fyyy, Fzzx, Fxxy, Fyyz,na,nb,nc,2,0,1);
+      }
+      else{
+	//Cas a=x,b=y,c=z
+	na = nx; nb = ny; nc = nz;
+	faces[i].compFaceIntegrals(Fx, Fy, Fz, Fxx, Fyy, Fzz, Fxxx, Fyyy, Fzzz, Fxxy, Fyyz, Fzzx,na,nb,nc,0,1,2);
+      }
+    }
+    //Calcul des integrales
+    T1 += nx*Fx;
+    Tx += nx*Fxx;
+    Ty += ny*Fyy;
+    Tz += nz*Fzz;
+    Txx += nx*Fxxx;
+    Tyy += ny*Fyyy;
+    Tzz += nz*Fzzz;
+    Txy += nx*Fxxy;
+    Tyz += ny*Fyyz;
+    Tzx += nz*Fzzx;
+  }
+  Tx /= 2.;
+  Ty /= 2.;
+  Tz /= 2.;
+  Txx /=3.;
+  Tyy /=3.;
+  Tzz /=3.;
+  Txy /=2.;
+  Tyz /=2.;
+  Tzx /=2.;
+}
+
+//Resolution de l'equation de degre 3 ax3+bx2+cx+d=0, de solutions x1, x2 et x3
+void solve_eq3(double a, double b, double c, double d, double &x1, double &x2, double &x3){
+  //On trouve x1 par une methode de Newton
+  x1 = 0.;
+  double res = a*x1*x1*x1+b*x1*x1+c*x1+d;
+  int i;
+  for(i=0;i<10000 && res!=0.;i++){
+    double p = 3.*a*x1*x1+2.*b*x1+c;
+    if(abs(p)>1.e-5*a){
+      x1 -= res/p;
+    }
+    else {
+      if(abs(res)>1.e-4*a){
+	x1 += pow(2.,-i);
+      }
+      else {
+	double Delta = max(4.*b*b-12.*a*c,0.);
+	double xm = -(2.*b+sqrt(Delta))/(6.*a);
+	double xM = -(2.*b-sqrt(Delta))/(6.*a);
+	if(abs(x1-xm)<abs(x1-xM)){
+	  x1 = xm;
+	}
+	else {
+	  x1 = xM;
+	}
+      }
+    }
+    res = a*x1*x1*x1+b*x1*x1+c*x1+d;
+  }
+  double a1 = a;
+  double b1 = b+a*x1;
+  double c1 = c+b*x1+a*x1*x1;
+  //On resout a1*x2+b1*x+c1=0
+  double Delta = max(b1*b1-4.*a1*c1,0.);
+  if(Delta<eps*a*a){
+    Delta = 0.;
+  }
+  x2 = (-b1+sqrt(Delta))/(2.*a1);
+  x3 = (-b1-sqrt(Delta))/(2.*a1);
+  if(abs(x1-x2)<2.e-3*x1){
+    if(Delta < eps*a*a){
+      //On vérifie si les trois solutions ne seraient pas identiques
+      double b2 = a*3.*x2;
+      double c2 = a*3.*x2*x2;
+      double d2 = a*pow(x2,3);
+      if(abs(b2-b)<eps*a && abs(c2-c)<eps*a && abs(d2-d)<eps*a){
+	x1 = x3 = x2;
+      }
+    }
+    else{
+      if(abs(a*x1*x1*x1+b*x1*x1+c*x1+d)>abs(a*x2*x2*x2+b*x2*x2+c*x2+d)){
+	x1 = x3;
+	x3 = x2;
+      }
+    }
+  }
+  else if(abs(x1-x3)<1.e-3*x1){
+    if(abs(a*x1*x1*x1+b*x1*x1+c*x1+d)>abs(a*x3*x3*x3+b*x3*x3+c*x3+d)){
+      x1 = x2;
+      x2 = x3;
+    }
+  }
+}
+
+void Particule::Inertie(){
+  double T1,Tx,Ty,Tz,Txx,Tyy,Tzz,Txy,Tyz,Tzx;
+  CompVolumeIntegrals(T1,Tx,Ty,Tz,Txx,Tyy,Tzz,Txy,Tyz,Tzx);
+  double R[3][3];
+  double xG = CGAL::to_double(x0.operator[](0));
+  double yG = CGAL::to_double(x0.operator[](1));
+  double zG = CGAL::to_double(x0.operator[](2));
+  R[0][0] = rhos*(Tyy-2.*yG*Ty+yG*yG*T1+Tzz-2.*zG*Tz+zG*zG*T1);
+  R[1][0] = R[0][1] = rhos*(Txy-yG*Tx-xG*Ty+xG*yG*T1);
+  R[2][0] = R[0][2] = rhos*(Tzx-zG*Tx-xG*Tz+xG*zG*T1);
+  R[1][1] = rhos*(Txx-2.*xG*Tx+xG*xG*T1+Tzz-2.*zG*Tz+zG*zG*T1);
+  R[1][2] = R[2][1] = rhos*(Tyz-zG*Ty-yG*Tz+yG*zG*T1);
+  R[2][2] = rhos*(Tyy-2.*yG*Ty+yG*yG*T1+Txx-2.*xG*Tx+xG*xG*T1);
+  double A = R[0][0];
+  double B = R[1][1];
+  double C = R[2][2];
+  double D = -R[1][2];
+  double E = -R[0][2];
+  double F = -R[0][1];
+  //Masse
+  m = rhos*T1;
+  //Calcul des moments d'inertie
+  double a = -1.;
+  double b = R[0][0] + R[1][1] + R[2][2];
+  double c = R[0][1]*R[0][1] + R[0][2]*R[0][2] + R[1][2]*R[1][2] - R[0][0]*R[1][1] - R[0][0]*R[2][2] - R[1][1]*R[2][2];
+  double d = R[0][0]*R[1][1]*R[2][2]-R[0][0]*R[1][2]*R[1][2]-R[1][1]*R[0][2]*R[0][2]-R[2][2]*R[0][1]*R[0][1]-2.*R[0][1]*R[0][2]*R[1][2];
+  solve_eq3(a,b,c,d,I[0],I[1],I[2]);
+  //Calcul des vecteurs propres associes
+  if(abs(I[1]-I[2])>1.e-5*I[1]){
+    for(int i=0;i<3;i++){
+      double ux,uy,uz;
+      if(abs(A-I[i])>eps){
+	  uz = (A-I[i])*(B-I[i])-F*F;
+	  uy = D*(A-I[i])+E*F;
+	  ux = (F*uy+E*uz)/(A-I[i]);
+      }
+      else if(abs(B-I[i])>eps){
+	ux = (B-I[i])*(C-I[i])-D*D;
+	uz = E*(B-I[i])+D*F;
+	uy = (D*uz+F*ux)/(B-I[i]);
+      }
+      else if(abs(C-I[i])>eps){
+	uy = (C-I[i])*(A-I[i])-E*E;
+	ux = F*(C-I[i])+D*E;
+	uz = (E*ux+D*uy)/(C-I[i]);
+      }
+      else{
+	if(abs(D)<eps){
+	  ux = 0.;
+	  uy = -E;
+	  uz = F;
+	}
+	else if(abs(E)<eps){
+	  uy = 0.;
+	  uz = -F;
+	  ux = D;
+	}
+	else {
+	  uz = 0.;
+	  ux = -D;
+	  uy = E;
+	}
+      }
+      double norm = sqrt(ux*ux+uy*uy+uz*uz);
+      ux /= norm;
+      uy /= norm;
+      uz /= norm;
+      rotref[0][i] = ux;
+      rotref[1][i] = uy;
+      rotref[2][i] = uz;
+    }
+  }
+  else{
+    if(abs(I[0]-I[1])>1.e-5*I[1]){
+      for(int i=0;i<2;i++){
+	double ux,uy,uz;
+	if(abs(A-I[i])>eps){
+	  uz = (A-I[i])*(B-I[i])-F*F;
+	  uy = D*(A-I[i])+E*F;
+	  ux = (F*uy+E*uz)/(A-I[i]);
+	}
+	else if(abs(B-I[i])>eps){
+	  ux = (B-I[i])*(C-I[i])-D*D;
+	  uz = E*(B-I[i])+D*F;
+	  uy = (D*uz+F*ux)/(B-I[i]);
+	}
+	else if(abs(C-I[i])>eps){
+	  uy = (C-I[i])*(A-I[i])-E*E;
+	  ux = F*(C-I[i])+D*E;
+	  uz = (E*ux+D*uy)/(C-I[i]);
+	}
+	else{
+	  if(abs(D)<eps){
+	    ux = 0.;
+	    uy = -E;
+	    uz = F;
+	  }
+	  else if(abs(E)<eps){
+	    uy = 0.;
+	    uz = -F;
+	    ux = D;
+	  }
+	  else {
+	    uz = 0.;
+	    ux = -D;
+	    uy = E;
+	  }
+	}
+	double norm = sqrt(ux*ux+uy*uy+uz*uz);
+	ux /= norm;
+	uy /= norm;
+	uz /= norm;
+	rotref[0][i] = ux;
+	rotref[1][i] = uy;
+	rotref[2][i] = uz;
+      }
+      rotref[0][2] = rotref[1][0]*rotref[2][1]-rotref[2][0]*rotref[1][1];
+      rotref[1][2] = rotref[2][0]*rotref[0][1]-rotref[0][0]*rotref[2][1];
+      rotref[2][2] = rotref[0][0]*rotref[1][1]-rotref[1][0]*rotref[0][1];
+    }
+    else{
+      rotref[0][0] = rotref[1][1] = rotref[2][2] = 1.;
+      rotref[0][1] = rotref[1][0] = rotref[0][2] = rotref[2][0] = rotref[1][2] = rotref[2][1] = 0.;
+    }
+  }
+  //Test sur le determinant de la matrice de rotation (1 ou -1)
+  double det = rotref[0][2]*(rotref[1][0]*rotref[2][1]-rotref[2][0]*rotref[1][1]);
+  det += rotref[1][2]*(rotref[2][0]*rotref[0][1]-rotref[0][0]*rotref[2][1]);
+  det += rotref[2][2]*(rotref[0][0]*rotref[1][1]-rotref[1][0]*rotref[0][1]);
+  if(det<0.){
+    for(int i=0;i<3;i++){
+      rotref[i][2] *= -1.;
+    }
+  }
+  for(int i=0;i<3;i++){
+    int j = (i+1)%3;
+    if(abs(rotref[0][i]*rotref[0][j]+rotref[1][i]*rotref[1][j]+rotref[2][i]*rotref[2][j])>eps){
+      cout << "erreur dans le calcul des moments d'inertie" << endl;
+    }
+  }
+}
 
 void Solide::impression(int n){ //Sortie au format vtk
 int nb_part = solide.size();
@@ -928,7 +1263,7 @@ void Solide::init(const char* s){
 	solide.push_back(P[i]);
   }
   
-  //Initialisation de la position du solide
+  //Initialisation de la position et de l'inertie du solide
   for(int i=0; i<solide.size(); i++){
 	solide[i].Dx = Point_3(0.,0.,0.);
 	solide[i].Dxprev = Point_3(0.,0.,0.);
@@ -945,6 +1280,7 @@ void Solide::init(const char* s){
 	solide[i].rot[1][2] = 0.;
 	solide[i].rot[2][0] = 0.;
 	solide[i].rot[2][1] = 0.;
+	solide[i].Inertie();
   }
 }
 

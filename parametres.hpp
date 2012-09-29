@@ -35,7 +35,9 @@ const double domainez = 1.;          //Largeur du domaine fluide selon z
 const double deltax = domainex/Nx;      //Pas d'espace pour le fluide selon x
 const double deltay = domainey/Ny;       //Pas d'espace pour le fluide selon y
 const double deltaz = domainez/Nz;       //Pas d'espace pour le fluide selon z
- 
+
+//Parametres solides
+const double rhos = 1.; //Densite du solide 
 
 //Parametres temporels
 const double T = 0.2;             //temps total de simulation

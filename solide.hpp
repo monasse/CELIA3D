@@ -11,6 +11,7 @@ public:
 	//Vertex & operator=(const  Vertex &V); // operateur = surcharge pour l'affectation
   Point_3 pos;
   int num;// numero du point dans le maillage de construction
+  
   int size(){
 	return particules.size();
   }
@@ -27,6 +28,8 @@ public:
   int size(){
 	return vertex.size();
   }
+  void compFaceIntegrals(double &Fa, double &Fb, double &Fc, double &Faa, double &Fbb, double &Fcc, double &Faaa, double &Fbbb, double &Fccc, double &Faab, double &Fbbc, double &Fcca, double na,double nb, double nc, int a, int b, int c);
+  void compProjectionIntegrals(double &P1, double &Pa, double &Pb, double &Paa, double &Pab, double &Pbb, double &Paaa, double &Paab, double &Pabb, double &Pbbb, int a, int b, int c);
   Point_3 centre;
   Vector_3 normale;
   std::vector<Vertex> vertex;
@@ -57,7 +60,8 @@ class Particule
   bool inside_box(const Bbox& cell, const Point_3& P);
 	void Affiche();  //fonction auxilaire utile pour les tests
   double volume(); 
-  
+  void CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &Tz, double &Txx, double &Tyy, double &Tzz, double &Txy, double &Tyz, double &Tzx);
+  void Inertie();
   double min_x;
   double min_y;
   double min_z;
@@ -75,6 +79,9 @@ class Particule
   std::vector<bool> fluide;
 	std::vector< std::vector<Point_3> > Points_interface;
 	std::vector< std::vector<Triangle_3> > Triangles_interface;
+  double m; //masse de la particule
+  double I[3]; //Moments d'inertie de la particule
+  double rotref[3][3]; //Matrice de rotation Q_0 telle que la matrice d'inertie R s'ecrit : R = Q_0*R_0*Q_0^-1, avec R_0=diag(I1,I2,I3)
   Point_3 x0; //Position du centre de la particule a t=0
   Point_3 Dx; //Deplacement du centre de la particule a t
   Point_3 Dxprev; //Deplacement du centre de la particule a t-dt
