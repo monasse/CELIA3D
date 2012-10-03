@@ -273,7 +273,7 @@ Cellule::Cellule(double x0, double y0, double z0, double dx0, double dy0, double
 
 Cellule & Cellule:: operator=(const Cellule &c){
     
-    assert(this != &c);
+    assert(this != &c);		
     x = c.x; y = c.y; z = c.z;
     
     dx = c.dx ; dy = c.dy ; dz = c.dz ;
@@ -427,8 +427,17 @@ void Cellule :: Affiche (){
 
 //Constructeur
 
-//Grille::Grille(): grille(Nx+2*marge, vector< vector<Cellule> > (Ny+2*marge, vector<Cellule>(Nz+2*marge))){
-	Grille::Grille(){  
+Grille::Grille(): grille(Nx+2*marge, vector< vector<Cellule> >(Ny+2*marge, vector<Cellule>(Nz+2*marge)) ){
+	//Grille::Grille(){ 
+	
+// 		grille.resize(Nx+2*marge);
+// 		for (int i = 0; i < Nx+2*marge; i++) {
+// 			grille[i].resize(Ny+2*marge);
+// 			
+// 			for (int j = 0; j <Ny+2*marge; j++)
+// 				grille[i][j].resize(Nz+2*marge);
+// 		}
+		
     x = X0; y = Y0; z = Z0;
     
     dx = deltax; dy = deltay; dz = deltaz;
@@ -436,32 +445,32 @@ void Cellule :: Affiche (){
     for(int i=0;i<Nx+2*marge;i++){
         for(int j=0;j<Ny+2*marge;j++){ 
             for(int k=0;k<Nz+2*marge;k++){ 
-                Cellule c(x+dx/2.+(i-marge)*dx,y+dy/2.+(j-marge)*dy, z+dz/2.+(k-marge)*dz,dx, dy, dz); 
-                grille[i][j][k] = c; 
+//                 Cellule c(x+dx/2.+(i-marge)*dx,y+dy/2.+(j-marge)*dy, z+dz/2.+(k-marge)*dz,dx, dy, dz); 
+//                grille[i][j][k] = c;
+							grille[i][j][k] = Cellule(x+dx/2.+(i-marge)*dx,y+dy/2.+(j-marge)*dy, z+dz/2.+(k-marge)*dz,dx, dy, dz);
             }
         } 
     }
 } 
 
-Grille::Grille(int Nx0, int Ny0, int Nz0,
-               double dx0, double x0, double dy0,
-               double y0, double dz0, double z0){
-//:grille(Nx0+2*marge, vector< vector<Cellule> > (Ny0+2*marge, vector<Cellule>(Nz0+2*marge))){ 
-    
-    
-    x = x0; y = y0; z = z0;
-    
-    dx = dx0; dy = dy0; dz = dz0;
-    
-    for(int i=0;i<Nx0+2*marge;i++){
-        for(int j=0;j<Ny0+2*marge;j++){ 
-            for(int k=0;k<Nz0+2*marge;k++){ 
-                Cellule c(x+dx/2.+(i-marge)*dx,y+dy/2.+(j-marge)*dy, z+dz/2.+(k-marge)*dz, dx, dy, dz); 
-                grille[i][j][k] = c; 
-            }
-        } 
-    }
-}
+// Grille::Grille(int Nx0, int Ny0, int Nz0,
+//                double dx0, double x0, double dy0,
+//                double y0, double dz0, double z0):grille(Nx0+2*marge, vector< vector<Cellule> > (Ny0+2*marge, vector<Cellule>(Nz0+2*marge))){ 
+//     
+//     
+//     x = x0; y = y0; z = z0;
+//     
+//     dx = dx0; dy = dy0; dz = dz0;
+//     
+//     for(int i=0;i<Nx0+2*marge;i++){
+//         for(int j=0;j<Ny0+2*marge;j++){ 
+//             for(int k=0;k<Nz0+2*marge;k++){ 
+//                 Cellule c(x+dx/2.+(i-marge)*dx,y+dy/2.+(j-marge)*dy, z+dz/2.+(k-marge)*dz, dx, dy, dz); 
+//                 grille[i][j][k] = c; 
+//             }
+//         } 
+//     }
+// }
 
 //Destructeur
 Grille::~Grille(){
@@ -1115,7 +1124,6 @@ void Grille::corentz(double sigma){
 
 //Calcul du flux en x entre les cellules 
 void Grille::fnumx(const double sigma, double t){ 
-    
    // Cellule c, ci, cg, cd, cg2, cg3, cg4, cg5, cd2, cd3, cd4;
     //Initialisation du flux au flux centre
     for(int i=0; i<Nx+2*marge-1; i++){ 
@@ -1521,7 +1529,6 @@ void Grille::fnumy(const double sigma, double t){
     
     //Cellule c, cj, camont, cg, cd, cg2, cg3, cg4, cg5, cd2, cd3, cd4;
     //Initialisation du flux au flux centre
-    
     for(int i=0; i<Nx+2*marge-1; i++){
         for(int j=0; j<Ny+2*marge-1; j++){ 
             for(int k=0; k<Nz+2*marge-1; k++){
@@ -1720,7 +1727,6 @@ void Grille::fnumy(const double sigma, double t){
     
     
     //Boucle de calcul des indicateurs de monotonicite
-    
     for(int l=0;l<5;l++){ 
         for(int i=1;i<Nx+2*marge-1;i++){
             for(int j=1;j<Ny+2*marge-1;j++){ 
@@ -1749,11 +1755,10 @@ void Grille::fnumy(const double sigma, double t){
             }
         } 
     } 
-    
     //Boucle de calcul de r+ et r- 
     for(int l=0;l<5;l++){ 
-        for(int i=marge;i<Ny+2*marge-4;i++){ 
-            for(int j=marge;j<Nx+2*marge-4;j++){ 
+        for(int i=marge;i<Nx+2*marge-4;i++){ 
+            for(int j=marge;j<Ny+2*marge-4;j++){ 
                 for(int k=marge;k<Nz+2*marge-4;k++){
 									Cellule c = grille[i][j][k]; 
 									Cellule cd = grille[i][j+1][k]; 
@@ -1775,7 +1780,7 @@ void Grille::fnumy(const double sigma, double t){
             }
         } 
     } 
-    
+		
     //Boucle de calcul des flux 
     for(int i=marge-1;i<Nx+marge;i++){ 
         for(int j=marge-1;j<Ny+marge;j++){ 
@@ -1876,8 +1881,7 @@ void Grille::fnumy(const double sigma, double t){
             }
         }
     } //Fin de la boucle sur les cellules
-    
-    
+
     // Correction d'entropie
     corenty(sigma);
     

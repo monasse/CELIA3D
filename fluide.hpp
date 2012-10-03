@@ -192,7 +192,7 @@ class Grille
   //Constructeur 
   Grille();
   //surcharge du Constructeur 
- Grille(int Nx0,int Ny0, int Nz0, double dx0, double x0, double dy0, double y0, double dz0, double z0);
+// Grille(int Nx0,int Ny0, int Nz0, double dx0, double x0, double dy0, double y0, double dz0, double z0);
 
   //Destructeur 
   ~Grille();
@@ -266,8 +266,8 @@ private :
   double dx;          //pas d'espace
   double dy;
   double dz;
-  //vector< vector< vector<Cellule > > > grille;
-	Cellule grille[Nx+2*marge][Ny+2*marge][Nz+2*marge];   //tableau des cellules 
+	vector< vector< vector<Cellule > > > grille;
+	//Cellule grille[Nx+2*marge][Ny+2*marge][Nz+2*marge];   //tableau des cellules 
     
 };
 

@@ -8,6 +8,7 @@ class Vertex
 public:
   Vertex();
   Vertex(const Point_3 p, std::vector<int> & parts);
+	//Vertex & operator=(const  Vertex &V); // operateur = surcharge pour l'affectation
   Point_3 pos;
   int num;// numero du point dans le maillage de construction
   
@@ -23,6 +24,7 @@ public:
   Face();//:vertex(std::vector<Vertex>(1)){}
   Face(std::vector<Vertex> & v, int part);
   Face(std::vector<Vertex> & v, int part, double dist);
+	//Face & operator=(const  Face &F); // operateur = surcharge pour l'affectation
   int size(){
 	return vertex.size();
   }
@@ -51,7 +53,8 @@ class Particule
 			const double x_max, const double y_max,const double z_max, 
 			std::vector<Face> & F);
   ~Particule();
-  
+	//Particule & operator=(const Particule &P); // operateur = surcharge pour l'affectation
+	
   bool box_inside_convex_polygon(const Particule& S, const Bbox& cell);  
   bool inside_convex_polygon(const Particule& S, const Point_3& P);  
   bool inside_box(const Bbox& cell, const Point_3& P);
