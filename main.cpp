@@ -60,7 +60,7 @@ int main(){
 		kimp++;
 		next_timp += dtimp;
 	  }
-		cout<<"Energie: "<<Fluide.Energie()<<"  "<<"Masse : "<<"  "<< Fluide.Masse()<<endl;
+	  cout<<"Energie: "<< Fluide.Energie()+S.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 		double dt = Fluide.pas_temps(t, T);
 		//Fluide.affiche("avant Solve");
 		Fluide.Solve(dt, t, n);

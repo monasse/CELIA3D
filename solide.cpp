@@ -639,7 +639,7 @@ void Particule::solve(double dt){
     omega = Vector_3(0.,0.,0.);
   } else {
     Dxprev = Dx;
-    u = u+(Fi+Ff)*(dt/m);
+    u = u+(Fi+(Ff+Ffprev)/2.)*(dt/m);
     Dx = Dx+u*dt;
     //Calcul de la matrice de rotation totale depuis le repère inertiel jusqu'au temps t et stockage de rotprev
     double Q[3][3];
@@ -689,9 +689,9 @@ void Particule::solve(double dt){
     double d2 = (I[0]+I[1]+I[2])/2.-I[1];
     double d3 = (I[0]+I[1]+I[2])/2.-I[2];
     //Calcul du moment dans le repère inertiel
-    double Mx = CGAL::to_double(Q[0][0]*((Mi+Mf).operator[](0))+Q[1][0]*((Mi+Mf).operator[](1))+Q[2][0]*((Mi+Mf).operator[](2)));
-    double My = CGAL::to_double(Q[0][1]*((Mi+Mf).operator[](0))+Q[1][1]*((Mi+Mf).operator[](1))+Q[2][1]*((Mi+Mf).operator[](2)));
-    double Mz = CGAL::to_double(Q[0][2]*((Mi+Mf).operator[](0))+Q[1][2]*((Mi+Mf).operator[](1))+Q[2][2]*((Mi+Mf).operator[](2)));
+    double Mx = CGAL::to_double(Q[0][0]*((Mi+(Mf+Mfprev)/2.).operator[](0))+Q[1][0]*((Mi+(Mf+Mfprev)/2.).operator[](1))+Q[2][0]*((Mi+(Mf+Mfprev)/2.).operator[](2)));
+    double My = CGAL::to_double(Q[0][1]*((Mi+(Mf+Mfprev)/2.).operator[](0))+Q[1][1]*((Mi+(Mf+Mfprev)/2.).operator[](1))+Q[2][1]*((Mi+(Mf+Mfprev)/2.).operator[](2)));
+    double Mz = CGAL::to_double(Q[0][2]*((Mi+(Mf+Mfprev)/2.).operator[](0))+Q[1][2]*((Mi+(Mf+Mfprev)/2.).operator[](1))+Q[2][2]*((Mi+(Mf+Mfprev)/2.).operator[](2)));
     a[0] = -(d2*z[1][2]-d3*z[2][1]-dt*Mx);
     a[1] = (d1*z[0][2]-d3*z[2][0]+dt*My);
     a[2] = -(d1*z[0][1]-d2*z[1][0]-dt*Mz);
@@ -1561,8 +1561,10 @@ void Solide::init(const char* s){
     solide[i].Dxprev = Vector_3(0.,0.,0.);
     solide[i].Fi = Vector_3(0.,0.,0.);
     solide[i].Ff = Vector_3(0.,0.,0.);
+    solide[i].Ffprev = Vector_3(0.,0.,0.);
     solide[i].Mi = Vector_3(0.,0.,0.);
     solide[i].Mf = Vector_3(0.,0.,0.);
+    solide[i].Mfprev = Vector_3(0.,0.,0.);
     solide[i].rotprev[0][0] = solide[i].rot[0][0] = 1.;
     solide[i].rotprev[1][1] = solide[i].rot[1][1] = 1.;
     solide[i].rotprev[2][2] = solide[i].rot[2][2] = 1.;
@@ -1632,6 +1634,41 @@ void Solide::update_triangles(){
       }
     }
   }
+}
+
+double Solide::Energie(){
+  return Energie_cinetique()+Energie_potentielle();
+}
+
+double Solide::Energie_cinetique(){
+  double E = 0.;
+  for(int i=0;i<size();i++){
+    double u2 = CGAL::to_double(solide[i].u.squared_length());
+    E += 1./2.*solide[i].m*u2;
+    //Calcul de -1/2*tr(D j(Q^T omega)) = 1/2*(I1*Omega1^2+I2*Omega2^2+I3*Omega3^2)
+    double Q[3][3];
+    for(int j=0;j<3;j++){
+      for(int k=0;k<3;k++){
+	Q[j][k] = solide[i].rot[j][0]*solide[i].rotref[0][k];
+	Q[j][k] += solide[i].rot[j][1]*solide[i].rotref[1][k];
+	Q[j][k] += solide[i].rot[j][2]*solide[i].rotref[2][k];
+      }
+    }  
+    double Omega[3];
+    Omega[0] = Omega[1] = Omega[2] = 0.;
+    for(int j=0;j<3;j++){
+      for(int k=0;k<3;k++){
+	Omega[j] += CGAL::to_double(solide[i].omega.operator[](k)*Q[k][j]);
+      }
+    }
+    E += 1./2.*(solide[i].I[0]*Omega[0]*Omega[0]+solide[i].I[1]*Omega[1]*Omega[1]+solide[i].I[2]*Omega[2]*Omega[2]);
+  }
+  return E;
+}
+
+double Solide::Energie_potentielle(){
+  //A REMPLIR UNE FOIS LE CALCUL DES FORCES EFFECTUE
+  return 0.;
 }
 
 

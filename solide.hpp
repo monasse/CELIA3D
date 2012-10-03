@@ -91,9 +91,11 @@ class Particule
   Vector_3 Dx; //Deplacement du centre de la particule a t
   Vector_3 Dxprev; //Deplacement du centre de la particule a t-dt
   Vector_3 Fi; //Forces interieures du solide
-  Vector_3 Ff; //Forces fluides exercees sur le solide
+  Vector_3 Ff; //Forces fluides exercees sur le solide entre t et t+dt/2
+  Vector_3 Ffprev; //Forces fluides exercees sur le solide entre t-dt/2 et t
   Vector_3 Mi; //Moments interieurs du solide
-  Vector_3 Mf; //Moments fluides exerces sur le solide
+  Vector_3 Mf; //Moments fluides exerces sur le solide entre t et t+dt/2
+  Vector_3 Mfprev; //Moments fluides exerces sur le solide entre t-dt/2 et t
   Vector_3 u; //Vitesse de la particule a t+dt/2
   Vector_3 omega; //Vecteur rotation au temps t+dt/2
   double rot[3][3]; //Matrice de rotation de la particule a t
@@ -118,6 +120,9 @@ public:
   void init(const char* s);
   void solve(double dt);
   void update_triangles();
+  double Energie();
+  double Energie_potentielle();
+  double Energie_cinetique();
   // private :
   std::vector<Particule> solide;
 };
