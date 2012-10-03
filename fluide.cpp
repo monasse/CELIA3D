@@ -2797,14 +2797,14 @@ void Grille::impression(int n){
 	}*/
 	
     //Impression du fichier vtk
-    const char* fluidevtk;
-    {
-        std::ostringstream oss;
-        oss << "resultats/fluide" << n << ".vtk";
-        string s = oss.str();
-        //cout << s << endl;
-        fluidevtk = s.c_str();
-    }
+    //const char* fluidevtk;
+    //{
+  std::ostringstream oss;
+  oss << "resultats/fluide" << n << ".vtk";
+  string s = oss.str();
+  //cout << s << endl;
+  const char* const fluidevtk = s.c_str();
+  //}
     
     
     //Ouverture des flux en donne en ecriture

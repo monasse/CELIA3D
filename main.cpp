@@ -65,6 +65,7 @@ int main(){
 		//Fluide.affiche("avant Solve");
 		Fluide.Solve(dt, t, n);
 		//Fluide.affiche("Solve");
+		S.solve(dt);
 		Fluide.modif_fnum(dt);
 		//Fluide.affiche("modif_fnum");
 		Fluide.mixage();

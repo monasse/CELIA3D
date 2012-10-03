@@ -59,6 +59,7 @@ class Particule
   double volume(); 
   void CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &Tz, double &Txx, double &Tyy, double &Tzz, double &Txy, double &Tyz, double &Tzx);
   void Inertie();
+  void solve(double dt);
   double min_x;
   double min_y;
   double min_z;
@@ -72,22 +73,30 @@ class Particule
   }
   std::vector<Face> faces;
   Triangles triangles;
+  Triangles triangles_prev;
   std::vector<Vector_3> normales;
+  std::vector<Vector_3> normales_prev;
   std::vector<bool> fluide;
-	std::vector< std::vector<Point_3> > Points_interface;
-	std::vector< std::vector<Triangle_3> > Triangles_interface;
+  std::vector<bool> fluide_prev;
+  std::vector< std::vector<Point_3> > Points_interface;
+  std::vector< std::vector<Triangle_3> > Triangles_interface;
+  bool fixe;
   double m; //masse de la particule
   double I[3]; //Moments d'inertie de la particule
   double rotref[3][3]; //Matrice de rotation Q_0 telle que la matrice d'inertie R s'ecrit : R = Q_0*R_0*Q_0^-1, avec R_0=diag(I1,I2,I3)
   Point_3 x0; //Position du centre de la particule a t=0
-  Point_3 Dx; //Deplacement du centre de la particule a t
-  Point_3 Dxprev; //Deplacement du centre de la particule a t-dt
+  Vector_3 Dx; //Deplacement du centre de la particule a t
+  Vector_3 Dxprev; //Deplacement du centre de la particule a t-dt
   Vector_3 Fi; //Forces interieures du solide
   Vector_3 Ff; //Forces fluides exercees sur le solide
   Vector_3 Mi; //Moments interieurs du solide
   Vector_3 Mf; //Moments fluides exerces sur le solide
-  double rot[3][3]; //Matrice de rotation de la particule
-  
+  Vector_3 u; //Vitesse de la particule a t+dt/2
+  Vector_3 omega; //Vecteur rotation au temps t+dt/2
+  double rot[3][3]; //Matrice de rotation de la particule a t
+  double rotprev[3][3]; //Matrice de rotation de la particule a t-dt
+  Aff_transformation_3 mvt_t; //Transformation affine de la particule au temps t
+  Aff_transformation_3 mvt_tprev; //Transformation affine de la particule au temps t-dt
 };  
   
 class Solide
@@ -104,6 +113,8 @@ public:
   }
   void impression(int n);
   void init(const char* s);
+  void solve(double dt);
+  void update_triangles();
   // private :
   std::vector<Particule> solide;
 };

@@ -41,6 +41,7 @@ typedef Kernel::Segment_3                Segment_3;
 typedef CGAL::Bbox_3                     Bbox;
 typedef CGAL::Polyhedron_3<Kernel>       Polyhedron_3;
 typedef CGAL::Triangulation_3<Kernel>    Triangulation;
+typedef CGAL::Aff_transformation_3<Kernel>  Aff_transformation_3;
 
 typedef Triangulation::Finite_facets_iterator Finite_faces_iterator;
 typedef Triangulation::Finite_cells_iterator Finite_cells_iterator;

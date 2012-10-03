@@ -24,8 +24,8 @@ const double X0 = 0;              //pozition de l'origine
 const double Y0 = 0;
 const double Z0 = 0;
 
-const int Nx =30;                 //nombre de cellules de fluide selon x
-const int Ny =30;                 //nombre de cellules de fluide selon y
+const int Nx =10;                 //nombre de cellules de fluide selon x
+const int Ny =10;                 //nombre de cellules de fluide selon y
 const int Nz =10;                 //nombre de cellules de fluide selon z
 
 const double domainex = 2.5;            //Largeur du domaine fluide selon x
@@ -40,10 +40,10 @@ const double deltaz = domainez/Nz;       //Pas d'espace pour le fluide selon z
 const double rhos = 1.; //Densite du solide 
 
 //Parametres temporels
-const double T = 0.2;             //temps total de simulation
+const double T = 2.;             //temps total de simulation
 const double cfl = 0.5;            //valeur de la cfl fluide
 const double cfls = 0.5;           //Valeur de la cfl solide
-const int nimp = 10;                //Nombre d'impressions
+const int nimp = 100;                //Nombre d'impressions
 const double dtimp = T/nimp;        //Pas de temps entre deux impressions
 const int Nmax = 1000000;           //nombre maximal d'iterations en temps
 
