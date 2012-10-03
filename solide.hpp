@@ -123,6 +123,7 @@ public:
   double Energie();
   double Energie_potentielle();
   double Energie_cinetique();
+  double pas_temps(double t, double T);
   // private :
   std::vector<Particule> solide;
 };

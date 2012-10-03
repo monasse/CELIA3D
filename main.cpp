@@ -61,7 +61,7 @@ int main(){
 		next_timp += dtimp;
 	  }
 	  cout<<"Energie: "<< Fluide.Energie()+S.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
-		double dt = Fluide.pas_temps(t, T);
+	  double dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
 		//Fluide.affiche("avant Solve");
 		Fluide.Solve(dt, t, n);
 		//Fluide.affiche("Solve");

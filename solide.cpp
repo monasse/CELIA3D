@@ -1671,5 +1671,19 @@ double Solide::Energie_potentielle(){
   return 0.;
 }
 
+double Solide::pas_temps(double t, double T){
+  double dt = 10000.;
+  //Restriction CFL sur la vitesse de rotation
+  for(int i=0;i<size();i++){
+    double dt1 = cfls/(sqrt(CGAL::to_double(solide[i].omega.squared_length()))+eps);
+    dt = min(dt,dt1); 
+  }
+  //Restriction CFL liée aux forces internes
+  //A REMPLIR APRES LE CALCUL DES FORCES
+  dt = min(dt,T-t); 
+  return dt;
+}
+
+
 
 #endif
