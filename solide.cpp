@@ -70,6 +70,72 @@ Face::Face(std::vector<Vertex> & v, int part, double dist)
   D0 = dist;
 }
 
+void Face::Inertie(){
+  //Choix initial d'un repere orthonorme de la face
+  if(normale.operator[](0)!=0. || normale.operator[](1)!=0.){
+    s = Vector_3(-normale.operator[](1),normale.operator[](0),0.);
+    s = s/(sqrt(CGAL::to_double(s.squared_length())));
+    t = cross_product(normale,s);
+  } else {
+    s = Vector_3(0.,0.,1.);
+    s = s/(sqrt(CGAL::to_double(s.squared_length())));
+    t = cross_product(normale,s);
+  }
+  //Calcul du centre de la face
+  double T1 = 0.;
+  double Ts = 0.;
+  double Tt = 0.;
+  for(int i=0;i<size();i++){
+    int ip = (i+1)%(size());
+    Vector_3 v1(centre,vertex[i].pos);
+    Vector_3 v2(centre,vertex[ip].pos);
+    T1 += 1./2.*CGAL::to_double(cross_product(v1,v2)*normale);
+    Ts += 1./6.*CGAL::to_double(cross_product(v1,v2)*normale)*CGAL::to_double((v1+v2)*s);
+    Tt += 1./6.*CGAL::to_double(cross_product(v1,v2)*normale)*CGAL::to_double((v1+v2)*t);
+  }
+  centre = centre + (Ts/T1)*s + (Tt/T1)*t;
+  //Calcul de la matrice d'inertie de la face dans les deux axes a l'origine centre
+  double Tss = 0.;
+  double Ttt = 0.;
+  double Tst = 0.;
+  for(int i=0;i<size();i++){
+    int ip = (i+1)%(size());
+    Vector_3 v1(centre,vertex[i].pos);
+    Vector_3 v2(centre,vertex[ip].pos);
+    double As = CGAL::to_double(v1*s);
+    double At = CGAL::to_double(v1*t);
+    double Bs = CGAL::to_double(v2*s);
+    double Bt = CGAL::to_double(v2*t);
+    Tss += 1./12.*(As*As+As*Bs+Bs*Bs);
+    Ttt += 1./12.*(At*At+At*Bt+Bt*Bt);
+    Tst += 1./24.*(2.*As*At+As*Bt+At*Bs+2.*Bs*Bt);
+  }
+  //Calcul des moments d'inertie
+  double Delta = pow(Tss-Ttt,2)+4.*Tst*Tst;
+  Is = (Tss+Ttt+sqrt(Delta))/2.;
+  It = (Tss+Ttt-sqrt(Delta))/2.;
+  //Diagonalisation
+  if(abs(Tss-Ttt)>eps){
+    if(abs(Tss-Is)>eps){
+      Vector_3 stemp = -Tst*s+(Tss-Is)*t;
+      s = stemp/(sqrt(CGAL::to_double(stemp.squared_length())));
+      t = cross_product(normale,s);
+    } else {
+      Vector_3 stemp = -Tst*t+(Ttt-Is)*s;
+      s = stemp/(sqrt(CGAL::to_double(stemp.squared_length())));
+      t = cross_product(normale,s);
+    }
+  } else {
+    if(abs(Tst)>eps){
+      Vector_3 stemp = s+t;
+      Vector_3 ttemp = -s+t;
+      s = stemp/(sqrt(CGAL::to_double(stemp.squared_length())));
+      t = stemp/(sqrt(CGAL::to_double(ttemp.squared_length())));
+    }
+  }
+}
+
+
 // Face & Face:: operator=(const Face &F){
 // 	
 // 	assert(this != &F);
@@ -1040,7 +1106,8 @@ void Particule::Inertie(){
   double D = -R[1][2];
   double E = -R[0][2];
   double F = -R[0][1];
-  //Masse
+  //Masse et volume
+  V = T1;
   m = rhos*T1;
   if(m<eps){
     cout<< "masse nulle " << m << endl;
@@ -1201,7 +1268,11 @@ void Particule::Inertie(){
       cout << "erreur dans le calcul des moments d'inertie" << endl;
     }
   }
-  
+
+  //Calcul des moments d'inertie des faces (pour le calcul des torsions)
+  for(int i=0;i<size();i++){
+    faces[i].Inertie();
+  }
   /*Test
   double R0[3][3];
   for(int i=0;i<3;i++){
@@ -1218,6 +1289,18 @@ void Particule::Inertie(){
   }
   getchar();
   //Fin du test */
+}
+
+void Particule::Volume_libre(){
+  Vl = 0.;
+  for(int i=0;i<size();i++){
+    if(faces[i].voisin == -1){
+      Vector_3 v1(faces[i].vertex[0].pos,faces[i].vertex[1].pos);
+      Vector_3 v2(faces[i].vertex[0].pos,faces[i].vertex[2].pos);
+      Vector_3 v3(x0,faces[i].vertex[0].pos);
+      Vl += 1./6.*CGAL::to_double(cross_product(v1,v2)*v3);
+    }
+  }
 }
 
 void Solide::impression(int n){ //Sortie au format vtk
@@ -1666,9 +1749,108 @@ double Solide::Energie_cinetique(){
   return E;
 }
 
+void Solide::Forces_internes(){
+  //Initialisation
+  for(int i=0;i<size();i++){
+    solide[i].Fi = Vector_3(0.,0.,0.);
+    solide[i].Mi = Vector_3(0.,0.,0.);
+  }
+  //Calcul de la déformation volumique epsilon de chaque particule
+  for(int i=0;i<size();i++){
+    solide[i].Volume_libre();
+    solide[i].epsilon = 0.;
+    for(int j=0;j<solide[i].size();j++){
+      if(solide[i].faces[j].voisin>=0){
+	int part = solide[i].faces[j].voisin;
+	Vector_3 Sn = 1./2.*cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos));
+	Point_3 c1 = solide[i].mvt_t(solide[i].faces[j].centre);
+	Point_3 c2 = solide[part].mvt_t(solide[i].faces[j].centre);
+	Vector_3 Delta_u(c1,c2);
+	solide[i].epsilon += 1./2./(solide[i].V+N_dim*nu/(1.-2.*nu)*solide[i].Vl)*CGAL::to_double(Sn*Delta_u);
+      }
+    }
+  }
+  //Calcul des forces pour chaque particule
+  for(int i=0;i<size();i++){
+    for(int j=0;j<solide[i].size();j++){
+      if(solide[i].faces[j].voisin>=0){
+	int part = solide[i].faces[j].voisin;
+	double S = 1./2.*sqrt(CGAL::to_double(cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos)).squared_length()));
+	Vector_3 X1X2(solide[i].mvt_t(solide[i].x0),solide[part].mvt_t(solide[part].x0));
+	double DIJ = sqrt(CGAL::to_double(X1X2.squared_length()));
+	Vector_3 nIJ = X1X2/DIJ;
+	Point_3 c1 = solide[i].mvt_t(solide[i].faces[j].centre);
+	Point_3 c2 = solide[part].mvt_t(solide[i].faces[j].centre);
+	Vector_3 Delta_u(c1,c2);
+	Vector_3 XC1(solide[i].x0,solide[i].faces[j].centre);
+	Vector_3 XC2(solide[part].x0,solide[i].faces[j].centre);
+	double alpha = sqrt(CGAL::to_double(XC1.squared_length()))/(solide[i].faces[j].D0);
+	double epsilonIJ = alpha*solide[i].epsilon+(1.-alpha)*solide[part].epsilon;
+	//Force de rappel elastique
+	solide[i].Fi = solide[i].Fi + S/solide[i].faces[j].D0*E/(1.+nu)*Delta_u;
+	//Force de deformation volumique
+	solide[i].Fi = solide[i].Fi + S*E*nu/(1.+nu)/(1.-2.*nu)*epsilonIJ*(nIJ+Delta_u/DIJ-(Delta_u*nIJ)/DIJ*nIJ);
+	//Moment des forces appliquees
+	solide[i].Mi = solide[i].Mi + cross_product(solide[i].mvt_t(XC1),S/solide[i].faces[j].D0*E/(1.+nu)*Delta_u);
+	solide[i].Mi = solide[i].Mi + cross_product(solide[i].mvt_t(XC1),S*E*nu/(1.+nu)/(1.-2.*nu)*epsilonIJ*(nIJ+Delta_u/DIJ-(Delta_u*nIJ)/DIJ*nIJ));
+	//Moments de flexion/torsion
+	double alphan = (1.+2.*nu)*E/4./(1.+nu)/S*(solide[i].faces[j].Is+solide[i].faces[j].It);
+	double alphas = E/4./(1.+nu)/S*((3.+2.*nu)*solide[i].faces[j].Is-(1.+2.*nu)*solide[i].faces[j].It);
+	double alphat = E/4./(1.+nu)/S*((3.+2.*nu)*solide[i].faces[j].It-(1.+2.*nu)*solide[i].faces[j].Is);
+	solide[i].Mi = solide[i].Mi + S/solide[i].faces[j].D0*(alphan*cross_product(solide[i].mvt_t(solide[i].faces[j].normale),solide[part].mvt_t(solide[i].faces[j].normale))+alphas*cross_product(solide[i].mvt_t(solide[i].faces[j].s),solide[part].mvt_t(solide[i].faces[j].s))+alphat*cross_product(solide[i].mvt_t(solide[i].faces[j].t),solide[part].mvt_t(solide[i].faces[j].t)));
+      }
+    }
+  }
+}
+
+
+
 double Solide::Energie_potentielle(){
-  //A REMPLIR UNE FOIS LE CALCUL DES FORCES EFFECTUE
-  return 0.;
+  double Ep = 0.;
+  //Calcul de la déformation volumique epsilon de chaque particule
+  for(int i=0;i<size();i++){
+    solide[i].Volume_libre();
+    solide[i].epsilon = 0.;
+    for(int j=0;j<solide[i].size();j++){
+      if(solide[i].faces[j].voisin>=0){
+	int part = solide[i].faces[j].voisin;
+	Vector_3 Sn = 1./2.*cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos));
+	Point_3 c1 = solide[i].mvt_t(solide[i].faces[j].centre);
+	Point_3 c2 = solide[part].mvt_t(solide[i].faces[j].centre);
+	Vector_3 Delta_u(c1,c2);
+	solide[i].epsilon += 1./2./(solide[i].V+N_dim*nu/(1.-2.*nu)*solide[i].Vl)*CGAL::to_double(Sn*Delta_u);
+      }
+    }
+    //Energie de deformation volumique de la particule
+    Ep += E*nu/2./(1.+nu)/(1.-2.*nu)*(solide[i].V+N_dim*nu/(1.-2.*nu)*solide[i].Vl)*pow(solide[i].epsilon,2);
+  }
+  //Calcul de l'energie pour chaque lien
+  for(int i=0;i<size();i++){
+    for(int j=0;j<solide[i].size();j++){
+      if(solide[i].faces[j].voisin>=0){
+	int part = solide[i].faces[j].voisin;
+	double S = 1./2.*sqrt(CGAL::to_double(cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos)).squared_length()));
+	Vector_3 X1X2(solide[i].mvt_t(solide[i].x0),solide[part].mvt_t(solide[part].x0));
+	double DIJ = sqrt(CGAL::to_double(X1X2.squared_length()));
+	Vector_3 nIJ = X1X2/DIJ;
+	Point_3 c1 = solide[i].mvt_t(solide[i].faces[j].centre);
+	Point_3 c2 = solide[part].mvt_t(solide[i].faces[j].centre);
+	Vector_3 Delta_u(c1,c2);
+	Vector_3 XC1(solide[i].x0,solide[i].faces[j].centre);
+	Vector_3 XC2(solide[part].x0,solide[i].faces[j].centre);
+	double alpha = sqrt(CGAL::to_double(XC1.squared_length()))/(solide[i].faces[j].D0);
+	double epsilonIJ = alpha*solide[i].epsilon+(1.-alpha)*solide[part].epsilon;
+	//Energie de rappel elastique
+	Ep += 1./4.*S/solide[i].faces[j].D0*E/(1.+nu)*CGAL::to_double(Delta_u*Delta_u);
+	//Moments de flexion/torsion
+	double alphan = (1.+2.*nu)*E/4./(1.+nu)/S*(solide[i].faces[j].Is+solide[i].faces[j].It);
+	double alphas = E/4./(1.+nu)/S*((3.+2.*nu)*solide[i].faces[j].Is-(1.+2.*nu)*solide[i].faces[j].It);
+	double alphat = E/4./(1.+nu)/S*((3.+2.*nu)*solide[i].faces[j].It-(1.+2.*nu)*solide[i].faces[j].Is);
+	Ep += S/2./solide[i].faces[j].D0*(alphan*(1.-CGAL::to_double(solide[i].mvt_t(solide[i].faces[j].normale)*solide[part].mvt_t(solide[i].faces[j].normale)))+alphas*(1.-CGAL::to_double(solide[i].mvt_t(solide[i].faces[j].s)*solide[part].mvt_t(solide[i].faces[j].s)))+alphat*(1.-CGAL::to_double(solide[i].mvt_t(solide[i].faces[j].t)*solide[part].mvt_t(solide[i].faces[j].t))));
+      }
+    }
+  }
+  return Ep;
 }
 
 double Solide::pas_temps(double t, double T){
@@ -1679,7 +1861,14 @@ double Solide::pas_temps(double t, double T){
     dt = min(dt,dt1); 
   }
   //Restriction CFL liée aux forces internes
-  //A REMPLIR APRES LE CALCUL DES FORCES
+  double cs = sqrt(E*(1.-nu)/rhos/(1.+nu)/(1.-2.*nu));
+  for(int i=0;i<size();i++){
+    for(int j=0;j<solide[i].size();j++){
+      if(solide[i].faces[j].voisin>=0){
+	dt = min(dt,cfls*solide[i].faces[j].D0/cs);
+      }
+    }
+  }
   dt = min(dt,T-t); 
   return dt;
 }

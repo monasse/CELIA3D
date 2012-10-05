@@ -38,6 +38,8 @@ const double deltaz = domainez/Nz;       //Pas d'espace pour le fluide selon z
 
 //Parametres solides
 const double rhos = 1.; //Densite du solide 
+const double nu = 0.; //Coefficient de Poisson du materiau
+const double E = 10000.; //Module d'Young du materiau
 
 //Parametres temporels
 const double T = 2.;             //temps total de simulation

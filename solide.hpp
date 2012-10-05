@@ -30,8 +30,13 @@ public:
   }
   void compFaceIntegrals(double &Fa, double &Fb, double &Fc, double &Faa, double &Fbb, double &Fcc, double &Faaa, double &Fbbb, double &Fccc, double &Faab, double &Fbbc, double &Fcca, double na,double nb, double nc, int a, int b, int c);
   void compProjectionIntegrals(double &P1, double &Pa, double &Pb, double &Paa, double &Pab, double &Pbb, double &Paaa, double &Paab, double &Pabb, double &Pbbb, int a, int b, int c);
+  void Inertie();
   Point_3 centre;
   Vector_3 normale;
+  double Is; //Premier moment d'inertie de la face
+  double It; //Second moment d'inertie de la face
+  Vector_3 s; //Vecteur selon le premier axe principal d'inertie de la face
+  Vector_3 t; //Vecteur selon le second axe principal d'inertie de la face
   std::vector<Vertex> vertex;
   int voisin;
   double D0; //Distance a l'equilibre avec la particule voisine
@@ -62,6 +67,7 @@ class Particule
   double volume(); 
   void CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &Tz, double &Txx, double &Tyy, double &Tzz, double &Txy, double &Tyz, double &Tzx);
   void Inertie();
+  void Volume_libre();
   void solve(double dt);
   double min_x;
   double min_y;
@@ -85,6 +91,9 @@ class Particule
   std::vector< std::vector<Triangle_3> > Triangles_interface;
   bool fixe;
   double m; //masse de la particule
+  double V; //Volume de la particule
+  double Vl; //Volume libre de la particule (pour le calcul de epsilon)
+  double epsilon; //Deformation volumique globale de la particule
   double I[3]; //Moments d'inertie de la particule
   double rotref[3][3]; //Matrice de rotation Q_0 telle que la matrice d'inertie R s'ecrit : R = Q_0*R_0*Q_0^-1, avec R_0=diag(I1,I2,I3)
   Point_3 x0; //Position du centre de la particule a t=0
@@ -120,6 +129,7 @@ public:
   void init(const char* s);
   void solve(double dt);
   void update_triangles();
+  void Forces_internes();
   double Energie();
   double Energie_potentielle();
   double Energie_cinetique();
