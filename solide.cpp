@@ -735,10 +735,10 @@ void Particule::solve_position(double dt){
       cout << "pas de temps trop grand : dt=" << dt << " Omega=" << Omega[0] << " " << Omega[1] << " " << Omega[2] << endl;
       getchar();
     }
-    double e0 = sqrt((1+sqrt(1-norm2))/2.);
+    double e0 = 1.;//sqrt((1+sqrt(1-norm2))/2.);
     double e[3];
     for(int j=0;j<3;j++){
-      e[j] = dt*Omega[j]/2./e0;
+      e[j] = 0.;//dt*Omega[j]/2./e0;
     }
     //Recuperation de la matrice Zn
     double z[3][3];
@@ -760,9 +760,9 @@ void Particule::solve_position(double dt){
     double Mx = CGAL::to_double(Q[0][0]*((Mi+Mf).operator[](0))+Q[1][0]*((Mi+Mf).operator[](1))+Q[2][0]*((Mi+Mf).operator[](2)));
     double My = CGAL::to_double(Q[0][1]*((Mi+Mf).operator[](0))+Q[1][1]*((Mi+Mf).operator[](1))+Q[2][1]*((Mi+Mf).operator[](2)));
     double Mz = CGAL::to_double(Q[0][2]*((Mi+Mf).operator[](0))+Q[1][2]*((Mi+Mf).operator[](1))+Q[2][2]*((Mi+Mf).operator[](2)));
-    a[0] = -(d2*z[1][2]-d3*z[2][1]-dt/2.*Mx);
-    a[1] = (d1*z[0][2]-d3*z[2][0]+dt/2.*My);
-    a[2] = -(d1*z[0][1]-d2*z[1][0]-dt/2.*Mz);
+    a[0] = -(I[0]*z[1][2]-dt/2.*Mx);
+    a[1] = (I[1]*z[0][2]+dt/2.*My);
+    a[2] = -(I[2]*z[0][1]-dt/2.*Mz);
     //Résolution du problème non linéaire
     double etemp0 = 1.;
     double etemp1 = 0.;
@@ -772,7 +772,8 @@ void Particule::solve_position(double dt){
     double err2 = 1.;
     double err3 = 1.;
     double epsilon = 1.e-15;
-    for(int k=0; k<1000 && (err1>epsilon || err2>epsilon || err3>epsilon); k++){
+    int k=0;
+    for(k=0; k<1000 && (err1>epsilon || err2>epsilon || err3>epsilon); k++){
       double x1 = (dt*a[0]-2.*(d2-d3)*etemp2*etemp3)/(2.*(d2+d3)*etemp0);
       double x2 = (dt*a[1]-2.*(d3-d1)*etemp1*etemp3)/(2.*(d1+d3)*etemp0);
       double x3 = (dt*a[2]-2.*(d1-d2)*etemp1*etemp2)/(2.*(d1+d2)*etemp0);
@@ -790,6 +791,7 @@ void Particule::solve_position(double dt){
       err2 = fabs((dt*a[1]-2.*(d3-d1)*etemp1*etemp3)/(2.*(d1+d3)*etemp0)-etemp2);
       err3 = fabs((dt*a[2]-2.*(d1-d2)*etemp1*etemp2)/(2.*(d1+d2)*etemp0)-etemp3);
     }
+    //cout << k << endl;
     e[0] = etemp1;
     e[1] = etemp2;
     e[2] = etemp3;
@@ -883,11 +885,10 @@ void Particule::solve_vitesse(double dt){
     omega = Vector_3(0.,0.,0.);
   } else {
     u = u+(Fi+Ff)/2.*(dt/m);
-    //Calcul de la matrice de rotation totale depuis le repère inertiel jusqu'au temps t et stockage de rotprev
+    //Calcul de la matrice de rotation totale depuis le repère inertiel jusqu'au temps t
     double Q[3][3];
     for(int i=0;i<3;i++){
       for(int j=0;j<3;j++){
-	rotprev[i][j] = rot[i][j];
 	Q[i][j] = rot[i][0]*rotref[0][j];
 	Q[i][j] += rot[i][1]*rotref[1][j];
 	Q[i][j] += rot[i][2]*rotref[2][j];
@@ -908,7 +909,7 @@ void Particule::solve_vitesse(double dt){
       cout << "pas de temps trop grand : dt=" << dt << " Omega=" << Omega[0] << " " << Omega[1] << " " << Omega[2] << endl;
       getchar();
     }
-    double e0 = sqrt((1+sqrt(1-norm2))/2.);
+    double e0 = sqrt((1.+sqrt(1.-norm2))/2.);
     double e[3];
     for(int j=0;j<3;j++){
       e[j] = dt*Omega[j]/2./e0;
@@ -934,9 +935,9 @@ void Particule::solve_vitesse(double dt){
     double Mx = CGAL::to_double(Q[0][0]*((Mi+Mf).operator[](0))+Q[1][0]*((Mi+Mf).operator[](1))+Q[2][0]*((Mi+Mf).operator[](2)));
     double My = CGAL::to_double(Q[0][1]*((Mi+Mf).operator[](0))+Q[1][1]*((Mi+Mf).operator[](1))+Q[2][1]*((Mi+Mf).operator[](2)));
     double Mz = CGAL::to_double(Q[0][2]*((Mi+Mf).operator[](0))+Q[1][2]*((Mi+Mf).operator[](1))+Q[2][2]*((Mi+Mf).operator[](2)));
-    a[0] = -(d2*z[2][1]-d3*z[1][2]-dt/2.*Mx);
-    a[1] = (d1*z[2][0]-d3*z[0][2]+dt/2.*My);
-    a[2] = -(d1*z[1][0]-d2*z[0][1]-dt/2.*Mz);
+    a[0] = -(d2*z[1][2]-d3*z[2][1]-dt/2.*Mx);
+    a[1] = (d1*z[0][2]-d3*z[2][0]+dt/2.*My);
+    a[2] = -(d1*z[0][1]-d2*z[1][0]-dt/2.*Mz);
     //Résolution du problème linéaire sur Zn+1
     z[0][0] = 0.;
     z[0][1] = -a[2]/I[2];
