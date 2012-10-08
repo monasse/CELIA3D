@@ -68,7 +68,8 @@ class Particule
   void CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &Tz, double &Txx, double &Tyy, double &Tzz, double &Txy, double &Tyz, double &Tzx);
   void Inertie();
   void Volume_libre();
-  void solve(double dt);
+  void solve_position(double dt);
+  void solve_vitesse(double dt);
   double min_x;
   double min_y;
   double min_z;
@@ -105,8 +106,10 @@ class Particule
   Vector_3 Mi; //Moments interieurs du solide
   Vector_3 Mf; //Moments fluides exerces sur le solide entre t et t+dt/2
   Vector_3 Mfprev; //Moments fluides exerces sur le solide entre t-dt/2 et t
-  Vector_3 u; //Vitesse de la particule a t+dt/2
-  Vector_3 omega; //Vecteur rotation au temps t+dt/2
+  Vector_3 u; //Vitesse de la particule a t
+  Vector_3 u_half; //Vitesse de la particule a t-dt/2
+  Vector_3 omega; //Vecteur rotation au temps t
+  Vector_3 omega_half;//Vecteur rotation au temps t-dt/2
   double rot[3][3]; //Matrice de rotation de la particule a t
   double rotprev[3][3]; //Matrice de rotation de la particule a t-dt
   Aff_transformation_3 mvt_t; //Transformation affine de la particule au temps t
@@ -127,7 +130,8 @@ public:
   }
   void impression(int n);
   void init(const char* s);
-  void solve(double dt);
+  void solve_position(double dt);
+  void solve_vitesse(double dt);
   void update_triangles();
   void Forces_internes();
   double Energie();

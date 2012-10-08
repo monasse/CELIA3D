@@ -693,19 +693,22 @@ void Particule::Affiche(){
 
 }
 
-void Particule::solve(double dt){
+void Particule::solve_position(double dt){
   if(fixe){
     Dx = Vector_3(0.,0.,0.);
     Dxprev = Vector_3(0.,0.,0.);
     u = Vector_3(0.,0.,0.);
+    u_half = u;
     rot[0][0]= rot[1][1] = rot[2][2] =1.;
     rot[0][1] = rot[0][2] =rot[1][0] = rot[1][2] = rot[2][0] = rot[2][1] = 0.;
     rotprev[0][0]= rotprev[1][1] = rotprev[2][2] =1.;
     rotprev[0][1] = rotprev[0][2] =rotprev[1][0] = rotprev[1][2] = rotprev[2][0] = rotprev[2][1] = 0.;
     omega = Vector_3(0.,0.,0.);
+    omega_half = omega;
   } else {
     Dxprev = Dx;
-    u = u+(Fi+(Ff+Ffprev)/2.)*(dt/m);
+    u = u+(Fi+Ff)/2.*(dt/m);
+    u_half = u;
     Dx = Dx+u*dt;
     //Calcul de la matrice de rotation totale depuis le repère inertiel jusqu'au temps t et stockage de rotprev
     double Q[3][3];
@@ -737,30 +740,29 @@ void Particule::solve(double dt){
     for(int j=0;j<3;j++){
       e[j] = dt*Omega[j]/2./e0;
     }
-    //Recuperation de la matrice Z
-    //double e0 = sqrt(1.-e[0]*e[0]-e[1]*e[1]-e[2]*e[2]);
+    //Recuperation de la matrice Zn
     double z[3][3];
-    z[0][0] = (-2.*(e[1]*e[1]+e[2]*e[2]))/dt;
-    z[0][1] = (-2.*e0*e[2]+2.*e[0]*e[1])/dt;
-    z[0][2] = (2.*e0*e[1]+2.*e[0]*e[2])/dt;
-    z[1][0] = (2.*e0*e[2]+2.*e[0]*e[1])/dt;
-    z[1][1] = (-2.*(e[0]*e[0]+e[2]*e[2]))/dt;
-    z[1][2] = (-2.*e0*e[0]+2.*e[1]*e[2])/dt;
-    z[2][0] = (-2.*e0*e[1]+2.*e[0]*e[2])/dt;
-    z[2][1] = (2.*e0*e[0]+2.*e[1]*e[2])/dt;
-    z[2][2] = (-2.*(e[0]*e[0]+e[1]*e[1]))/dt;
+    z[0][0] = 0.;
+    z[0][1] = -Omega[2];
+    z[0][2] = Omega[1];
+    z[1][0] = Omega[2];
+    z[1][1] = 0.;
+    z[1][2] = -Omega[0];
+    z[2][0] = -Omega[1];
+    z[2][1] = Omega[0];
+    z[2][2] = 0.;
     //Calcul de la matrice A
     double a[3];
     double d1 = (I[0]+I[1]+I[2])/2.-I[0];
     double d2 = (I[0]+I[1]+I[2])/2.-I[1];
     double d3 = (I[0]+I[1]+I[2])/2.-I[2];
     //Calcul du moment dans le repère inertiel
-    double Mx = CGAL::to_double(Q[0][0]*((Mi+(Mf+Mfprev)/2.).operator[](0))+Q[1][0]*((Mi+(Mf+Mfprev)/2.).operator[](1))+Q[2][0]*((Mi+(Mf+Mfprev)/2.).operator[](2)));
-    double My = CGAL::to_double(Q[0][1]*((Mi+(Mf+Mfprev)/2.).operator[](0))+Q[1][1]*((Mi+(Mf+Mfprev)/2.).operator[](1))+Q[2][1]*((Mi+(Mf+Mfprev)/2.).operator[](2)));
-    double Mz = CGAL::to_double(Q[0][2]*((Mi+(Mf+Mfprev)/2.).operator[](0))+Q[1][2]*((Mi+(Mf+Mfprev)/2.).operator[](1))+Q[2][2]*((Mi+(Mf+Mfprev)/2.).operator[](2)));
-    a[0] = -(d2*z[1][2]-d3*z[2][1]-dt*Mx);
-    a[1] = (d1*z[0][2]-d3*z[2][0]+dt*My);
-    a[2] = -(d1*z[0][1]-d2*z[1][0]-dt*Mz);
+    double Mx = CGAL::to_double(Q[0][0]*((Mi+Mf).operator[](0))+Q[1][0]*((Mi+Mf).operator[](1))+Q[2][0]*((Mi+Mf).operator[](2)));
+    double My = CGAL::to_double(Q[0][1]*((Mi+Mf).operator[](0))+Q[1][1]*((Mi+Mf).operator[](1))+Q[2][1]*((Mi+Mf).operator[](2)));
+    double Mz = CGAL::to_double(Q[0][2]*((Mi+Mf).operator[](0))+Q[1][2]*((Mi+Mf).operator[](1))+Q[2][2]*((Mi+Mf).operator[](2)));
+    a[0] = -(d2*z[1][2]-d3*z[2][1]-dt/2.*Mx);
+    a[1] = (d1*z[0][2]-d3*z[2][0]+dt/2.*My);
+    a[2] = -(d1*z[0][1]-d2*z[1][0]-dt/2.*Mz);
     //Résolution du problème non linéaire
     double etemp0 = 1.;
     double etemp1 = 0.;
@@ -824,6 +826,10 @@ void Particule::solve(double dt){
       Q[i][0] /= norm;
       Q[i][1] /= norm;
       Q[i][2] /= norm;
+      if(abs(norm-1.)>eps){
+	cout << "Matrice de rotation renomalisee" <<endl;
+	cout << "Ligne " << i << " norme=" << norm << endl;
+      }
     }
     double vect1 = Q[0][2]-(Q[1][0]*Q[2][1]-Q[2][0]*Q[1][1]);
     double vect2 = Q[1][2]-(Q[2][0]*Q[0][1]-Q[0][0]*Q[2][1]);
@@ -860,6 +866,7 @@ void Particule::solve(double dt){
       }
     }
     omega = Vector_3(omega1,omega2,omega3);
+    omega_half = omega;
   }//Fin du calcul dans le cas d'une particule libre
   //Mise à jour de la transformation donnant le mouvement de la particule
   mvt_tprev = mvt_t;
@@ -870,7 +877,98 @@ void Particule::solve(double dt){
   mvt_t = Aff_transformation_3(rot[0][0],rot[0][1],rot[0][2],M.operator[](0),rot[1][0],rot[1][1],rot[1][2],M.operator[](1),rot[2][0],rot[2][1],rot[2][2],M.operator[](2));
 }
 
-
+void Particule::solve_vitesse(double dt){
+  if(fixe){
+    u = Vector_3(0.,0.,0.);
+    omega = Vector_3(0.,0.,0.);
+  } else {
+    u = u+(Fi+Ff)/2.*(dt/m);
+    //Calcul de la matrice de rotation totale depuis le repère inertiel jusqu'au temps t et stockage de rotprev
+    double Q[3][3];
+    for(int i=0;i<3;i++){
+      for(int j=0;j<3;j++){
+	rotprev[i][j] = rot[i][j];
+	Q[i][j] = rot[i][0]*rotref[0][j];
+	Q[i][j] += rot[i][1]*rotref[1][j];
+	Q[i][j] += rot[i][2]*rotref[2][j];
+      }
+    }    
+    //Recuperation de Zn+1/2 à partir de omega
+    double Omega[3];
+    Omega[0] = Omega[1] = Omega[2] = 0.;
+    for(int j=0;j<3;j++){
+      for(int k=0;k<3;k++){
+	Omega[j] += CGAL::to_double(omega.operator[](k)*Q[k][j]);
+      }
+    }
+    //cout << "debut " << Omega[0] << " " << Omega[1] << " " << Omega[2] << endl;
+    //getchar();
+    double norm2 = dt*dt*(Omega[0]*Omega[0]+Omega[1]*Omega[1]+Omega[2]*Omega[2]);
+    if(norm2>1.){
+      cout << "pas de temps trop grand : dt=" << dt << " Omega=" << Omega[0] << " " << Omega[1] << " " << Omega[2] << endl;
+      getchar();
+    }
+    double e0 = sqrt((1+sqrt(1-norm2))/2.);
+    double e[3];
+    for(int j=0;j<3;j++){
+      e[j] = dt*Omega[j]/2./e0;
+    }
+    //Recuperation de la matrice Zn+1/2
+    //double e0 = sqrt(1.-e[0]*e[0]-e[1]*e[1]-e[2]*e[2]);
+    double z[3][3];
+    z[0][0] = (-2.*(e[1]*e[1]+e[2]*e[2]))/dt;
+    z[0][1] = (-2.*e0*e[2]+2.*e[0]*e[1])/dt;
+    z[0][2] = (2.*e0*e[1]+2.*e[0]*e[2])/dt;
+    z[1][0] = (2.*e0*e[2]+2.*e[0]*e[1])/dt;
+    z[1][1] = (-2.*(e[0]*e[0]+e[2]*e[2]))/dt;
+    z[1][2] = (-2.*e0*e[0]+2.*e[1]*e[2])/dt;
+    z[2][0] = (-2.*e0*e[1]+2.*e[0]*e[2])/dt;
+    z[2][1] = (2.*e0*e[0]+2.*e[1]*e[2])/dt;
+    z[2][2] = (-2.*(e[0]*e[0]+e[1]*e[1]))/dt;
+    //Calcul de la matrice A
+    double a[3];
+    double d1 = (I[0]+I[1]+I[2])/2.-I[0];
+    double d2 = (I[0]+I[1]+I[2])/2.-I[1];
+    double d3 = (I[0]+I[1]+I[2])/2.-I[2];
+    //Calcul du moment dans le repère inertiel
+    double Mx = CGAL::to_double(Q[0][0]*((Mi+Mf).operator[](0))+Q[1][0]*((Mi+Mf).operator[](1))+Q[2][0]*((Mi+Mf).operator[](2)));
+    double My = CGAL::to_double(Q[0][1]*((Mi+Mf).operator[](0))+Q[1][1]*((Mi+Mf).operator[](1))+Q[2][1]*((Mi+Mf).operator[](2)));
+    double Mz = CGAL::to_double(Q[0][2]*((Mi+Mf).operator[](0))+Q[1][2]*((Mi+Mf).operator[](1))+Q[2][2]*((Mi+Mf).operator[](2)));
+    a[0] = -(d2*z[2][1]-d3*z[1][2]-dt/2.*Mx);
+    a[1] = (d1*z[2][0]-d3*z[0][2]+dt/2.*My);
+    a[2] = -(d1*z[1][0]-d2*z[0][1]-dt/2.*Mz);
+    //Résolution du problème linéaire sur Zn+1
+    z[0][0] = 0.;
+    z[0][1] = -a[2]/I[2];
+    z[0][2] = a[1]/I[1];
+    z[1][0] = -z[0][1];
+    z[1][1] = 0.;
+    z[1][2] = -a[0]/I[0];
+    z[2][0] = -z[0][2];
+    z[2][1] = -z[1][2];
+    z[2][2]= 0.;
+    //Calcul de Omega^n+1
+    double omega1 = 0.;
+    for(int i=0;i<3;i++){
+      for(int j=0;j<3;j++){
+	omega1 -= Q[1][i]*z[i][j]*Q[2][j];
+      }
+    }
+    double omega2 = 0.;
+    for(int i=0;i<3;i++){
+      for(int j=0;j<3;j++){
+	omega2 += Q[0][i]*z[i][j]*Q[2][j];
+      }
+    }
+    double omega3 = 0.;
+    for(int i=0;i<3;i++){
+      for(int j=0;j<3;j++){
+	omega3 -= Q[0][i]*z[i][j]*Q[1][j];
+      }
+    }
+    omega = Vector_3(omega1,omega2,omega3);
+  }//Fin du calcul dans le cas d'une particule libre
+}
 
 double Particule::volume(){
 	
@@ -1664,11 +1762,17 @@ void Solide::init(const char* s){
 }
 
 
-void Solide::solve(double dt){
+void Solide::solve_position(double dt){
   for(int i=0;i<size();i++){
-    solide[i].solve(dt);
+    solide[i].solve_position(dt);
   }
   update_triangles();
+}
+
+void Solide::solve_vitesse(double dt){
+  for(int i=0;i<size();i++){
+    solide[i].solve_vitesse(dt);
+  }
 }
 
 void Solide::update_triangles(){

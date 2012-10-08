@@ -23,6 +23,17 @@ int main(){
 	} else {
 		cout <<"ouverture de .dat rate" << endl;
 	}
+
+	char energie[]="resultats/energie.dat";
+	
+	//Ouverture des flux en donne en ecriture
+	std::ofstream ener(energie,ios::out);
+	if(ener)
+	{
+		// cout <<"ouverture de xt.vtk reussie" << endl;
+	} else {
+		cout <<"ouverture de .dat rate" << endl;
+	}
 	
 	Grille Fluide;
 	
@@ -51,7 +62,11 @@ int main(){
 	S.impression(kimp);
 	kimp++;
 	
-	
+	double E0 = Fluide.Energie()+S.Energie();
+	double E0S= S.Energie();
+
+	S.Forces_internes();
+
 	for (int n=0; (t<T) && n<Nmax; n++){
 		
 	  if(t>next_timp){
@@ -61,12 +76,14 @@ int main(){
 		next_timp += dtimp;
 	  }
 	  cout<<"Energie: "<< Fluide.Energie()+S.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
+	  ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S << endl;
 	  double dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
 		//Fluide.affiche("avant Solve");
 		Fluide.Solve(dt, t, n);
 		//Fluide.affiche("Solve");
+		S.solve_position(dt);
 		S.Forces_internes();
-		S.solve(dt);
+		S.solve_vitesse(dt);
 		Fluide.modif_fnum(dt);
 		//Fluide.affiche("modif_fnum");
 		Fluide.mixage();
