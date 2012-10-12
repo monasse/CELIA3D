@@ -710,7 +710,7 @@ void Particule::solve_position(double dt){
     u = u+(Fi+Ff)/2.*(dt/m);
     u_half = u;
     Dx = Dx+u*dt;
-    //Calcul de la matrice de rotation totale depuis le repère inertiel jusqu'au temps t et stockage de rotprev
+    //Calcul de la matrice de rotation totale depuis le repï¿½re inertiel jusqu'au temps t et stockage de rotprev
     double Q[3][3];
     for(int i=0;i<3;i++){
       for(int j=0;j<3;j++){
@@ -720,7 +720,7 @@ void Particule::solve_position(double dt){
 	Q[i][j] += rot[i][2]*rotref[2][j];
       }
     }    
-    //Recuperation de e à partir de omega
+    //Recuperation de e ï¿½ partir de omega
     double Omega[3];
     Omega[0] = Omega[1] = Omega[2] = 0.;
     for(int j=0;j<3;j++){
@@ -756,14 +756,14 @@ void Particule::solve_position(double dt){
     double d1 = (I[0]+I[1]+I[2])/2.-I[0];
     double d2 = (I[0]+I[1]+I[2])/2.-I[1];
     double d3 = (I[0]+I[1]+I[2])/2.-I[2];
-    //Calcul du moment dans le repère inertiel
+    //Calcul du moment dans le repï¿½re inertiel
     double Mx = CGAL::to_double(Q[0][0]*((Mi+Mf).operator[](0))+Q[1][0]*((Mi+Mf).operator[](1))+Q[2][0]*((Mi+Mf).operator[](2)));
     double My = CGAL::to_double(Q[0][1]*((Mi+Mf).operator[](0))+Q[1][1]*((Mi+Mf).operator[](1))+Q[2][1]*((Mi+Mf).operator[](2)));
     double Mz = CGAL::to_double(Q[0][2]*((Mi+Mf).operator[](0))+Q[1][2]*((Mi+Mf).operator[](1))+Q[2][2]*((Mi+Mf).operator[](2)));
     a[0] = -(I[0]*z[1][2]-dt/2.*Mx);
     a[1] = (I[1]*z[0][2]+dt/2.*My);
     a[2] = -(I[2]*z[0][1]-dt/2.*Mz);
-    //Résolution du problème non linéaire
+    //Rï¿½solution du problï¿½me non linï¿½aire
     double etemp0 = 1.;
     double etemp1 = 0.;
     double etemp2 = 0.;
@@ -822,7 +822,7 @@ void Particule::solve_position(double dt){
     Q[2][0] = Qprev[2][0]*(1.+dt*z[0][0])+Qprev[2][1]*dt*z[1][0]+Qprev[2][2]*dt*z[2][0];
     Q[2][1] = Qprev[2][0]*dt*z[0][1]+Qprev[2][1]*(1.+dt*z[1][1])+Qprev[2][2]*dt*z[2][1];
     Q[2][2] = Qprev[2][0]*dt*z[0][2]+Qprev[2][1]*dt*z[1][2]+Qprev[2][2]*(1.+dt*z[2][2]);
-    //Tests pour vérifier qu'on a toujours une matrice de rotation
+    //Tests pour vï¿½rifier qu'on a toujours une matrice de rotation
     for(int i=0;i<3;i++){
       double norm = Q[i][0]*Q[i][0]+Q[i][1]*Q[i][1]+Q[i][2]*Q[i][2];
       Q[i][0] /= norm;
@@ -840,7 +840,7 @@ void Particule::solve_position(double dt){
       cout << "Erreur rotation " << vect1 << " " << vect2 << " " << vect3 << endl;
       getchar();
     }
-    //Récupération de la matrice de rotation de la particule
+    //Rï¿½cupï¿½ration de la matrice de rotation de la particule
     for(int i=0;i<3;i++){
       for(int j=0;j<3;j++){
 	rot[i][j] = Q[i][0]*rotref[j][0];
@@ -870,7 +870,7 @@ void Particule::solve_position(double dt){
     omega = Vector_3(omega1,omega2,omega3);
     omega_half = omega;
   }//Fin du calcul dans le cas d'une particule libre
-  //Mise à jour de la transformation donnant le mouvement de la particule
+  //Mise ï¿½ jour de la transformation donnant le mouvement de la particule
   mvt_tprev = mvt_t;
   Aff_transformation_3 rotation(rot[0][0],rot[0][1],rot[0][2],rot[1][0],rot[1][1],rot[1][2],rot[2][0],rot[2][1],rot[2][2]);
   Vector_3 M = Dx;
@@ -885,7 +885,7 @@ void Particule::solve_vitesse(double dt){
     omega = Vector_3(0.,0.,0.);
   } else {
     u = u+(Fi+Ff)/2.*(dt/m);
-    //Calcul de la matrice de rotation totale depuis le repère inertiel jusqu'au temps t
+    //Calcul de la matrice de rotation totale depuis le repï¿½re inertiel jusqu'au temps t
     double Q[3][3];
     for(int i=0;i<3;i++){
       for(int j=0;j<3;j++){
@@ -894,7 +894,7 @@ void Particule::solve_vitesse(double dt){
 	Q[i][j] += rot[i][2]*rotref[2][j];
       }
     }    
-    //Recuperation de Zn+1/2 à partir de omega
+    //Recuperation de Zn+1/2 ï¿½ partir de omega
     double Omega[3];
     Omega[0] = Omega[1] = Omega[2] = 0.;
     for(int j=0;j<3;j++){
@@ -931,14 +931,14 @@ void Particule::solve_vitesse(double dt){
     double d1 = (I[0]+I[1]+I[2])/2.-I[0];
     double d2 = (I[0]+I[1]+I[2])/2.-I[1];
     double d3 = (I[0]+I[1]+I[2])/2.-I[2];
-    //Calcul du moment dans le repère inertiel
+    //Calcul du moment dans le repï¿½re inertiel
     double Mx = CGAL::to_double(Q[0][0]*((Mi+Mf).operator[](0))+Q[1][0]*((Mi+Mf).operator[](1))+Q[2][0]*((Mi+Mf).operator[](2)));
     double My = CGAL::to_double(Q[0][1]*((Mi+Mf).operator[](0))+Q[1][1]*((Mi+Mf).operator[](1))+Q[2][1]*((Mi+Mf).operator[](2)));
     double Mz = CGAL::to_double(Q[0][2]*((Mi+Mf).operator[](0))+Q[1][2]*((Mi+Mf).operator[](1))+Q[2][2]*((Mi+Mf).operator[](2)));
     a[0] = -(d2*z[1][2]-d3*z[2][1]-dt/2.*Mx);
     a[1] = (d1*z[0][2]-d3*z[2][0]+dt/2.*My);
     a[2] = -(d1*z[0][1]-d2*z[1][0]-dt/2.*Mz);
-    //Résolution du problème linéaire sur Zn+1
+    //Rï¿½solution du problï¿½me linï¿½aire sur Zn+1
     z[0][0] = 0.;
     z[0][1] = -a[2]/I[2];
     z[0][2] = a[1]/I[1];
@@ -1130,11 +1130,11 @@ void solve_eq3(double a, double b, double c, double d, double &x1, double &x2, d
   int i;
   for(i=0;i<10000 && res!=0.;i++){
     double p = 3.*a*x1*x1+2.*b*x1+c;
-    if(abs(p)>1.e-5*a){
+    if(abs(p)>1.e-5*abs(a)){
       x1 -= res/p;
     }
     else {
-      if(abs(res)>1.e-4*a){
+      if(abs(res)>1.e-4*abs(a)){
 	x1 += pow(2.,-i);
       }
       else {
@@ -1386,6 +1386,7 @@ void Particule::Inertie(){
     }
     cout << endl;
   }
+  cout << I[0] << " " << I[1] << " " << I[2] << endl;
   getchar();
   //Fin du test */
 }
@@ -1860,7 +1861,7 @@ void Solide::Forces_internes(){
     solide[i].Fi = Vector_3(0.,0.,0.);
     solide[i].Mi = Vector_3(0.,0.,0.);
   }
-  //Calcul de la déformation volumique epsilon de chaque particule
+  //Calcul de la dï¿½formation volumique epsilon de chaque particule
   for(int i=0;i<size();i++){
     solide[i].Volume_libre();
     solide[i].epsilon = 0.;
@@ -1912,7 +1913,7 @@ void Solide::Forces_internes(){
 
 double Solide::Energie_potentielle(){
   double Ep = 0.;
-  //Calcul de la déformation volumique epsilon de chaque particule
+  //Calcul de la dï¿½formation volumique epsilon de chaque particule
   for(int i=0;i<size();i++){
     solide[i].Volume_libre();
     solide[i].epsilon = 0.;
@@ -1965,7 +1966,7 @@ double Solide::pas_temps(double t, double T){
     double dt1 = cfls/(sqrt(CGAL::to_double(solide[i].omega.squared_length()))+eps);
     dt = min(dt,dt1); 
   }
-  //Restriction CFL liée aux forces internes
+  //Restriction CFL liï¿½e aux forces internes
   double cs = sqrt(E*(1.-nu)/rhos/(1.+nu)/(1.-2.*nu));
   for(int i=0;i<size();i++){
     for(int j=0;j<solide[i].size();j++){

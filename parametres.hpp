@@ -28,9 +28,9 @@ const int Nx =10;                 //nombre de cellules de fluide selon x
 const int Ny =10;                 //nombre de cellules de fluide selon y
 const int Nz =10;                 //nombre de cellules de fluide selon z
 
-const double domainex = 2.5;            //Largeur du domaine fluide selon x
+const double domainex = 2.;            //Largeur du domaine fluide selon x
 const double domainey = 2.;          //Largeur du domaine fluide selon y
-const double domainez = 1.;          //Largeur du domaine fluide selon z
+const double domainez = 2.;          //Largeur du domaine fluide selon z
 
 const double deltax = domainex/Nx;      //Pas d'espace pour le fluide selon x
 const double deltay = domainey/Ny;       //Pas d'espace pour le fluide selon y
