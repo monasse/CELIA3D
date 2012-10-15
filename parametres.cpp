@@ -13,7 +13,6 @@ double U(double x,double y, double z){
   if(x<0.16)
 	{u = 1.;} 
    else {u = 1.;}
-
   return u; 
  }
  double V(double x,double y, double z){ 
