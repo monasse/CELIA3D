@@ -89,7 +89,9 @@ class Particule
   std::vector<bool> fluide;
   std::vector<bool> fluide_prev;
   std::vector< std::vector<Point_3> > Points_interface;
+	std::vector< std::vector<Point_3> > Points_interface_prev;
   std::vector< std::vector<Triangle_3> > Triangles_interface;
+	std::vector< std::vector<Triangle_3> > Triangles_interface_prev;
   bool fixe;
   double m; //masse de la particule
   double V; //Volume de la particule

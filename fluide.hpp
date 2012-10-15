@@ -192,7 +192,7 @@ class Grille
   //Constructeur 
   Grille();
   //surcharge du Constructeur 
-// Grille(int Nx0,int Ny0, int Nz0, double dx0, double x0, double dy0, double y0, double dz0, double z0);
+ Grille(int Nx0,int Ny0, int Nz0, double dx0, double x0, double dy0, double y0, double dz0, double z0);
 
   //Destructeur 
   ~Grille();
@@ -205,7 +205,8 @@ class Grille
    Cellule cellule(int i, int j, int k);
   //Acces a la cellule contenant le point (x,y,z)
   Cellule in_cell(Point_3 p);
-
+	//Acces a la cellule contenant le point (x,y,z)
+	void in_cell(Point_3 p, int &i, int& j, int& k);
   //Sous-programme de definition des conditions initiales 
   void init();
 
@@ -258,6 +259,8 @@ class Grille
   void mixage(); //Procedure de mixage pour le cellules avec c.alpha>0.5
   void fill_cel(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.)
 	//void fill_cel_old(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.) old version
+	void swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n);
+	void swap(const double dt, Solide& S);
 private :
 
   double x;          //position de l'origine

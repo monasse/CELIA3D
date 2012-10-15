@@ -35,20 +35,16 @@ int main(){
 		cout <<"ouverture de .dat rate" << endl;
 	}
 	
-	Grille Fluide;
-	
-	
 	double t=0.;
 
 	Solide S;
 	S.init("maillage.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
+	//S.Affiche();
 
-
+	Grille Fluide;
 	Fluide.init();
 	Fluide.parois(S);
 	Fluide.BC();
-	//S.Affiche();
-	
 
 	int iter=0;
 	
@@ -67,6 +63,7 @@ int main(){
 
 	S.Forces_internes();
 
+	
 	for (int n=0; (t<T) && n<Nmax; n++){
 		
 	  if(t>next_timp){
@@ -84,8 +81,10 @@ int main(){
 		S.solve_position(dt);
 		S.Forces_internes();
 		S.solve_vitesse(dt);
+		Fluide.parois(S);
 		Fluide.modif_fnum(dt);
 		//Fluide.affiche("modif_fnum");
+		Fluide.swap(dt,S);
 		Fluide.mixage();
 		//Fluide.affiche("mixage");
 		Fluide.fill_cel(S);

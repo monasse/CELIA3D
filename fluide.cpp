@@ -453,24 +453,23 @@ Grille::Grille(): grille(Nx+2*marge, vector< vector<Cellule> >(Ny+2*marge, vecto
     }
 } 
 
-// Grille::Grille(int Nx0, int Ny0, int Nz0,
-//                double dx0, double x0, double dy0,
-//                double y0, double dz0, double z0):grille(Nx0+2*marge, vector< vector<Cellule> > (Ny0+2*marge, vector<Cellule>(Nz0+2*marge))){ 
-//     
-//     
-//     x = x0; y = y0; z = z0;
-//     
-//     dx = dx0; dy = dy0; dz = dz0;
-//     
-//     for(int i=0;i<Nx0+2*marge;i++){
-//         for(int j=0;j<Ny0+2*marge;j++){ 
-//             for(int k=0;k<Nz0+2*marge;k++){ 
-//                 Cellule c(x+dx/2.+(i-marge)*dx,y+dy/2.+(j-marge)*dy, z+dz/2.+(k-marge)*dz, dx, dy, dz); 
-//                 grille[i][j][k] = c; 
-//             }
-//         } 
-//     }
-// }
+Grille::Grille(int Nx0, int Ny0, int Nz0, double dx0, double x0, double dy0,double y0, double dz0, double z0):grille
+               (Nx0+2*marge, vector< vector<Cellule> > (Ny0+2*marge, vector<Cellule>(Nz0+2*marge))){ 
+     
+    x = x0; y = y0; z = z0;
+    
+    dx = dx0; dy = dy0; dz = dz0;
+    
+    for(int i=0;i<Nx0+2*marge;i++){
+        for(int j=0;j<Ny0+2*marge;j++){ 
+            for(int k=0;k<Nz0+2*marge;k++){ 
+                //Cellule c(x+dx/2.+(i-marge)*dx,y+dy/2.+(j-marge)*dy, z+dz/2.+(k-marge)*dz, dx, dy, dz); 
+                //grille[i][j][k] = c; 
+								grille[i][j][k] =	Cellule(x+dx/2.+(i-marge)*dx,y+dy/2.+(j-marge)*dy, z+dz/2.+(k-marge)*dz, dx, dy, dz); 
+            }
+        } 
+    }
+}
 
 //Destructeur
 Grille::~Grille(){
@@ -544,7 +543,32 @@ Cellule Grille::in_cell(Point_3 p){
   return cellule(i,j,k);
 }
 
-
+void Grille::in_cell(Point_3 p, int &i, int& j, int& k){
+	
+	i = (int) (floor(CGAL::to_double((p.operator[](0)-x)/dx))+marge);
+	j = (int) (floor(CGAL::to_double((p.operator[](1)-y)/dy))+marge);
+	k = (int) (floor(CGAL::to_double((p.operator[](2)-z)/dz))+marge);
+	
+	if(i<0){
+		i = 0;
+	}
+	if(i>Nx+2*marge-1){
+		i = Nx+2*marge-1;
+	}
+	if(j<0){
+		j = 0;
+	}
+	if(j>Ny+2*marge-1){
+		j = Ny+2*marge-1;
+	}
+	if(k<0){
+		k = 0;
+	}
+	if(k>Nz+2*marge-1){
+		k = Nz+2*marge-1;
+	}
+	
+}
 //Sous-programme de definition des conditions initiales 
 void Grille::init(){
     

@@ -836,22 +836,30 @@ Point_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn){
 	
 	double lambda = 0., mu = 0.;
 	
-	
-	double dom = CGAL::to_double((Tn.operator[](0).operator[](0) - Tn.operator[](2).operator[](0)) * 
-	           (Tn.operator[](1).operator[](1) - Tn.operator[](2).operator[](1))-
-	           (Tn.operator[](0).operator[](1) - Tn.operator[](2).operator[](1)) * 
-	           (Tn.operator[](1).operator[](0) - Tn.operator[](2).operator[](0)));
-						 
-						 
-	double num1 = CGAL::to_double((Xn.operator[](0) - Tn.operator[](2).operator[](0)) * 
-						    (Tn.operator[](1).operator[](1) - Tn.operator[](2).operator[](1)) -
-						    (Xn.operator[](1) - Tn.operator[](2).operator[](1)) * 
-						    (Tn.operator[](1).operator[](0) - Tn.operator[](2).operator[](0)));
+// 	double dom = CGAL::to_double((Tn.operator[](0).operator[](0) - Tn.operator[](2).operator[](0)) * 
+// 	           (Tn.operator[](1).operator[](1) - Tn.operator[](2).operator[](1))-
+// 	           (Tn.operator[](0).operator[](1) - Tn.operator[](2).operator[](1)) * 
+// 	           (Tn.operator[](1).operator[](0) - Tn.operator[](2).operator[](0)));
+// 						 
+// 						 
+// 	double num1 = CGAL::to_double((Xn.operator[](0) - Tn.operator[](2).operator[](0)) * 
+// 						    (Tn.operator[](1).operator[](1) - Tn.operator[](2).operator[](1)) -
+// 						    (Xn.operator[](1) - Tn.operator[](2).operator[](1)) * 
+// 						    (Tn.operator[](1).operator[](0) - Tn.operator[](2).operator[](0)));
+// 								
+// 	double num2 =-1*( CGAL::to_double((Xn.operator[](0) - Tn.operator[](2).operator[](0)) * 
+// 								(Tn.operator[](0).operator[](1) - Tn.operator[](2).operator[](1)) -
+// 								(Xn.operator[](1) - Tn.operator[](2).operator[](1)) * 
+// 								(Tn.operator[](0).operator[](0) - Tn.operator[](2).operator[](0))));
 								
-	double num2 =-1*( CGAL::to_double((Xn.operator[](0) - Tn.operator[](2).operator[](0)) * 
-								(Tn.operator[](0).operator[](1) - Tn.operator[](2).operator[](1)) -
-								(Xn.operator[](1) - Tn.operator[](2).operator[](1)) * 
-								(Tn.operator[](0).operator[](0) - Tn.operator[](2).operator[](0))));
+								
+	double dom = std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
+										Vector_3(Tn.operator[](2),Tn.operator[](1))).squared_length() ));
+	double num1 = std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Xn),
+										 Vector_3(Tn.operator[](2),Tn.operator[](1))).squared_length() ));
+	double num2 =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
+										 Vector_3(Tn.operator[](2),Xn)).squared_length() )); 
+										 
 	if(dom>eps){							
 	lambda =  num1/dom;
 	mu = num2/dom;
@@ -887,20 +895,28 @@ Point_2 tr(Triangle_3 Tn1, Point_3 Xn){
 		
  double lambda = 0., mu = 0.;
   
- double dom = CGAL::to_double((Tn1.operator[](0).operator[](0) - Tn1.operator[](2).operator[](0)) * 
- (Tn1.operator[](1).operator[](1) - Tn1.operator[](2).operator[](1))-
- (Tn1.operator[](0).operator[](1) - Tn1.operator[](2).operator[](1)) * 
- (Tn1.operator[](1).operator[](0) - Tn1.operator[](2).operator[](0)));
+//  double dom = CGAL::to_double((Tn1.operator[](0).operator[](0) - Tn1.operator[](2).operator[](0)) * 
+//  (Tn1.operator[](1).operator[](1) - Tn1.operator[](2).operator[](1))-
+//  (Tn1.operator[](0).operator[](1) - Tn1.operator[](2).operator[](1)) * 
+//  (Tn1.operator[](1).operator[](0) - Tn1.operator[](2).operator[](0)));
+//  
+//  double num1 = CGAL::to_double((Xn.operator[](0) - Tn1.operator[](2).operator[](0)) * 
+//  (Tn1.operator[](1).operator[](1) - Tn1.operator[](2).operator[](1)) -
+//  (Xn.operator[](1) - Tn1.operator[](2).operator[](1)) * 
+//  (Tn1.operator[](1).operator[](0) - Tn1.operator[](2).operator[](0)));
+//  
+//  double num2 = -1*(CGAL::to_double((Xn.operator[](0) - Tn1.operator[](2).operator[](0)) * 
+//  (Tn1.operator[](0).operator[](1) - Tn1.operator[](2).operator[](1)) -
+//  (Xn.operator[](1) - Tn1.operator[](2).operator[](1)) * 
+//  (Tn1.operator[](0).operator[](0) - Tn1.operator[](2).operator[](0))));
  
- double num1 = CGAL::to_double((Xn.operator[](0) - Tn1.operator[](2).operator[](0)) * 
- (Tn1.operator[](1).operator[](1) - Tn1.operator[](2).operator[](1)) -
- (Xn.operator[](1) - Tn1.operator[](2).operator[](1)) * 
- (Tn1.operator[](1).operator[](0) - Tn1.operator[](2).operator[](0)));
+ 	double dom =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Tn1.operator[](0)),
+										    Vector_3(Tn1.operator[](2),Tn1.operator[](1))).squared_length() ));
+	double num1 =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Xn),
+										     Vector_3(Tn1.operator[](2),Tn1.operator[](1))).squared_length() ));
+	double num2 =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Tn1.operator[](0)),
+												 Vector_3(Tn1.operator[](2),Xn)).squared_length() )); 
  
- double num2 = -1*(CGAL::to_double((Xn.operator[](0) - Tn1.operator[](2).operator[](0)) * 
- (Tn1.operator[](0).operator[](1) - Tn1.operator[](2).operator[](1)) -
- (Xn.operator[](1) - Tn1.operator[](2).operator[](1)) * 
- (Tn1.operator[](0).operator[](0) - Tn1.operator[](2).operator[](0))));
  if(dom>eps){							
 	 lambda =  num1/dom;
 	 mu = num2/dom;
@@ -926,11 +942,9 @@ Triangle_2 tr(Triangle_3 Tn1, Triangle_3 T){
 
 //Transformation d'un Point_2 en Point_3
 Point_3 tr(Triangle_3 Tn1, Point_2 Xn){
-	
-	double lambda = CGAL::to_double(1.- Xn.operator[](0) -  Xn.operator[](1));
-	double mu = CGAL::to_double(Xn.operator[](0));
-	
-	
+
+  double lambda = CGAL::to_double(1.- Xn.operator[](0) -  Xn.operator[](1));
+  double mu = CGAL::to_double(Xn.operator[](0));
 	
 	double x = CGAL::to_double(lambda * Tn1.operator[](0).operator[](0) + mu*Tn1.operator[](1).operator[](0) 
 	+ (1- lambda- mu)*Tn1.operator[](2).operator[](0));
@@ -956,8 +970,8 @@ Triangle_3 tr(Triangle_3 Tn1, Triangle_2 T){
 
 
 
-CDT sous_maillage_face(Triangles_2 Tn1, Triangles_2 Tn_n1, CDT &cdt){
-		
+CDT sous_maillage_face(Triangles_2& Tn1, Triangles_2& Tn_n1, CDT &cdt){
+	
 	std::vector<Bbox_2> boxesTn1, boxesTn_n1; //tres outil pour les intersections 
 	
 	for(Triangle2_iterator it= Tn1.begin(); it!= Tn1.end(); ++it){  //on associe a chaque triangle un Box(une boite contenant le triangle)
@@ -1007,7 +1021,7 @@ CDT sous_maillage_face(Triangles_2 Tn1, Triangles_2 Tn_n1, CDT &cdt){
 							}
 							
 						}
-						else {cout<<"Intersection type: ? "<<endl;
+						else {cout<<"Intersection type: ? in sous_maillage_face"<<endl;
 									cout<<"Triangle 1: "<<Tn1[i]<<" Triangle 2: "<<Tn_n1[j]<<endl;
 						}
 						
@@ -1027,11 +1041,10 @@ CDT sous_maillage_face(Triangles_2 Tn1, Triangles_2 Tn_n1, CDT &cdt){
 }	
 
 
-void sous_maillage_faceTn_faceTn1(Triangle_3 Tn, Triangles tn, Triangle_3 Tn1, Triangles tn1,Triangles& T3d_n,Triangles& T3d_n1){
-
+void sous_maillage_faceTn_faceTn1(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1,Triangles& T3d_n,Triangles& T3d_n1){
 	// transf barycentrique de tn 
 	Triangles tn_n1(tn.size());
-	for(int i=0; i<tn.size(); i++){
+	for(int i=0; i<tn.size(); i++){		
 		tn_n1[i] = tr(Tn, Tn1, tn[i]);
 	}
 	
@@ -1095,6 +1108,180 @@ void sous_maillage_faceTn_faceTn1(Triangle_3 Tn, Triangles tn, Triangle_3 Tn1, T
 	
 }
 
+
+void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n){
+	
+	std::vector<Bbox> box_prismes(T3d_prev.size());
+	for (int i=0; i< T3d_prev.size(); i++){
+		Bbox box_triangles_prev = T3d_prev[i].bbox();
+		Bbox box_triangles_n = T3d_n[i].bbox();
+		box_prismes[i]= box_triangles_prev.operator+(box_triangles_n);
+	}
+		
+	for (int i=0; i< box_prismes.size(); i++){
+		int in=0, jn=0, kn=0, in1=0, jn1=0, kn1=0;
+		in_cell(T3d_prev[i].operator[](0), in, jn, kn);
+		in_cell(T3d_n[i].operator[](0), in1, jn1, kn1);
+		if (in==in1 && jn==jn1 && kn==kn1){
+			// le prisme est contenu dans une seule cellule 
+	    double volume_prisme=0;
+			//calcul du volume
+			Cellule c= grille[in1][jn1][kn1];
+			c.rho  += volume_prisme*c.rho0; 
+			c.impx += volume_prisme*c.impx0;
+			c.impy += volume_prisme*c.impy0; 
+			c.impz += volume_prisme*c.impz0; 
+			c.rhoE += volume_prisme*c.rhoE0;
+			c.u = c.impx/c.rho; c.v = c.impy/c.rho; c.w = c.impz/c.rho;
+			c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2.-c.rho*c.w*c.w/2.);
+			grille[in1][jn1][kn1] = c;
+		}	
+		else {
+		std::vector<Bbox> box_cells(8);
+		
+		Cellule c0 = grille[in][jn][kn];
+		Cellule c1 = grille[in1][jn1][kn1];
+		Cellule c2 = grille[in1][jn][kn];
+		Cellule c3 = grille[in][jn1][kn];
+		Cellule c4 = grille[in][jn][kn1];
+		Cellule c5 = grille[in1][jn1][kn];
+		Cellule c6 = grille[in1][jn][kn1];
+		Cellule c7 = grille[in][jn1][kn1];
+		std::vector<Cellule> Cells(8);
+		Cells[0] = c0; Cells[1] = c1; Cells[2] = c2; Cells[3] = c3;
+		Cells[4] = c4; Cells[5] = c5; Cells[6] = c6; Cells[7] = c7;
+		
+		box_cells[0]=Bbox(c0.x -c0.dx/2.,c0.y -c0.dy/2.,c0.z -c0.dz/2.,
+											c0.x +c0.dx/2.,c0.y +c0.dy/2.,c0.z + c0.dz/2.);
+		box_cells[1]=Bbox(c1.x -c1.dx/2.,c1.y -c1.dy/2.,c1.z -c1.dz/2.,
+											c1.x +c1.dx/2.,c1.y +c1.dy/2.,c1.z + c1.dz/2.);
+		box_cells[2]=Bbox(c2.x -c2.dx/2.,c2.y -c2.dy/2.,c2.z -c2.dz/2.,
+											c2.x +c2.dx/2.,c2.y +c2.dy/2.,c2.z + c2.dz/2.);
+		box_cells[3]=Bbox(c3.x -c3.dx/2.,c3.y -c3.dy/2.,c3.z -c3.dz/2.,
+											c3.x +c3.dx/2.,c3.y +c3.dy/2.,c3.z + c3.dz/2.);
+    box_cells[4]=Bbox(c4.x -c4.dx/2.,c4.y -c4.dy/2.,c4.z -c4.dz/2.,
+											c4.x +c4.dx/2.,c4.y +c4.dy/2.,c4.z + c4.dz/2.);
+    box_cells[5]=Bbox(c5.x -c5.dx/2.,c5.y -c5.dy/2.,c5.z - c5.dz/2.,
+											c5.x +c5.dx/2.,c5.y +c5.dy/2.,c5.z + c5.dz/2.);
+	  box_cells[6]=Bbox(c6.x -c6.dx/2.,c6.y -c6.dy/2.,c6.z -c6.dz/2.,
+											c6.x +c6.dx/2.,c6.y +c6.dy/2.,c6.z + c6.dz/2.);
+		box_cells[7]=Bbox(c7.x -c7.dx/2.,c7.y -c7.dy/2.,c7.z -c7.dz/2.,
+											c7.x +c7.dx/2.,c7.y +c7.dy/2.,c7.z + c7.dz/2.);
+    
+			//definition Tetraedres 
+			std::vector<Tetrahedron> vect_Tet;
+			std::vector<Bbox> box_Tet;
+			Point_3 a = centroid(T3d_prev[i].operator[](1),T3d_n[i].operator[](1), T3d_prev[i].operator[](2),T3d_n[i].operator[](2));
+			Point_3 b = centroid(T3d_prev[i].operator[](0),T3d_n[i].operator[](0), T3d_prev[i].operator[](2),T3d_n[i].operator[](2));
+			Point_3 c = centroid(T3d_prev[i].operator[](0),T3d_n[i].operator[](0), T3d_prev[i].operator[](1),T3d_n[i].operator[](1));
+			
+			Tetrahedron tet0 (T3d_prev[i].operator[](0),T3d_n[i].operator[](0), c, b);
+			if(!tet0.is_degenerate ()){
+				vect_Tet.push_back(tet0);
+				box_Tet.push_back(tet0.bbox());
+			}
+			
+			Tetrahedron tet1 (T3d_prev[i].operator[](1),T3d_n[i].operator[](1), a, c);
+			if(!tet1.is_degenerate ()){
+				vect_Tet.push_back(tet1);
+				box_Tet.push_back(tet1.bbox());
+			}
+			
+			Tetrahedron tet2 (T3d_prev[i].operator[](2),T3d_n[i].operator[](2), b, a);
+			if(!tet2.is_degenerate ()){
+				vect_Tet.push_back(tet2);
+				box_Tet.push_back(tet2.bbox());
+			}
+			
+			Tetrahedron tet3 (T3d_prev[i].operator[](0),T3d_prev[i].operator[](1), T3d_prev[i].operator[](2), c);
+			if(!tet3.is_degenerate ()){
+				vect_Tet.push_back(tet3);
+				box_Tet.push_back(tet3.bbox());
+			}
+			
+			Tetrahedron tet4 (T3d_prev[i].operator[](0),c, T3d_prev[i].operator[](2), b);
+			if(!tet4.is_degenerate ()){
+				vect_Tet.push_back(tet4);
+				box_Tet.push_back(tet4.bbox());
+			}
+			Tetrahedron tet5 (T3d_prev[i].operator[](1),a, T3d_prev[i].operator[](2), c);
+			if(!tet5.is_degenerate ()){
+				vect_Tet.push_back(tet5);
+				box_Tet.push_back(tet5.bbox());
+			}
+			
+			Tetrahedron tet6 (a,c,b, T3d_prev[i].operator[](2));
+			if(!tet6.is_degenerate ()){
+				vect_Tet.push_back(tet6);
+				box_Tet.push_back(tet6.bbox());
+			}
+			Tetrahedron tet7 (a,b,c, T3d_n[i].operator[](2));
+			if(!tet7.is_degenerate ()){
+				vect_Tet.push_back(tet7);
+				box_Tet.push_back(tet7.bbox());
+			}
+			Tetrahedron tet8 (a, T3d_n[i].operator[](1),T3d_n[i].operator[](2),c);
+			if(!tet8.is_degenerate ()){
+				vect_Tet.push_back(tet8);
+				box_Tet.push_back(tet8.bbox());
+			}
+			Tetrahedron tet9 (T3d_n[i].operator[](0),T3d_n[i].operator[](2),c,b);
+			if(!tet9.is_degenerate ()){
+				vect_Tet.push_back(tet9);
+				box_Tet.push_back(tet9.bbox());
+			}
+			Tetrahedron tet10 (T3d_n[i].operator[](0),T3d_n[i].operator[](1),c,T3d_n[i].operator[](2));
+			if(!tet10.is_degenerate ()){
+				vect_Tet.push_back(tet10);
+				box_Tet.push_back(tet10.bbox());
+			}
+			
+			// test d'intersection des box_tetraedre avec les 8 cellules autour
+			for(int it=0; it<box_Tet.size(); it++){
+				for (int iter=0; iter<box_cells.size(); iter++ ){
+					if (CGAL::do_intersect(box_Tet[it],box_cells[iter]) ) {
+						double volume = 0.;
+						// test pour verifier si vect_Tet[it] est contenu dans la cellule "iter"
+						if (inside_box(box_cells[iter], vect_Tet[it].operator[](0)) &&  inside_box(box_cells[iter], vect_Tet[it].operator[](1))
+							&& inside_box(box_cells[iter], vect_Tet[it].operator[](2)) && inside_box(box_cells[iter], vect_Tet[it].operator[](3))){
+							volume = CGAL::to_double(vect_Tet[it].volume()); 
+						}
+						else {
+							//calcul volume intersection
+							volume = intersect_cube_tetrahedron(box_cells[iter], vect_Tet[it]);
+						}
+						
+						Cellule c= grille[in1][jn1][kn1];
+						c.rho  += volume*Cells[iter].rho0; 
+						c.impx += volume*Cells[iter].impx0;
+						c.impy += volume*Cells[iter].impy0; 
+						c.impz += volume*Cells[iter].impz0; 
+						c.rhoE += volume*Cells[iter].rhoE0;
+						c.u = c.impx/c.rho; c.v = c.impy/c.rho; c.w = c.impz/c.rho;
+						c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2.-c.rho*c.w*c.w/2.);
+						grille[in1][jn1][kn1] = c;
+						
+					}
+				}
+			}
+			
+		}//end else 
+		
+	} //end boucle sur les prismes
+
+}	
+void Grille::swap(const double dt, Solide& S){
+	
+	for(int i=0;i<S.solide.size();i++){
+		for (int j=0; j<S.solide[i].triangles.size(); j++){
+			Triangles T3d_prev,T3d_n;
+			sous_maillage_faceTn_faceTn1(S.solide[i].triangles_prev[j], S.solide[i].Triangles_interface_prev[j] ,
+																 S.solide[i].triangles[j], S.solide[i].Triangles_interface[j],T3d_prev,T3d_n);
+			swap_modification_flux(T3d_prev,T3d_n);
+		}
+	}
+	
+}
 
 
 

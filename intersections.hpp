@@ -36,6 +36,7 @@ typedef Kernel::Plane_3                  Plane_3;
 typedef CGAL::Triangle_3<Kernel>         Triangle_3;
 typedef CGAL::Plane_3<Kernel>            Plane_3;
 typedef std::vector<Triangle_3>          Triangles;
+typedef CGAL::Tetrahedron_3<Kernel>     Tetrahedron;
 typedef std::vector<Point_3>             Points;
 typedef Kernel::Segment_3                Segment_3;
 typedef CGAL::Bbox_3                     Bbox;
