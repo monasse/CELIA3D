@@ -11,8 +11,8 @@ double Rho(double x,double y, double z){
 double U(double x,double y, double z){ 
    double u;
   if(x<0.16)
-	{u = 1.;} 
-   else {u = 1.;}
+	{u = 0.;} 
+   else {u = 0.;}
   return u; 
  }
  double V(double x,double y, double z){ 

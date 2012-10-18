@@ -860,12 +860,10 @@ Point_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn){
 	double num2 =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
 										 Vector_3(Tn.operator[](2),Xn)).squared_length() )); 
 										 
-	if(dom>eps){							
+							
 	lambda =  num1/dom;
 	mu = num2/dom;
-	}
-	else {std::cout<<"Oupps division par zero dans la fonction tr "<<std::endl;}
-	
+
 	double x = CGAL::to_double(lambda * Tn1.operator[](0).operator[](0) + mu*Tn1.operator[](1).operator[](0) 
 	                           + (1- lambda- mu)*Tn1.operator[](2).operator[](0));
 														 
@@ -917,12 +915,9 @@ Point_2 tr(Triangle_3 Tn1, Point_3 Xn){
 	double num2 =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Tn1.operator[](0)),
 												 Vector_3(Tn1.operator[](2),Xn)).squared_length() )); 
  
- if(dom>eps){							
 	 lambda =  num1/dom;
 	 mu = num2/dom;
- }
- else {std::cout<<"Oupps division par zero dans la fonction tr "<<std::endl;}
-	
+
 	Point_2 M(mu, (1-lambda-mu));
 	
 	return M;
@@ -1108,6 +1103,21 @@ void sous_maillage_faceTn_faceTn1(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1
 	
 }
 
+double volume_prisme(const Triangle_3& T1,const Triangle_3& T2){
+	
+	double volume=0.;
+	
+	Vector_3 V = 2.*cross_product( Vector_3(T1.operator[](0),T1.operator[](1)), Vector_3(T1.operator[](0),T1.operator[](2)) )
+	             +2*cross_product( Vector_3(T2.operator[](0),T2.operator[](1)), Vector_3(T2.operator[](0),T2.operator[](2)) )
+	             +cross_product( Vector_3(T1.operator[](0),T1.operator[](1)), Vector_3(T2.operator[](0),T2.operator[](2)) )
+	             +cross_product( Vector_3(T2.operator[](0),T2.operator[](1)), Vector_3(T1.operator[](0),T1.operator[](2)) );
+																
+	volume = CGAL::to_double((Vector_3(T1.operator[](0),T2.operator[](0)) + Vector_3(T1.operator[](1),T2.operator[](1)) + 
+	                         Vector_3(T1.operator[](2),T2.operator[](2)))*V);
+	
+	volume /=36;
+	return volume;
+}	
 
 void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n){
 	
@@ -1117,27 +1127,30 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n){
 		Bbox box_triangles_n = T3d_n[i].bbox();
 		box_prismes[i]= box_triangles_prev.operator+(box_triangles_n);
 	}
-		
 	for (int i=0; i< box_prismes.size(); i++){
 		int in=0, jn=0, kn=0, in1=0, jn1=0, kn1=0;
 		in_cell(T3d_prev[i].operator[](0), in, jn, kn);
 		in_cell(T3d_n[i].operator[](0), in1, jn1, kn1);
 		if (in==in1 && jn==jn1 && kn==kn1){
 			// le prisme est contenu dans une seule cellule 
-	    double volume_prisme=0;
+			double volume_p=volume_prisme(T3d_prev[i],T3d_n[i]);
+			//if(abs(volume_p)>eps) cout<<"volume non null"<<endl;
 			//calcul du volume
+			if(abs(volume_p)>eps){
 			Cellule c= grille[in1][jn1][kn1];
-			c.rho  += volume_prisme*c.rho0; 
-			c.impx += volume_prisme*c.impx0;
-			c.impy += volume_prisme*c.impy0; 
-			c.impz += volume_prisme*c.impz0; 
-			c.rhoE += volume_prisme*c.rhoE0;
+			c.rho  += volume_p*c.rho0/(1.-c.alpha); 
+			c.impx += volume_p*c.impx0/(1.-c.alpha);
+			c.impy += volume_p*c.impy0/(1.-c.alpha); 
+			c.impz += volume_p*c.impz0/(1.-c.alpha); 
+			c.rhoE += volume_p*c.rhoE0/(1.-c.alpha);
 			c.u = c.impx/c.rho; c.v = c.impy/c.rho; c.w = c.impz/c.rho;
 			c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2.-c.rho*c.w*c.w/2.);
 			grille[in1][jn1][kn1] = c;
+			}
 		}	
 		else {
 		std::vector<Bbox> box_cells(8);
+		double vol_test=0.;
 		
 		Cellule c0 = grille[in][jn][kn];
 		Cellule c1 = grille[in1][jn1][kn1];
@@ -1235,7 +1248,6 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n){
 				vect_Tet.push_back(tet10);
 				box_Tet.push_back(tet10.bbox());
 			}
-			
 			// test d'intersection des box_tetraedre avec les 8 cellules autour
 			for(int it=0; it<box_Tet.size(); it++){
 				for (int iter=0; iter<box_cells.size(); iter++ ){
@@ -1250,21 +1262,22 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n){
 							//calcul volume intersection
 							volume = intersect_cube_tetrahedron(box_cells[iter], vect_Tet[it]);
 						}
-						
+						vol_test+=volume;
+						if(abs(volume)>eps){						
 						Cellule c= grille[in1][jn1][kn1];
-						c.rho  += volume*Cells[iter].rho0; 
-						c.impx += volume*Cells[iter].impx0;
-						c.impy += volume*Cells[iter].impy0; 
-						c.impz += volume*Cells[iter].impz0; 
-						c.rhoE += volume*Cells[iter].rhoE0;
+						c.rho  += volume*Cells[iter].rho0/(1.-c.alpha); 
+						c.impx += volume*Cells[iter].impx0/(1.-c.alpha);
+						c.impy += volume*Cells[iter].impy0/(1.-c.alpha); 
+						c.impz += volume*Cells[iter].impz0/(1.-c.alpha); 
+						c.rhoE += volume*Cells[iter].rhoE0/(1.-c.alpha);
 						c.u = c.impx/c.rho; c.v = c.impy/c.rho; c.w = c.impz/c.rho;
 						c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2.-c.rho*c.w*c.w/2.);
 						grille[in1][jn1][kn1] = c;
-						
+						}
 					}
 				}
 			}
-			
+			//if(abs(vol_test - volume_prisme(T3d_prev[i],T3d_n[i])) >eps)cout<<"pb!!! somme volume tet dif de vol prisme "<<endl;
 		}//end else 
 		
 	} //end boucle sur les prismes
@@ -1277,7 +1290,7 @@ void Grille::swap(const double dt, Solide& S){
 			Triangles T3d_prev,T3d_n;
 			sous_maillage_faceTn_faceTn1(S.solide[i].triangles_prev[j], S.solide[i].Triangles_interface_prev[j] ,
 																 S.solide[i].triangles[j], S.solide[i].Triangles_interface[j],T3d_prev,T3d_n);
-			swap_modification_flux(T3d_prev,T3d_n);
+			//swap_modification_flux(T3d_prev,T3d_n);
 		}
 	}
 	
