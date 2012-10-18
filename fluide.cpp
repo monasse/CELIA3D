@@ -1192,7 +1192,7 @@ void Grille::fnumx(const double sigma, double t){
                 double wr = (roe*ci.w+c.w)/(1.+roe); 
                 double Hr = (roe*(ci.rho*ci.u*ci.u/2.+ ci.rho*ci.v*ci.v/2.+ ci.rho*ci.w*ci.w/2. 
                             + ci.p*gam/(gam-1.))/ci.rho
-                            + (c.rho*c.u*c.u/2.+c.rho*c.v*c.v/2.+ ci.rho*ci.w*ci.w/2.
+                            + (c.rho*c.u*c.u/2.+c.rho*c.v*c.v/2.+ c.rho*c.w*c.w/2.
                             + c.p*gam/(gam-1.))/c.rho)/(1.+roe);
                 double ur2 = ur*ur;
                 double vr2 = vr*vr;
@@ -1594,7 +1594,7 @@ void Grille::fnumy(const double sigma, double t){
                 double wr = (roe*cj.w+c.w)/(1.+roe); 
                 double Hr = (roe*(cj.rho*cj.u*cj.u/2.+ cj.rho*cj.v*cj.v/2.+ cj.rho*cj.w*cj.w/2. 
                             + cj.p*gam/(gam-1.))/cj.rho
-                            + (c.rho*c.u*c.u/2.+c.rho*c.v*c.v/2.+ cj.rho*cj.w*cj.w/2.
+                            + (c.rho*c.u*c.u/2.+c.rho*c.v*c.v/2.+ c.rho*c.w*c.w/2.
                             + c.p*gam/(gam-1.))/c.rho)/(1.+roe);
                 double ur2 = ur*ur; 
                 double vr2 = vr*vr;
@@ -1996,7 +1996,7 @@ void Grille::fnumz(const double sigma, double t){
                 double vr = (roe*ck.v+c.v)/(1.+roe); 
                 double wr = (roe*ck.w+c.w)/(1.+roe); 
                 double Hr = (roe*(ck.rho*ck.u*ck.u/2.+ ck.rho*ck.v*ck.v/2.+ ck.rho*ck.w*ck.w/2. 
-                            + ck.p*gam/(gam-1.))/ck.rho+(c.rho*c.u*c.u/2.+c.rho*c.v*c.v/2.+ ck.rho*ck.w*ck.w/2.
+                            + ck.p*gam/(gam-1.))/ck.rho+(c.rho*c.u*c.u/2.+c.rho*c.v*c.v/2.+ c.rho*c.w*c.w/2.
                             + c.p*gam/(gam-1.))/c.rho)/(1.+roe);
                 double ur2 = ur*ur; 
                 double vr2 = vr*vr;

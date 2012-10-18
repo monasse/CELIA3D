@@ -63,6 +63,8 @@ int main(){
 
 	S.Forces_internes();
 	
+	CGAL::Timer user_time;
+	
 	for (int n=0; (t<T) && n<Nmax; n++){
 		
 	  if(t>next_timp){
@@ -84,7 +86,10 @@ int main(){
 		Fluide.parois(S);
 		Fluide.modif_fnum(dt);
 		//Fluide.affiche("modif_fnum");
+		user_time.start();
 		Fluide.swap(dt,S);
+		cout << "Temps swap: " << user_time.time() << " seconds." << endl;
+		user_time.reset();
 		Fluide.mixage();
 		//Fluide.affiche("mixage");
 		Fluide.fill_cel(S);

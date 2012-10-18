@@ -68,7 +68,7 @@ typedef std::vector<Point_2>             Points_2;
 typedef Kernel::Segment_2                Segment_2;
 typedef CGAL::Bbox_2                     Bbox_2;
 typedef Triangles_2::iterator            Triangle2_iterator;
-
+typedef Triangles::iterator            Triangle3_iterator;
 
 void triang_cellule(const Bbox& cel, Triangles& trianglesB){
   
