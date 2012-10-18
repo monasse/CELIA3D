@@ -62,7 +62,6 @@ int main(){
 	double E0S= S.Energie();
 
 	S.Forces_internes();
-
 	
 	for (int n=0; (t<T) && n<Nmax; n++){
 		

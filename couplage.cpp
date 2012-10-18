@@ -984,7 +984,8 @@ CDT sous_maillage_face(Triangles_2& Tn1, Triangles_2& Tn_n1, CDT &cdt){
 	
 	std::vector<Point_2> intPoints; //vector de Point_2 d'intersection
 	std::vector<Segment_2> intSeg;  //vector de Segment_2 d'intersection a conserver dans la triangularisation de la face 
-	
+	CGAL::Timer user_time, user_time2;
+	user_time.start();
 	for(int i=0; i<boxesTn1.size(); i++ ){ 
 		for(int j=0; j<boxesTn_n1.size(); j++ ){
 			//cout<<"Triangle 1: "<<Tn1[i]<<" Triangle 2: "<<Tn_n1[j]<<endl;
@@ -1024,26 +1025,34 @@ CDT sous_maillage_face(Triangles_2& Tn1, Triangles_2& Tn_n1, CDT &cdt){
 				}
 			}
 		}
-	
-	 cdt.insert(intPoints.begin(), intPoints.end()); //insertion des points d'intersection dans le maillage
+		cout << "Intersection triangles 2d pour une face time is: " << user_time.time() << " seconds." <<"nb des triangles " <<boxesTn1.size()+boxesTn_n1.size() <<endl;
+		
+		user_time2.start();
+	  cdt.insert(intPoints.begin(), intPoints.end()); //insertion des points d'intersection dans le maillage
 	 
 	 for(int i = 0; i<intSeg.size(); i++){
 		 //construction du maillage 2d sous la contrainte "intSeg[i] est une arrete dans le maillage"
 		 cdt.insert_constraint(intSeg[i].operator[](0), intSeg[i].operator[](1));
 	 }
-	
+	 cout << "construction sous-maillage sous contrainte pour une face time is: " << user_time2.time() << " seconds." <<endl;
 	return cdt;
 }	
 
 
 void sous_maillage_faceTn_faceTn1(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1,Triangles& T3d_n,Triangles& T3d_n1){
+	
+	CGAL::Timer user_time, user_time2, user_time3, user_time4 ;
+	double time=0.;	
+	user_time.start();
 	// transf barycentrique de tn 
 	Triangles tn_n1(tn.size());
 	for(int i=0; i<tn.size(); i++){		
 		tn_n1[i] = tr(Tn, Tn1, tn[i]);
 	}
+	cout << "Mapping Tn vers Tn1 pour une face time is: " << user_time.time() << " seconds." << endl;
+	user_time.reset();
 	
-	
+	user_time2.start();
 	Point_2 Ap(0., 0.); 
 	Point_2 Bp(1., 0.);
 	Point_2 Cp(0., 1.);
@@ -1065,13 +1074,17 @@ void sous_maillage_faceTn_faceTn1(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1
 	for(int i=0; i<tn1.size(); i++){
 		Tn1_2[i+1] =tr(Tn1, tn1[i]);
 	}
+	cout << "Passage 3d-2d pour une face time is: " << user_time2.time() << " seconds." << endl;
+	user_time2.reset();
 	
-	
+	user_time3.start();
 	// sous maillage triangulaire de l'interface
 	CDT cdt;
 	cdt.insert(Ap); cdt.insert(Bp); cdt.insert(Cp);
 	sous_maillage_face(Tn1_2, Tn_n1_2, cdt);
 	assert(cdt.is_valid());
+	cout << "Sous-maillage en 2d pour une face time is: " << user_time3.time() << " seconds." << endl;
+	user_time3.reset();
 	
 	Triangles_2 T2d; //recuperation faces du maillage Triangle_2
 	
@@ -1085,14 +1098,15 @@ void sous_maillage_faceTn_faceTn1(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1
 		T2d.push_back(Triangle_2(s,v,r));
 	}
 	
-
+	user_time4.start();
 	//transf des Triangle_2 en Triangle_3
 	T3d_n1.resize(T2d.size());
 	for(int i=0; i<T2d.size(); i++){ 
 		T3d_n1[i] = tr(Tn1,T2d[i]);
 		//cout<<"triangle 3d "<<T3d[i]<<endl;
 	}
-	
+	cout << "Passage 2d-3d pour une face time is: " << user_time4.time() << " seconds." << endl;
+	user_time4.reset();
 	
 	//transf inverse 
 	T3d_n.resize(T3d_n1.size());
@@ -1120,7 +1134,8 @@ double volume_prisme(const Triangle_3& T1,const Triangle_3& T2){
 }	
 
 void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n){
-	
+	CGAL::Timer user_time, user_time2;
+	double time=0.;
 	std::vector<Bbox> box_prismes(T3d_prev.size());
 	for (int i=0; i< T3d_prev.size(); i++){
 		Bbox box_triangles_prev = T3d_prev[i].bbox();
@@ -1260,7 +1275,10 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n){
 						}
 						else {
 							//calcul volume intersection
+							user_time.start();
 							volume = intersect_cube_tetrahedron(box_cells[iter], vect_Tet[it]);
+							time+=user_time.time();
+							user_time.reset();
 						}
 						vol_test+=volume;
 						if(abs(volume)>eps){						
@@ -1281,16 +1299,25 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n){
 		}//end else 
 		
 	} //end boucle sur les prismes
-
+	//cout << "Intersection Tetra avec Cubes pour une face time is: " << time << " seconds." << endl;
+	//cout << "nombres des tera is: " <<T3d_prev.size() << endl;
 }	
 void Grille::swap(const double dt, Solide& S){
+	
+	CGAL::Timer user_time, user_time2;
 	
 	for(int i=0;i<S.solide.size();i++){
 		for (int j=0; j<S.solide[i].triangles.size(); j++){
 			Triangles T3d_prev,T3d_n;
+			user_time.start();
 			sous_maillage_faceTn_faceTn1(S.solide[i].triangles_prev[j], S.solide[i].Triangles_interface_prev[j] ,
 																 S.solide[i].triangles[j], S.solide[i].Triangles_interface[j],T3d_prev,T3d_n);
-			//swap_modification_flux(T3d_prev,T3d_n);
+			cout << "Temps sous_maillage_faceTn_faceTn1: " << user_time.time() << " seconds." << endl;
+		  user_time.reset();
+			user_time2.start();
+			swap_modification_flux(T3d_prev,T3d_n);
+			cout << "Temps swap_modification_flux: " << user_time2.time() << " seconds." << endl;
+			user_time2.reset();
 		}
 	}
 	

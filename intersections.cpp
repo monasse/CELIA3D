@@ -387,6 +387,7 @@ void Grille::parois(Solide& S) {
 
 double intersect_cube_tetrahedron(Bbox& cube, Tetrahedron& Tet){
 	
+	
 	double volume=0.;
 	Triangles triangCube;
 	triang_cellule(cube , triangCube); 
@@ -450,5 +451,6 @@ double intersect_cube_tetrahedron(Bbox& cube, Tetrahedron& Tet){
 	}
 	
 	volume *= sign(Tet.volume());
+	
 	return volume;
 }	
