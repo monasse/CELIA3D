@@ -1201,17 +1201,17 @@ void Grille::fnumx(const double sigma, double t){
                 
                 //Test sur la vitesse du son 
                 if(cr2<=0. && abs(c.alpha-1.)>eps){
-				  cout << "calcul des flux selon x" << endl;
-				  cout << "i=" << i << " j=" << j << " k=" << k<< " vitesse du son negative : c2=" << cr2 << endl;
-				  cout << "x=" << c.x << " y=" << c.y << " z=" << c.z<< " alpha=" << c.alpha << endl;
-				  cout << "t=" << t << endl; 
-				  cout << "c.p=" << c.p << endl; 
-				  cout << "c.rho=" << c.rho << endl; 
-				  cout << "c.u=" << c.u << endl; 
-				  cout << "c.v=" << c.v << endl; 
-				  cout << "c.w=" << c.w << endl; 
-				  cout << "ci.p=" << ci.p << endl; 
-				  cout << "ci.rho=" << ci.rho << endl; 
+										cout << "calcul des flux selon x" << endl;
+										cout << "i=" << i << " j=" << j << " k=" << k<< " vitesse du son negative : c2=" << cr2 << endl;
+										cout << "x=" << c.x << " y=" << c.y << " z=" << c.z<< " alpha=" << c.alpha << endl;
+										cout << "t=" << t << endl; 
+										cout << "c.p=" << c.p << endl; 
+										cout << "c.rho=" << c.rho << endl; 
+										cout << "c.u=" << c.u << endl; 
+										cout << "c.v=" << c.v << endl; 
+										cout << "c.w=" << c.w << endl; 
+										cout << "ci.p=" << ci.p << endl; 
+										cout << "ci.rho=" << ci.rho << endl; 
                     cout << "ci.u=" << ci.u << endl;
                     cout << "ci.v=" << ci.v << endl;
                     cout << "ci.w=" << ci.w << endl;
@@ -2367,6 +2367,7 @@ void Grille::Solve(const double dt, double t, int n){
                 c.impy0 = c.impy;
                 c.impz0 = c.impz;
                 c.rhoE0 = c.rhoE;
+								c.p1=c.p;
                 grille[i][j][k] = c;
             }
         }
@@ -3105,7 +3106,7 @@ void Grille::impression(int n){
     // 	}
     //     }
     //   }
-    //   
+    //   Affiche
     //   cout<<"tab conectivity : " <<endl;
     //    int l=0;
     //    for(int k=0; k<Nz; k++){ 

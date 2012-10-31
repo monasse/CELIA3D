@@ -259,7 +259,7 @@ class Grille
   void mixage(); //Procedure de mixage pour le cellules avec c.alpha>0.5
   void fill_cel(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.)
 	//void fill_cel_old(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.) old version
-	void swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n);
+	void swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const double dt);
 	void swap(const double dt, Solide& S);
 private :
 

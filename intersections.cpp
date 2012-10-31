@@ -63,7 +63,7 @@ void Grille::parois(Solide& S) {
 	std::vector<Bbox> solide(nb_particules);
 	for(int it=0; it<nb_particules; it++){
 		solide[it] = Bbox(S.solide[it].min_x-eps_box,S.solide[it].min_y-eps_box, S.solide[it].min_z-eps_box, S.solide[it].max_x+eps_box, S.solide[it].max_y+eps_box, S.solide[it].max_z+eps_box);
-		//S[it].Affiche();
+		//S.solide[it].Affiche();
 	}
 	
 	
@@ -71,7 +71,6 @@ void Grille::parois(Solide& S) {
 	
 	
 	
-	int count=0;
 	double volume_s=0.;
 	
 	Cellule cel;
@@ -82,10 +81,11 @@ void Grille::parois(Solide& S) {
 	for (int a=0; a< nx_m; a++){
 		for (int b=0; b< ny_m; b++){
 			for (int c=0; c< nz_m; c++){
+				grille[a][b][c].alpha = 0.; grille[a][b][c].kappai = 0.; grille[a][b][c].kappaj = 0.; grille[a][b][c].kappak = 0.;
+				grille[a][b][c].phi_x = 0.; grille[a][b][c].phi_y = 0.; grille[a][b][c].phi_z = 0.;
 				cel = grille[a][b][c]; 
-				cel.phi_x = 0.;
-				cel.phi_y = 0.;
-				cel.phi_z = 0.;
+				cel.alpha = 0.; cel.kappai = 0.; cel.kappaj = 0.; cel.kappak = 0.;
+				cel.phi_x = 0.; cel.phi_y = 0.; cel.phi_z = 0.;
 				std::vector<Point_3> Points_poly; 
 				double alpha = 0.0;
 				std::vector<double>  kappa(6,0.0);
@@ -136,18 +136,14 @@ void Grille::parois(Solide& S) {
 										//test if point is in solide
 										point_in_solide = inside_convex_polygon(S.solide[iter_s],trianglesB[k].operator[](0));
 										if(point_in_solide) {Points_poly.push_back(trianglesB[k].operator[](0)); point_in_solide=false;
-										S.solide[iter_s].Points_interface[j].push_back(trianglesB[k].operator[](0));
 										}
 										
 										point_in_solide = inside_convex_polygon(S.solide[iter_s],trianglesB[k].operator[](1));
 										if(point_in_solide) {Points_poly.push_back(trianglesB[k].operator[](1)); point_in_solide=false;
-										S.solide[iter_s].Points_interface[j].push_back(trianglesB[k].operator[](1));
 										}
 										
 										point_in_solide = inside_convex_polygon(S.solide[iter_s],trianglesB[k].operator[](2));
 										if(point_in_solide) {Points_poly.push_back(trianglesB[k].operator[](2)); point_in_solide=false;
-										S.solide[iter_s].Points_interface[j].push_back(trianglesB[k].operator[](2));
-										
 										}
 										
 										if (CGAL::do_intersect(S.solide[iter_s].triangles[j],trianglesB[k]) ) {
@@ -185,9 +181,7 @@ void Grille::parois(Solide& S) {
 												}
 												
 											}
-											else {cout<<"Intersection type: ? in intersect particule with grille"<< trianglesB[k]<<endl; 
-											count++;
-											}
+											else {cout<<"Intersection type: ? in intersect particule with grille"<< trianglesB[k]<<endl;}
 										}
 										//end intr t1 et t2
 									} //end boucle sur trianglesB
@@ -362,23 +356,35 @@ void Grille::parois(Solide& S) {
 	
 	
 	cout << "Intersection time is: " << user_time.time() - time << " seconds." << endl;
-	cout<<"count triangles degenerate is : "<<count<<endl;
 	user_time.reset();
 	
 	cout<<"volume solide := "<<volume_s<<endl;
 	
-	//triangularisation de l'interface face par face	
+	//triangularisation de l'interface face par face
   for(int ip=0; ip<nb_particules; ip++){
 		Finite_faces_iterator iter;
 		for(int it=0; it<S.solide[ip].triangles.size(); it++){
-			if((S.solide[ip].fluide[it] == true)  && (S.solide[ip].Points_interface[it].size() >= 3)){
+			//if(S.solide[ip].fluide[it] == true){
+				S.solide[ip].Points_interface[it].push_back(S.solide[ip].triangles[it].operator[](0));
+				S.solide[ip].Points_interface[it].push_back(S.solide[ip].triangles[it].operator[](1));
+				S.solide[ip].Points_interface[it].push_back(S.solide[ip].triangles[it].operator[](2));
 				Triangulation T(S.solide[ip].Points_interface[it].begin(), S.solide[ip].Points_interface[it].end());
 				assert(T.is_valid());
 				for (iter = T.finite_facets_begin(); iter != T.finite_facets_end(); iter++){
-					if(!T.triangle(*iter).is_degenerate())
-					S.solide[ip].Triangles_interface[it].push_back(T.triangle(*iter));
+					if(!T.triangle(*iter).is_degenerate()){
+						   Triangle_3 Tri= T.triangle(*iter);
+							 Vector_3 vect0(Tri.operator[](0),Tri.operator[](1));
+							 Vector_3 vect1(Tri.operator[](0),Tri.operator[](2));
+							 Vector_3 normale = CGAL::cross_product(vect0,vect1);
+							 if (normale*S.solide[ip].normales[it] > 0.){
+								S.solide[ip].Triangles_interface[it].push_back(Tri);
+							 }
+							 else {
+								 S.solide[ip].Triangles_interface[it].push_back(Triangle_3(Tri.operator[](0),Tri.operator[](2),Tri.operator[](1)));
+							 }
+					}
 				}
-			}
+			//}
 		}
 	}
 	
@@ -387,70 +393,72 @@ void Grille::parois(Solide& S) {
 
 double intersect_cube_tetrahedron(Bbox& cube, Tetrahedron& Tet){
 	
-	
 	double volume=0.;
-	Triangles triangCube;
-	triang_cellule(cube , triangCube); 
-	std::vector<Triangle_3> triangTet(4);
-	std::vector<Point_3> Points_intersect;
 	
-	for(int i=0; i<4; i++){
-		if (inside_box(cube, Tet.operator[](i)) ){
-			Points_intersect.push_back(Tet.operator[](i));
+	if(abs(Tet.volume())>eps){
+		
+		Triangles triangCube;
+		triang_cellule(cube , triangCube); 
+		std::vector<Triangle_3> triangTet(4);
+		std::vector<Point_3> Points_intersect;
+		
+		for(int i=0; i<4; i++){
+			if (inside_box(cube, Tet.operator[](i)) ){
+				Points_intersect.push_back(Tet.operator[](i));
+			}
 		}
-	}
-	
-	triangTet[0]= Triangle_3(Tet.operator[](0), Tet.operator[](1), Tet.operator[](2));
-	triangTet[1]= Triangle_3(Tet.operator[](0), Tet.operator[](2), Tet.operator[](3));
-	triangTet[2]= Triangle_3(Tet.operator[](0), Tet.operator[](1), Tet.operator[](3));
-	triangTet[3]= Triangle_3(Tet.operator[](1), Tet.operator[](2), Tet.operator[](3));
-	
-	for(int i= 0; i<4; i++){
-		if (CGAL::do_intersect(cube,triangTet[i]) ) {
-			for(int j= 0; j<triangCube.size(); j++)
-				if (CGAL::do_intersect(triangCube[j],triangTet[i]) ) {
-				Triangle_3 t;
-				Point_3 P;
-				Segment_3 seg;
-				std::vector<Point_3> vPoints; 
-				
-			 CGAL::Object result = CGAL::intersection(triangCube[j],triangTet[i]);
-				
-				if(CGAL::assign(P,result)){
-					Points_intersect.push_back(P);
-				}
-				else if(CGAL::assign(seg,result)){
-					Points_intersect.push_back(seg.operator[](0));
-					Points_intersect.push_back(seg.operator[](1));
-				}
-				else if(CGAL::assign(t,result)){
-					Points_intersect.push_back(t.operator[](0));
-					Points_intersect.push_back(t.operator[](1));
-					Points_intersect.push_back(t.operator[](2));	
-				}
-				else if(CGAL::assign(vPoints,result)){ 
-					for(int l= 0; l<vPoints.size(); l++)
-					{
-						Points_intersect.push_back(vPoints[l]);
-					}
+		
+		triangTet[0]= Triangle_3(Tet.operator[](0), Tet.operator[](1), Tet.operator[](2));
+		triangTet[1]= Triangle_3(Tet.operator[](0), Tet.operator[](2), Tet.operator[](3));
+		triangTet[2]= Triangle_3(Tet.operator[](0), Tet.operator[](1), Tet.operator[](3));
+		triangTet[3]= Triangle_3(Tet.operator[](1), Tet.operator[](2), Tet.operator[](3));
+		
+		for(int i= 0; i<4; i++){
+			if (CGAL::do_intersect(cube,triangTet[i]) ) {
+				for(int j= 0; j<triangCube.size(); j++)
+					if (CGAL::do_intersect(triangCube[j],triangTet[i]) ) {
+					Triangle_3 t;
+					Point_3 P;
+					Segment_3 seg;
+					std::vector<Point_3> vPoints; 
 					
+				CGAL::Object result = CGAL::intersection(triangCube[j],triangTet[i]);
+					
+					if(CGAL::assign(P,result)){
+						Points_intersect.push_back(P);
+					}
+					else if(CGAL::assign(seg,result)){
+						Points_intersect.push_back(seg.operator[](0));
+						Points_intersect.push_back(seg.operator[](1));
+					}
+					else if(CGAL::assign(t,result)){
+						Points_intersect.push_back(t.operator[](0));
+						Points_intersect.push_back(t.operator[](1));
+						Points_intersect.push_back(t.operator[](2));	
+					}
+					else if(CGAL::assign(vPoints,result)){ 
+						for(int l= 0; l<vPoints.size(); l++)
+						{
+							Points_intersect.push_back(vPoints[l]);
+						}
+						
+					}
+					else {cout<<"Intersection type: ? dans <<intersect_cube_tetrahedron>> "<< endl;}
 				}
-				else {cout<<"Intersection type: ? dans <<intersect_cube_tetrahedron>> "<< endl;}
 			}
 		}
-	}
-	
-	if( Points_intersect.size() >=4 ){
-		Triangulation T(Points_intersect.begin(), Points_intersect.end());
-		if(T.is_valid()){
-			Finite_cells_iterator cit;
-			for (cit = T.finite_cells_begin(); cit!= T.finite_cells_end(); cit++){
-				volume+= CGAL::to_double(T.tetrahedron( cit).volume());
+		
+		if( Points_intersect.size() >=4 ){
+			Triangulation T(Points_intersect.begin(), Points_intersect.end());
+			if(T.is_valid()){
+				Finite_cells_iterator cit;
+				for (cit = T.finite_cells_begin(); cit!= T.finite_cells_end(); cit++){
+					volume+= std::abs(CGAL::to_double(T.tetrahedron( cit).volume()));
+				}
 			}
+			if(abs(volume)<eps) {volume=0.;}
+			else { volume *= sign(Tet.volume());}
 		}
 	}
-	
-	volume *= sign(Tet.volume());
-	
 	return volume;
 }	

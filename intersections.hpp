@@ -20,7 +20,7 @@
 #include <CGAL/squared_distance_3.h>
 #include <CGAL/box_intersection_d.h>
 #include <CGAL/centroid.h>
-
+#include <CGAL/number_utils.h>
 //Constrained Triangulation
 #include <CGAL/Constrained_triangulation_2.h>
 #include <CGAL/Triangulation_hierarchy_2.h>

@@ -64,15 +64,14 @@ int main(){
 	S.Forces_internes();
 	
 	CGAL::Timer user_time;
-	
 	for (int n=0; (t<T) && n<Nmax; n++){
 		
-	  if(t>next_timp){
-		Fluide.impression(kimp);
-		S.impression(kimp);
-		kimp++;
-		next_timp += dtimp;
-	  }
+		if(t>next_timp){
+			Fluide.impression(kimp);
+			S.impression(kimp);
+			kimp++;
+			next_timp += dtimp;
+		}
 	  //cout<<"Energie: "<< Fluide.Energie()+S.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 		cout<<"Energie: "<< Fluide.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 	  ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S << endl;
@@ -84,6 +83,7 @@ int main(){
 		S.Forces_internes();
 		S.solve_vitesse(dt);
 		Fluide.parois(S);
+		//S.Affiche();
 		Fluide.modif_fnum(dt);
 		//Fluide.affiche("modif_fnum");
 		user_time.start();

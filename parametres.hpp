@@ -3,13 +3,11 @@
 #include <fstream>
 #include <stdio.h>
 #include <sstream>
-
-
 #ifndef PARAMETRES_H
 #define PARAMETRES_H
 
-using std::string;
 
+using std::string;
 
 //Parametres pour le fluide
 const double gam = 1.4;            //constante des gaz parfaits 
@@ -47,7 +45,7 @@ const double cfl = 0.5;            //valeur de la cfl fluide
 const double cfls = 0.1;           //Valeur de la cfl solide
 const int nimp = 100;                //Nombre d'impressions
 const double dtimp = T/nimp;        //Pas de temps entre deux impressions
-const int Nmax = 2;           //nombre maximal d'iterations en temps
+const int Nmax = 1;           //nombre maximal d'iterations en temps
 
 //Conditions aux limites
 //Type de CL :  1 = reflecting ("miroir"); 2 = periodic("periodique"); 3= outflow("transmisibles");

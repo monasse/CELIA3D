@@ -684,10 +684,15 @@ Particule::~Particule(){
 void Particule::Affiche(){
 	
 //	std::cout<<" volume of solide := "<<volume()<<std::endl;
-// 	std::cout<<" Point min := "<< min_x<<std::endl;
-// 	std::cout<<" Point max := "<< max_x<<std::endl;
-
-// std::cout<<" triangles size := "<< triangles.size()<<std::endl;
+ 	std::cout<<" Point min x:= "<< min_x<<std::endl;
+  std::cout<<" Point max x:= "<< max_x<<std::endl;
+	std::cout<<" Point min y:= "<< min_y<<std::endl;
+	std::cout<<" Point max y:= "<< max_y<<std::endl;
+	std::cout<<" Point min z:= "<< min_z<<std::endl;
+	std::cout<<" Point max z:= "<< max_z<<std::endl;
+// 	for(int i=0; i<triangles.size(); i++){
+// 		std::cout<<" triangles:= "<< triangles[i]<<std::endl;
+// 	}
 //std::cout<<" P interface size := "<< Points_interface.size()<<std::endl;
 // std::cout<<" T interface size := "<< Triangles_interface.size()<<std::endl;
 
@@ -787,10 +792,10 @@ void Particule::solve_position(double dt){
       etemp2 = x2;
       etemp3 = x3;
       if(etemp1*etemp1+etemp2*etemp2+etemp3*etemp3>0.5){
-	etemp1 /=2.;
-	etemp2 /=2.;
-	etemp3 /=2.;
-	etemp0 = sqrt(1.-etemp1*etemp1-etemp2*etemp2-etemp3*etemp3);
+	    etemp1 /=2.;
+	    etemp2 /=2.;
+	    etemp3 /=2.;
+	    etemp0 = sqrt(1.-etemp1*etemp1-etemp2*etemp2-etemp3*etemp3);
       }
       else{etemp0 = sqrt(1.-etemp1*etemp1-etemp2*etemp2-etemp3*etemp3);}
       err1 = fabs((dt*a[0]-2.*(d2-d3)*etemp2*etemp3)/(2.*(d2+d3)*etemp0)-etemp1);
@@ -816,7 +821,7 @@ void Particule::solve_position(double dt){
     double Qprev[3][3];
     for(int i=0;i<3;i++){
       for(int j=0;j<3;j++){
-	Qprev[i][j] = Q[i][j];
+	       Qprev[i][j] = Q[i][j];
       }
     }
     Q[0][0] = Qprev[0][0]*(1.+dt*z[0][0])+Qprev[0][1]*dt*z[1][0]+Qprev[0][2]*dt*z[2][0];
@@ -1775,6 +1780,28 @@ void Solide::solve_position(double dt){
     solide[i].solve_position(dt);
   }
   update_triangles();
+	for(int i=0;i<size();i++){
+		double x_min = solide[i].max_x, y_min=solide[i].max_y, z_min=solide[i].max_z, 
+		       x_max =solide[i].max_x, y_max=solide[i].max_y, z_max =solide[i].max_z;
+					 
+		for(int j=0;j<solide[i].triangles.size();j++){
+			
+			x_min = min( x_min ,min(CGAL::to_double(solide[i].triangles[j].operator[](0).x()), min(CGAL::to_double(solide[i].triangles[j].operator[]                       (1).x()), CGAL::to_double(solide[i].triangles[j].operator[](2).x()) )) );
+			
+			y_min = min( y_min ,min(CGAL::to_double(solide[i].triangles[j].operator[](0).y()), min(CGAL::to_double(solide[i].triangles[j].operator[] (1).y()), CGAL::to_double(solide[i].triangles[j].operator[](2).y()) )) );
+			
+			z_min = min( z_min ,min(CGAL::to_double(solide[i].triangles[j].operator[](0).z()), min(CGAL::to_double(solide[i].triangles[j].operator[] (1).z()), CGAL::to_double(solide[i].triangles[j].operator[](2).z()) )) );
+			
+			x_max = max( x_max ,max(CGAL::to_double(solide[i].triangles[j].operator[](0).x()), max(CGAL::to_double(solide[i].triangles[j].operator[] (1).x()), CGAL::to_double(solide[i].triangles[j].operator[](2).x()) )) );
+			
+			y_max = max( y_max ,max(CGAL::to_double(solide[i].triangles[j].operator[](0).y()), max(CGAL::to_double(solide[i].triangles[j].operator[] (1).y()), CGAL::to_double(solide[i].triangles[j].operator[](2).y()) )) );
+			
+			z_max = max( z_max ,max(CGAL::to_double(solide[i].triangles[j].operator[](0).z()), max(CGAL::to_double(solide[i].triangles[j].operator[] (1).z()), CGAL::to_double(solide[i].triangles[j].operator[](2).z()) )) );
+		}
+		solide[i].min_x = x_min; solide[i].min_y = y_min; solide[i].min_z = z_min;
+		solide[i].max_x = x_max; solide[i].max_y = y_max; solide[i].max_z = z_max;
+	}
+	
 }
 
 void Solide::solve_vitesse(double dt){
@@ -1804,7 +1831,7 @@ void Solide::update_triangles(){
       si.push_back(solide[i].mvt_t.transform(solide[i].faces[f].centre));
       int j = solide[i].faces[f].voisin;
       if(j>=0){
-	si.push_back(solide[j].mvt_t.transform(solide[i].faces[f].centre));
+	     si.push_back(solide[j].mvt_t.transform(solide[i].faces[f].centre));
       }
       s = centroid(si.begin(),si.end());
       for(int k=0;k<solide[i].faces[f].size();k++){
