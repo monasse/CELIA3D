@@ -370,6 +370,7 @@ void Grille::parois(Solide& S) {
 				S.solide[ip].Points_interface[it].push_back(S.solide[ip].triangles[it].operator[](2));
 				Triangulation T(S.solide[ip].Points_interface[it].begin(), S.solide[ip].Points_interface[it].end());
 				assert(T.is_valid());
+				if(T.dimension()==2){
 				for (iter = T.finite_facets_begin(); iter != T.finite_facets_end(); iter++){
 					if(!T.triangle(*iter).is_degenerate()){
 						   Triangle_3 Tri= T.triangle(*iter);
@@ -384,6 +385,8 @@ void Grille::parois(Solide& S) {
 							 }
 					}
 				}
+			}
+			else{cout<<"tag tag "<<endl;}
 			//}
 		}
 	}
