@@ -82,10 +82,10 @@ void Grille::parois(Solide& S) {
 		for (int b=0; b< ny_m; b++){
 			for (int c=0; c< nz_m; c++){
 				grille[a][b][c].alpha = 0.; grille[a][b][c].kappai = 0.; grille[a][b][c].kappaj = 0.; grille[a][b][c].kappak = 0.;
-				grille[a][b][c].phi_x = 0.; grille[a][b][c].phi_y = 0.; grille[a][b][c].phi_z = 0.;
+				grille[a][b][c].phi_x = 0.; grille[a][b][c].phi_y = 0.; grille[a][b][c].phi_z = 0.; grille[a][b][c].delta_w = 0.;
 				cel = grille[a][b][c]; 
 				cel.alpha = 0.; cel.kappai = 0.; cel.kappaj = 0.; cel.kappak = 0.;
-				cel.phi_x = 0.; cel.phi_y = 0.; cel.phi_z = 0.;
+				cel.phi_x = 0.; cel.phi_y = 0.; cel.phi_z = 0.; cel.delta_w = 0.;
 				std::vector<Point_3> Points_poly; 
 				double alpha = 0.0;
 				std::vector<double>  kappa(6,0.0);
@@ -328,12 +328,14 @@ void Grille::parois(Solide& S) {
 						
 					}
 					
-					
+					cel.delta_w =0.;
 					for (int it= 0; it< v_lambda.size(); it++)
 					{
 						cel.phi_x += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].x()))/volume_cel;
 						cel.phi_y += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].y()))/volume_cel;
 						cel.phi_z += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].z()))/volume_cel;
+						cel.delta_w += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].x())*cel.u + CGAL::to_double(v_n_lambda[it].y())*cel.v
+						+ CGAL::to_double(v_n_lambda[it].z())*cel.w) /volume_cel;
 					}
 					
 					if (abs(cel.phi_x)<=eps_relat) {cel.phi_x = 0.;} 
@@ -345,6 +347,7 @@ void Grille::parois(Solide& S) {
 					cel.kappaj = kappa[4]/(deltax * deltaz);
 					cel.kappak = kappa[1]/(deltax * deltay);
 					volume_s +=alpha;
+					
 				}
 				grille[a][b][c] = cel;
 				i++;
@@ -386,7 +389,7 @@ void Grille::parois(Solide& S) {
 					}
 				}
 			}
-			else{cout<<"tag tag "<<endl;}
+			//else{cout<<"tag tag "<<endl;}
 			//}
 		}
 	}
@@ -456,12 +459,11 @@ double intersect_cube_tetrahedron(Bbox& cube, Tetrahedron& Tet){
 			if(T.is_valid()){
 				Finite_cells_iterator cit;
 				for (cit = T.finite_cells_begin(); cit!= T.finite_cells_end(); cit++){
-					volume+= std::abs(CGAL::to_double(T.tetrahedron( cit).volume()));
+					//volume+= std::abs(CGAL::to_double(T.tetrahedron( cit).volume()));
+					volume+= CGAL::to_double(T.tetrahedron( cit).volume());
 				}
 			}
-			if(abs(volume)<eps) {volume=0.;}
-			else { volume *= sign(Tet.volume());}
 		}
 	}
-	return volume;
+	return std::abs(volume);
 }	

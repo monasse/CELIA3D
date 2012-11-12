@@ -9,9 +9,10 @@
 
 
 //Definition de la fonction sign 
-inline double sign(double z){ 
-  double s = 0.; 
-  if(z>0.){s = 1.;} else {s = -1.;} 
+inline double sign(double x){ 
+
+  double s = (x > 0) ? 1 : ((x < 0) ? -1 : 0);
+	
   return s; 
 } 
 

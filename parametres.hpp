@@ -11,7 +11,7 @@ using std::string;
 
 //Parametres pour le fluide
 const double gam = 1.4;            //constante des gaz parfaits 
-const double eps = 0.0000001;      //constante proche de 0 pour le controle 
+const double eps = 0.000000001;      //constante proche de 0 pour le controle 
 const double epsa = 0.5;           //fraction de cellule coupee
 const int ordremax = 11;           //ordre maximal du schema
 const int marge = 6;              //marge de cellules a appliquer au debut et a la fin du tableau des cellules  

@@ -18,7 +18,10 @@ using namespace std;  // espace de nom standard
 
 Cellule::Cellule()
 {
-    
+	//test 9 nov
+	delta_w =0.;
+	//fin test 9 nov
+	
     x = y = z = 1.;
     
     dx = dy = dz = 1.;
@@ -39,9 +42,9 @@ Cellule::Cellule()
     
     rho0 = impx0 = impy0 = impz0 = rhoE0 = 0.;
     
-    cells = alpha = alpha1 = 0.;
+    cells = alpha = alpha0 = 0.;
     
-    kappai = kappaj = kappak = kappai1 = kappaj1 = kappak1 = 0.;
+    kappai = kappaj = kappak = kappai0 = kappaj0 = kappak0 = 0.;
     
     proche = proche1 = 0;
     
@@ -102,7 +105,9 @@ Cellule::Cellule()
 
 Cellule::Cellule(double x0, double y0, double z0)
 {
-    
+	//test 9 nov
+	delta_w =0.;
+	//fin test 9 nov
     x=x0; y=y0; z=z0;
     
     
@@ -124,9 +129,9 @@ Cellule::Cellule(double x0, double y0, double z0)
     
     rho0 = impx0 = impy0 = impz0 = rhoE0 = 0.;
     
-    cells = alpha = alpha1 = 0.;
+    cells = alpha = alpha0 = 0.;
     
-    kappai = kappaj = kappak = kappai1 = kappaj1 = kappak1 = 0.;
+    kappai = kappaj = kappak = kappai0 = kappaj0 = kappak0 = 0.;
     
     proche = proche1 = 0;
     
@@ -188,7 +193,9 @@ Cellule::Cellule(double x0, double y0, double z0)
 
 Cellule::Cellule(double x0, double y0, double z0, double dx0, double dy0, double dz0)
 {
-    
+	//test 9 nov
+	delta_w =0.;
+	//fin test 9 nov
     x = x0; y = y0; z = z0;
     
     dx = dx0 ; dy = dy0 ; dz = dz0 ;
@@ -210,9 +217,9 @@ Cellule::Cellule(double x0, double y0, double z0, double dx0, double dy0, double
     
     rho0 = impx0 = impy0 = impz0 = rhoE0 = 0.;
     
-    cells = alpha = alpha1 = 0.;
+    cells = alpha = alpha0 = 0.;
     
-    kappai = kappaj = kappak = kappai1 = kappaj1 = kappak1 = 0.;
+    kappai = kappaj = kappak = kappai0 = kappaj0 = kappak0 = 0.;
     
     proche = proche1 = 0;
     
@@ -273,7 +280,10 @@ Cellule::Cellule(double x0, double y0, double z0, double dx0, double dy0, double
 
 Cellule & Cellule:: operator=(const Cellule &c){
     
-    assert(this != &c);		
+    assert(this != &c);	
+		//test 9 nov
+		delta_w = c.delta_w;
+		//fin test 9 nov
     x = c.x; y = c.y; z = c.z;
     
     dx = c.dx ; dy = c.dy ; dz = c.dz ;
@@ -296,10 +306,10 @@ Cellule & Cellule:: operator=(const Cellule &c){
     
     rho0 = c.rho0; impx0 = c.impx0; impy0 = c.impy0; impz0 = c.impz0; rhoE0 = c.rhoE0;
     
-    cells = c.cells; alpha = c.alpha; alpha1 = c.alpha1;
+    cells = c.cells; alpha = c.alpha; alpha0 = c.alpha0;
     
     kappai = c.kappai; kappaj = c.kappaj; kappak = c.kappak; 
-    kappai1 = c.kappai1; kappaj1 = c.kappaj1; kappak1 = c.kappak1;
+    kappai0 = c.kappai0; kappaj0 = c.kappaj0; kappak0 = c.kappak0;
     
     proche = c.proche; proche1 = c.proche1;
     
@@ -381,11 +391,16 @@ bool Cellule :: is_in_cell(double x0,double y0, double z0)
 void Cellule :: Affiche (){
     
 	  
-   cout<< " x = "<< x<< " y = "<<y<< " z = "<<z<<endl;
+  // cout<< " x = "<< x<< " y = "<<y<< " z = "<<z<<endl;
 
 		//if(std::abs(alpha-1.)<eps){
     //cout<< " ki = "<< kappai<< " kj = "<< kappaj<< " kk = "<< kappak<<endl;
     cout<<"alpha ="<<alpha<<endl;
+		cout<<"alpha0 ="<<alpha0<<endl;
+		cout<<"delta_w =  "<<delta_w <<endl;
+		cout<<"phi_x =  "<<phi_x <<endl;
+		cout<<"phi_y =  "<<phi_y <<endl;
+		cout<<"phi_z =  "<<phi_z <<endl;
 // 		cout<<"pression ="<<p<<endl;
 // 	  cout<<"pression parois x= "<<phi_x<<endl;
 // 		cout<<"pression parois y= "<<phi_y<<endl;
@@ -478,19 +493,34 @@ Grille::~Grille(){
 
 void Grille:: affiche()
 {
-    int s=0;
 		double vol=0.;
     for(int i=marge;i<Nx+marge;i++){
         for(int j=marge;j<Ny+marge;j++){ 
             for(int k=marge;k<Nz+marge;k++){ 
-                s++;
 								vol +=(dx*dy*dz)*grille[i][j][k].alpha;
-                //cout<<"cellule i="<<i-marge<<"j= "<<j-marge<<endl;
+								if(grille[i][j][k].alpha > eps){
+                 cout<<"cellule i="<<i-marge<<"j= "<<j-marge<< "k= "<<k-marge<<endl;
 									grille[i][j][k].Affiche();
+								}
             }
         }
     }
-   cout<<"volume solide := "<<vol<<endl;
+  // cout<<"volume solide := "<<vol<<endl;
+
+// 	 //test 8 nov
+// 	 double somme_n=0., somme_n0=0.;
+// 	 for(int i=0;i<Nx+2*marge;i++){
+// 		 for(int j=0;j<Ny+2*marge;j++){
+// 			 for(int k=0;k<Nz+2*marge;k++){
+// 				 Cellule  c = grille[i][j][k];
+// 				 somme_n += c.alpha;
+// 				 somme_n0 +=c.alpha0;
+// 			 }
+// 		 }
+// 	 }
+// 	 cout<<"alpha n+1 "<<somme_n<<endl; cout<<"alpha n "<<somme_n0<<endl;
+// 	 //fin test 8 nov
+	
 }
 
 void Grille:: affiche(string r)
@@ -543,30 +573,22 @@ Cellule Grille::in_cell(Point_3 p){
   return cellule(i,j,k);
 }
 
-void Grille::in_cell(Point_3 p, int &i, int& j, int& k){
+void Grille::in_cell(Point_3 p, int &i, int& j, int& k, bool& interieur){
 	
 	i = (int) (floor(CGAL::to_double((p.operator[](0)-x)/dx))+marge);
 	j = (int) (floor(CGAL::to_double((p.operator[](1)-y)/dy))+marge);
 	k = (int) (floor(CGAL::to_double((p.operator[](2)-z)/dz))+marge);
+
+
+	if(i<0 || i>Nx+2*marge-1 || j<0 || j>Ny+2*marge-1 || k<0 || k>Nz+2*marge-1){
+		interieur= false ;
+	}
+	else {interieur = true;}
 	
-	if(i<0){
-		i = 0;
-	}
-	if(i>Nx+2*marge-1){
-		i = Nx+2*marge-1;
-	}
-	if(j<0){
-		j = 0;
-	}
-	if(j>Ny+2*marge-1){
-		j = Ny+2*marge-1;
-	}
-	if(k<0){
-		k = 0;
-	}
-	if(k>Nz+2*marge-1){
-		k = Nz+2*marge-1;
-	}
+// 	Cellule c= cellule(i,j,k);
+// 	if(std::abs(c.alpha -1.)>eps){
+// 		//?
+// 	}
 	
 }
 //Sous-programme de definition des conditions initiales 
@@ -2368,6 +2390,8 @@ void Grille::Solve(const double dt, double t, int n){
                 c.impz0 = c.impz;
                 c.rhoE0 = c.rhoE;
 								c.p1=c.p;
+								c.alpha0=c.alpha;
+								c.kappai0 = c.kappai; c.kappaj0 = c.kappaj; c.kappak0 = c.kappak;
                 grille[i][j][k] = c;
             }
         }

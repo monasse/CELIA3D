@@ -37,6 +37,7 @@ int main(){
 	
 	double t=0.;
 
+
 	Solide S;
 	S.init("maillage.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	//S.Affiche();
@@ -102,6 +103,7 @@ int main(){
 		iter++;
 		
 	}
+	
 	end=clock();
 	
 	Fluide.impression(kimp);
@@ -111,7 +113,11 @@ int main(){
 	out<<"nb iter= "<< iter<<endl;    
 	out <<"Temps de calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl;     
 	cout<<"nb iter= "<< iter<<endl;    
-	cout <<"Temps de calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl;    
+	cout <<"Temps de calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl;  
+	
+// 	//test 8 nov
+// 	Fluide.affiche();
+// 	//fin test 8 nov
 	
 	return 0;
 	

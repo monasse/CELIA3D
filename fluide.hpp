@@ -37,7 +37,9 @@ public :
   void Affiche ();  //fonction auxilaire utile pour les test :)
 
 protected:
-    
+  //test 9 nov
+	double delta_w;
+	//fin test 9 nov
   double x;        //position du centre de la cellule 
   double y;
   double z; 
@@ -86,15 +88,15 @@ protected:
 
   double cells;      //Volume des cellules melangees avec la cellule si elle est cible
   double alpha;      //proportion de la cellule occupee par du solide a l'instant t
-  double alpha1;    //proportion de la cellule occupee par du solide a l'instant t-dt
+  double alpha0;    //proportion de la cellule occupee par du solide a l'instant t-dt
 
   double kappai;    //Taux d'occupation des faces par du solide
   double kappaj;
   double kappak;
 
-  double kappai1;    //Taux d'occupation des faces par du solide au temps t-dt
-  double kappaj1;
-  double kappak1;
+  double kappai0;    //Taux d'occupation des faces par du solide au temps t-dt
+  double kappaj0;
+  double kappak0;
 
   int proche;         //Indicateur qui vaut 0 loin de la paroi, 1 pr�s de la paroi
   int proche1;       //Indicateur de proche au temps t-dt
@@ -204,9 +206,9 @@ class Grille
   //Acces a une cellule i,j, k
    Cellule cellule(int i, int j, int k);
   //Acces a la cellule contenant le point (x,y,z)
-  Cellule in_cell(Point_3 p);
+   Cellule in_cell(Point_3 p);
 	//Acces a la cellule contenant le point (x,y,z)
-	void in_cell(Point_3 p, int &i, int& j, int& k);
+	void in_cell(Point_3 p, int &i, int& j, int& k, bool& interieur);
   //Sous-programme de definition des conditions initiales 
   void init();
 
@@ -259,7 +261,8 @@ class Grille
   void mixage(); //Procedure de mixage pour le cellules avec c.alpha>0.5
   void fill_cel(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.)
 	//void fill_cel_old(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.) old version
-	void swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const double dt);
+	void swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const double dt, vector< vector< vector<double > > >& Test);
+	void cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,int& kn1, std::vector<Bbox>& box_cells, std::vector<Cellule>& Cells);
 	void swap(const double dt, Solide& S);
 private :
 
