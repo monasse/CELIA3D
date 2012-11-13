@@ -1395,7 +1395,7 @@ void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,i
 
 
 
-void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const double dt,vector< vector< vector<double > > >& Test){
+void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const double dt,vector< vector< vector<double > > >& Test, double & var){
 	
 	CGAL::Timer user_time, user_time2;
 	double time=0.;
@@ -1406,13 +1406,17 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const
 		box_prismes[i]= box_triangles_prev.operator+(box_triangles_n);
 	}
 	for (int i=0; i< box_prismes.size(); i++){
-		double vol_test=0.;
+		double vol_test=0.; 
 		int in=0, jn=0, kn=0, in1=0, jn1=0, kn1=0;
 		bool interieur = true;
 		Point_3 center_prev= centroid(T3d_prev[i].operator[](0),T3d_prev[i].operator[](1),T3d_prev[i].operator[](2));
 		Point_3 center_n= centroid(T3d_n[i].operator[](0),T3d_n[i].operator[](1),T3d_n[i].operator[](2));
 		in_cell(center_prev, in, jn, kn, interieur);
 		in_cell(center_n, in1, jn1, kn1, interieur);
+		
+		//test 12 nov
+			Test[in1][jn1][kn1] += sqrt(CGAL::to_double(T3d_n[i].squared_area()));
+		//fin test 12 nov
 		
 		if (in==in1 && jn==jn1 && kn==kn1 && interieur==true){
 			// le prisme est contenu dans une seule cellule 
@@ -1428,12 +1432,24 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const
 			c.u = c.impx/c.rho; c.v = c.impy/c.rho; c.w = c.impz/c.rho;
 			c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2.-c.rho*c.w*c.w/2.);
 			grille[in1][jn1][kn1] = c;
-			Test[in1][jn1][kn1] +=volume_p/(c.dx*c.dy*c.dz) ;
+			//Test[in1][jn1][kn1] +=volume_p/(c.dx*c.dy*c.dz) ;
+			
+// 			//test 12 nov
+// 			if(in1==8 && jn1==8 && kn1==8){
+// 				double cal_vol = volume_p;  
+// 				double a_lambda = sqrt(CGAL::to_double(T3d_n[i].squared_area()));
+// 				Vector_3 norm= orthogonal_vector(T3d_n[i].operator[](0),T3d_n[i].operator[](1),T3d_n[i].operator[](2));
+// 				double norm2 = sqrt(CGAL::to_double(norm*norm));
+// 				Vector_3 v_n_lambda = norm/norm2;
+// 				double cal_exact = a_lambda*( CGAL::to_double(v_n_lambda.x())) *dt;
+// 				var += a_lambda*( CGAL::to_double(v_n_lambda.x())) ;
+// 				if(std::abs(cal_exact - cal_vol)>eps){cout<<"oups "<<endl;}
+// 			} 
+// 			//fin test 12 nov
 			}
 			vol_test += volume_p;
 		}	
 		else if(std::abs(volume_prisme(T3d_prev[i],T3d_n[i])) >eps  && interieur==true) {
-			
 		std::vector<Bbox> box_cells;
 		std::vector<Cellule> Cells ;
 		cells_intersection_face(in,jn,kn,in1,jn1,kn1,box_cells,Cells);
@@ -1554,7 +1570,7 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const
 				c.u = c.impx/c.rho; c.v = c.impy/c.rho; c.w = c.impz/c.rho;
 				c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2.-c.rho*c.w*c.w/2.);
 				grille[in1][jn1][kn1] = c;
-				Test[in1][jn1][kn1] +=volume/(c.dx*c.dy*c.dz) ;
+				//Test[in1][jn1][kn1] +=volume/(c.dx*c.dy*c.dz) ;
 			}
 			vol_test += volume;
 			
@@ -1579,6 +1595,7 @@ void Grille::swap(const double dt, Solide& S){
 	
 	CGAL::Timer user_time, user_time2;
 	double time_1=0., time_2=0.;
+	double var=0.;
 	vector< vector< vector<double > > > Test(Nx+2*marge, vector< vector<double> >(Ny+2*marge, vector<double>(Nz+2*marge,0.)) );
 	for(int i=0;i<S.solide.size();i++){
 		for (int j=0; j<S.solide[i].triangles.size(); j++){
@@ -1589,16 +1606,16 @@ void Grille::swap(const double dt, Solide& S){
 										 S.solide[i].normales[j], T3d_n,T3d_n1);
 	     //cout << "Temps sous-maillage face: " << user_time.time() << " seconds." << endl;
 				
-		 // //test 5 nov calcul aire faces
-			// 		  cout<< " aire face is : "<< std::sqrt(CGAL::to_double(S.solide[i].triangles_prev[j].squared_area () ))<<endl;
-			// 			double a_n=0., a_n1=0.;
-			// 		  for(int iter=0; iter<T3d_n1.size(); iter++){
-			// 				a_n += std::sqrt(CGAL::to_double(T3d_n[iter].squared_area () )); 
-			// 				a_n1 += std::sqrt(CGAL::to_double(T3d_n[iter].squared_area () ));
-			// 			}
-			// 			cout<< " aire n is : "<< a_n<<endl;
-			// 			cout<< " aire n1 is : "<< a_n1<<endl;
-			////fin test 5 nov	calcul aire faces	 OK
+// 		 //test 5 nov calcul aire faces
+// 					  cout<< " aire face is : "<< std::sqrt(CGAL::to_double(S.solide[i].triangles_prev[j].squared_area () ))<<endl;
+// 						double a_n=0., a_n1=0.;
+// 					  for(int iter=0; iter<T3d_n1.size(); iter++){
+// 							a_n += std::sqrt(CGAL::to_double(T3d_n[iter].squared_area () )); 
+// 							a_n1 += std::sqrt(CGAL::to_double(T3d_n1[iter].squared_area () ));
+// 						}
+// 						cout<< " aire n is : "<< a_n<<endl;
+// 						cout<< " aire n1 is : "<< a_n1<<endl;
+// 			//fin test 5 nov	calcul aire faces	 OK
 			time_1+=CGAL::to_double(user_time.time());
 		  user_time.reset();
 		  user_time2.start();
@@ -1649,7 +1666,7 @@ void Grille::swap(const double dt, Solide& S){
 //        if(std::abs(vol_tetra)<eps){vol_tetra=0.;}
 //        cout<< "volume tetra:                      "<<vol_tetra<<endl;
 // 			 //fin test 6 nov ok
-			swap_modification_flux(T3d_n,T3d_n1,dt, Test);
+			swap_modification_flux(T3d_n,T3d_n1,dt, Test,var);
 		  //cout << "Temps swap_modification_flux: " << user_time2.time() << " seconds." << endl;
 			//cout << "nb sous triang face: " << T3d_n.size()<< endl;
 			time_2+=CGAL::to_double(user_time2.time());
@@ -1705,6 +1722,27 @@ void Grille::swap(const double dt, Solide& S){
 // 	}
 // }
 // //fin test 9 nov
+
+// //test 12nov
+// cout<<" intersect "<< grille[8][8][8].delta_w<<endl;
+// cout<<" var  "<< var <<endl;
+// //fin test 12 nov
+
+// //test 12 nov
+// double s1=0., s2=0.;
+// for(int ii=marge;ii<Nx+marge;ii++){
+// 		for(int jj=marge;jj<Ny+marge;jj++){
+// 				for(int kk=marge;kk<Nz+marge;kk++){
+// 					if(std::abs(Test[ii][jj][kk]- grille[ii][jj][kk].delta_w)>eps){cout<<" test "<<Test[ii][jj][kk]<<"   aire "<<grille[ii][jj][kk].delta_w<<endl;}
+// 					s1+= Test[ii][jj][kk];
+// 					s2+= grille[ii][jj][kk].delta_w;
+// 					}
+// 				}
+// 			}
+// 	cout<<" s1 "<< s1<<endl;
+// 	cout<<" s2 "<< s2<<endl;	
+// //fin test 12 nov
+
 
 }
 

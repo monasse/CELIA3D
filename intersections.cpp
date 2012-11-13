@@ -334,8 +334,9 @@ void Grille::parois(Solide& S) {
 						cel.phi_x += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].x()))/volume_cel;
 						cel.phi_y += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].y()))/volume_cel;
 						cel.phi_z += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].z()))/volume_cel;
-						cel.delta_w += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].x())*cel.u + CGAL::to_double(v_n_lambda[it].y())*cel.v
-						+ CGAL::to_double(v_n_lambda[it].z())*cel.w) /volume_cel;
+// 						cel.delta_w += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].x())*cel.u + CGAL::to_double(v_n_lambda[it].y())*cel.v
+// 						+ CGAL::to_double(v_n_lambda[it].z())*cel.w) /volume_cel;
+              cel.delta_w += v_lambda[it];
 					}
 					
 					if (abs(cel.phi_x)<=eps_relat) {cel.phi_x = 0.;} 

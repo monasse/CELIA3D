@@ -391,16 +391,17 @@ bool Cellule :: is_in_cell(double x0,double y0, double z0)
 void Cellule :: Affiche (){
     
 	  
-  // cout<< " x = "<< x<< " y = "<<y<< " z = "<<z<<endl;
+  cout<<"max "<< " x = "<< x+dx/2<< " y = "<<y+dy/2<< " z = "<<z+dz/2<<endl;
+	cout<<"min "<< " x = "<< x-dx/2<< " y = "<<y-dy/2<< " z = "<<z-dz/2<<endl;
 
 		//if(std::abs(alpha-1.)<eps){
     //cout<< " ki = "<< kappai<< " kj = "<< kappaj<< " kk = "<< kappak<<endl;
-    cout<<"alpha ="<<alpha<<endl;
-		cout<<"alpha0 ="<<alpha0<<endl;
-		cout<<"delta_w =  "<<delta_w <<endl;
-		cout<<"phi_x =  "<<phi_x <<endl;
-		cout<<"phi_y =  "<<phi_y <<endl;
-		cout<<"phi_z =  "<<phi_z <<endl;
+//     cout<<"alpha ="<<alpha<<endl;
+// 		cout<<"alpha0 ="<<alpha0<<endl;
+// 		cout<<"delta_w =  "<<delta_w <<endl;
+// 		cout<<"phi_x =  "<<phi_x <<endl;
+// 		cout<<"phi_y =  "<<phi_y <<endl;
+// 		cout<<"phi_z =  "<<phi_z <<endl;
 // 		cout<<"pression ="<<p<<endl;
 // 	  cout<<"pression parois x= "<<phi_x<<endl;
 // 		cout<<"pression parois y= "<<phi_y<<endl;

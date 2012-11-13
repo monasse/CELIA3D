@@ -261,7 +261,7 @@ class Grille
   void mixage(); //Procedure de mixage pour le cellules avec c.alpha>0.5
   void fill_cel(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.)
 	//void fill_cel_old(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.) old version
-	void swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const double dt, vector< vector< vector<double > > >& Test);
+	void swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const double dt, vector< vector< vector<double > > >& Test, double & var);
 	void cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,int& kn1, std::vector<Bbox>& box_cells, std::vector<Cellule>& Cells);
 	void swap(const double dt, Solide& S);
 private :
