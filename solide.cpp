@@ -1006,8 +1006,8 @@ double Particule::volume(){
 
 Vector_3 Particule::vitesse_parois(Point_3& X_f){
 		
-// 	Vector_3 V_f = u_half + cross_product(omega_half, Vector_3(Point_3(x0.operator[](0) + Dx.operator[](0), x0.operator[](1) + Dx.operator[](1),x0.operator[](2) + Dx.operator[](2)),X_f));
-	Vector_3 V_f(1.,0.3,0.2);
+	Vector_3 V_f = u_half + cross_product(omega_half, Vector_3(Point_3(x0.operator[](0) + Dx.operator[](0), x0.operator[](1) + Dx.operator[](1),x0.operator[](2) + Dx.operator[](2)),X_f));
+
 	return V_f;
 }	
 
