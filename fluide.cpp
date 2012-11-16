@@ -52,7 +52,7 @@ Cellule::Cellule()
     
     xi = yj = zk = 1.;
     
-    phi_x = phi_y = phi_z =0.;
+		phi_x = phi_y = phi_z = phi_v=0.;
     
     S = log(p) - gam*log(rho);
     
@@ -139,7 +139,7 @@ Cellule::Cellule(double x0, double y0, double z0)
     
     xi = yj = zk = 1.;
     
-    phi_x = phi_y = phi_z =0.;
+		phi_x = phi_y = phi_z = phi_v = 0.;
     
     S = log(p) - gam*log(rho);
     
@@ -227,7 +227,7 @@ Cellule::Cellule(double x0, double y0, double z0, double dx0, double dy0, double
     
     xi = yj = zk = 1.;
     
-    phi_x = phi_y = phi_z =0.;
+		phi_x = phi_y = phi_z = phi_v = 0.;
     
     S = log(p) - gam*log(rho);
     
@@ -298,7 +298,7 @@ Cellule & Cellule:: operator=(const Cellule &c){
     
     impx = c.impx; impy = c.impy; impz = c.impz;  
     
-    phi_x = c.phi_x; phi_y = c.phi_y; phi_z = c.phi_z;
+		phi_x = c.phi_x; phi_y = c.phi_y; phi_z = c.phi_z; phi_v= c.phi_v;
     
     rhoE=c.rhoE;
     
@@ -499,9 +499,9 @@ void Grille:: affiche()
         for(int j=marge;j<Ny+marge;j++){ 
             for(int k=marge;k<Nz+marge;k++){ 
 								vol +=(dx*dy*dz)*grille[i][j][k].alpha;
-								if(grille[i][j][k].alpha > eps){
-                 cout<<"cellule i="<<i-marge<<"j= "<<j-marge<< "k= "<<k-marge<<endl;
-									grille[i][j][k].Affiche();
+								if(( std::abs(grille[i][j][k].alpha-1.) > 0.000001 ) && (std::abs(grille[i][j][k].rho -1.4)>0.000001)){
+									cout<<"cellule i="<<i-marge<<"j= "<<j-marge<< "k= "<<k-marge<< " rho "<<grille[i][j][k].rho  << " p "<<grille[i][j][k].p<< endl;
+									//grille[i][j][k].Affiche();
 								}
             }
         }
@@ -581,7 +581,7 @@ void Grille::in_cell(Point_3 p, int &i, int& j, int& k, bool& interieur){
 	k = (int) (floor(CGAL::to_double((p.operator[](2)-z)/dz))+marge);
 
 
-	if(i<0 || i>Nx+2*marge-1 || j<0 || j>Ny+2*marge-1 || k<0 || k>Nz+2*marge-1){
+	if(i<0 || i>Nx+2*marge || j<0 || j>Ny+2*marge || k<0 || k>Nz+2*marge){
 		interieur= false ;
 	}
 	else {interieur = true;}
@@ -590,7 +590,7 @@ void Grille::in_cell(Point_3 p, int &i, int& j, int& k, bool& interieur){
 // 	if(std::abs(c.alpha -1.)>eps){
 // 		//?
 // 	}
-	
+
 }
 //Sous-programme de definition des conditions initiales 
 void Grille::init(){

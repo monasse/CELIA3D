@@ -81,11 +81,16 @@ void Grille::parois(Solide& S) {
 	for (int a=0; a< nx_m; a++){
 		for (int b=0; b< ny_m; b++){
 			for (int c=0; c< nz_m; c++){
+				
+				std::vector< std::vector<Point_3> > Points_interface;
+				Points_interface.resize(S.solide[0].triangles.size(), std::vector<Point_3>(0));
+				
 				grille[a][b][c].alpha = 0.; grille[a][b][c].kappai = 0.; grille[a][b][c].kappaj = 0.; grille[a][b][c].kappak = 0.;
-				grille[a][b][c].phi_x = 0.; grille[a][b][c].phi_y = 0.; grille[a][b][c].phi_z = 0.; grille[a][b][c].delta_w = 0.;
+				grille[a][b][c].phi_x = 0.; grille[a][b][c].phi_y = 0.; grille[a][b][c].phi_z = 0.; grille[a][b][c].phi_v = 0.;
+				grille[a][b][c].delta_w = 0.;
 				cel = grille[a][b][c]; 
 				cel.alpha = 0.; cel.kappai = 0.; cel.kappaj = 0.; cel.kappak = 0.;
-				cel.phi_x = 0.; cel.phi_y = 0.; cel.phi_z = 0.; cel.delta_w = 0.;
+				cel.phi_x = 0.; cel.phi_y = 0.; cel.phi_z = 0.; cel.phi_v = 0.; cel.delta_w = 0.;
 				std::vector<Point_3> Points_poly; 
 				double alpha = 0.0;
 				std::vector<double>  kappa(6,0.0);
@@ -118,16 +123,19 @@ void Grille::parois(Solide& S) {
 								point_in_cell = inside_box(box_grille[i], S.solide[iter_s].triangles[j].operator[](0));
 								if(point_in_cell) {Points_poly.push_back(S.solide[iter_s].triangles[j].operator[](0)); point_in_cell=false;
 								S.solide[iter_s].Points_interface[j].push_back(S.solide[iter_s].triangles[j].operator[](0));
+								Points_interface[j].push_back(S.solide[iter_s].triangles[j].operator[](0));
 								}
 								
 								point_in_cell = inside_box(box_grille[i], S.solide[iter_s].triangles[j].operator[](1));
 								if(point_in_cell) {Points_poly.push_back(S.solide[iter_s].triangles[j].operator[](1)); point_in_cell=false;
 								S.solide[iter_s].Points_interface[j].push_back(S.solide[iter_s].triangles[j].operator[](1));
+								Points_interface[j].push_back(S.solide[iter_s].triangles[j].operator[](1));
 								}
 								
 								point_in_cell = inside_box(box_grille[i], S.solide[iter_s].triangles[j].operator[](2));
 								if(point_in_cell) {Points_poly.push_back(S.solide[iter_s].triangles[j].operator[](2)); point_in_cell=false;
 								S.solide[iter_s].Points_interface[j].push_back(S.solide[iter_s].triangles[j].operator[](2));
+								Points_interface[j].push_back(S.solide[iter_s].triangles[j].operator[](2));
 								}
 								
 								
@@ -157,12 +165,15 @@ void Grille::parois(Solide& S) {
 											if(CGAL::assign(P,result)){
 												Points_poly.push_back(P);
 												S.solide[iter_s].Points_interface[j].push_back(P);
+												Points_interface[j].push_back(P);
 											}
 											else if(CGAL::assign(seg,result)){
 												Points_poly.push_back(seg.operator[](0));
 												Points_poly.push_back(seg.operator[](1));
 												S.solide[iter_s].Points_interface[j].push_back(seg.operator[](0));
 												S.solide[iter_s].Points_interface[j].push_back(seg.operator[](1));
+												Points_interface[j].push_back(seg.operator[](0));
+												Points_interface[j].push_back(seg.operator[](1));
 											}
 											else if(CGAL::assign(t,result)){
 												Points_poly.push_back(t.operator[](0));
@@ -171,6 +182,9 @@ void Grille::parois(Solide& S) {
 												S.solide[iter_s].Points_interface[j].push_back(t.operator[](0));
 												S.solide[iter_s].Points_interface[j].push_back(t.operator[](1));
 												S.solide[iter_s].Points_interface[j].push_back(t.operator[](2));
+												Points_interface[j].push_back(t.operator[](0));
+												Points_interface[j].push_back(t.operator[](1));
+												Points_interface[j].push_back(t.operator[](2));
 												
 											}
 											else if(CGAL::assign(vPoints,result)){ 
@@ -178,6 +192,7 @@ void Grille::parois(Solide& S) {
 												{
 													Points_poly.push_back(vPoints[l]);
 													S.solide[iter_s].Points_interface[j].push_back(vPoints[l]);
+													Points_interface[j].push_back(vPoints[l]);
 												}
 												
 											}
@@ -200,6 +215,7 @@ void Grille::parois(Solide& S) {
 					
 					std::vector<double>  v_lambda;
 					std::vector<Vector_3> v_n_lambda;
+					std::vector<Point_3> X_f; //centre de la face
 					///////////////////////////////////////////////////////////////////////////////	  
 					if (T.dimension() == 3){
 						Polyhedron_3 poly;
@@ -254,6 +270,7 @@ void Grille::parois(Solide& S) {
 														 norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
 														 norm2= sqrt(CGAL::to_double(norm*norm));
 														 v_n_lambda.push_back(norm/norm2);
+														 X_f.push_back(centroid(K.operator[](0),K.operator[](1),K.operator[](2)));
 													 } //calcul des aires parietales
 													 
 						}
@@ -274,6 +291,7 @@ void Grille::parois(Solide& S) {
 								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
 								norm2= sqrt(CGAL::to_double(norm*norm));
 								v_n_lambda.push_back(norm/norm2);
+								X_f.push_back(centroid(K.operator[](0),K.operator[](1),K.operator[](2)));
 							}
 							
 							else if (abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](0).operator[](2))<=eps_relat && abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](1).operator[](2))<=eps_relat && abs(trianglesB[2].operator[](0).operator[](2) -  K.operator[](2).operator[](2))<=eps_relat)
@@ -283,7 +301,7 @@ void Grille::parois(Solide& S) {
 								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
 								norm2= sqrt(CGAL::to_double(norm*norm));
 								v_n_lambda.push_back(norm/norm2);
-								
+								X_f.push_back(centroid(K.operator[](0),K.operator[](1),K.operator[](2)));
 							}
 							
 							else if (abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](0).operator[](0))<=eps_relat && abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](1).operator[](0))<=eps_relat && abs(trianglesB[4].operator[](0).operator[](0) -  K.operator[](2).operator[](0))<=eps_relat)
@@ -293,7 +311,7 @@ void Grille::parois(Solide& S) {
 								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
 								norm2= sqrt(CGAL::to_double(norm*norm));
 								v_n_lambda.push_back(norm/norm2);
-								
+								X_f.push_back(centroid(K.operator[](0),K.operator[](1),K.operator[](2)));
 							}
 							
 							else if (abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](0).operator[](0))<=eps_relat && abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](1).operator[](0))<=eps_relat && abs(trianglesB[6].operator[](0).operator[](0) -  K.operator[](2).operator[](0))<=eps_relat)
@@ -303,7 +321,7 @@ void Grille::parois(Solide& S) {
 								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
 								norm2= sqrt(CGAL::to_double(norm*norm));
 								v_n_lambda.push_back(norm/norm2);
-								
+								X_f.push_back(centroid(K.operator[](0),K.operator[](1),K.operator[](2)));
 							}
 							
 							else if (abs(trianglesB[8].operator[](0).operator[](1) -  K.operator[](0).operator[](1))<=eps_relat && abs(trianglesB[8].operator[](0).operator[](1) -  K.operator[](1).operator[](1))<=eps_relat && abs(trianglesB[8].operator[](0).operator[](1) -  K.operator[](2).operator[](1))<=eps_relat)
@@ -313,7 +331,7 @@ void Grille::parois(Solide& S) {
 								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
 								norm2= sqrt(CGAL::to_double(norm*norm));
 								v_n_lambda.push_back(norm/norm2);
-								
+								X_f.push_back(centroid(K.operator[](0),K.operator[](1),K.operator[](2)));
 							}
 							
 							else 
@@ -323,25 +341,33 @@ void Grille::parois(Solide& S) {
 								norm= orthogonal_vector(K.operator[](0),K.operator[](1),K.operator[](2));
 								norm2= sqrt(CGAL::to_double(norm*norm));
 								v_n_lambda.push_back(norm/norm2);
+								X_f.push_back(centroid(K.operator[](0),K.operator[](1),K.operator[](2)));
 							}
 						}
 						
 					}
 					
-					cel.delta_w =0.;
 					for (int it= 0; it< v_lambda.size(); it++)
 					{
-						cel.phi_x += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].x()))/volume_cel;
-						cel.phi_y += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].y()))/volume_cel;
-						cel.phi_z += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].z()))/volume_cel;
-// 						cel.delta_w += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].x())*cel.u + CGAL::to_double(v_n_lambda[it].y())*cel.v
-// 						+ CGAL::to_double(v_n_lambda[it].z())*cel.w) /volume_cel;
-              cel.delta_w += v_lambda[it];
-					}
+						cel.phi_x += cel.pdtx * v_lambda[it] *( CGAL::to_double(v_n_lambda[it].x()))/volume_cel;
+						cel.phi_y += cel.pdty *v_lambda[it] *( CGAL::to_double(v_n_lambda[it].y()))/volume_cel;
+						cel.phi_z += cel.pdtz *v_lambda[it] *( CGAL::to_double(v_n_lambda[it].z()))/volume_cel;
+						Vector_3 V_f = S.solide[0].vitesse_parois(X_f[it]);
+             cel.phi_v += v_lambda[it] * (CGAL::to_double(cel.pdtx*v_n_lambda[it].x()*V_f.x()  + cel.pdty*v_n_lambda[it].y()*V_f.y()+
+                                          cel.pdtz*v_n_lambda[it].z()*V_f.z()))/volume_cel;
+// 			cel.phi_v += v_lambda[it] * (CGAL::to_double(cel.pdtx*v_n_lambda[it].x()*1.  + cel.pdty*v_n_lambda[it].y()*0.3+
+// 			                             cel.pdtz*v_n_lambda[it].z()*0.2))/volume_cel;
+ 
+		cel.delta_w += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].x())*cel.impx0/cel.rho0 + CGAL::to_double(v_n_lambda[it].y())*cel.impy0/cel.rho0 + CGAL::to_double(v_n_lambda[it].z())*cel.impz0/cel.rho0) /volume_cel;
+																				 
+//              cel.delta_w += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].x()) ) /volume_cel;
+							//cel.delta_w += v_lambda[it];
+             }
 					
 					if (abs(cel.phi_x)<=eps_relat) {cel.phi_x = 0.;} 
 					if (abs(cel.phi_y)<=eps_relat) {cel.phi_y = 0.;} 
 					if (abs(cel.phi_z)<=eps_relat) {cel.phi_z = 0.;} 
+					if (abs(cel.phi_z)<=eps_relat) {cel.phi_v = 0.;} 
 					
 					cel.alpha = alpha/volume_cel;
 					cel.kappai = kappa[3]/(deltay * deltaz);
@@ -354,6 +380,31 @@ void Grille::parois(Solide& S) {
 				i++;
 				time+= user_time2.time();
 				user_time2.reset();
+
+	      //test 13 nov
+	      Finite_faces_iterator iter;
+	      for(int it=0; it<S.solide[0].triangles.size(); it++){
+						Triangulation T(Points_interface[it].begin(), Points_interface[it].end());
+						assert(T.is_valid());
+						if(T.dimension()==2){
+							for (iter = T.finite_facets_begin(); iter != T.finite_facets_end(); iter++){
+								if(T.triangle(*iter).squared_area() >eps){
+									Triangle_3 Tri= T.triangle(*iter);
+									Vector_3 vect0(Tri.operator[](0),Tri.operator[](1));
+									Vector_3 vect1(Tri.operator[](0),Tri.operator[](2));
+									Vector_3 normale = CGAL::cross_product(vect0,vect1);
+									if (normale*S.solide[0].normales[it] > 0.){
+										S.solide[0].Triangles_interface[it].push_back(Tri);
+									}
+									else {
+										S.solide[0].Triangles_interface[it].push_back(Triangle_3(Tri.operator[](0),Tri.operator[](2),Tri.operator[](1)));
+									}
+								}
+							}
+						}
+			   }
+				//fin test 13 nov
+
 			} //fin boucle sur grille
 		}
 	}
@@ -364,36 +415,36 @@ void Grille::parois(Solide& S) {
 	
 	cout<<"volume solide := "<<volume_s<<endl;
 	
-	//triangularisation de l'interface face par face
-  for(int ip=0; ip<nb_particules; ip++){
-		Finite_faces_iterator iter;
-		for(int it=0; it<S.solide[ip].triangles.size(); it++){
-			//if(S.solide[ip].fluide[it] == true){
-				S.solide[ip].Points_interface[it].push_back(S.solide[ip].triangles[it].operator[](0));
-				S.solide[ip].Points_interface[it].push_back(S.solide[ip].triangles[it].operator[](1));
-				S.solide[ip].Points_interface[it].push_back(S.solide[ip].triangles[it].operator[](2));
-				Triangulation T(S.solide[ip].Points_interface[it].begin(), S.solide[ip].Points_interface[it].end());
-				assert(T.is_valid());
-				if(T.dimension()==2){
-				for (iter = T.finite_facets_begin(); iter != T.finite_facets_end(); iter++){
-					if(!T.triangle(*iter).is_degenerate()){
-						   Triangle_3 Tri= T.triangle(*iter);
-							 Vector_3 vect0(Tri.operator[](0),Tri.operator[](1));
-							 Vector_3 vect1(Tri.operator[](0),Tri.operator[](2));
-							 Vector_3 normale = CGAL::cross_product(vect0,vect1);
-							 if (normale*S.solide[ip].normales[it] > 0.){
-								S.solide[ip].Triangles_interface[it].push_back(Tri);
-							 }
-							 else {
-								 S.solide[ip].Triangles_interface[it].push_back(Triangle_3(Tri.operator[](0),Tri.operator[](2),Tri.operator[](1)));
-							 }
-					}
-				}
-			}
-			//else{cout<<"tag tag "<<endl;}
-			//}
-		}
-	}
+// 	//triangularisation de l'interface face par face
+//   for(int ip=0; ip<nb_particules; ip++){
+// 		Finite_faces_iterator iter;
+// 		for(int it=0; it<S.solide[ip].triangles.size(); it++){
+// 			//if(S.solide[ip].fluide[it] == true){
+// 				S.solide[ip].Points_interface[it].push_back(S.solide[ip].triangles[it].operator[](0));
+// 				S.solide[ip].Points_interface[it].push_back(S.solide[ip].triangles[it].operator[](1));
+// 				S.solide[ip].Points_interface[it].push_back(S.solide[ip].triangles[it].operator[](2));
+// 				Triangulation T(S.solide[ip].Points_interface[it].begin(), S.solide[ip].Points_interface[it].end());
+// 				assert(T.is_valid());
+// 				if(T.dimension()==2){
+// 				for (iter = T.finite_facets_begin(); iter != T.finite_facets_end(); iter++){
+// 					if(!T.triangle(*iter).is_degenerate()){
+// 						   Triangle_3 Tri= T.triangle(*iter);
+// 							 Vector_3 vect0(Tri.operator[](0),Tri.operator[](1));
+// 							 Vector_3 vect1(Tri.operator[](0),Tri.operator[](2));
+// 							 Vector_3 normale = CGAL::cross_product(vect0,vect1);
+// 							 if (normale*S.solide[ip].normales[it] > 0.){
+// 								S.solide[ip].Triangles_interface[it].push_back(Tri);
+// 							 }
+// 							 else {
+// 								 S.solide[ip].Triangles_interface[it].push_back(Triangle_3(Tri.operator[](0),Tri.operator[](2),Tri.operator[](1)));
+// 							 }
+// 					}
+// 				}
+// 			}
+// 			//else{cout<<"tag tag "<<endl;}
+// 			//}
+// 		}
+// 	}
 	
 }
 

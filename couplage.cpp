@@ -15,12 +15,13 @@ void Grille::modif_fnum(const double dt){
 					ck = grille[i][j][k-1];    //Cellule  k-1
            
 					c.flux_modif[0] = 0.;
-					c.flux_modif[1] = c.pdtx * c.phi_x;
-					c.flux_modif[2] = c.pdty * c.phi_y;
-					c.flux_modif[3] = c.pdtz * c.phi_z;
-					c.flux_modif[4] = 0.;
-
-					
+					c.flux_modif[1] = c.phi_x;
+					c.flux_modif[2] = c.phi_y;
+					c.flux_modif[3] = c.phi_z;
+					//c.flux_modif[4] = c.phi_v;
+					//c.flux_modif[4] = c.phi_x;
+					//c.flux_modif[4] = c.phi_x + c.phi_y*0.3 + c.phi_z*0.2;
+					c.flux_modif[4] = c.phi_x*c.impx0/c.rho0 + c.phi_y*c.impy0/c.rho0 + c.phi_z*c.impz0/c.rho0;
 					for(int l=0.; l<5; l++){  
 						c.flux_modif[l] -= (1.-c.kappai)*c.dtfxi[l] - (1.-ci.kappai)*ci.dtfxi[l]
 						+ (1.-c.kappaj)*c.dtfyj[l] - (1.-cj.kappaj)*cj.dtfyj[l]
@@ -738,6 +739,7 @@ void Grille::fill_cel(Solide& S){
 				  Point_3 center_cell(c.x, c.y, c.z);
 				  int nbx=0, nby=0,nbz=0;
 				  Point_3 projete(0.,0.,0.); //Projete sur la face la plus proche
+					Vector_3 V_f(0.,0.,0.); //Vitesse de la paroi au point projete
 				  double dist_min = 10000000.;
 				  for(int iter=0; iter<nb_part; iter++){
 					for(int it=0;it<S.solide[iter].size();it++){
@@ -764,6 +766,7 @@ void Grille::fill_cel(Solide& S){
 						  if(d<dist_min && inside_box(Fluide,xP)){
 							dist_min = d;
 							projete = xP;
+							V_f = S.solide[iter].vitesse_parois(xP);
 						  }
 						}
 						//2eme cas : on est hors de la face
@@ -781,6 +784,7 @@ void Grille::fill_cel(Solide& S){
 							  if(d1<dist_min && inside_box(Fluide,x1)){
 								dist_min = d1;
 								projete = x1;
+								V_f = S.solide[iter].vitesse_parois(x1);
 							  }
 							}
 							//2eme sous-cas : on est plus proche du point x2
@@ -788,6 +792,7 @@ void Grille::fill_cel(Solide& S){
 							  if(d2<dist_min && inside_box(Fluide,x2)){
 								dist_min = d2;
 								projete = x2;
+								V_f = S.solide[iter].vitesse_parois(x2);
 							  }
 							}
 							//3eme sous-cas : on prend le projete sur (x1,x2)
@@ -798,6 +803,7 @@ void Grille::fill_cel(Solide& S){
 							  if(d<dist_min && inside_box(Fluide,proj)){
 								dist_min = d;
 								projete = proj;
+								V_f = S.solide[iter].vitesse_parois(proj);
 							  }
 							}
 						  }
@@ -812,7 +818,7 @@ void Grille::fill_cel(Solide& S){
 				  normale = normale*1./norme;
 				  cm = in_cell(symm_center);
 				  Vector_3 vit_m(cm.u,cm.v,cm.w); //Vitesse au point miroir
-				  Vector_3 vit = vit_m - normale*2.*(vit_m*normale);
+					Vector_3 vit = vit_m - normale*2.*((vit_m-V_f)*normale);
 				  c.rho = cm.rho;
 				  c.u = CGAL::to_double(vit.operator[](0));
 				  c.v = CGAL::to_double(vit.operator[](1));
@@ -1157,9 +1163,9 @@ Triangle_3 tr(Triangle_3 Tn1, Triangle_2 T){
  							}
  							
  						}
- 						//else {cout<<"Intersection type: ? in sous_maillage_face"<<endl;
- 							//		cout<<"Triangle 1: "<<Tn1[i]<<" Triangle 2: "<<Tn_n1[j]<<endl;
- 						//}
+ 						else {cout<<"Intersection type: ? in sous_maillage_face"<<endl;
+ 									cout<<"Triangle 1: "<<Tn1[i]<<" Triangle 2: "<<Tn_n1[j]<<endl;
+ 						}
  						
  					}
  				}
@@ -1231,11 +1237,13 @@ Triangle_3 tr(Triangle_3 Tn1, Triangle_2 T){
  	
  	for (CDT::Finite_faces_iterator fit=cdt.finite_faces_begin();
  	          fit!=cdt.finite_faces_end();++fit)
- 	{
+ 	{ 
  		Point_2 s = fit->vertex(0)->point();
  		Point_2 v = fit->vertex(1)->point();
  		Point_2 r = fit->vertex(2)->point();
+		if(Triangle_2(s,v,r).area()>eps){
  		T2d.push_back(Triangle_2(s,v,r));
+	 }
  	}
  	
  	user_time4.start();
@@ -1404,7 +1412,8 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const
 		Bbox box_triangles_prev = T3d_prev[i].bbox();
 		Bbox box_triangles_n = T3d_n[i].bbox();
 		box_prismes[i]= box_triangles_prev.operator+(box_triangles_n);
-	}
+	} 
+	int nb=0, nb2=0;  double diff=0.;
 	for (int i=0; i< box_prismes.size(); i++){
 		double vol_test=0.; 
 		int in=0, jn=0, kn=0, in1=0, jn1=0, kn1=0;
@@ -1414,10 +1423,18 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const
 		in_cell(center_prev, in, jn, kn, interieur);
 		in_cell(center_n, in1, jn1, kn1, interieur);
 		
-		//test 12 nov
-			Test[in1][jn1][kn1] += sqrt(CGAL::to_double(T3d_n[i].squared_area()));
-		//fin test 12 nov
-		
+// 		//test 12 nov
+		//	Test[in1][jn1][kn1] += sqrt(CGAL::to_double(T3d_n[i].squared_area()));
+// 		//fin test 12 nov
+
+// 		//test 15 nov
+// 		if(in1==8 && jn1==8 && kn1==8){
+// 			cout<<" triangle "<< T3d_n[i]<<endl;
+// 		}
+// 		//fin test 15 nov
+
+
+
 		if (in==in1 && jn==jn1 && kn==kn1 && interieur==true){
 			// le prisme est contenu dans une seule cellule 
 			double volume_p=volume_prisme(T3d_prev[i],T3d_n[i]);
@@ -1432,17 +1449,17 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const
 			c.u = c.impx/c.rho; c.v = c.impy/c.rho; c.w = c.impz/c.rho;
 			c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2.-c.rho*c.w*c.w/2.);
 			grille[in1][jn1][kn1] = c;
-			//Test[in1][jn1][kn1] +=volume_p/(c.dx*c.dy*c.dz) ;
+			Test[in1][jn1][kn1] +=volume_p/(c.dx*c.dy*c.dz) ;
 			
 // 			//test 12 nov
-// 			if(in1==8 && jn1==8 && kn1==8){
+// 			if(in1==11 && jn1==9 && kn1==8){
 // 				double cal_vol = volume_p;  
 // 				double a_lambda = sqrt(CGAL::to_double(T3d_n[i].squared_area()));
 // 				Vector_3 norm= orthogonal_vector(T3d_n[i].operator[](0),T3d_n[i].operator[](1),T3d_n[i].operator[](2));
 // 				double norm2 = sqrt(CGAL::to_double(norm*norm));
 // 				Vector_3 v_n_lambda = norm/norm2;
 // 				double cal_exact = a_lambda*( CGAL::to_double(v_n_lambda.x())) *dt;
-// 				var += a_lambda*( CGAL::to_double(v_n_lambda.x())) ;
+// 				var += a_lambda*( CGAL::to_double(v_n_lambda.x()))/(grille[in1][jn1][kn1].dx*grille[in1][jn1][kn1].dy*grille[in1][jn1][kn1].dz) ;
 // 				if(std::abs(cal_exact - cal_vol)>eps){cout<<"oups "<<endl;}
 // 			} 
 // 			//fin test 12 nov
@@ -1570,7 +1587,7 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const
 				c.u = c.impx/c.rho; c.v = c.impy/c.rho; c.w = c.impz/c.rho;
 				c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2.-c.rho*c.w*c.w/2.);
 				grille[in1][jn1][kn1] = c;
-				//Test[in1][jn1][kn1] +=volume/(c.dx*c.dy*c.dz) ;
+				Test[in1][jn1][kn1] +=volume/(c.dx*c.dy*c.dz) ;
 			}
 			vol_test += volume;
 			
@@ -1580,13 +1597,13 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const
 		
 		//test 8 nov
   		if( std::abs((volume_prisme(T3d_prev[i],T3d_n[i]) -vol_test))>eps ){ 
-  			cout<<" volume prisme "<< volume_prisme(T3d_prev[i],T3d_n[i])<<" i= "<< i<<endl; 
-  			cout<<" volume "<< vol_test<<endl;
-				cout<<" dif "<< volume_prisme(T3d_prev[i],T3d_n[i])- vol_test <<endl;
+  			cout<<" volume exact "<< volume_prisme(T3d_prev[i],T3d_n[i])<< " volume "<< vol_test<<" diff "<<
+  			volume_prisme(T3d_prev[i],T3d_n[i])- vol_test <<endl;
+				diff+=volume_prisme(T3d_prev[i],T3d_n[i])- vol_test;
   		}
   	//fin test 8 nov
 	} //end boucle sur les prismes
-	
+	cout<<" dif totale " <<diff<<endl;
 	//cout << "Intersection Tetra avec Cubes pour une face time is: " << time << " seconds." << endl;
 	//cout << "nombres des tera is: " <<T3d_prev.size() << endl;
 
@@ -1666,7 +1683,7 @@ void Grille::swap(const double dt, Solide& S){
 //        if(std::abs(vol_tetra)<eps){vol_tetra=0.;}
 //        cout<< "volume tetra:                      "<<vol_tetra<<endl;
 // 			 //fin test 6 nov ok
-			swap_modification_flux(T3d_n,T3d_n1,dt, Test,var);
+		   swap_modification_flux(T3d_n,T3d_n1,dt, Test,var);
 		  //cout << "Temps swap_modification_flux: " << user_time2.time() << " seconds." << endl;
 			//cout << "nb sous triang face: " << T3d_n.size()<< endl;
 			time_2+=CGAL::to_double(user_time2.time());
@@ -1691,8 +1708,29 @@ void Grille::swap(const double dt, Solide& S){
 // 	}
 // 	cout<<"ab11 "<<ab11<<" ab22 "<<ab22<<endl;
 // 	//fin test 8 nov
-// 
-// //test 9 nov
+
+/*
+//test 14 nov
+for(int ii=0;ii<Nx+2*marge;ii++){
+	for(int jj=0;jj<Ny+2*marge;jj++){
+		for(int kk=0;kk<Nz+2*marge;kk++){
+			if(grille[ii][jj][kk].alpha<eps){
+				grille[ii][jj][kk].rho = 1.4;
+				grille[ii][jj][kk].u   = 1.;
+				grille[ii][jj][kk].v = 0.;
+				grille[ii][jj][kk].w = 0.;
+				grille[ii][jj][kk].p = 1.;
+				grille[ii][jj][kk].impx = 1.4;
+				grille[ii][jj][kk].impy = 0.;
+				grille[ii][jj][kk].impz = 0.;
+				grille[ii][jj][kk].rhoE =grille[ii][jj][kk].rhoE0;
+			}
+		}
+	}
+}
+//fin test 14 nov*/
+
+// //test 15 nov
 //  double ab1=0., ab2=0;
 // for(int ii=0;ii<Nx+2*marge;ii++){
 // 	for(int jj=0;jj<Ny+2*marge;jj++){
@@ -1701,50 +1739,58 @@ void Grille::swap(const double dt, Solide& S){
 // 				cout<<"delta w "<<Test[ii][jj][kk]<< " u.n S/v_c "<<grille[ii][jj][kk].delta_w *dt<<" cellule: "<< "i "<<ii-marge<<" j "<<jj-marge<<" k "<<kk-marge<<"dif " <<(Test[ii][jj][kk]- grille[ii][jj][kk].delta_w *dt)<<endl;
 // 				ab1+=grille[ii][jj][kk].delta_w*dt;
 // 				ab2+=Test[ii][jj][kk] ;
-// 				if(std::abs(1.4-grille[ii][jj][kk].rho)>eps && (grille[ii][jj][kk].alpha!=1.))
-// 					//grille[ii][jj][kk].rho +=grille[ii][jj][kk].delta_w *dt*1.4; 
-// 				{cout<<" cellule: "<< "i "<<ii-marge<<" j "<<jj-marge<<" k "<<kk-marge<<"rho : "<<grille[ii][jj][kk].rho <<" rho 0 "<<grille[ii][jj][kk].rho0<<endl;
-// 				grille[ii][jj][kk].Affiche();
-// 				}
 // 			}
+// // if(std::abs(1.4-grille[ii][jj][kk].rho)>eps && (grille[ii][jj][kk].alpha!=1.) )
+// // 			{cout<<" cellule: "<< "i "<<ii-marge<<" j "<<jj-marge<<" k "<<kk-marge<<"rho : "<<grille[ii][jj][kk].rho <<" rho0 "<<grille[ii][jj][kk].rho0<<endl;
+// // 			}
 // 		}
 // 	}
 // }
 // cout<<"ab1 "<<ab1<<" ab2 "<<ab2<<endl;
-// //fin test 9 nov
+// //fin test 15 nov
 
 // //test 9 nov
 // for(int ii=marge;ii<Nx+marge;ii++){
 // 	for(int jj=marge;jj<Ny+marge;jj++){
 // 		for(int kk=marge;kk<Nz+marge;kk++){
-// 			grille[ii][jj][kk].rho +=(grille[ii][jj][kk].delta_w *dt*1.4)/(1-grille[ii][jj][kk].alpha); 
+// 			grille[ii][jj][kk].rho +=(grille[ii][jj][kk].delta_w *dt*1.4)/(1-grille[ii][jj][kk].alpha); 			
 // 		}
 // 	}
 // }
 // //fin test 9 nov
 
-// //test 12nov
-// cout<<" intersect "<< grille[8][8][8].delta_w<<endl;
-// cout<<" var  "<< var <<endl;
-// //fin test 12 nov
+// //test 15nov
+// cout<<" intersect "<< grille[11][9][8].delta_w*dt<<endl;
+// cout<<" test "<<Test[11][9][8]<<endl;
+// //fin test 15 nov
 
-// //test 12 nov
+// //test 16 nov
 // double s1=0., s2=0.;
+// double p1=0., p2=0.;
 // for(int ii=marge;ii<Nx+marge;ii++){
 // 		for(int jj=marge;jj<Ny+marge;jj++){
 // 				for(int kk=marge;kk<Nz+marge;kk++){
-// 					if(std::abs(Test[ii][jj][kk]- grille[ii][jj][kk].delta_w)>eps){cout<<" test "<<Test[ii][jj][kk]<<"   aire "<<grille[ii][jj][kk].delta_w<<endl;}
-// 					s1+= Test[ii][jj][kk];
-// 					s2+= grille[ii][jj][kk].delta_w;
+// 					if(std::abs(Test[ii][jj][kk]- grille[ii][jj][kk].delta_w*dt)>eps){
+// 						cout<<" test "<<Test[ii][jj][kk]<<"   aire "<<grille[ii][jj][kk].delta_w*dt<<" cellule i: "<< ii-marge<<" j "<<jj-marge<< " k "<<kk-marge<<" alpha "<<grille[ii][jj][kk].alpha<<" diff "<<Test[ii][jj][kk] -grille[ii][jj][kk].delta_w*dt <<endl;
+// 
+// 				}
+// 				if(Test[ii][jj][kk]<0){
+// 				s1+= Test[ii][jj][kk];
+// 				s2+= grille[ii][jj][kk].delta_w*dt;}
+// 				if(Test[ii][jj][kk]>0){
+// 					p1+= Test[ii][jj][kk];
+// 					p2+= grille[ii][jj][kk].delta_w*dt;}
 // 					}
 // 				}
 // 			}
-// 	cout<<" s1 "<< s1<<endl;
-// 	cout<<" s2 "<< s2<<endl;	
-// //fin test 12 nov
-
+// cout<<" s1 "<< s1<<" p1 "<<p1<<endl;
+// cout<<" s2 "<< s2<<" p2 "<<p2<<endl;	
+// //fin test 16 nov
 
 }
+
+
+
 
 
 

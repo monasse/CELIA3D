@@ -11,7 +11,7 @@ using std::string;
 
 //Parametres pour le fluide
 const double gam = 1.4;            //constante des gaz parfaits 
-const double eps = 0.000000001;      //constante proche de 0 pour le controle 
+const double eps = 0.00000000001;      //constante proche de 0 pour le controle 
 const double epsa = 0.5;           //fraction de cellule coupee
 const int ordremax = 11;           //ordre maximal du schema
 const int marge = 6;              //marge de cellules a appliquer au debut et a la fin du tableau des cellules  
@@ -43,9 +43,9 @@ const double E = 10000.; //Module d'Young du materiau
 const double T = 2.;             //temps total de simulation
 const double cfl = 0.5;            //valeur de la cfl fluide
 const double cfls = 0.1;           //Valeur de la cfl solide
-const int nimp = 100;                //Nombre d'impressions
+const int nimp = 1000;                //Nombre d'impressions
 const double dtimp = T/nimp;        //Pas de temps entre deux impressions
-const int Nmax = 1;           //nombre maximal d'iterations en temps
+const int Nmax = 5;           //nombre maximal d'iterations en temps
 
 //Conditions aux limites
 //Type de CL :  1 = reflecting ("miroir"); 2 = periodic("periodique"); 3= outflow("transmisibles");

@@ -1003,6 +1003,14 @@ double Particule::volume(){
   return vol;
 }
 
+
+Vector_3 Particule::vitesse_parois(Point_3& X_f){
+		
+// 	Vector_3 V_f = u_half + cross_product(omega_half, Vector_3(Point_3(x0.operator[](0) + Dx.operator[](0), x0.operator[](1) + Dx.operator[](1),x0.operator[](2) + Dx.operator[](2)),X_f));
+	Vector_3 V_f(1.,0.3,0.2);
+	return V_f;
+}	
+
 void Face::compProjectionIntegrals(double &P1, double &Pa, double &Pb, double &Paa, double &Pab, double &Pbb, double &Paaa, double &Paab, double &Pabb, double &Pbbb, int a, int b, int c){
   //Utilisation de la fonction decrite par Brian Mirtich 1996 (cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar)
   P1 = Pa = Pb = Paa = Pab = Pbb = Paaa = Paab = Pabb = Pbbb = 0.;
@@ -1725,6 +1733,8 @@ void Solide::init(const char* s){
     P[i].fixe = fixe;
     P[i].u = Vector_3(u,v,w);
     P[i].omega = Vector_3(theta,phi,psi);
+		P[i].u_half = Vector_3(u,v,w);
+		P[i].omega_half = Vector_3(theta,phi,psi);
   }
   //Boucle de mise a jour des particules sur les sommets du maillage
   //Mise a jour des distances a l'equilibre entre particules en meme temps

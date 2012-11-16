@@ -106,11 +106,12 @@ protected:
   double fluxj[5];     //Flux en haut de la cellule
   double fluxk[5];     //Flux en bas de la cellule
   
-  double flux_modif[5];
-  double phi_x;
+  double flux_modif[5]; 
+	double phi_x;   //necessaire pour le calcul du flux à la parois
   double phi_y;
-  double phi_z;     //necessaire pour le calcul du flux à la parois
-
+  double phi_z;     
+  double phi_v;  
+	
   double xi;            //Position du centre de la face effective 
   double yj;
   double zk;

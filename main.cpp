@@ -76,7 +76,8 @@ int main(){
 	  //cout<<"Energie: "<< Fluide.Energie()+S.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 		cout<<"Energie: "<< Fluide.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 	  ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S << endl;
-	  double dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
+	 // double dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
+	 double dt = 0.01;
 		//Fluide.affiche("avant Solve");
 		Fluide.Solve(dt, t, n);
 		//Fluide.affiche("Solve");
@@ -101,9 +102,7 @@ int main(){
 		cout<<"iteration="<<n<< " dt="<<dt<<" t="<<t<<endl;
 		t+= dt;
 		iter++;
-		
 	}
-	
 	end=clock();
 	
 	Fluide.impression(kimp);
