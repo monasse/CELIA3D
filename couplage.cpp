@@ -1403,7 +1403,7 @@ void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,i
 
 
 
-void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const double dt,vector< vector< vector<double > > >& Test, double & var){
+void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const double dt){
 	
 	CGAL::Timer user_time, user_time2;
 	double time=0.;
@@ -1449,7 +1449,7 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const
 			c.u = c.impx/c.rho; c.v = c.impy/c.rho; c.w = c.impz/c.rho;
 			c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2.-c.rho*c.w*c.w/2.);
 			grille[in1][jn1][kn1] = c;
-			Test[in1][jn1][kn1] +=volume_p/(c.dx*c.dy*c.dz) ;
+			
 			
 // 			//test 12 nov
 // 			if(in1==11 && jn1==9 && kn1==8){
@@ -1464,7 +1464,7 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const
 // 			} 
 // 			//fin test 12 nov
 			}
-			vol_test += volume_p;
+			//vol_test += volume_p;
 		}	
 		else if(std::abs(volume_prisme(T3d_prev[i],T3d_n[i])) >eps  && interieur==true) {
 		std::vector<Bbox> box_cells;
@@ -1587,42 +1587,44 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const
 				c.u = c.impx/c.rho; c.v = c.impy/c.rho; c.w = c.impz/c.rho;
 				c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2.-c.rho*c.w*c.w/2.);
 				grille[in1][jn1][kn1] = c;
-				Test[in1][jn1][kn1] +=volume/(c.dx*c.dy*c.dz) ;
+				
 			}
-			vol_test += volume;
+			//vol_test += volume;
 			
 			
 		 } // boucle sur les box_cells
 		}//end else 
 		
-		//test 8 nov
-  		if( std::abs((volume_prisme(T3d_prev[i],T3d_n[i]) -vol_test))>eps ){ 
-  			cout<<" volume exact "<< volume_prisme(T3d_prev[i],T3d_n[i])<< " volume "<< vol_test<<" diff "<<
-  			volume_prisme(T3d_prev[i],T3d_n[i])- vol_test <<endl;
-				diff+=volume_prisme(T3d_prev[i],T3d_n[i])- vol_test;
-  		}
-  	//fin test 8 nov
+// 		//test 8 nov
+//   		if( std::abs((volume_prisme(T3d_prev[i],T3d_n[i]) -vol_test))>eps ){ 
+//   			cout<<" volume exact "<< volume_prisme(T3d_prev[i],T3d_n[i])<< " volume "<< vol_test<<" diff "<<
+//   			volume_prisme(T3d_prev[i],T3d_n[i])- vol_test <<endl;
+// 				diff+=volume_prisme(T3d_prev[i],T3d_n[i])- vol_test;
+//   		}
+//   	//fin test 8 nov
 	} //end boucle sur les prismes
-	cout<<" dif totale " <<diff<<endl;
+	//cout<<" dif totale " <<diff<<endl;
 	//cout << "Intersection Tetra avec Cubes pour une face time is: " << time << " seconds." << endl;
 	//cout << "nombres des tera is: " <<T3d_prev.size() << endl;
 
 }	
-void Grille::swap(const double dt, Solide& S){
+void Grille::swap(const double dt, Solide& S, int& n, int &n1, int& m){
 	
 	CGAL::Timer user_time, user_time2;
 	double time_1=0., time_2=0.;
-	double var=0.;
-	vector< vector< vector<double > > > Test(Nx+2*marge, vector< vector<double> >(Ny+2*marge, vector<double>(Nz+2*marge,0.)) );
+// 	double var=0.;
+// 	vector< vector< vector<double > > > Test(Nx+2*marge, vector< vector<double> >(Ny+2*marge, vector<double>(Nz+2*marge,0.)) );
 	for(int i=0;i<S.solide.size();i++){
 		for (int j=0; j<S.solide[i].triangles.size(); j++){
 			Triangles T3d_n,T3d_n1;
 			user_time.start();
+			n+= S.solide[i].Triangles_interface_prev[j].size();
+			n1+=S.solide[i].Triangles_interface[j].size() ;
 			sous_maillage_faceTn_faceTn1(S.solide[i].triangles_prev[j], S.solide[i].Triangles_interface_prev[j] ,
 										 S.solide[i].triangles[j], S.solide[i].Triangles_interface[j],
 										 S.solide[i].normales[j], T3d_n,T3d_n1);
 	     //cout << "Temps sous-maillage face: " << user_time.time() << " seconds." << endl;
-				
+			 m+= T3d_n.size();
 // 		 //test 5 nov calcul aire faces
 // 					  cout<< " aire face is : "<< std::sqrt(CGAL::to_double(S.solide[i].triangles_prev[j].squared_area () ))<<endl;
 // 						double a_n=0., a_n1=0.;
@@ -1683,7 +1685,7 @@ void Grille::swap(const double dt, Solide& S){
 //        if(std::abs(vol_tetra)<eps){vol_tetra=0.;}
 //        cout<< "volume tetra:                      "<<vol_tetra<<endl;
 // 			 //fin test 6 nov ok
-		   swap_modification_flux(T3d_n,T3d_n1,dt, Test,var);
+		   swap_modification_flux(T3d_n,T3d_n1,dt);
 		  //cout << "Temps swap_modification_flux: " << user_time2.time() << " seconds." << endl;
 			//cout << "nb sous triang face: " << T3d_n.size()<< endl;
 			time_2+=CGAL::to_double(user_time2.time());

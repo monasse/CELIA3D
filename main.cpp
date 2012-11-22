@@ -64,7 +64,7 @@ int main(){
 
 	S.Forces_internes();
 	
-	CGAL::Timer user_time;
+	CGAL::Timer user_time, user_time2;
 	for (int n=0; (t<T) && n<Nmax; n++){
 		
 		if(t>next_timp){
@@ -76,10 +76,13 @@ int main(){
 	  //cout<<"Energie: "<< Fluide.Energie()+S.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 		cout<<"Energie: "<< Fluide.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 	  ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S << endl;
-	 // double dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
-	 double dt = 0.01;
+	  double dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
+	// double dt = 0.01;
 		//Fluide.affiche("avant Solve");
+		user_time2.start();
 		Fluide.Solve(dt, t, n);
+		cout << "Temps calcul flux: " << user_time2.time() << " seconds." << endl;
+		user_time2.reset();
 		//Fluide.affiche("Solve");
 		S.solve_position(dt);
 		S.Forces_internes();
@@ -89,9 +92,11 @@ int main(){
 		Fluide.modif_fnum(dt);
 		//Fluide.affiche("modif_fnum");
 		user_time.start();
-		Fluide.swap(dt,S);
+		int n0=0.,n1=0., m=0.;
+		Fluide.swap(dt,S,n0,n1,m);
 		cout << "Temps swap: " << user_time.time() << " seconds." << endl;
 		user_time.reset();
+		cout<<" triangles en n "<<n0<<" triangles en n+1 "<<n1<<" triangles sous maillage "<<m<<endl;
 		Fluide.mixage();
 		//Fluide.affiche("mixage");
 		Fluide.fill_cel(S);
