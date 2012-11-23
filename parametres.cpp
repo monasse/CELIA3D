@@ -13,12 +13,12 @@ double U(double x,double y, double z){
   return u; 
  }
  double V(double x,double y, double z){ 
-  double v = 1.; 
+  double v = 0.; 
 
  return v; 
  } 
 double W(double x,double y, double z){ 
-   double w = 1.; 
+   double w = 0.; 
 
  return w; 
  } 

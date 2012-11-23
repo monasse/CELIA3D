@@ -381,7 +381,7 @@ bool Cellule :: is_in_cell(double x0,double y0, double z0)
 {
     bool k = false;
     
-    if( (abs(x0-x) <= dx*(1./2.)) && (abs(y0-y) <= dy*(1./2.)) && (abs(z0-z) <= dz*(1./2.)) )
+		if( (( dx*(1./2.) - abs(x0-x) )>-1.*eps)  && (( dy*(1./2.) - abs(y0-y) )>-1.*eps) && (( dz*(1./2.) - abs(z0-z) )>-1.*eps) )
 	{
         k= true;
 	}
@@ -584,13 +584,37 @@ void Grille::in_cell(Point_3 p, int &i, int& j, int& k, bool& interieur){
 	if(i<0 || i>Nx+2*marge || j<0 || j>Ny+2*marge || k<0 || k>Nz+2*marge){
 		interieur= false ;
 	}
-	else {interieur = true;}
-	
-// 	Cellule c= cellule(i,j,k);
-// 	if(std::abs(c.alpha -1.)>eps){
-// 		//?
-// 	}
-
+	else {
+		interieur = true;
+// 		Cellule c= cellule(i,j,k);
+// 		if(std::abs(c.alpha -1.)<eps){
+// 			double x= CGAL::to_double(p.operator[](0));
+// 			double y= CGAL::to_double(p.operator[](1));
+// 			double z= CGAL::to_double(p.operator[](2));
+// 			Cellule cd= cellule(i+1,j,k);
+// 			if (cd.is_in_cell(x,y,z) ) {i=i+1;}
+// 			else{
+// 				Cellule cg= cellule(i-1,j,k);
+// 				if (cg.is_in_cell(x,y,z)) {i=i-1;}
+// 				else{
+// 					Cellule ch= cellule(i,j+1,k);
+// 					if (ch.is_in_cell(x,y,z)) {j=j+1;}
+// 					else{
+// 						Cellule cb= cellule(i,j-1,k);
+// 						if (cb.is_in_cell(x,y,z)) {j=j-1;}
+// 						else{
+// 							Cellule cd= cellule(i,j,k+1);
+// 							if (cd.is_in_cell(x,y,z)) {k=k+1;}
+// 							else{
+// 								Cellule cder= cellule(i,j,k-1);
+// 								if (cder.is_in_cell(x,y,z)) {k=k-1;}
+// 							}
+// 						}
+// 					}
+// 				}
+// 			}
+// 		} // end if alpha==1
+	} //end else 
 }
 //Sous-programme de definition des conditions initiales 
 void Grille::init(){

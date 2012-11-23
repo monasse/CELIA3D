@@ -1423,6 +1423,35 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const
 		in_cell(center_prev, in, jn, kn, interieur);
 		in_cell(center_n, in1, jn1, kn1, interieur);
 		
+		Cellule c_cur= grille[in1][jn1][kn1];
+		if(std::abs(c_cur.alpha -1.)<eps){
+			double x= CGAL::to_double(center_n.operator[](0));
+			double y= CGAL::to_double(center_n.operator[](1));
+			double z= CGAL::to_double(center_n.operator[](2));
+			Cellule cd= grille[in1+1][jn1][kn1];
+			if (cd.is_in_cell(x,y,z) ) {in1=in1+1;}
+			else{
+				Cellule cg= grille[in1-1][jn1][kn1];
+				if (cg.is_in_cell(x,y,z)) {in1=in1-1;}
+				else{
+					Cellule ch= grille[in1][jn1+1][kn1];
+					if (ch.is_in_cell(x,y,z)) {jn1=jn1+1;}
+					else{
+						Cellule cb= grille[in1][jn1-1][kn1];
+						if (cb.is_in_cell(x,y,z)) {jn1=jn1-1;}
+						else{
+							Cellule cd= grille[in1][jn1][kn1+1];
+							if (cd.is_in_cell(x,y,z)) {kn1=kn1+1;}
+							else{
+								Cellule cder= grille[in1][jn1][kn1-1];
+								if (cder.is_in_cell(x,y,z)) {kn1=kn1-1;}
+							}
+						}
+					}
+				}
+			}
+		} // end if alpha==1
+		
 // 		//test 12 nov
 		//	Test[in1][jn1][kn1] += sqrt(CGAL::to_double(T3d_n[i].squared_area()));
 // 		//fin test 12 nov

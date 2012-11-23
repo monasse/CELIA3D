@@ -721,6 +721,21 @@ void Particule::solve_position(double dt){
     u = u+(Fi+Ff)/2.*(dt/m);
     u_half = u;
     Dx = Dx+u*dt;
+		//Tests pour v�rifier qu'on a toujours une matrice de rotation
+		for(int i=0;i<3;i++){
+			double norm = rotref[i][0]*rotref[i][0]+rotref[i][1]*rotref[i][1]+rotref[i][2]*rotref[i][2];
+			if(abs(norm-1.)>eps){
+				cout << "Matrice de rotation rotref renomalisee" <<endl;
+				cout << "Ligne " << i << " norme=" << norm << endl;
+			}
+		}
+		double vectrot1 = rotref[0][2]-(rotref[1][0]*rotref[2][1]-rotref[2][0]*rotref[1][1]);
+		double vectrot2 = rotref[1][2]-(rotref[2][0]*rotref[0][1]-rotref[0][0]*rotref[2][1]);
+		double vectrot3 = rotref[2][2]-(rotref[0][0]*rotref[1][1]-rotref[1][0]*rotref[0][1]);
+		if(vectrot1*vectrot1+vectrot2*vectrot2+vectrot3*vectrot3>eps){
+			cout << "Erreur rotation rotref " << vectrot1 << " " << vectrot2 << " " << vectrot3 << endl;
+			//getchar();
+		}
     //Calcul de la matrice de rotation totale depuis le rep�re inertiel jusqu'au temps t et stockage de rotprev
     double Q[3][3];
     for(int i=0;i<3;i++){
@@ -849,7 +864,7 @@ void Particule::solve_position(double dt){
     double vect3 = Q[2][2]-(Q[0][0]*Q[1][1]-Q[1][0]*Q[0][1]);
     if(vect1*vect1+vect2*vect2+vect3*vect3>eps){
       cout << "Erreur rotation " << vect1 << " " << vect2 << " " << vect3 << endl;
-      getchar();
+      //getchar();
     }
     //R�cup�ration de la matrice de rotation de la particule
     for(int i=0;i<3;i++){
@@ -1224,6 +1239,9 @@ void Particule::Inertie(){
   double D = -R[1][2];
   double E = -R[0][2];
   double F = -R[0][1];
+// 	cout << A << " " << -F << " " << -E << endl;
+// 	cout << -F << " " << B << " " << -D << endl;
+// 	cout << -E << " " << -D << " " << C << endl;
   //Masse et volume
   V = T1;
   m = rhos*T1;
@@ -1236,6 +1254,7 @@ void Particule::Inertie(){
   double b = R[0][0] + R[1][1] + R[2][2];
   double c = R[0][1]*R[0][1] + R[0][2]*R[0][2] + R[1][2]*R[1][2] - R[0][0]*R[1][1] - R[0][0]*R[2][2] - R[1][1]*R[2][2];
   double d = R[0][0]*R[1][1]*R[2][2]-R[0][0]*R[1][2]*R[1][2]-R[1][1]*R[0][2]*R[0][2]-R[2][2]*R[0][1]*R[0][1]-2.*R[0][1]*R[0][2]*R[1][2];
+	//cout << a << " " << b << " " << c << " " << d << endl;
   solve_eq3(a,b,c,d,I[0],I[1],I[2]);
   //Calcul des vecteurs propres associes
   if(abs(I[1]-I[2])>1.e-5*I[1]){
@@ -1278,8 +1297,8 @@ void Particule::Inertie(){
 	  ux = -D;
 	  uy = E;
 	}
-      }
-      double norm = sqrt(ux*ux+uy*uy+uz*uz);
+			}
+      double norm = std::sqrt(ux*ux+uy*uy+uz*uz);
       ux /= norm;
       uy /= norm;
       uz /= norm;
@@ -1298,6 +1317,7 @@ void Particule::Inertie(){
     }
   }
   else{
+		//cout << "I " << I[0] << " " << I[1] << " " << I[2] << endl;
     if(abs(I[0]-I[1])>1.e-5*I[1]){
       for(int i=0;i<2;i++){
 	double ux,uy,uz;
@@ -1353,6 +1373,30 @@ void Particule::Inertie(){
 	  }
 	}
       }
+      //Test : produit scalaire des deux premieres colonnes
+      double scal = rotref[0][0]*rotref[0][1]+rotref[1][0]*rotref[1][1]+rotref[2][0]*rotref[2][1];
+// 			cout << "produit scalaire " << scal << endl;
+			if(abs(scal)>eps){
+					//on prend un vecteur normal a rotref[][0]
+					rotref[0][1] = rotref[1][0];
+					rotref[1][1] = -rotref[0][0];
+					rotref[2][1] = 0.;
+					double norm = sqrt(rotref[0][1]*rotref[0][1]+rotref[1][1]*rotref[1][1]+rotref[2][1]*rotref[2][1]);
+					if(norm>eps){
+						rotref[0][1] /= norm;
+						rotref[1][1] /= norm;
+						rotref[2][1] /= norm;
+					}
+					else {
+						rotref[0][1] = -rotref[2][0];
+						rotref[1][1] = 0.;
+						rotref[2][1] = rotref[0][0];
+						norm = sqrt(rotref[0][1]*rotref[0][1]+rotref[1][1]*rotref[1][1]+rotref[2][1]*rotref[2][1]);
+						rotref[0][1] /= norm;
+						rotref[1][1] /= norm;
+						rotref[2][1] /= norm;
+					}
+			}
       rotref[0][2] = rotref[1][0]*rotref[2][1]-rotref[2][0]*rotref[1][1];
       rotref[1][2] = rotref[2][0]*rotref[0][1]-rotref[0][0]*rotref[2][1];
       rotref[2][2] = rotref[0][0]*rotref[1][1]-rotref[1][0]*rotref[0][1];
