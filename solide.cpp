@@ -1406,6 +1406,10 @@ void Particule::Inertie(){
       rotref[0][1] = rotref[1][0] = rotref[0][2] = rotref[2][0] = rotref[1][2] = rotref[2][1] = 0.;
     }
   }
+  //Test 26/11/12
+  rotref[0][0] = rotref[1][1] = rotref[2][2] = 1.;
+	rotref[0][1] = rotref[1][0] = rotref[0][2] = rotref[2][0] = rotref[1][2] = rotref[2][1] = 0.;
+	// Fin Test 26/11/12
   for(int i=0;i<3;i++){
     for(int j=0;j<3;j++){
       if(rotref[i][j]!=rotref[i][j]){

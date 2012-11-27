@@ -9,7 +9,6 @@
 #include "solide.hpp"
 
 
-
 #ifndef FLUIDE_HPP
 #define FLUIDE_HPP
 

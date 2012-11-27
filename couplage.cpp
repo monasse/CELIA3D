@@ -1654,7 +1654,7 @@ void Grille::swap(const double dt, Solide& S, int& n, int &n1, int& m){
 										 S.solide[i].normales[j], T3d_n,T3d_n1);
 	     //cout << "Temps sous-maillage face: " << user_time.time() << " seconds." << endl;
 			 m+= T3d_n.size();
-// 		 //test 5 nov calcul aire faces
+		 //test 5 nov calcul aire faces
 // 					  cout<< " aire face is : "<< std::sqrt(CGAL::to_double(S.solide[i].triangles_prev[j].squared_area () ))<<endl;
 // 						double a_n=0., a_n1=0.;
 // 					  for(int iter=0; iter<T3d_n1.size(); iter++){
@@ -1663,7 +1663,7 @@ void Grille::swap(const double dt, Solide& S, int& n, int &n1, int& m){
 // 						}
 // 						cout<< " aire n is : "<< a_n<<endl;
 // 						cout<< " aire n1 is : "<< a_n1<<endl;
-// 			//fin test 5 nov	calcul aire faces	 OK
+			//fin test 5 nov	calcul aire faces	 OK
 			time_1+=CGAL::to_double(user_time.time());
 		  user_time.reset();
 		  user_time2.start();
