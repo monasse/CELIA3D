@@ -80,7 +80,7 @@ int main(){
 		//S.Affiche();
 		user_time.start();
 		int n0=0.,n1=0., m=0.;
-		Fluide.swap(dt,S,n0,n1,m);
+		Fluide.swap_2d(dt,S,n0,n1,m);
 		cout << "Temps swap: " << user_time.time() << " seconds." << endl;
 		user_time.reset();
 		cout<<"Triangles en n "<<n0<<" Triangles en n+1 "<<n1<<" Triangles sous maillage "<<m<<endl;

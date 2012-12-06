@@ -18,8 +18,8 @@ void Grille::modif_fnum(const double dt){
 					c.flux_modif[1] = c.phi_x;
 					c.flux_modif[2] = c.phi_y;
 					c.flux_modif[3] = c.phi_z;
-					//c.flux_modif[4] = c.phi_v;
-					c.flux_modif[4] = c.phi_x*c.impx0/c.rho0 + c.phi_y*c.impy0/c.rho0 + c.phi_z*c.impz0/c.rho0;
+					c.flux_modif[4] = c.phi_v;
+					//c.flux_modif[4] = c.phi_x*c.impx0/c.rho0 + c.phi_y*c.impy0/c.rho0 + c.phi_z*c.impz0/c.rho0;
 					for(int l=0.; l<5; l++){  
 						c.flux_modif[l] -= (1.-c.kappai)*c.dtfxi[l] - (1.-ci.kappai)*ci.dtfxi[l]
 						+ (1.-c.kappaj)*c.dtfyj[l] - (1.-cj.kappaj)*cj.dtfyj[l]
@@ -1009,106 +1009,6 @@ Triangle_3 tr(Triangle_3 Tn1, Triangle_2 T){
 
 
 
-//Triangles sous_maillage_face(const Triangles& Tn_n1, const Triangles& Tn1, const Vector_3& N){
-	
-	//std::vector<Bbox>  boxesTn_n1(Tn_n1.size()), boxesTn1(Tn1.size()); //tres outil pour les intersections 
-	////on associe a chaque triangle un Box (une boite contenant le triangle)
-	
-	//for(int it=0; it< Tn_n1.size(); it++){
-		//boxesTn_n1[it] = Tn_n1[it].bbox();
-	//}
-	
-	//for(int iter=0; iter< Tn1.size(); iter++){
-		//boxesTn1[iter] = Tn1[iter].bbox();
-	//}
-	
-	
-	//Triangles cdt;
-	//Triangle_3 tri;
-	//std::vector<Point_3> vPoints; 
-	//int k=0;
-	//CGAL::Timer user_time;
-	//user_time.start();
-	//for(int i=0; i<boxesTn_n1.size(); i++){ 
-		//for(int j=0; j<boxesTn1.size(); j++){
-			//if (CGAL::do_overlap(boxesTn_n1[i],boxesTn1[j])) //test d'intersection des Box 
-			//{
-				//if (CGAL::do_intersect(Tn_n1[i],Tn1[j])){ // test d'intersection des triangles contenues dans les Box
-					
-					//CGAL::Object result = CGAL::intersection(Tn_n1[i],Tn1[j]); //calcul d'intersection entre les deux triangles
-					//if(CGAL::assign(tri,result)){
-						//Vector_3 vect0(tri.operator[](0),tri.operator[](1));
-						//Vector_3 vect1(tri.operator[](0),tri.operator[](2));
-						//Vector_3 normale = CGAL::cross_product(vect0,vect1);
-						//if (normale*N > 0.){
-            //cdt.push_back(tri);
-						//}
-						//else{cdt.push_back(Triangle_3(tri.operator[](0),tri.operator[](2),tri.operator[](1)));}
-					//}
-	         //else if(CGAL::assign(vPoints,result)){
-						 //Triangulation T(vPoints.begin(), vPoints.end());
-						 //if( (T.is_valid() ) && (T.dimension() == 2)){
-							//Finite_faces_iterator it;
-							//for (it = T.finite_facets_begin(); it != T.finite_facets_end(); it++){
-								//if (!T.triangle(*it).is_degenerate()){
-									//Vector_3 vect0(T.triangle(*it).operator[](0),T.triangle(*it).operator[](1));
-									//Vector_3 vect1(T.triangle(*it).operator[](0),T.triangle(*it).operator[](2));
-									//Vector_3 normale = CGAL::cross_product(vect0,vect1);
-									//if (normale*N > 0.){
-								  //cdt.push_back(T.triangle(*it));
-									//}
-									//else{cdt.push_back(Triangle_3(T.triangle(*it).operator[](0),T.triangle(*it).operator[](2),T.triangle(*it).operator[](1)));}
-								//}
-							//}
-						 //}
-					//}
-				//}
-			//}
-		//}
-	//}	
-	////cout << "Intersection triangles 3d pour une face time is: " << user_time.time() << " seconds." <<"nb des triangles " <<boxesTn1.size()+boxesTn_n1.size() <<endl;
-
-	//return cdt;
-//}	
-
-
-//void sous_maillage_faceTn_faceTn1(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1){
-	
-	//CGAL::Timer user_time, user_time2, user_time3, user_time4 ;
-	//double time=0.;
-	//user_time.start();
-	//// transf barycentrique de tn 
-	//Triangles tn_n1(tn.size());
-	
-	//for(int i=0; i<tn.size(); i++){		
-		//tn_n1[i] = tr(Tn, Tn1, tn[i]);
-	//}
-		
-	////cout << "Mapping Tn vers Tn1 pour une face time is: " << user_time.time() << " seconds." << endl;
-	//user_time.reset();
-	
-	
-	
-	//// sous maillage triangulaire de l'interface
-	////user_time3.start();
-	//T3d_n1 = sous_maillage_face(tn_n1,tn1,N);
-	////cout << "Sous-maillage en 3d pour une face time is: " << user_time3.time() << " seconds." << endl;
-	////user_time3.reset();
-
-	////transf inverse 
-	//user_time4.start();
-	//T3d_n.resize(T3d_n1.size());
-	//for(int i=0; i<T3d_n.size(); i++){ 
-		//T3d_n[i] = tr(Tn1,Tn,T3d_n1[i]);
-	//}
-	
-	////cout << "Mapping inverse n->n+1 pour une face time is: " << user_time4.time() << " seconds." << endl;
-	//user_time4.reset();
-//}
-
-
-
-
  CDT sous_maillage_face(Triangles_2& Tn1, Triangles_2& Tn_n1, CDT &cdt){
  	
  	std::vector<Bbox_2> boxesTn1, boxesTn_n1; //tres outil pour les intersections 
@@ -1183,90 +1083,7 @@ Triangle_3 tr(Triangle_3 Tn1, Triangle_2 T){
  }	
  
  
-//  void sous_maillage_faceTn_faceTn1(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1){
-//  	
-//  	CGAL::Timer user_time, user_time2, user_time3, user_time4 ;
-//  	double time=0.;	
-//  	user_time.start();
-//  	// transf barycentrique de tn 
-//  	Triangles tn_n1(tn.size());
-//  	for(int i=0; i<tn.size(); i++){		
-//  		tn_n1[i] = tr(Tn, Tn1, tn[i]);
-//  	}
-//  	//cout << "Mapping Tn vers Tn1 pour une face time is: " << user_time.time() << " seconds." << endl;
-//  	user_time.reset();
-//  	
-//  	user_time2.start();
-//  	Point_2 Ap(0., 0.); 
-//  	Point_2 Bp(1., 0.);
-//  	Point_2 Cp(0., 1.);
-//  	Triangle_2 Ref(Ap,Bp,Cp);
-//  	
-//  	// Transf du Triangles_3  tn_n1 en Triangle_2
-//  	Triangles_2 Tn_n1_2(1+tn_n1.size());
-//  	Tn_n1_2[0] = Ref;
-//  	for(int i=0; i<tn_n1.size(); i++){
-//  		Tn_n1_2[i+1] = tr(Tn1, tn_n1[i]);
-//  	}
-//  	
-//  	
-//  	
-//  	Triangles_2 Tn1_2(1+tn1.size());
-//  	Tn1_2[0] = Ref;
-//  	
-//  	// Transf du Triangles_3  tn1 en Triangle_2
-//  	for(int i=0; i<tn1.size(); i++){
-//  		Tn1_2[i+1] =tr(Tn1, tn1[i]);
-//  	}
-//  	//cout << "Passage 3d-2d pour une face time is: " << user_time2.time() << " seconds." << endl;
-//  	user_time2.reset();
-//  	
-//  	user_time3.start();
-//  	// sous maillage triangulaire de l'interface
-//  	CDT cdt;
-//  	cdt.insert(Ap); cdt.insert(Bp); cdt.insert(Cp);
-//  	sous_maillage_face(Tn1_2, Tn_n1_2, cdt);
-//  	assert(cdt.is_valid());
-//  //	cout << "Sous-maillage en 2d pour une face time is: " << user_time3.time() << " seconds." << endl;
-//  	user_time3.reset();
-//  	
-//  	Triangles_2 T2d; //recuperation faces du maillage Triangle_2
-//  	
-//  	
-//  	for (CDT::Finite_faces_iterator fit=cdt.finite_faces_begin();
-//  	          fit!=cdt.finite_faces_end();++fit)
-//  	{ 
-//  		Point_2 s = fit->vertex(0)->point();
-//  		Point_2 v = fit->vertex(1)->point();
-//  		Point_2 r = fit->vertex(2)->point();
-// 		if(Triangle_2(s,v,r).area()>eps){
-//  		T2d.push_back(Triangle_2(s,v,r));
-// 	 }
-//  	}
-//  	
-//  	user_time4.start();
-//  	//transf des Triangle_2 en Triangle_3
-//  	T3d_n1.resize(T2d.size());
-//  	for(int i=0; i<T2d.size(); i++){
-// 		Triangle_3 Tri = tr(Tn1,T2d[i]);
-// 		Vector_3 vect0(Tri.operator[](0),Tri.operator[](1));
-// 		Vector_3 vect1(Tri.operator[](0),Tri.operator[](2));
-// 		Vector_3 normale = CGAL::cross_product(vect0,vect1);
-// 		if (normale*N > 0.){ T3d_n1[i] =  Tri; }
-// 		else{ T3d_n1[i] = Triangle_3(Tri.operator[](0),Tri.operator[](2),Tri.operator[](1));} 
-//  		//cout<<"triangle 3d "<<T3d[i]<<endl;
-//  	}
-//     //cout << "Passage 2d-3d pour une face time is: " << user_time4.time() << " seconds." << endl;
-//  	user_time4.reset();
-//  	
-//  	//transf inverse 
-//  	T3d_n.resize(T3d_n1.size());
-//  	for(int i=0; i<T3d_n1.size(); i++){ 
-//  		T3d_n[i] = tr(Tn1,Tn,T3d_n1[i]);
-//  		//cout<<"triangle 3d n "<<T3d_n[i]<<endl;
-//  	}
-//  	
-//  }
+
 
 double volume_prisme(const Triangle_3& T1,const Triangle_3& T2){
 	
@@ -1401,7 +1218,7 @@ void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,i
 
 
 
-void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const double dt){
+void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt){
 	
 	CGAL::Timer user_time, user_time2;
 	double time=0.;
@@ -1590,280 +1407,117 @@ void Grille::swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const
 }	
 
 
-// void sous_maillage_faceTn_faceTn1(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1){
-// 	
-// 	CGAL::Timer user_time, user_time2, user_time3, user_time4 ;
-// 	double time=0.;	
-// 	user_time.start();
-// 	// transf barycentrique de tn 
-// 	Triangles tn_n1(tn.size());
-// 	for(int i=0; i<tn.size(); i++){		
-// 		tn_n1[i] = tr(Tn, Tn1, tn[i]);
-// 	}
-// 	//cout << "Mapping Tn vers Tn1 pour une face time is: " << user_time.time() << " seconds." << endl;
-// 	user_time.reset();
-// 	
-// 	user_time2.start();
-// 	Point_2 Ap(0., 0.); 
-// 	Point_2 Bp(1., 0.);
-// 	Point_2 Cp(0., 1.);
-// 	Triangle_2 Ref(Ap,Bp,Cp);
-// 	
-// 	// Transf du Triangles_3  tn_n1 en Triangle_2
-// 	Triangles_2 Tn_n1_2(1+tn_n1.size());
-// 	Tn_n1_2[0] = Ref;
-// 	for(int i=0; i<tn_n1.size(); i++){
-// 		Tn_n1_2[i+1] = tr(Tn1, tn_n1[i]);
-// 	}
-// 	
-// 	
-// 	
-// 	Triangles_2 Tn1_2(1+tn1.size());
-// 	Tn1_2[0] = Ref;
-// 	
-// 	// Transf du Triangles_3  tn1 en Triangle_2
-// 	for(int i=0; i<tn1.size(); i++){
-// 		Tn1_2[i+1] =tr(Tn1, tn1[i]);
-// 	}
-// 	//cout << "Passage 3d-2d pour une face time is: " << user_time2.time() << " seconds." << endl;
-// 	user_time2.reset();
-// 	
-// 	user_time3.start();
-// 	// sous maillage triangulaire de l'interface
-// 	CDT cdt;
-// 	cdt.insert(Ap); cdt.insert(Bp); cdt.insert(Cp);
-// 	sous_maillage_face(Tn1_2, Tn_n1_2, cdt);
-// 	assert(cdt.is_valid());
-// 	//	cout << "Sous-maillage en 2d pour une face time is: " << user_time3.time() << " seconds." << endl;
-// 	user_time3.reset();
-// 	
-// 	Triangles_2 T2d; //recuperation faces du maillage Triangle_2
-// 	
-// 	
-// 	for (CDT::Finite_faces_iterator fit=cdt.finite_faces_begin();
-// 	fit!=cdt.finite_faces_end();++fit)
-// 	{ 
-// 		Point_2 s = fit->vertex(0)->point();
-// 		Point_2 v = fit->vertex(1)->point();
-// 		Point_2 r = fit->vertex(2)->point();
-// 		if(Triangle_2(s,v,r).area()>eps){
-// 			T2d.push_back(Triangle_2(s,v,r));
-// 		}
-// 	}
-// 	
-// 	user_time4.start();
-// 	//transf des Triangle_2 en Triangle_3
-// 	T3d_n1.resize(T2d.size());
-// 	for(int i=0; i<T2d.size(); i++){
-// 		Triangle_3 Tri = tr(Tn1,T2d[i]);
-// 		Vector_3 vect0(Tri.operator[](0),Tri.operator[](1));
-// 		Vector_3 vect1(Tri.operator[](0),Tri.operator[](2));
-// 		Vector_3 normale = CGAL::cross_product(vect0,vect1);
-// 		if (normale*N > 0.){ T3d_n1[i] =  Tri; }
-// 		else{ T3d_n1[i] = Triangle_3(Tri.operator[](0),Tri.operator[](2),Tri.operator[](1));} 
-// 		//cout<<"triangle 3d "<<T3d[i]<<endl;
-// 	}
-// 	//cout << "Passage 2d-3d pour une face time is: " << user_time4.time() << " seconds." << endl;
-// 	user_time4.reset();
-// 	
-// 	//transf inverse 
-// 	T3d_n.resize(T3d_n1.size());
-// 	for(int i=0; i<T3d_n1.size(); i++){ 
-// 		T3d_n[i] = tr(Tn1,Tn,T3d_n1[i]);
-// 		//cout<<"triangle 3d n "<<T3d_n[i]<<endl;
-// 	}
-// 	
-// }
+void sous_maillage_faceTn_faceTn1_3d(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1){
+	
+	CGAL::Timer user_time, user_time2, user_time3, user_time4 ;
+	double time=0.;	
+	user_time.start();
+	// transf barycentrique de tn 
+	Triangles tn_n1(tn.size());
+	for(int i=0; i<tn.size(); i++){		
+		tn_n1[i] = tr(Tn, Tn1, tn[i]);
+	}
+	//cout << "Mapping Tn vers Tn1 pour une face time is: " << user_time.time() << " seconds." << endl;
+	user_time.reset();
+	
+	user_time2.start();
+	Point_2 Ap(0., 0.); 
+	Point_2 Bp(1., 0.);
+	Point_2 Cp(0., 1.);
+	Triangle_2 Ref(Ap,Bp,Cp);
+	
+	// Transf du Triangles_3  tn_n1 en Triangle_2
+	Triangles_2 Tn_n1_2(1+tn_n1.size());
+	Tn_n1_2[0] = Ref;
+	for(int i=0; i<tn_n1.size(); i++){
+		Tn_n1_2[i+1] = tr(Tn1, tn_n1[i]);
+	}
+	
+	Triangles_2 Tn1_2(1+tn1.size());
+	Tn1_2[0] = Ref;
+	
+	// Transf du Triangles_3  tn1 en Triangle_2
+	for(int i=0; i<tn1.size(); i++){
+		Tn1_2[i+1] =tr(Tn1, tn1[i]);
+	}
+	//cout << "Passage 3d-2d pour une face time is: " << user_time2.time() << " seconds." << endl;
+	user_time2.reset();
+	
+	user_time3.start();
+	// sous maillage triangulaire de l'interface
+	CDT cdt;
+	cdt.insert(Ap); cdt.insert(Bp); cdt.insert(Cp);
+	sous_maillage_face(Tn1_2, Tn_n1_2, cdt);
+	assert(cdt.is_valid());
+	//	cout << "Sous-maillage en 2d pour une face time is: " << user_time3.time() << " seconds." << endl;
+	user_time3.reset();
+	
+	Triangles_2 T2d; //recuperation faces du maillage Triangle_2
+	
+	
+	for (CDT::Finite_faces_iterator fit=cdt.finite_faces_begin();
+	fit!=cdt.finite_faces_end();++fit)
+	{ 
+		Point_2 s = fit->vertex(0)->point();
+		Point_2 v = fit->vertex(1)->point();
+		Point_2 r = fit->vertex(2)->point();
+		if(Triangle_2(s,v,r).area()>eps){
+			T2d.push_back(Triangle_2(s,v,r));
+		}
+	}
+	
+	user_time4.start();
+	//transf des Triangle_2 en Triangle_3
+	T3d_n1.resize(T2d.size());
+	for(int i=0; i<T2d.size(); i++){
+		Triangle_3 Tri = tr(Tn1,T2d[i]);
+		Vector_3 vect0(Tri.operator[](0),Tri.operator[](1));
+		Vector_3 vect1(Tri.operator[](0),Tri.operator[](2));
+		Vector_3 normale = CGAL::cross_product(vect0,vect1);
+		if (normale*N > 0.){ T3d_n1[i] =  Tri; }
+		else{ T3d_n1[i] = Triangle_3(Tri.operator[](0),Tri.operator[](2),Tri.operator[](1));} 
+	}
+	//cout << "Passage 2d-3d pour une face time is: " << user_time4.time() << " seconds." << endl;
+	user_time4.reset();
+	
+	//transf inverse 
+	T3d_n.resize(T3d_n1.size());
+	for(int i=0; i<T3d_n1.size(); i++){ 
+		T3d_n[i] = tr(Tn1,Tn,T3d_n1[i]);
+	}
+	
+}
 
 
-// void Grille::swap(const double dt, Solide& S, int& n, int &n1, int& m){
-// 	
-// 	CGAL::Timer user_time, user_time2;
-// 	double time_1=0., time_2=0.;
-// // 	double var=0.;
-// // 	vector< vector< vector<double > > > Test(Nx+2*marge, vector< vector<double> >(Ny+2*marge, vector<double>(Nz+2*marge,0.)) );
-// 	for(int i=0;i<S.solide.size();i++){
-// 		for (int j=0; j<S.solide[i].triangles.size(); j++){
-// 			Triangles T3d_n,T3d_n1;
-// 			user_time.start();
-// 			n+= S.solide[i].Triangles_interface_prev[j].size();
-// 			n1+=S.solide[i].Triangles_interface[j].size() ;
-// 			sous_maillage_faceTn_faceTn1(S.solide[i].triangles_prev[j], S.solide[i].Triangles_interface_prev[j] ,
-// 										 S.solide[i].triangles[j], S.solide[i].Triangles_interface[j],
-// 										 S.solide[i].normales[j], T3d_n,T3d_n1);
-// 	     //cout << "Temps sous-maillage face: " << user_time.time() << " seconds." << endl;
-// 			 m+= T3d_n.size();
-// 		 //test 5 nov calcul aire faces
-// // 					  cout<< " aire face is : "<< std::sqrt(CGAL::to_double(S.solide[i].triangles_prev[j].squared_area () ))<<endl;
-// // 						double a_n=0., a_n1=0.;
-// // 					  for(int iter=0; iter<T3d_n1.size(); iter++){
-// // 							a_n += std::sqrt(CGAL::to_double(T3d_n[iter].squared_area () )); 
-// // 							a_n1 += std::sqrt(CGAL::to_double(T3d_n1[iter].squared_area () ));
-// // 						}
-// // 						cout<< " aire n is : "<< a_n<<endl;
-// // 						cout<< " aire n1 is : "<< a_n1<<endl;
-// 			//fin test 5 nov	calcul aire faces	 OK
-// 			time_1+=CGAL::to_double(user_time.time());
-// 		  user_time.reset();
-// 		  user_time2.start();
-// 			
-// // 			//test 5 nov calcul volume
-// // 			cout<< "volume balayee n-n1 calcul direct: "<<volume_prisme(S.solide[i].triangles_prev[j],S.solide[i].triangles[j])<<endl;
-// // 			double vol=0., vol_tetra=0.;
-// // 			for(int iter=0; iter<T3d_n1.size(); iter++){
-// // 				//double vol=0., vol_tetra=0.;
-// // 				vol += volume_prisme(T3d_n[iter],T3d_n1[iter]);
-// // 				//test 6 nov
-// // 				Point_3 a = centroid(T3d_n[iter].operator[](1),T3d_n1[iter].operator[](1), T3d_n[iter].operator[](2),T3d_n1[iter].operator[](2));
-// // 				Point_3 b = centroid(T3d_n[iter].operator[](0),T3d_n1[iter].operator[](0), T3d_n[iter].operator[](2),T3d_n1[iter].operator[](2));
-// // 				Point_3 c = centroid(T3d_n[iter].operator[](0),T3d_n1[iter].operator[](0), T3d_n[iter].operator[](1),T3d_n1[iter].operator[](1));
-// // 				
-// // 				Tetrahedron tet0 (T3d_n[iter].operator[](0),T3d_n1[iter].operator[](0), c, b);
-// // 				vol_tetra+= volume_tetra(tet0);
-// // 				Tetrahedron tet1 (T3d_n[iter].operator[](1),T3d_n1[iter].operator[](1), a, c);
-// // 				vol_tetra+= volume_tetra(tet1);
-// // 				Tetrahedron tet2 (T3d_n[iter].operator[](2),T3d_n1[iter].operator[](2), b, a);
-// // 				vol_tetra+= volume_tetra(tet2);
-// // 				Tetrahedron tet3 (T3d_n[iter].operator[](0),T3d_n[iter].operator[](1), T3d_n[iter].operator[](2), c);
-// // 				vol_tetra+= volume_tetra(tet3);
-// // 				Tetrahedron tet4 (T3d_n[iter].operator[](0),c, T3d_n[iter].operator[](2), b);
-// // 				vol_tetra+= volume_tetra(tet4);
-// // 				Tetrahedron tet5 (T3d_n[iter].operator[](1),a, T3d_n[iter].operator[](2), c);
-// // 				vol_tetra+= volume_tetra(tet5);
-// // 				Tetrahedron tet6 (a,c,b, T3d_n[iter].operator[](2));
-// // 				vol_tetra+= volume_tetra(tet6);
-// // 				Tetrahedron tet7 (a,b,c, T3d_n1[iter].operator[](2));
-// // 				vol_tetra+= volume_tetra(tet7);
-// // 				Tetrahedron tet8 (a, T3d_n1[iter].operator[](1),T3d_n1[iter].operator[](2),c);
-// // 				vol_tetra+= volume_tetra(tet8);
-// // 				Tetrahedron tet9 (T3d_n1[iter].operator[](0),T3d_n1[iter].operator[](2),c,b);
-// // 				vol_tetra+= volume_tetra(tet9);
-// // 				Tetrahedron tet10 (T3d_n1[iter].operator[](0),T3d_n1[iter].operator[](1),c,T3d_n1[iter].operator[](2));
-// // 				vol_tetra+= volume_tetra(tet10);
-// // 				
-// // // 				if( std::abs(vol - vol_tetra)>eps ){ 
-// // // 					 cout<<"volume prisme "<< vol<<" i= "<< i<<endl; 
-// // // 					 cout<<"volume  tetra"<< vol_tetra<<endl;
-// // // 				}
-// // 			}
-// // 			if(std::abs(vol)<eps){vol=0.;}
-// // 			cout<< "volume balayee n-n1:               "<<vol<<endl;
-// // 			//fin test 5 nov	calcul volume	 OK
-// // 
-// //        if(std::abs(vol_tetra)<eps){vol_tetra=0.;}
-// //        cout<< "volume tetra:                      "<<vol_tetra<<endl;
-// // 			 //fin test 6 nov ok
-// 		   swap_modification_flux(T3d_n,T3d_n1,dt);
-// 		  //cout << "Temps swap_modification_flux: " << user_time2.time() << " seconds." << endl;
-// 			//cout << "nb sous triang face: " << T3d_n.size()<< endl;
-// 			time_2+=CGAL::to_double(user_time2.time());
-// 		  user_time2.reset();
-// 		}
-// 	}
-// 	cout << "Temps sous-maillage face: " << time_1 << " seconds." << endl;
-// 	cout << "Temps swap_modification_flux: " << time_2 << " seconds." << endl;
-// 	
-// // 	//test 8 nov
-// // 	double ab11=0., ab22=0;
-// // 	for(int ii=0;ii<Nx+2*marge;ii++){
-// // 		for(int jj=0;jj<Ny+2*marge;jj++){
-// // 			for(int kk=0;kk<Nz+2*marge;kk++){
-// // 				if( std::abs( (grille[ii][jj][kk].alpha - grille[ii][jj][kk].alpha0) - Test[ii][jj][kk])>eps ){
-// // 					cout<<"alpha n -n0 "<< grille[ii][jj][kk].alpha -grille[ii][jj][kk].alpha0<< " delta w "<<Test[ii][jj][kk]<<" cellule: "<< "i "<<ii-marge<<" j "<<jj-marge<<" k "<<kk-marge<<endl;
-// // 					ab11+=grille[ii][jj][kk].alpha -grille[ii][jj][kk].alpha0 ;
-// // 					ab22+=Test[ii][jj][kk] ;
-// // 				}
-// // 			}
-// // 		}
-// // 	}
-// // 	cout<<"ab11 "<<ab11<<" ab22 "<<ab22<<endl;
-// // 	//fin test 8 nov
-// 
-// /*
-// //test 14 nov
-// for(int ii=0;ii<Nx+2*marge;ii++){
-// 	for(int jj=0;jj<Ny+2*marge;jj++){
-// 		for(int kk=0;kk<Nz+2*marge;kk++){
-// 			if(grille[ii][jj][kk].alpha<eps){
-// 				grille[ii][jj][kk].rho = 1.4;
-// 				grille[ii][jj][kk].u   = 1.;
-// 				grille[ii][jj][kk].v = 0.;
-// 				grille[ii][jj][kk].w = 0.;
-// 				grille[ii][jj][kk].p = 1.;
-// 				grille[ii][jj][kk].impx = 1.4;
-// 				grille[ii][jj][kk].impy = 0.;
-// 				grille[ii][jj][kk].impz = 0.;
-// 				grille[ii][jj][kk].rhoE =grille[ii][jj][kk].rhoE0;
-// 			}
-// 		}
-// 	}
-// }
-// //fin test 14 nov*/
-// 
-// // //test 15 nov
-// //  double ab1=0., ab2=0;
-// // for(int ii=0;ii<Nx+2*marge;ii++){
-// // 	for(int jj=0;jj<Ny+2*marge;jj++){
-// // 		for(int kk=0;kk<Nz+2*marge;kk++){
-// // 			if( std::abs( (grille[ii][jj][kk].delta_w * dt) - Test[ii][jj][kk])>eps ){
-// // 				cout<<"delta w "<<Test[ii][jj][kk]<< " u.n S/v_c "<<grille[ii][jj][kk].delta_w *dt<<" cellule: "<< "i "<<ii-marge<<" j "<<jj-marge<<" k "<<kk-marge<<"dif " <<(Test[ii][jj][kk]- grille[ii][jj][kk].delta_w *dt)<<endl;
-// // 				ab1+=grille[ii][jj][kk].delta_w*dt;
-// // 				ab2+=Test[ii][jj][kk] ;
-// // 			}
-// // // if(std::abs(1.4-grille[ii][jj][kk].rho)>eps && (grille[ii][jj][kk].alpha!=1.) )
-// // // 			{cout<<" cellule: "<< "i "<<ii-marge<<" j "<<jj-marge<<" k "<<kk-marge<<"rho : "<<grille[ii][jj][kk].rho <<" rho0 "<<grille[ii][jj][kk].rho0<<endl;
-// // // 			}
-// // 		}
-// // 	}
-// // }
-// // cout<<"ab1 "<<ab1<<" ab2 "<<ab2<<endl;
-// // //fin test 15 nov
-// 
-// // //test 9 nov
-// // for(int ii=marge;ii<Nx+marge;ii++){
-// // 	for(int jj=marge;jj<Ny+marge;jj++){
-// // 		for(int kk=marge;kk<Nz+marge;kk++){
-// // 			grille[ii][jj][kk].rho +=(grille[ii][jj][kk].delta_w *dt*1.4)/(1-grille[ii][jj][kk].alpha); 			
-// // 		}
-// // 	}
-// // }
-// // //fin test 9 nov
-// 
-// // //test 15nov
-// // cout<<" intersect "<< grille[11][9][8].delta_w*dt<<endl;
-// // cout<<" test "<<Test[11][9][8]<<endl;
-// // //fin test 15 nov
-// 
-// // //test 16 nov
-// // double s1=0., s2=0.;
-// // double p1=0., p2=0.;
-// // for(int ii=marge;ii<Nx+marge;ii++){
-// // 		for(int jj=marge;jj<Ny+marge;jj++){
-// // 				for(int kk=marge;kk<Nz+marge;kk++){
-// // 					if(std::abs(Test[ii][jj][kk]- grille[ii][jj][kk].delta_w*dt)>eps){
-// // 						cout<<" test "<<Test[ii][jj][kk]<<"   aire "<<grille[ii][jj][kk].delta_w*dt<<" cellule i: "<< ii-marge<<" j "<<jj-marge<< " k "<<kk-marge<<" alpha "<<grille[ii][jj][kk].alpha<<" diff "<<Test[ii][jj][kk] -grille[ii][jj][kk].delta_w*dt <<endl;
-// // 
-// // 				}
-// // 				if(Test[ii][jj][kk]<0){
-// // 				s1+= Test[ii][jj][kk];
-// // 				s2+= grille[ii][jj][kk].delta_w*dt;}
-// // 				if(Test[ii][jj][kk]>0){
-// // 					p1+= Test[ii][jj][kk];
-// // 					p2+= grille[ii][jj][kk].delta_w*dt;}
-// // 					}
-// // 				}
-// // 			}
-// // cout<<" s1 "<< s1<<" p1 "<<p1<<endl;
-// // cout<<" s2 "<< s2<<" p2 "<<p2<<endl;	
-// // //fin test 16 nov
-// 
-// }
-// 
-// 
+void Grille::swap_3d(const double dt, Solide& S, int& n, int &n1, int& m){
+	
+	CGAL::Timer user_time, user_time2;
+	double time_1=0., time_2=0.;
+	for(int i=0;i<S.solide.size();i++){
+		for (int j=0; j<S.solide[i].triangles.size(); j++){
+			Triangles T3d_n,T3d_n1;
+			user_time.start();
+			n+= S.solide[i].Triangles_interface_prev[j].size();
+			n1+=S.solide[i].Triangles_interface[j].size() ;
+			sous_maillage_faceTn_faceTn1_3d(S.solide[i].triangles_prev[j], S.solide[i].Triangles_interface_prev[j] ,
+										 S.solide[i].triangles[j], S.solide[i].Triangles_interface[j],
+										 S.solide[i].normales[j], T3d_n,T3d_n1);
+			m+= T3d_n.size();
+			time_1+=CGAL::to_double(user_time.time());
+		  user_time.reset();
+		  user_time2.start();
+		  swap_face(T3d_n,T3d_n1,dt);
+			time_2+=CGAL::to_double(user_time2.time());
+		  user_time2.reset();
+		}
+	}
+	cout << "Temps sous-maillage face: " << time_1 << " seconds." << endl;
+	cout << "Temps swap_modification_flux: " << time_2 << " seconds." << endl;
+	
+}
 
 
-
-void Sous_Maillage3(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2& tri2){
+void Sous_Maillage_2d(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2& tri2){
 	
 	std::vector<Bbox_2> boxesTn(Tn.size()), boxesTn1(Tn1.size()); //tres outil pour les intersections 
 	//on associe a chaque triangle un Box (une boite contenant le triangle)
@@ -1902,7 +1556,7 @@ void Sous_Maillage3(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2& 
 		}
 	}
 }	
-void sous_maillage_faceTn_faceTn1(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1){
+void sous_maillage_faceTn_faceTn1_2d(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1){
 	
 	CGAL::Timer user_time, user_time2, user_time3, user_time4 ;
 	double time=0.;	
@@ -1912,83 +1566,7 @@ void sous_maillage_faceTn_faceTn1(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1
 	for(int i=0; i<tn.size(); i++){		
 		tn_n1[i] = tr(Tn, Tn1, tn[i]);
 	}
-	//cout << "Mapping Tn vers Tn1 pour une face time is: " << user_time.time() << " seconds." << endl;
 	user_time.reset();
-	
-	//Sous_Maillage2(tn_n1, tn1, N, Test);
-	
-	/*	
-	user_time2.start();
-	Point_2 Ap(0., 0.); 
-	Point_2 Bp(1., 0.);
-	Point_2 Cp(0., 1.);
-	Triangle_2 Ref(Ap,Bp,Cp);
-	
-	// Transf du Triangles_3  tn_n1 en Triangle_2
-	Triangles_2 Tn_n1_2(1+tn_n1.size());
-	Tn_n1_2[0] = Ref;
-	for(int i=0; i<tn_n1.size(); i++){
-		Tn_n1_2[i+1] = tr(Tn1, tn_n1[i]);
-}
-
-
-
-Triangles_2 Tn1_2(1+tn1.size());
-Tn1_2[0] = Ref;
-
-// Transf du Triangles_3  tn1 en Triangle_2
-for(int i=0; i<tn1.size(); i++){
-	Tn1_2[i+1] =tr(Tn1, tn1[i]);
-}
-
-
-//cout << "Passage 3d-2d pour une face time is: " << user_time2.time() << " seconds." << endl;
-user_time2.reset();
-
-user_time3.start();
-// sous maillage triangulaire de l'interface
-CDT cdt;
-cdt.insert(Ap); cdt.insert(Bp); cdt.insert(Cp);
-sous_maillage_face(Tn1_2, Tn_n1_2, cdt);
-assert(cdt.is_valid());
-//	cout << "Sous-maillage en 2d pour une face time is: " << user_time3.time() << " seconds." << endl;
-user_time3.reset();
-
-Triangles_2 T2d; //recuperation faces du maillage Triangle_2
-
-
-for (CDT::Finite_faces_iterator fit=cdt.finite_faces_begin();
-fit!=cdt.finite_faces_end();++fit)
-{ 
-	Point_2 s = fit->vertex(0)->point();
-	Point_2 v = fit->vertex(1)->point();
-	Point_2 r = fit->vertex(2)->point();
-	if(Triangle_2(s,v,r).area()>eps){
-		T2d.push_back(Triangle_2(s,v,r));
-}
-}
-
-user_time4.start();
-//transf des Triangle_2 en Triangle_3
-T3d_n1.resize(T2d.size());
-for(int i=0; i<T2d.size(); i++){
-	Triangle_3 Tri = tr(Tn1,T2d[i]);
-	Vector_3 vect0(Tri.operator[](0),Tri.operator[](1));
-	Vector_3 vect1(Tri.operator[](0),Tri.operator[](2));
-	Vector_3 normale = CGAL::cross_product(vect0,vect1);
-	if (normale*N > 0.){ T3d_n1[i] =  Tri; }
-	else{ T3d_n1[i] = Triangle_3(Tri.operator[](0),Tri.operator[](2),Tri.operator[](1));} 
-	//cout<<"triangle 3d "<<T3d[i]<<endl;
-}
-//cout << "Passage 2d-3d pour une face time is: " << user_time4.time() << " seconds." << endl;
-user_time4.reset();
-
-//transf inverse 
-T3d_n.resize(T3d_n1.size());
-for(int i=0; i<T3d_n1.size(); i++){ 
-	T3d_n[i] = tr(Tn1,Tn,T3d_n1[i]);
-	//cout<<"triangle 3d n "<<T3d_n[i]<<endl;
-}*/
 	
 	Triangles_2 Tn_n1_2_test(tn_n1.size());
 	for(int i=0; i<tn_n1.size(); i++){
@@ -2000,7 +1578,7 @@ for(int i=0; i<T3d_n1.size(); i++){
 		Tn1_2_test[i] =tr(Tn1, tn1[i]);
 	}
 	Triangles_2 tri2;
-	Sous_Maillage3(Tn1_2_test, Tn_n1_2_test, tri2);
+	Sous_Maillage_2d(Tn1_2_test, Tn_n1_2_test, tri2);
 	//cout<<" size "<<tri2.size()<<endl;
 	T3d_n1.resize(tri2.size());
 	for(int i=0; i<T3d_n1.size(); i++){
@@ -2019,7 +1597,7 @@ for(int i=0; i<T3d_n1.size(); i++){
 }
 
 
-void Grille::swap(const double dt, Solide& S, int& n, int &n1, int& m){
+void Grille::swap_2d(const double dt, Solide& S, int& n, int &n1, int& m){
 	
 	CGAL::Timer user_time, user_time2;
 	double time_1=0., time_2=0.;
@@ -2032,27 +1610,27 @@ void Grille::swap(const double dt, Solide& S, int& n, int &n1, int& m){
 			user_time.start();
 			n+= S.solide[i].Triangles_interface_prev[j].size();
 			n1+=S.solide[i].Triangles_interface[j].size() ;
-			sous_maillage_faceTn_faceTn1(S.solide[i].triangles_prev[j], S.solide[i].Triangles_interface_prev[j] ,
+			sous_maillage_faceTn_faceTn1_2d(S.solide[i].triangles_prev[j], S.solide[i].Triangles_interface_prev[j] ,
 										 S.solide[i].triangles[j], S.solide[i].Triangles_interface[j],
 										 S.solide[i].normales[j], T3d_n,T3d_n1);
 	     //cout << "Temps sous-maillage face: " << user_time.time() << " seconds." << endl;
 			 m+= T3d_n.size();
 
 
-// 		     //test 26 nov calcul aire faces
-// 					 // cout<< " aire face is : "<< std::sqrt(CGAL::to_double(S.solide[i].triangles_prev[j].squared_area () ))<<endl;
-// 					 double aire_f= std::sqrt(CGAL::to_double(S.solide[i].triangles_prev[j].squared_area () ));
-// 					 double volume_f= volume_prisme(S.solide[i].triangles_prev[j],S.solide[i].triangles[j]);
-// 						double a_n=0., a_n1=0., vol=0.;
-// 						for(int iter=0; iter<T3d_n1.size(); iter++){
-// 							a_n += std::sqrt(CGAL::to_double(T3d_n1[iter].squared_area () )); 
-// 							//a_n1 += std::sqrt(CGAL::to_double(Test2[iter].squared_area () )); 
-// 							vol += volume_prisme(T3d_n[iter], T3d_n1[iter]);
-// 							}
-// 							if (std::abs(vol)<eps){vol=0.;}
-// 							if (std::abs(a_n -aire_f)>eps){cout<< " aire n is : "<< a_n<< "aire direct "<<aire_f<< endl;}
-// 							if(std::abs(vol- volume_f)>eps){cout<<"volume balayee "<<vol<< "volume balayee n-n1 calcul direct "<<volume_f<<endl;}
-// 				//fin test 26 nov	calcul aire faces	 OK
+		     //test 26 nov calcul aire faces
+					 // cout<< " aire face is : "<< std::sqrt(CGAL::to_double(S.solide[i].triangles_prev[j].squared_area () ))<<endl;
+					 double aire_f= std::sqrt(CGAL::to_double(S.solide[i].triangles_prev[j].squared_area () ));
+					 double volume_f= volume_prisme(S.solide[i].triangles_prev[j],S.solide[i].triangles[j]);
+						double a_n=0., a_n1=0., vol=0.;
+						for(int iter=0; iter<T3d_n1.size(); iter++){
+							a_n += std::sqrt(CGAL::to_double(T3d_n1[iter].squared_area () )); 
+							//a_n1 += std::sqrt(CGAL::to_double(Test2[iter].squared_area () )); 
+							vol += volume_prisme(T3d_n[iter], T3d_n1[iter]);
+							}
+							if (std::abs(vol)<eps){vol=0.;}
+							if (std::abs(a_n -aire_f)>eps){cout<< " aire n is : "<< a_n<< "aire direct "<<aire_f<< endl;}
+							if(std::abs(vol- volume_f)>eps){cout<<"volume balayee "<<vol<< "volume balayee n-n1 calcul direct "<<volume_f<<endl;}
+				//fin test 26 nov	calcul aire faces	 OK
 				
 			time_1+=CGAL::to_double(user_time.time());
 		  user_time.reset();
@@ -2104,7 +1682,7 @@ void Grille::swap(const double dt, Solide& S, int& n, int &n1, int& m){
 //        if(std::abs(vol_tetra)<eps){vol_tetra=0.;}
 //        cout<< "volume tetra:                      "<<vol_tetra<<endl;
 // 			 //fin test 6 nov ok
-		   swap_modification_flux(T3d_n,T3d_n1,dt);
+		   swap_face(T3d_n,T3d_n1,dt);
 		  //cout << "Temps swap_modification_flux: " << user_time2.time() << " seconds." << endl;
 			//cout << "nb sous triang face: " << T3d_n.size()<< endl;
 			time_2+=CGAL::to_double(user_time2.time());
@@ -2113,315 +1691,6 @@ void Grille::swap(const double dt, Solide& S, int& n, int &n1, int& m){
 	}
 	cout << "Temps sous-maillage face: " << time_1 << " seconds." << endl;
 	cout << "Temps swap_modification_flux: " << time_2 << " seconds." << endl;
-	
-// 	//test 8 nov
-// 	double ab11=0., ab22=0;
-// 	for(int ii=0;ii<Nx+2*marge;ii++){
-// 		for(int jj=0;jj<Ny+2*marge;jj++){
-// 			for(int kk=0;kk<Nz+2*marge;kk++){
-// 				if( std::abs( (grille[ii][jj][kk].alpha - grille[ii][jj][kk].alpha0) - Test[ii][jj][kk])>eps ){
-// 					cout<<"alpha n -n0 "<< grille[ii][jj][kk].alpha -grille[ii][jj][kk].alpha0<< " delta w "<<Test[ii][jj][kk]<<" cellule: "<< "i "<<ii-marge<<" j "<<jj-marge<<" k "<<kk-marge<<endl;
-// 					ab11+=grille[ii][jj][kk].alpha -grille[ii][jj][kk].alpha0 ;
-// 					ab22+=Test[ii][jj][kk] ;
-// 				}
-// 			}
-// 		}
-// 	}
-// 	cout<<"ab11 "<<ab11<<" ab22 "<<ab22<<endl;
-// 	//fin test 8 nov
-
-/*
-//test 14 nov
-for(int ii=0;ii<Nx+2*marge;ii++){
-	for(int jj=0;jj<Ny+2*marge;jj++){
-		for(int kk=0;kk<Nz+2*marge;kk++){
-			if(grille[ii][jj][kk].alpha<eps){
-				grille[ii][jj][kk].rho = 1.4;
-				grille[ii][jj][kk].u   = 1.;
-				grille[ii][jj][kk].v = 0.;
-				grille[ii][jj][kk].w = 0.;
-				grille[ii][jj][kk].p = 1.;
-				grille[ii][jj][kk].impx = 1.4;
-				grille[ii][jj][kk].impy = 0.;
-				grille[ii][jj][kk].impz = 0.;
-				grille[ii][jj][kk].rhoE =grille[ii][jj][kk].rhoE0;
-			}
-		}
-	}
-}
-//fin test 14 nov*/
-
-// //test 15 nov
-//  double ab1=0., ab2=0;
-// for(int ii=0;ii<Nx+2*marge;ii++){
-// 	for(int jj=0;jj<Ny+2*marge;jj++){
-// 		for(int kk=0;kk<Nz+2*marge;kk++){
-// 			if( std::abs( (grille[ii][jj][kk].delta_w * dt) - Test[ii][jj][kk])>eps ){
-// 				cout<<"delta w "<<Test[ii][jj][kk]<< " u.n S/v_c "<<grille[ii][jj][kk].delta_w *dt<<" cellule: "<< "i "<<ii-marge<<" j "<<jj-marge<<" k "<<kk-marge<<"dif " <<(Test[ii][jj][kk]- grille[ii][jj][kk].delta_w *dt)<<endl;
-// 				ab1+=grille[ii][jj][kk].delta_w*dt;
-// 				ab2+=Test[ii][jj][kk] ;
-// 			}
-// // if(std::abs(1.4-grille[ii][jj][kk].rho)>eps && (grille[ii][jj][kk].alpha!=1.) )
-// // 			{cout<<" cellule: "<< "i "<<ii-marge<<" j "<<jj-marge<<" k "<<kk-marge<<"rho : "<<grille[ii][jj][kk].rho <<" rho0 "<<grille[ii][jj][kk].rho0<<endl;
-// // 			}
-// 		}
-// 	}
-// }
-// cout<<"ab1 "<<ab1<<" ab2 "<<ab2<<endl;
-// //fin test 15 nov
-
-// //test 9 nov
-// for(int ii=marge;ii<Nx+marge;ii++){
-// 	for(int jj=marge;jj<Ny+marge;jj++){
-// 		for(int kk=marge;kk<Nz+marge;kk++){
-// 			grille[ii][jj][kk].rho +=(grille[ii][jj][kk].delta_w *dt*1.4)/(1-grille[ii][jj][kk].alpha); 			
-// 		}
-// 	}
-// }
-// //fin test 9 nov
-
-// //test 15nov
-// cout<<" intersect "<< grille[11][9][8].delta_w*dt<<endl;
-// cout<<" test "<<Test[11][9][8]<<endl;
-// //fin test 15 nov
-
-// //test 16 nov
-// double s1=0., s2=0.;
-// double p1=0., p2=0.;
-// for(int ii=marge;ii<Nx+marge;ii++){
-// 		for(int jj=marge;jj<Ny+marge;jj++){
-// 				for(int kk=marge;kk<Nz+marge;kk++){
-// 					if(std::abs(Test[ii][jj][kk]- grille[ii][jj][kk].delta_w*dt)>eps){
-// 						cout<<" test "<<Test[ii][jj][kk]<<"   aire "<<grille[ii][jj][kk].delta_w*dt<<" cellule i: "<< ii-marge<<" j "<<jj-marge<< " k "<<kk-marge<<" alpha "<<grille[ii][jj][kk].alpha<<" diff "<<Test[ii][jj][kk] -grille[ii][jj][kk].delta_w*dt <<endl;
-// 
-// 				}
-// 				if(Test[ii][jj][kk]<0){
-// 				s1+= Test[ii][jj][kk];
-// 				s2+= grille[ii][jj][kk].delta_w*dt;}
-// 				if(Test[ii][jj][kk]>0){
-// 					p1+= Test[ii][jj][kk];
-// 					p2+= grille[ii][jj][kk].delta_w*dt;}
-// 					}
-// 				}
-// 			}
-// cout<<" s1 "<< s1<<" p1 "<<p1<<endl;
-// cout<<" s2 "<< s2<<" p2 "<<p2<<endl;	
-// //fin test 16 nov
 
 }
 
-
-
-
-
-
-// void Grille::fill_cel_old(Solide& S){
-// 	
-// 	Cellule c, cm;
-// 	int nb_part = S.size();
-// 	double dist[6*nb_part];
-// 	double dist_min = 100;
-// 	int poz=0;
-// 	
-// 	Point_3 center_faces[6][nb_part];
-// 	Point_3 ref(10000., 10000., 10000.);
-// 	
-// 	for(int it=0; it<nb_part; it++){
-// 		if(S.solide[it].fluide[0])
-// 		{ center_faces[0][it]= S.solide[it].faces[0].centre; }
-// 		else {center_faces[0][it] = ref;}
-// 		
-// 		if(S.solide[it].fluide[2])
-// 		{center_faces[1][it]= S.solide[it].faces[1].centre; }
-// 		else {center_faces[1][it] = ref;}
-// 		
-// 		if(S.solide[it].fluide[4])
-// 		{center_faces[2][it]= S.solide[it].faces[2].centre;} 
-// 		else {center_faces[2][it] = ref;}
-// 		
-// 		if(S.solide[it].fluide[6])
-// 		{center_faces[3][it]= S.solide[it].faces[3].centre;} 
-// 		else {center_faces[3][it] = ref;}
-// 		
-// 		if(S.solide[it].fluide[8])
-// 		{center_faces[4][it]= S.solide[it].faces[4].centre; }
-// 		else {center_faces[4][it]=ref;}
-// 		
-// 		if(S.solide[it].fluide[10])
-// 		{center_faces[5][it]= S.solide[it].faces[5].centre;}
-// 		else {center_faces[5][it]=ref;}
-// 	}
-// 	
-// 
-// 
-// 	for(int i=marge;i<Nx+marge;i++){
-// 		for(int j=marge;j<Ny+marge;j++){ 
-// 			for(int k=marge;k<Nz+marge;k++){
-// 				c = grille[i][j][k];
-// 				if((std::abs(c.alpha-1.)<eps))
-// 				{
-// 					Point_3 center_cell(c.x, c.y, c.z);
-// 					int nbx=0, nby=0,nbz=0;
-// 					double dist_min = 100;
-// 					double nb=0.;
-// 					int count = 0;
-// 					for(int it=0; it<6; it++){
-// 						for(int iter=0; iter<nb_part; iter++){
-// 							dist[count] = CGAL::to_double(squared_distance(center_cell, center_faces[it][iter]));
-// 							if(dist[count]< dist_min) {
-// 								dist_min = dist[count];
-// 								poz = it;
-// 							}
-// 							count++;
-// 						}
-// 					}
-// 					if (poz == 0){
-// 						nb = dist_min/c.dx;
-// 						if (nb != (int)(nb)){ nbx= (int)(nb)+1;}
-// 						else {nbx = nb;}
-// 						if(i-2*nbx>0){
-// 							cm = grille[i-2*nbx][j][k]; // a definir la cellule mirroir par rapport à l'interface
-// 							while(cm.alpha>eps && (i-2*nbx)>marge){nbx++; cm = grille[i-2*nbx][j][k]; }
-// 						}
-// 						else {cm = grille[0][j][k]; }
-// 					}
-// 					else if (poz == 1){
-// 						nb = dist_min/c.dx;
-// 						if (nb != (int)(nb)){ nbx= (int)(nb)+1;}
-// 						else {nbx = nb;}
-// 						if(i+2*nbx <Nx+2*marge){
-// 							cm = grille[i+2*nbx][j][k]; // a definir la cellule mirroir par rapport à l'interface
-// 							while(cm.alpha>eps && (i+2*nbx)<Nx+marge){nbx++; cm = grille[i+2*nbx][j][k]; }
-// 						}
-// 						else{cm = grille[Nx+marge][j][k];}
-// 					}
-// 					
-// 					else if (poz == 2){
-// 						nb = dist_min/c.dy;
-// 						if (nb != (int)(nb)){ nby= (int)(nb)+1;}
-// 						else {nby = nb;}
-// 						if(j-2*nby>0){
-// 							cm = grille[i][j-2*nby][k]; // a definir la cellule mirroir par rapport à l'interface
-// 							while(cm.alpha>eps && (j-2*nby)>marge){nby++; cm = grille[i][j-2*nby][k]; }
-// 						}
-// 						else{cm = grille[i][0][k];}
-// 					}
-// 					
-// 					else if (poz == 3){
-// 						nb = dist_min/c.dy;
-// 						if (nb != (int)(nb)){ nby= (int)(nb)+1;}
-// 						else {nby = nb;}
-// 						if(j+2*nby<Ny+2*marge){
-// 							cm = grille[i][j+2*nby][k]; // a definir la cellule mirroir par rapport à l'interface
-// 							while(cm.alpha>eps && (j+2*nby)<Ny+marge){nby++; cm = grille[i][j+2*nby][k]; }
-// 						}
-// 						else{cm = grille[i][Ny+marge][k];}
-// 					}
-// 					else if (poz == 4){
-// 						nb = dist_min/c.dz;
-// 						if (nb != (int)(nb)){ nbz= (int)(nb)+1;}
-// 						else {nbz = nb;}
-// 						if(k-2*nbz>0){
-// 							cm = grille[i][j][k-2*nbz]; // a definir la cellule mirroir par rapport à l'interface
-// 							while(cm.alpha>eps && (k-2*nbz)>marge){nbz++; cm = grille[i][j][k-2*nbz]; }
-// 						}
-// 						else{cm = grille[i][j][0];}
-// 					}
-// 					else{
-// 						nb = dist_min/c.dz;
-// 						if (nb != (int)(nb)){ nbz= (int)(nb)+1;}
-// 						else {nbz = nb;}
-// 						if(k+2*nbz<Nz+2*marge){
-// 							cm = grille[i][j][k+2*nbz]; // a definir la cellule mirroir par rapport à l'interface
-// 							while(cm.alpha>eps && (k+2*nbz)<Nz+marge){nbz++; cm = grille[i][j][k+2*nbz]; }
-// 						}
-// 						else{cm = grille[i][j][Nz+marge];}
-// 					}
-// 					c.rho = cm.rho;
-// 					c.impx = cm.impx;
-// 					c.impy = cm.impy;
-// 					c.impz = cm.impz;
-// 					c.rhoE = cm.rhoE;
-// 					c.u = cm.u ;
-// 					c.v = cm.v;
-// 					c.w = cm.w;
-// 					c.p = cm.p;
-// 					grille[i][j][k] = c;
-// 			}
-// 		}
-// 	}
-// }
-// }
-
-/*Triangulation sous_maillage_face(Triangles Tn1, Triangles Tn_n1){
-
-	CDT cdt;
-	
-	std::vector<Bbox> boxesTn1(Tn1.size()), boxesTn_n1(Tn_n1.size());
-	
-	for(Tri_iterator it= Tn1.begin(); it!= Tn1.end(); ++it){
-		boxesTn1.push_back(Bbox(it->bbox()));
-		}
-		
-		for(Tri_iterator it= Tn_n1.begin(); it!= Tn_n1.end(); ++it){
-			boxesTn_n1.push_back(Bbox(it->bbox()));
-		}
-		
-		Triangle_3 t;
-		Point_3 P;
-		Segment_3 seg;
-		std::vector<Point_3> vPoints; 
-		
-		std::vector<Point_3> intPoints;
-		std::vector<Segment_3> intSeg;
-		
-		
-		for(int i=0; i<boxesTn1.size(); i++ ){
-			for(int j=0; j<boxesTn_n1.size(); j++ ){
-				if (CGAL::do_intersect( boxesTn1[i],boxesTn_n1[j]) )
-				{
-					if (CGAL::do_intersect(boxesTn1[i],Tn_n1[j]) ){
-						if (CGAL::do_intersect(Tn1[i],Tn_n1[j]) ){
-							
-							CGAL::Object result = CGAL::intersection(Tn1[i],Tn_n1[j]);
-							
-							if(CGAL::assign(P,result)){
-								intPoints.push_back(P);
-							}
-							else if(CGAL::assign(seg,result)){
-								intSeg.push_back(seg);
-								
-							}
-							else if(CGAL::assign(t,result)){
-								Segment_3 s1(t.operator[](0), t.operator[](1));
-								Segment_3 s2(t.operator[](1), t.operator[](2));
-								Segment_3 s3(t.operator[](2), t.operator[](0));
-								intSeg.push_back(s1);	
-								intSeg.push_back(s2);	
-								intSeg.push_back(s3);							
-							}
-							else if(CGAL::assign(vPoints,result)){ 
-								for(int l= 0; l<vPoints.size(); l++)
-								{
-									intPoints.push_back(vPoints[l]);
-								}
-								
-						}
-						else {cout<<"Intersection type: ? "<<endl;}
-						
-						}
-					}
-				}
-			}
-		}
-		
-		Triangulation T(intPoints.begin(), intPoints.end());
-		//assert( T.dimension() == 2);
-		
-		if (T.dimension() == 2){
-			//cdt.insert();
-		}
-		else {std::cout<<"il y a un probleme dans la construction du sous-maillage triangulaire de l'interface"<<std::cout;}
-		
-		return T;
-		}*/	

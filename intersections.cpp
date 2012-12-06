@@ -341,10 +341,6 @@ void Grille::parois(Solide& S) {
 						cel.phi_y += cel.pdty *v_lambda[it] *( CGAL::to_double(v_n_lambda[it].y()))/volume_cel;
 						cel.phi_z += cel.pdtz *v_lambda[it] *( CGAL::to_double(v_n_lambda[it].z()))/volume_cel;
 						Vector_3 V_f = S.solide[0].vitesse_parois(X_f[it]);
-						//test 5 dec
-						if (std::abs(CGAL::to_double(V_f.operator[](0))-1.)>eps || std::abs(CGAL::to_double(V_f.operator[](1)))>eps || std::abs(CGAL::to_double(V_f.operator[](2)))>eps)
-						{cout<<" Vitess a la parois "<< V_f<<endl;}
-						//fin test 5 dec
             cel.phi_v += v_lambda[it] * (CGAL::to_double(cel.pdtx*v_n_lambda[it].x()*V_f.x()  + cel.pdty*v_n_lambda[it].y()*V_f.y()+
                                           cel.pdtz*v_n_lambda[it].z()*V_f.z()))/volume_cel;
  
