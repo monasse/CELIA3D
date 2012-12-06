@@ -36,9 +36,7 @@ public :
   void Affiche ();  //fonction auxilaire utile pour les test :)
 
 protected:
-  //test 9 nov
-	double delta_w;
-	//fin test 9 nov
+
   double x;        //position du centre de la cellule 
   double y;
   double z; 
@@ -105,8 +103,9 @@ protected:
   double fluxj[5];     //Flux en haut de la cellule
   double fluxk[5];     //Flux en bas de la cellule
   
-  double flux_modif[5]; 
-	double phi_x;   //necessaire pour le calcul du flux à la parois
+  double flux_modif[5]; //modification flux pour les cellules coupees
+	double delta_w[5];    //quantitee balayee
+	double phi_x;        //necessaire pour le calcul du flux à la parois
   double phi_y;
   double phi_z;     
   double phi_v;  

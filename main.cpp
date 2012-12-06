@@ -1,16 +1,11 @@
 #include <iostream>
 #include <ctime>
-
-//#include "fluide.hpp"
 #include "fluide.cpp"
 #include "couplage.cpp"
-//#include "parametres.hpp"
 #include "parametres.cpp"
 #include "solide.cpp"
 
-
 using namespace std;          // espace de nom standard
-
 
 int main(){
   char tempsF[]="resultats/tempsF.dat";
@@ -36,21 +31,15 @@ int main(){
 	}
 	
 	double t=0.;
-
-
 	Solide S;
 	S.init("maillage.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
-	//S.Affiche();
-
 	Grille Fluide;
 	Fluide.init();
 	Fluide.parois(S);
 	Fluide.BC();
 
-	int iter=0;
-	
+	int iter=0;	
 	clock_t start,end;
-	
 	start =clock();
 
 	int kimp = 0; //Numero de suivi de l'impression
@@ -74,10 +63,10 @@ int main(){
 			next_timp += dtimp;
 		}
 	  //cout<<"Energie: "<< Fluide.Energie()+S.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
-		cout<<"Energie: "<< Fluide.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
+		cout<<"Energie Fluide: "<< Fluide.Energie() << " Energie Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 	  ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S << endl;
-	  double dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
-	 // double dt = 0.01;
+	  //double dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
+		double dt = 0.005;
 		//Fluide.affiche("avant Solve");
 		user_time2.start();
 		Fluide.Solve(dt, t, n);
@@ -89,14 +78,14 @@ int main(){
 		S.solve_vitesse(dt);
 		Fluide.parois(S);
 		//S.Affiche();
-		Fluide.modif_fnum(dt);
-		//Fluide.affiche("modif_fnum");
 		user_time.start();
 		int n0=0.,n1=0., m=0.;
 		Fluide.swap(dt,S,n0,n1,m);
 		cout << "Temps swap: " << user_time.time() << " seconds." << endl;
 		user_time.reset();
-		cout<<" triangles en n "<<n0<<" triangles en n+1 "<<n1<<" triangles sous maillage "<<m<<endl;
+		cout<<"Triangles en n "<<n0<<" Triangles en n+1 "<<n1<<" Triangles sous maillage "<<m<<endl;
+		Fluide.modif_fnum(dt);
+		//Fluide.affiche("modif_fnum");
 		Fluide.mixage();
 		//Fluide.affiche("mixage");
 		Fluide.fill_cel(S);
@@ -118,12 +107,6 @@ int main(){
 	out <<"Temps de calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl;     
 	cout<<"nb iter= "<< iter<<endl;    
 	cout <<"Temps de calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl;  
-	
-// 	//test 8 nov
-// 	Fluide.affiche();
-// 	//fin test 8 nov
-	
+
 	return 0;
-	
-	
 }
