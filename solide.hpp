@@ -59,10 +59,6 @@ class Particule
 			std::vector<Face> & F);
   ~Particule();
 	//Particule & operator=(const Particule &P); // operateur = surcharge pour l'affectation
-	
-  bool box_inside_convex_polygon(const Particule& S, const Bbox& cell);  
-  bool inside_convex_polygon(const Particule& S, const Point_3& P);  
-  bool inside_box(const Bbox& cell, const Point_3& P);
 	void Affiche();  //fonction auxilaire utile pour les tests
   double volume(); 
   void CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &Tz, double &Txx, double &Tyy, double &Tzz, double &Txy, double &Tyz, double &Tzx);
@@ -144,5 +140,9 @@ public:
   // private :
   std::vector<Particule> solide;
 };
+
+bool box_inside_convex_polygon(const Particule& S, const Bbox& cell);  
+bool inside_convex_polygon(const Particule& S, const Point_3& P);  
+bool inside_box(const Bbox& cell, const Point_3& P);
 
 #endif

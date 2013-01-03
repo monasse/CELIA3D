@@ -340,7 +340,11 @@ void Grille::parois(Solide& S) {
 						cel.phi_x += cel.pdtx * v_lambda[it] *( CGAL::to_double(v_n_lambda[it].x()))/volume_cel;
 						cel.phi_y += cel.pdty *v_lambda[it] *( CGAL::to_double(v_n_lambda[it].y()))/volume_cel;
 						cel.phi_z += cel.pdtz *v_lambda[it] *( CGAL::to_double(v_n_lambda[it].z()))/volume_cel;
-						Vector_3 V_f = S.solide[0].vitesse_parois(X_f[it]);
+						bool in = false; Vector_3 V_f;
+						for (int iter_s=0; iter_s<nb_particules && in==false; iter_s++){
+							in = inside_convex_polygon(S.solide[iter_s] ,X_f[it]);
+							V_f = S.solide[iter_s].vitesse_parois(X_f[it]);
+						}
             cel.phi_v += v_lambda[it] * (CGAL::to_double(cel.pdtx*v_n_lambda[it].x()*V_f.x()  + cel.pdty*v_n_lambda[it].y()*V_f.y()+
                                           cel.pdtz*v_n_lambda[it].z()*V_f.z()))/volume_cel;
  

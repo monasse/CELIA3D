@@ -19,7 +19,6 @@ void Grille::modif_fnum(const double dt){
 					c.flux_modif[2] = c.phi_y;
 					c.flux_modif[3] = c.phi_z;
 					c.flux_modif[4] = c.phi_v;
-					//c.flux_modif[4] = c.phi_x*c.impx0/c.rho0 + c.phi_y*c.impy0/c.rho0 + c.phi_z*c.impz0/c.rho0;
 					for(int l=0.; l<5; l++){  
 						c.flux_modif[l] -= (1.-c.kappai)*c.dtfxi[l] - (1.-ci.kappai)*ci.dtfxi[l]
 						+ (1.-c.kappaj)*c.dtfyj[l] - (1.-cj.kappaj)*cj.dtfyj[l]
@@ -1216,8 +1215,6 @@ void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,i
 
 }
 
-
-
 void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt){
 	
 	CGAL::Timer user_time, user_time2;
@@ -1628,8 +1625,8 @@ void Grille::swap_2d(const double dt, Solide& S, int& n, int &n1, int& m){
 							vol += volume_prisme(T3d_n[iter], T3d_n1[iter]);
 							}
 							if (std::abs(vol)<eps){vol=0.;}
-							if (std::abs(a_n -aire_f)>eps){cout<< " aire n is : "<< a_n<< "aire direct "<<aire_f<< endl;}
-							if(std::abs(vol- volume_f)>eps){cout<<"volume balayee "<<vol<< "volume balayee n-n1 calcul direct "<<volume_f<<endl;}
+							if (std::abs(a_n -aire_f)>0.0001){cout<< " aire n is : "<< a_n<< "aire direct "<<aire_f<< endl;}
+							if(std::abs(vol- volume_f)>0.00001){cout<<"volume balayee "<<vol<< "volume balayee n-n1 calcul direct "<<volume_f<<endl;}
 				//fin test 26 nov	calcul aire faces	 OK
 				
 			time_1+=CGAL::to_double(user_time.time());

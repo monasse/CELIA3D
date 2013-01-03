@@ -9,7 +9,7 @@ double Rho(double x,double y, double z){
   return rho; 
 } 
 double U(double x,double y, double z){ 
-   double u = 1.;
+   double u = 0.;
   return u; 
  }
  double V(double x,double y, double z){ 

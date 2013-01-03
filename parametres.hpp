@@ -21,13 +21,13 @@ const double X0 = 0;              //pozition de l'origine
 const double Y0 = 0;
 const double Z0 = 0;
 
-const int Nx =28;                 //nombre de cellules de fluide selon x
-const int Ny =28;                 //nombre de cellules de fluide selon y
-const int Nz =28;                 //nombre de cellules de fluide selon z
+const int Nx =73;                 //nombre de cellules de fluide selon x
+const int Ny =23;                 //nombre de cellules de fluide selon y
+const int Nz =23;                 //nombre de cellules de fluide selon z
 
-const double domainex = 2.;            //Largeur du domaine fluide selon x
-const double domainey = 2.;          //Largeur du domaine fluide selon y
-const double domainez = 2.;          //Largeur du domaine fluide selon z
+const double domainex = 3.;            //Largeur du domaine fluide selon x
+const double domainey = 1.;          //Largeur du domaine fluide selon y
+const double domainez = 1.;          //Largeur du domaine fluide selon z
 
 const double deltax = domainex/Nx;      //Pas d'espace pour le fluide selon x
 const double deltay = domainey/Ny;       //Pas d'espace pour le fluide selon y
@@ -36,15 +36,15 @@ const double deltaz = domainez/Nz;       //Pas d'espace pour le fluide selon z
 //Parametres solides
 const double rhos = 1.; //Densite du solide 
 const double nu = 0.; //Coefficient de Poisson du materiau
-const double E = 10000.; //Module d'Young du materiau
+const double E = 6.e5; //Module d'Young du materiau
 
 //Parametres temporels
-const double T = 2.;             //temps total de simulation
+const double T = 1.;             //temps total de simulation
 const double cfl = 0.5;            //valeur de la cfl fluide
 const double cfls = 0.5;           //Valeur de la cfl solide
-const int nimp = 1000;                //Nombre d'impressions
+const int nimp = 10;                //Nombre d'impressions
 const double dtimp = T/nimp;        //Pas de temps entre deux impressions
-const int Nmax = 10;           //nombre maximal d'iterations en temps
+const int Nmax = 10000000;           //nombre maximal d'iterations en temps
 
 //Conditions aux limites
 //Type de CL :  1 = reflecting ("miroir"); 2 = periodic("periodique"); 3= outflow("transmisibles");
