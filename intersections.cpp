@@ -6,11 +6,10 @@
 using std:: cout;
 using std:: endl;
 
-void Grille::parois(Solide& S) {
+void Grille::parois(Solide& S,double dt) {
 	
 	const double eps_relat = numeric_limits<double>::epsilon( );
 	
-	//cout<<"Eps relative :"<<1- 100/100<<endl;
 	std::vector<Bbox> box_grille;
 	const int nx_m=Nx+2*marge;
 	const int ny_m=Ny+2*marge;
@@ -98,7 +97,10 @@ void Grille::parois(Solide& S) {
 				bool point_in_solide = false;
 				bool point_in_cell = false;
 				Triangles trianglesB;
-				for(int iter_s=0; iter_s<nb_particules; iter_s++){
+				for(int iter_s=0; iter_s<nb_particules; iter_s++){ //boucle sur les particules 
+					//Mise à jour des Forces fluides et Moments fluides exerces sur le solide 
+					S.solide[iter_s].Ffprev = S.solide[iter_s].Ff;
+					S.solide[iter_s].Mfprev = S.solide[iter_s].Mf;
 					if (CGAL::do_intersect(box_grille[i],solide[iter_s]) ) {	
 						intersection = true;
 						box_in_solide = box_inside_convex_polygon(S.solide[iter_s],box_grille[i]);
@@ -108,6 +110,11 @@ void Grille::parois(Solide& S) {
 							cel.kappai = 1.;
 							cel.kappaj = 1.;
 							cel.kappak = 1.;
+							//test 3 janvier 2013
+							if(a>0) {grille[a-1][b][c].kappai = 1.;}
+							if(b>0) {grille[a][b-1][c].kappaj = 1.;}
+							if(c>0) {grille[a][b][c-1].kappak = 1.;}
+							//fin test 3 janvier 2013
 							volume_s += volume_cel;
 							box_in_solide = false;
 						}
@@ -347,8 +354,6 @@ void Grille::parois(Solide& S) {
 						}
             cel.phi_v += v_lambda[it] * (CGAL::to_double(cel.pdtx*v_n_lambda[it].x()*V_f.x()  + cel.pdty*v_n_lambda[it].y()*V_f.y()+
                                           cel.pdtz*v_n_lambda[it].z()*V_f.z()))/volume_cel;
- 
-// 		delta_w += v_lambda[it] *( CGAL::to_double(v_n_lambda[it].x())*cel.impx0/cel.rho0 + CGAL::to_double(v_n_lambda[it].y())*cel.impy0/cel.rho0 + CGAL::to_double(v_n_lambda[it].z())*cel.impz0/cel.rho0) /volume_cel;
              }
 					
 					if (abs(cel.phi_x)<=eps_relat) {cel.phi_x = 0.;} 
@@ -360,10 +365,26 @@ void Grille::parois(Solide& S) {
 					cel.kappai = kappa[3]/(deltay * deltaz);
 					cel.kappaj = kappa[4]/(deltax * deltaz);
 					cel.kappak = kappa[1]/(deltax * deltay);
+					//test 31 janvier 2013
+					if(a>0){grille[a-1][b][c].kappai = kappa[2]/(deltay * deltaz);}
+					if(b>0){grille[a][b-1][c].kappaj = kappa[5]/(deltax * deltaz);}
+					if(c>0){grille[a][b][c-1].kappak = kappa[0]/(deltax * deltay);}
+					//fin test 31 janvier 2013
+					
 					volume_s +=alpha;
 					
 				}
 				grille[a][b][c] = cel;
+				//test 3 janvier 2013
+				if(std::abs(grille[a][b][c].alpha -1.) <eps) {
+					grille[a][b][c].kappai = 1.;
+					grille[a][b][c].kappaj = 1.;
+					grille[a][b][c].kappak = 1.;
+					if(a>0){grille[a-1][b][c].kappai = 1.;}
+					if(b>0){grille[a][b-1][c].kappaj = 1.;}
+					if(c>0){grille[a][b][c-1].kappak = 1.;}
+				}
+				//fin test 31 janvier 2013
 				i++;
 				time+= user_time2.time();
 				user_time2.reset();
@@ -371,14 +392,18 @@ void Grille::parois(Solide& S) {
 				//triangularisation de l'interface face par face
 	      Finite_faces_iterator iter;
 				for(int count=0; count<nb_particules;count++){
-				
+					Point_3 Xn(S.solide[count].x0.operator[](0) + S.solide[count].Dx.operator[](0), S.solide[count].x0.operator[](1) + 
+					           S.solide[count].Dx.operator[](1),S.solide[count].x0.operator[](2) + S.solide[count].Dx.operator[](2));
+					double fx=0.,fy=0., fz=0.;
+					Kernel::FT mx=0,my=0,mz=0;
 					for(int it=0; it<S.solide[count].triangles.size(); it++){
 						Triangulation T(Points_interface[count][it].begin(), Points_interface[count][it].end());
 							assert(T.is_valid());
 							if(T.dimension()==2){
 								for (iter = T.finite_facets_begin(); iter != T.finite_facets_end(); iter++){
-									if(T.triangle(*iter).squared_area() >eps){
-										Triangle_3 Tri= T.triangle(*iter);
+									    Triangle_3 Tri= T.triangle(*iter);
+									    double aire= std::sqrt(CGAL::to_double(Tri.squared_area()));
+									if(aire >eps){
 										Vector_3 vect0(Tri.operator[](0),Tri.operator[](1));
 										Vector_3 vect1(Tri.operator[](0),Tri.operator[](2));
 										Vector_3 normale = CGAL::cross_product(vect0,vect1);
@@ -388,16 +413,35 @@ void Grille::parois(Solide& S) {
 										else {
 											S.solide[count].Triangles_interface[it].push_back(Triangle_3(Tri.operator[](0),Tri.operator[](2),Tri.operator[](1)));
 										}
+										if(dt>eps){	//Calcul des Forces fluides et Moments fluides exerces sur le solide
+											double tempx = (grille[a][b][c].pdtx/dt) * aire
+																			* (CGAL::to_double(S.solide[count].normales[it].x()));
+											double tempy = (grille[a][b][c].pdty/dt) * aire
+										                   * (CGAL::to_double( S.solide[count].normales[it].y()));
+											double tempz = (grille[a][b][c].pdtz/dt) *aire
+									                     * (CGAL::to_double( S.solide[count].normales[it].z()));
+										  Vector_3 temp_Mf = cross_product(Vector_3(Xn,Point_3(centroid(Tri.operator[](0),Tri.operator[](1),
+																												        Tri.operator[](2)))), Vector_3(tempx,tempy,tempz));
+										  fx-= tempx; fy-= tempy; fz-= tempz;
+										  mx+= temp_Mf.x(); my+= temp_Mf.y(); mz+= temp_Mf.z();
+										}
 									}
 								}
 							}
 					}
+					//Mise à jour des Forces fluides et Moments fluides exerces sur le solide
+					S.solide[count].Ff.x() =  S.solide[count].Ff.x() + fx; 
+					S.solide[count].Ff.y() =  S.solide[count].Ff.y() + fy; 
+					S.solide[count].Ff.z() =  S.solide[count].Ff.z() + fz;
+					S.solide[count].Mf.x() =  S.solide[count].Mf.x() + mx;
+					S.solide[count].Mf.y() =  S.solide[count].Mf.y() + my;
+					S.solide[count].Mf.z() =  S.solide[count].Mf.z() + mz;
 				}
 				
 			} //fin boucle sur grille
 		}
 	}	
-	cout << "Intersection time is: " << user_time.time() - time << " seconds." << endl;
+	//cout << "temps Parois : " << user_time.time() - time << " seconds." << endl;
 	user_time.reset();
 	cout<<"volume solide := "<<volume_s<<endl;
 }
@@ -465,7 +509,6 @@ double intersect_cube_tetrahedron(Bbox& cube, Tetrahedron& Tet){
 			if(T.is_valid()){
 				Finite_cells_iterator cit;
 				for (cit = T.finite_cells_begin(); cit!= T.finite_cells_end(); cit++){
-					//volume+= std::abs(CGAL::to_double(T.tetrahedron( cit).volume()));
 					volume+= CGAL::to_double(T.tetrahedron( cit).volume());
 				}
 			}

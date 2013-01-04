@@ -25,7 +25,7 @@ const int Nx =73;                 //nombre de cellules de fluide selon x
 const int Ny =23;                 //nombre de cellules de fluide selon y
 const int Nz =23;                 //nombre de cellules de fluide selon z
 
-const double domainex = 3.;            //Largeur du domaine fluide selon x
+const double domainex = 2.;            //Largeur du domaine fluide selon x
 const double domainey = 1.;          //Largeur du domaine fluide selon y
 const double domainez = 1.;          //Largeur du domaine fluide selon z
 
@@ -44,7 +44,7 @@ const double cfl = 0.5;            //valeur de la cfl fluide
 const double cfls = 0.5;           //Valeur de la cfl solide
 const int nimp = 10;                //Nombre d'impressions
 const double dtimp = T/nimp;        //Pas de temps entre deux impressions
-const int Nmax = 10000000;           //nombre maximal d'iterations en temps
+const int Nmax = 1000000;           //nombre maximal d'iterations en temps
 
 //Conditions aux limites
 //Type de CL :  1 = reflecting ("miroir"); 2 = periodic("periodique"); 3= outflow("transmisibles");

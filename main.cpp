@@ -35,7 +35,7 @@ int main(){
 	S.init("maillage.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	Grille Fluide;
 	Fluide.init();
-	Fluide.parois(S);
+	Fluide.parois(S, t);
 	Fluide.BC();
 
 	int iter=0;	
@@ -76,7 +76,7 @@ int main(){
 		S.solve_position(dt);
 		S.Forces_internes();
 		S.solve_vitesse(dt);
-		Fluide.parois(S);
+		Fluide.parois(S,dt);
 		//S.Affiche();
 		user_time.start();
 		int n0=0.,n1=0., m=0.;
