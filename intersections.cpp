@@ -65,7 +65,13 @@ void Grille::parois(Solide& S,double dt) {
 		//S.solide[it].Affiche();
 	}
 	
-
+	//Mise à jour des Forces fluides et Moments fluides exerces sur le solide 
+	for(int iter_s=0; iter_s<nb_particules; iter_s++){ //boucle sur les particules 
+		S.solide[iter_s].Ffprev = S.solide[iter_s].Ff;
+		S.solide[iter_s].Mfprev = S.solide[iter_s].Mf;
+		S.solide[iter_s].Ff = Vector_3(0.,0.,0.);
+		S.solide[iter_s].Ff = Vector_3(0.,0.,0.);
+	}
 	double volume_s=0.;
 	
 	Cellule cel;
@@ -98,9 +104,6 @@ void Grille::parois(Solide& S,double dt) {
 				bool point_in_cell = false;
 				Triangles trianglesB;
 				for(int iter_s=0; iter_s<nb_particules; iter_s++){ //boucle sur les particules 
-					//Mise à jour des Forces fluides et Moments fluides exerces sur le solide 
-					S.solide[iter_s].Ffprev = S.solide[iter_s].Ff;
-					S.solide[iter_s].Mfprev = S.solide[iter_s].Mf;
 					if (CGAL::do_intersect(box_grille[i],solide[iter_s]) ) {	
 						intersection = true;
 						box_in_solide = box_inside_convex_polygon(S.solide[iter_s],box_grille[i]);
@@ -394,8 +397,10 @@ void Grille::parois(Solide& S,double dt) {
 				for(int count=0; count<nb_particules;count++){
 					Point_3 Xn(S.solide[count].x0.operator[](0) + S.solide[count].Dx.operator[](0), S.solide[count].x0.operator[](1) + 
 					           S.solide[count].Dx.operator[](1),S.solide[count].x0.operator[](2) + S.solide[count].Dx.operator[](2));
-					double fx=0.,fy=0., fz=0.;
-					Kernel::FT mx=0,my=0,mz=0;
+			double fx=CGAL::to_double( S.solide[count].Ff.x());
+			double fy=CGAL::to_double( S.solide[count].Ff.y());
+			double fz=CGAL::to_double( S.solide[count].Ff.z());
+			Kernel::FT mx=S.solide[count].Mf.x(),my=S.solide[count].Mf.y(),mz=S.solide[count].Mf.z();
 					for(int it=0; it<S.solide[count].triangles.size(); it++){
 						Triangulation T(Points_interface[count][it].begin(), Points_interface[count][it].end());
 							assert(T.is_valid());
@@ -429,13 +434,9 @@ void Grille::parois(Solide& S,double dt) {
 								}
 							}
 					}
-					//Mise à jour des Forces fluides et Moments fluides exerces sur le solide
-					S.solide[count].Ff.x() =  S.solide[count].Ff.x() + fx; 
-					S.solide[count].Ff.y() =  S.solide[count].Ff.y() + fy; 
-					S.solide[count].Ff.z() =  S.solide[count].Ff.z() + fz;
-					S.solide[count].Mf.x() =  S.solide[count].Mf.x() + mx;
-					S.solide[count].Mf.y() =  S.solide[count].Mf.y() + my;
-					S.solide[count].Mf.z() =  S.solide[count].Mf.z() + mz;
+					//Mise à jour des Forces fluides et Moments fluides exerces sur le solide 
+					S.solide[count].Ff = Vector_3(fx,fy,fz);
+					S.solide[count].Mf = Vector_3(CGAL::to_double(mx),CGAL::to_double(my),CGAL::to_double(mz)); 
 				}
 				
 			} //fin boucle sur grille
@@ -444,6 +445,8 @@ void Grille::parois(Solide& S,double dt) {
 	//cout << "temps Parois : " << user_time.time() - time << " seconds." << endl;
 	user_time.reset();
 	cout<<"volume solide := "<<volume_s<<endl;
+	cout<<"Ff "<< S.solide[0].Ff<<endl;   
+	cout<<"Mf "<< S.solide[0].Mf<<endl; 
 }
 
 

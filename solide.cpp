@@ -361,6 +361,8 @@ Particule::Particule()
   Triangles_interface.resize(triangles.size(), std::vector<Triangle_3>(0));
 	Points_interface_prev.resize(triangles.size(), std::vector<Point_3>(0));
 	Triangles_interface_prev.resize(triangles.size(), std::vector<Triangle_3>(0));
+	Ff = Vector_3(0.,0.,0.); Ffprev = Vector_3(0.,0.,0.); 
+	Mf = Vector_3(0.,0.,0.); Mfprev = Vector_3(0.,0.,0.);
 }
 
 Particule::Particule(const double x_min, const double y_min, const double z_min, 
@@ -576,6 +578,8 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
   Triangles_interface.resize(triangles.size(), std::vector<Triangle_3>(0));
 	Points_interface_prev.resize(triangles.size(), std::vector<Point_3>(0));
 	Triangles_interface_prev.resize(triangles.size(), std::vector<Triangle_3>(0));
+	Ff = Vector_3(0.,0.,0.); Ffprev = Vector_3(0.,0.,0.); 
+	Mf = Vector_3(0.,0.,0.); Mfprev = Vector_3(0.,0.,0.);
 }
 
 
@@ -625,6 +629,8 @@ Particule::Particule(Point_3 c, const double x_min, const double y_min, const do
   Triangles_interface.resize(triangles.size(), std::vector<Triangle_3>(0));
 	Points_interface_prev.resize(triangles.size(), std::vector<Point_3>(0));
 	Triangles_interface_prev.resize(triangles.size(), std::vector<Triangle_3>(0));
+	Ff = Vector_3(0.,0.,0.); Ffprev = Vector_3(0.,0.,0.); 
+	Mf = Vector_3(0.,0.,0.); Mfprev = Vector_3(0.,0.,0.);
 }
 //Destructeur
 Particule::~Particule(){

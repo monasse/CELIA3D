@@ -1541,6 +1541,22 @@ void Grille::fnumx(const double sigma, double t){
         }
     }
     
+    if(BC_x_in ==  2 || BC_x_out ==  2){
+			for(int i=0;i<Nx+2*marge;i++){
+				for(int j=0;j<Ny+2*marge;j++){
+					for(int k=0;k<Nz+2*marge;k++){
+						if(i==Nx+marge-1){
+							grille[i][j][k].fluxi[0] = grille[marge-1][j][k].fluxi[0];
+							grille[i][j][k].fluxi[1] = grille[marge-1][j][k].fluxi[1];
+							grille[i][j][k].fluxi[2] = grille[marge-1][j][k].fluxi[2];
+							grille[i][j][k].fluxi[3] = grille[marge-1][j][k].fluxi[3];
+							grille[i][j][k].fluxi[4] = grille[marge-1][j][k].fluxi[4];
+						}
+					}
+				}
+			}
+		}
+    
 }
 
 
@@ -1944,6 +1960,22 @@ void Grille::fnumy(const double sigma, double t){
         }
     }
     
+    if(BC_y_in ==  2 || BC_y_out ==  2){
+			for(int i=0;i<Nx+2*marge;i++){
+				for(int j=0;j<Ny+2*marge;j++){
+					for(int k=0;k<Nz+2*marge;k++){
+						if(j==Ny+marge-1){
+							grille[i][j][k].fluxj[0] = grille[i][marge-1][k].fluxj[0];
+							grille[i][j][k].fluxj[1] = grille[i][marge-1][k].fluxj[1];
+							grille[i][j][k].fluxj[2] = grille[i][marge-1][k].fluxj[2];
+							grille[i][j][k].fluxj[3] = grille[i][marge-1][k].fluxj[3];
+							grille[i][j][k].fluxj[4] = grille[i][marge-1][k].fluxj[4];
+						}
+					}
+				}
+			}
+		}
+  
 }
 
 
@@ -2346,7 +2378,24 @@ void Grille::fnumz(const double sigma, double t){
                 
             } 
         }
-    }   
+    }
+    
+    
+    if(BC_z_in ==  2 || BC_z_out ==  2){
+			for(int i=0;i<Nx+2*marge;i++){
+				for(int j=0;j<Ny+2*marge;j++){
+					for(int k=0;k<Nz+2*marge;k++){
+						if(k==Nz+marge-1){
+							grille[i][j][k].fluxk[0] = grille[i][j][marge-1].fluxk[0];
+							grille[i][j][k].fluxk[1] = grille[i][j][marge-1].fluxk[1];
+							grille[i][j][k].fluxk[2] = grille[i][j][marge-1].fluxk[2];
+							grille[i][j][k].fluxk[3] = grille[i][j][marge-1].fluxk[3];
+							grille[i][j][k].fluxk[4] = grille[i][j][marge-1].fluxk[4];
+						}
+					}
+				}
+			}
+		}  
 }
 
 

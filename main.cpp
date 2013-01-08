@@ -30,12 +30,12 @@ int main(){
 		cout <<"ouverture de .dat rate" << endl;
 	}
 	
-	double t=0.;
+	double t=0., dt=0.;
 	Solide S;
 	S.init("maillage.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	Grille Fluide;
 	Fluide.init();
-	Fluide.parois(S, t);
+	Fluide.parois(S, dt);
 	Fluide.BC();
 
 	int iter=0;	
@@ -65,8 +65,8 @@ int main(){
 	  //cout<<"Energie: "<< Fluide.Energie()+S.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 		cout<<"Energie Fluide: "<< Fluide.Energie() << " Energie Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 	  ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S << endl;
-	  double dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
-		//double dt = 0.007;
+	   dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
+		//dt = 0.007;
 		//Fluide.affiche("avant Solve");
 		user_time2.start();
 		Fluide.Solve(dt, t, n);

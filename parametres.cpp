@@ -26,7 +26,7 @@ double W(double x,double y, double z){
 
   double p; 
   if(x<0.16)
-	{p = 1.;}
+	{p = 5.;}
  else {p = 1.;}
 
   return p; 

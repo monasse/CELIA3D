@@ -49,12 +49,12 @@ const int Nmax = 1000000;           //nombre maximal d'iterations en temps
 //Conditions aux limites
 //Type de CL :  1 = reflecting ("miroir"); 2 = periodic("periodique"); 3= outflow("transmisibles");
 
-const int BC_x_in =  3;                 // Inner Boundary Condition for x
-const int BC_x_out = 3;                 // Outer Boundary Condition for x
-const int BC_y_in =  3;                 // Inner Boundary Condition for y
-const int BC_y_out = 3;                 // Outer Boundary Condition for y
-const int BC_z_in =  3;                 // Inner Boundary Condition for z
-const int BC_z_out = 3;                 // Outer Boundary Condition for z
+const int BC_x_in =  2;                 // Inner Boundary Condition for x
+const int BC_x_out = 2;                 // Outer Boundary Condition for x
+const int BC_y_in =  2;                 // Inner Boundary Condition for y
+const int BC_y_out = 2;                 // Outer Boundary Condition for y
+const int BC_z_in =  2;                 // Inner Boundary Condition for z
+const int BC_z_out = 2;                 // Outer Boundary Condition for z
 
 double Rho(double x = 0.,double y = 0., double z = 0.);
 
