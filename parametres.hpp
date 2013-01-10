@@ -34,7 +34,7 @@ const double deltay = domainey/Ny;       //Pas d'espace pour le fluide selon y
 const double deltaz = domainez/Nz;       //Pas d'espace pour le fluide selon z
 
 //Parametres solides
-const double rhos = 1.; //Densite du solide 
+const double rhos = 10.; //Densite du solide 
 const double nu = 0.; //Coefficient de Poisson du materiau
 const double E = 6.e5; //Module d'Young du materiau
 
