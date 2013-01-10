@@ -1,6 +1,50 @@
 #include "fluide.hpp"
 #include "intersections.cpp"
 
+//Calcul des Forces fluides et Moments fluides exerces sur le solide	
+void Grille::Forces_fluide(Solide& S, const double dt){
+	
+	//Mise à jour des Forces fluides et Moments fluides exerces sur le solide 
+	for(int iter_s=0; iter_s<S.size(); iter_s++){ 
+		
+		S.solide[iter_s].Ffprev = S.solide[iter_s].Ff;
+		S.solide[iter_s].Mfprev = S.solide[iter_s].Mf;
+		Point_3 Xn(S.solide[iter_s].x0.operator[](0) + S.solide[iter_s].Dx.operator[](0), S.solide[iter_s].x0.operator[](1) + S.solide[iter_s].Dx.operator[](1),S.solide[iter_s].x0.operator[](2) + S.solide[iter_s].x0.operator[](2));
+    double fx=0.; double fy=0.; double fz=0.;
+		Kernel::FT mx = S.solide[iter_s].Mf.x(),my = S.solide[iter_s].Mf.y(),mz = S.solide[iter_s].Mf.z();
+		
+		for(int it=0; it<S.solide[iter_s].triangles.size(); it++){
+			for(int iter=0; iter<S.solide[iter_s].Position_Triangles_interface[it].size(); iter++)
+			{
+				double aire= std::sqrt(CGAL::to_double(S.solide[iter_s].Triangles_interface[it][iter].squared_area()));
+				if(dt>eps){	
+					int i= S.solide[iter_s].Position_Triangles_interface[it][iter][0]; 
+					int j= S.solide[iter_s].Position_Triangles_interface[it][iter][1]; 
+					int k= S.solide[iter_s].Position_Triangles_interface[it][iter][2]; 
+					
+					double tempx = (grille[i][j][k].pdtx/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].x()));
+					double tempy = (grille[i][j][k].pdty/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].y()));
+					double tempz = (grille[i][j][k].pdtz/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].z()));
+					
+					Vector_3 temp_Mf = cross_product(Vector_3(Xn,Point_3(centroid(S.solide[iter_s].Triangles_interface[it][iter].operator[](0),
+										                       S.solide[iter_s].Triangles_interface[it][iter].operator[](1),
+										                       S.solide[iter_s].Triangles_interface[it][iter].operator[](2)))), 
+																					 Vector_3(tempx,tempy,tempz));
+
+				fx-= tempx; fy-= tempy; fz-= tempz;
+				mx+= temp_Mf.x(); my+= temp_Mf.y(); mz+= temp_Mf.z();
+				}
+			}
+		}
+		
+		S.solide[iter_s].Ff = Vector_3(fx,fy,fz);
+		S.solide[iter_s].Mf = Vector_3(CGAL::to_double(mx),CGAL::to_double(my),CGAL::to_double(mz)); 
+		cout<<" Ff "<< S.solide[iter_s].Ff <<endl;
+		cout<<" Mf "<< S.solide[iter_s].Mf <<endl;
+	} //fin boucle sur les particules
+	
+}	
+
 
 void Grille::modif_fnum(const double dt){
 	

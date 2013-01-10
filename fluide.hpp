@@ -34,8 +34,10 @@ public :
   bool is_in_cell(double x,double y, double z);
 
   void Affiche ();  //fonction auxilaire utile pour les test :)
-
-protected:
+	
+// 	double getpdtx()const {return pdtx;} // return pdtx dans la cellule
+// 	double getpdty()const {return pdty;} // return pdty dans la cellule
+// 	double getpdtz()const {return pdtz;} // return pdtz dans la cellule
 
   double x;        //position du centre de la cellule 
   double y;
@@ -254,7 +256,7 @@ class Grille
   void corentz(double sigma);
    
   void Solve(const double dt, double t, int n);
-  
+	void Forces_fluide(Solide& S, const double dt); //Calcul des Forces fluides et Moments fluides exerces sur le solide	
   void parois(Solide& S,double dt);  // Mise a jour de Kappai,kappaj,kappak et alpha   
   void modif_fnum(const double dt);  //Modification du flux
   void mixage(); //Procedure de mixage pour le cellules avec c.alpha>0.5

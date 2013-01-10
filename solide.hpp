@@ -1,5 +1,4 @@
 #include "intersections.hpp"
-
 #ifndef SOLIDE_HPP
 #define SOLIDE_HPP
 
@@ -64,6 +63,7 @@ class Particule
   void CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &Tz, double &Txx, double &Tyy, double &Tzz, double &Txy, double &Tyz, double &Tzx);
   void Inertie();
   void Volume_libre();
+	//void forces_fluide(double dt); 	// Forces fluides et Moments fluides exerces sur le solide	
   void solve_position(double dt);
   void solve_vitesse(double dt);
 	Vector_3 vitesse_parois(Point_3& X_f);  // condition de non-penetration a la parois
@@ -88,7 +88,9 @@ class Particule
   std::vector< std::vector<Point_3> > Points_interface;
 	std::vector< std::vector<Point_3> > Points_interface_prev;
   std::vector< std::vector<Triangle_3> > Triangles_interface;
+	std::vector< std::vector< std::vector<int> > > Position_Triangles_interface;
 	std::vector< std::vector<Triangle_3> > Triangles_interface_prev;
+	std::vector< std::vector<std::vector<int> > > Position_Triangles_interface_prev;
   bool fixe;
   double m; //masse de la particule
   double V; //Volume de la particule
@@ -131,8 +133,9 @@ public:
   void init(const char* s);
   void solve_position(double dt);
   void solve_vitesse(double dt);
-  void update_triangles();
+	//void Forces_fluide(double dt);
   void Forces_internes();
+	void update_triangles();
   double Energie();
   double Energie_potentielle();
   double Energie_cinetique();

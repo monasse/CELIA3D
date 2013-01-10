@@ -359,8 +359,10 @@ Particule::Particule()
   fluide.push_back(true);
   Points_interface.resize(triangles.size(), std::vector<Point_3>(0));
   Triangles_interface.resize(triangles.size(), std::vector<Triangle_3>(0));
+	Position_Triangles_interface.resize(triangles.size(), std::vector< std::vector<int> >(0));
 	Points_interface_prev.resize(triangles.size(), std::vector<Point_3>(0));
 	Triangles_interface_prev.resize(triangles.size(), std::vector<Triangle_3>(0));
+	Position_Triangles_interface_prev.resize(triangles.size(), std::vector<std::vector<int> >(0));
 	Ff = Vector_3(0.,0.,0.); Ffprev = Vector_3(0.,0.,0.); 
 	Mf = Vector_3(0.,0.,0.); Mfprev = Vector_3(0.,0.,0.);
 }
@@ -576,8 +578,10 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
   fluide.push_back(true);
   Points_interface.resize(triangles.size(), std::vector<Point_3>(0));
   Triangles_interface.resize(triangles.size(), std::vector<Triangle_3>(0));
+	Position_Triangles_interface.resize(triangles.size(), std::vector< std::vector<int> >(0));
 	Points_interface_prev.resize(triangles.size(), std::vector<Point_3>(0));
 	Triangles_interface_prev.resize(triangles.size(), std::vector<Triangle_3>(0));
+	Position_Triangles_interface_prev.resize(triangles.size(), std::vector< std::vector<int> >(0));
 	Ff = Vector_3(0.,0.,0.); Ffprev = Vector_3(0.,0.,0.); 
 	Mf = Vector_3(0.,0.,0.); Mfprev = Vector_3(0.,0.,0.);
 }
@@ -627,8 +631,10 @@ Particule::Particule(Point_3 c, const double x_min, const double y_min, const do
   }
   Points_interface.resize(triangles.size(), std::vector<Point_3>(0));
   Triangles_interface.resize(triangles.size(), std::vector<Triangle_3>(0));
+	Position_Triangles_interface.resize(triangles.size(), std::vector< std::vector<int> >(0));
 	Points_interface_prev.resize(triangles.size(), std::vector<Point_3>(0));
 	Triangles_interface_prev.resize(triangles.size(), std::vector<Triangle_3>(0));
+	Position_Triangles_interface_prev.resize(triangles.size(), std::vector< std::vector<int> >(0));
 	Ff = Vector_3(0.,0.,0.); Ffprev = Vector_3(0.,0.,0.); 
 	Mf = Vector_3(0.,0.,0.); Mfprev = Vector_3(0.,0.,0.);
 }
@@ -902,6 +908,14 @@ void Particule::solve_position(double dt){
     omega = Vector_3(omega1,omega2,omega3);
     omega_half = omega;
   }//Fin du calcul dans le cas d'une particule libre
+  /*Test de fixer la rotation
+  rot[0][0]= rot[1][1] = rot[2][2] =1.;
+	rot[0][1] = rot[0][2] =rot[1][0] = rot[1][2] = rot[2][0] = rot[2][1] = 0.;
+	rotprev[0][0]= rotprev[1][1] = rotprev[2][2] =1.;
+	rotprev[0][1] = rotprev[0][2] =rotprev[1][0] = rotprev[1][2] = rotprev[2][0] = rotprev[2][1] = 0.;
+	omega = Vector_3(0.,0.,0.);
+	omega_half = omega;
+	//fin test */
   //Mise � jour de la transformation donnant le mouvement de la particule
   mvt_tprev = mvt_t;
   Aff_transformation_3 rotation(rot[0][0],rot[0][1],rot[0][2],rot[1][0],rot[1][1],rot[1][2],rot[2][0],rot[2][1],rot[2][2]);
@@ -1000,6 +1014,14 @@ void Particule::solve_vitesse(double dt){
       }
     }
     omega = Vector_3(omega1,omega2,omega3);
+		/*Test de fixer la rotation
+		rot[0][0]= rot[1][1] = rot[2][2] =1.;
+		rot[0][1] = rot[0][2] =rot[1][0] = rot[1][2] = rot[2][0] = rot[2][1] = 0.;
+		rotprev[0][0]= rotprev[1][1] = rotprev[2][2] =1.;
+		rotprev[0][1] = rotprev[0][2] =rotprev[1][0] = rotprev[1][2] = rotprev[2][0] = rotprev[2][1] = 0.;
+		omega = Vector_3(0.,0.,0.);
+		omega_half = omega;
+		//fin test */
   }//Fin du calcul dans le cas d'une particule libre
 }
 
@@ -1031,6 +1053,44 @@ Vector_3 Particule::vitesse_parois(Point_3& X_f){
 
 	return V_f;
 }	
+
+/*void Particule::forces_fluide(double dt){
+	//Calcul des Forces fluides et Moments fluides exerces sur le solide	
+	
+	Point_3 Xn(x0.operator[](0) + Dx.operator[](0), x0.operator[](1) + Dx.operator[](1),x0.operator[](2) + x0.operator[](2));
+	double fx=CGAL::to_double(Ff.x());
+	double fy=CGAL::to_double(Ff.y());
+	double fz=CGAL::to_double(Ff.z());
+	Kernel::FT mx = Mf.x(),my = Mf.y(),mz = Mf.z();
+	
+	for(int it=0; it<triangles.size(); it++){
+		for(int iter=0; iter<Position_Triangles_interface[it].size(); iter++)
+		{
+			double aire= std::sqrt(CGAL::to_double(Triangles_interface[it][iter].squared_area()));
+			if(dt>eps){	
+				int i= Position_Triangles_interface[it][iter][0]; 
+				int j= Position_Triangles_interface[it][iter][1]; 
+				int k= Position_Triangles_interface[it][iter][2]; 
+				double pdtx = 0.; //Fluide.grille[i][j][k].getpdtx();
+				double pdty = 0.; //Fluide.grille[i][j][k].getpdty();
+				double pdtz = 0.; //Fluide.grille[i][j][k].getpdtz();
+				double tempx = (pdtx/dt) * aire * (CGAL::to_double(normales[it].x()));
+				double tempy = (pdty/dt) * aire * (CGAL::to_double(normales[it].y()));
+				double tempz = (pdtz/dt) * aire * (CGAL::to_double(normales[it].z()));
+				
+				Vector_3 temp_Mf = cross_product(Vector_3(Xn,Point_3(centroid(Triangles_interface[it][iter].operator[](0),
+								 Triangles_interface[it][iter].operator[](1),Triangles_interface[it][iter].operator[](2)))), Vector_3(tempx,tempy,tempz));
+								 
+				fx-= tempx; fy-= tempy; fz-= tempz;
+				mx+= temp_Mf.x(); my+= temp_Mf.y(); mz+= temp_Mf.z();
+			}
+		}
+	}
+	
+	Ff = Vector_3(fx,fy,fz);
+	Mf = Vector_3(CGAL::to_double(mx),CGAL::to_double(my),CGAL::to_double(mz)); 
+	
+}*/	
 
 void Face::compProjectionIntegrals(double &P1, double &Pa, double &Pb, double &Paa, double &Pab, double &Pbb, double &Paaa, double &Paab, double &Pabb, double &Pbbb, int a, int b, int c){
   //Utilisation de la fonction decrite par Brian Mirtich 1996 (cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar)
@@ -1875,6 +1935,12 @@ void Solide::solve_vitesse(double dt){
   }
 }
 
+// void Solide::Forces_fluide(double dt){
+// 	for(int i=0;i<size();i++){
+// 		solide[i].forces_fluide(dt);
+// 	}
+// }
+
 void Solide::update_triangles(){
   for(int i=0;i<solide.size();i++){
     solide[i].triangles_prev = solide[i].triangles;
@@ -1883,9 +1949,11 @@ void Solide::update_triangles(){
 		for(int it=0;it<solide[i].triangles.size();it++){
 			solide[i].Points_interface_prev[it] = solide[i].Points_interface[it];
 			solide[i].Triangles_interface_prev[it] = solide[i].Triangles_interface[it];
+			solide[i].Position_Triangles_interface_prev[it] = solide[i].Position_Triangles_interface[it];
 			solide[i].Points_interface[it].erase(solide[i].Points_interface[it].begin(),solide[i].Points_interface[it].end());
-			solide[i].Triangles_interface[it].erase(solide[i].Triangles_interface[it].begin(),solide[i].Triangles_interface[it].end());
-		}
+			solide[i].Triangles_interface[it].erase(solide[i].Triangles_interface[it].begin(),solide[i].Triangles_interface[it].end());	solide[i].Position_Triangles_interface[it].erase(solide[i].Position_Triangles_interface[it].begin(),
+                                                       solide[i].Position_Triangles_interface[it].end());
+    }
     solide[i].triangles.erase(solide[i].triangles.begin(),solide[i].triangles.end());
     solide[i].normales.erase(solide[i].normales.begin(),solide[i].normales.end());
     solide[i].fluide.erase(solide[i].fluide.begin(),solide[i].fluide.end());
