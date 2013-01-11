@@ -29,7 +29,7 @@ void Grille::Forces_fluide(Solide& S, const double dt){
 					Vector_3 temp_Mf = cross_product(Vector_3(Xn,Point_3(centroid(S.solide[iter_s].Triangles_interface[it][iter].operator[](0),
 										                       S.solide[iter_s].Triangles_interface[it][iter].operator[](1),
 										                       S.solide[iter_s].Triangles_interface[it][iter].operator[](2)))), 
-																					 Vector_3(tempx,tempy,tempz));
+																					 Vector_3(-tempx,-tempy,-tempz));
 
 				fx-= tempx; fy-= tempy; fz-= tempz;
 				mx+= temp_Mf.x(); my+= temp_Mf.y(); mz+= temp_Mf.z();
