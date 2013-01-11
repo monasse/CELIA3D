@@ -818,7 +818,7 @@ void Particule::solve_position(double dt){
       etemp1 = x1;
       etemp2 = x2;
       etemp3 = x3;
-			//Test : on fixe la rotation en x et y
+			/* //Test : on fixe la rotation en x et y
 			etemp1 = 0.;
 			etemp2 = 0.;
 			//fin test */
@@ -912,6 +912,7 @@ void Particule::solve_position(double dt){
     omega = Vector_3(omega1,omega2,omega3);
     omega_half = omega;
   }//Fin du calcul dans le cas d'une particule libre
+  
   /*Test de fixer la rotation
   rot[0][0]= rot[1][1] = rot[2][2] =1.;
 	rot[0][1] = rot[0][2] =rot[1][0] = rot[1][2] = rot[2][0] = rot[2][1] = 0.;
@@ -920,6 +921,7 @@ void Particule::solve_position(double dt){
 	omega = Vector_3(0.,0.,0.);
 	omega_half = omega;
 	//fin test */
+	
   //Mise � jour de la transformation donnant le mouvement de la particule
   mvt_tprev = mvt_t;
   Aff_transformation_3 rotation(rot[0][0],rot[0][1],rot[0][2],rot[1][0],rot[1][1],rot[1][2],rot[2][0],rot[2][1],rot[2][2]);
@@ -1017,11 +1019,12 @@ void Particule::solve_vitesse(double dt){
 	omega3 -= Q[0][i]*z[i][j]*Q[1][j];
       }
     }
-    //Test pour fixer les composantes x et y de la rotation
+   /* //Test pour fixer les composantes x et y de la rotation
 		omega1 = 0.;
 		omega2 = 0.;
 		//fin test */
     omega = Vector_3(omega1,omega2,omega3);
+		
 		/*Test de fixer la rotation
 		rot[0][0]= rot[1][1] = rot[2][2] =1.;
 		rot[0][1] = rot[0][2] =rot[1][0] = rot[1][2] = rot[2][0] = rot[2][1] = 0.;
@@ -1030,6 +1033,7 @@ void Particule::solve_vitesse(double dt){
 		omega = Vector_3(0.,0.,0.);
 		omega_half = omega;
 		//fin test */
+		
   }//Fin du calcul dans le cas d'une particule libre
 }
 
