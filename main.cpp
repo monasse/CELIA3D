@@ -39,7 +39,7 @@ int main(){
 
 
 	Solide S;
-	S.init("maillage.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
+	S.init("maillage2.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	//S.Affiche();
 
 	Grille Fluide;
@@ -77,7 +77,7 @@ int main(){
 		cout<<"Energie: "<< Fluide.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 	  ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S << endl;
 	  double dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
-	 // double dt = 0.01;
+	 //double dt = 0.03;
 		//Fluide.affiche("avant Solve");
 		user_time2.start();
 		Fluide.Solve(dt, t, n);

@@ -409,7 +409,6 @@ void Grille::parois(Solide& S) {
 					}
 				}
 		//fin test 27 nov
-
 			} //fin boucle sur grille
 		}
 	}
