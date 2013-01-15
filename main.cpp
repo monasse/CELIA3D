@@ -84,7 +84,7 @@ int main(){
 		Fluide.swap_2d(dt,S,n0,n1,m);
 		cout << "Temps swap: " << user_time.time() << " seconds." << endl;
 		user_time.reset();
-		cout<<"Triangles en n "<<n0<<" Triangles en n+1 "<<n1<<" Triangles sous maillage "<<m<<endl;
+		//cout<<"Triangles en n "<<n0<<" Triangles en n+1 "<<n1<<" Triangles sous maillage "<<m<<endl;
 		Fluide.modif_fnum(dt);
 		//Fluide.affiche("modif_fnum");
 		Fluide.mixage();
