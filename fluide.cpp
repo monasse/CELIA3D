@@ -18,10 +18,7 @@ using namespace std;  // espace de nom standard
 
 Cellule::Cellule()
 {
-	//test 9 nov
-	delta_w =0.;
-	//fin test 9 nov
-	
+
     x = y = z = 1.;
     
     dx = dy = dz = 1.;
@@ -69,7 +66,7 @@ Cellule::Cellule()
         
         rp[l] = rm[l] = 1.; 
         
-        fluxi[l] = fluxj[l] = fluxk[l] = flux_modif[l] = 0.; 
+				fluxi[l] = fluxj[l] = fluxk[l] = flux_modif[l] = delta_w[l] = 0.; 
         
         Qci[l] = Qcj[l] = Qck[l] = 0.; 
         
@@ -105,12 +102,9 @@ Cellule::Cellule()
 
 Cellule::Cellule(double x0, double y0, double z0)
 {
-	//test 9 nov
-	delta_w =0.;
-	//fin test 9 nov
+
     x=x0; y=y0; z=z0;
-    
-    
+     
     dx = dy = dz = 1.;
     
     rho = rho1 = 1.;
@@ -156,7 +150,7 @@ Cellule::Cellule(double x0, double y0, double z0)
         
         rp[l] = rm[l] = 1.; 
         
-        fluxi[l] = fluxj[l] = fluxk[l] = flux_modif[l] = 0.; 
+				fluxi[l] = fluxj[l] = fluxk[l] = flux_modif[l] = delta_w[l] = 0.; 
         
         Qci[l] = Qcj[l] = Qck[l] = 0.; 
         
@@ -193,9 +187,7 @@ Cellule::Cellule(double x0, double y0, double z0)
 
 Cellule::Cellule(double x0, double y0, double z0, double dx0, double dy0, double dz0)
 {
-	//test 9 nov
-	delta_w =0.;
-	//fin test 9 nov
+
     x = x0; y = y0; z = z0;
     
     dx = dx0 ; dy = dy0 ; dz = dz0 ;
@@ -244,7 +236,7 @@ Cellule::Cellule(double x0, double y0, double z0, double dx0, double dy0, double
         
         rp[l] = rm[l] = 1.; 
         
-        fluxi[l] = fluxj[l] = fluxk[l] = 0.; 
+				fluxi[l] = fluxj[l] = fluxk[l] = flux_modif[l] = delta_w[l] = 0.; 
         
         Qci[l] = Qcj[l] = Qck[l] = 0.; 
         
@@ -277,13 +269,10 @@ Cellule::Cellule(double x0, double y0, double z0, double dx0, double dy0, double
     
 }
 
-
 Cellule & Cellule:: operator=(const Cellule &c){
     
     assert(this != &c);	
-		//test 9 nov
-		delta_w = c.delta_w;
-		//fin test 9 nov
+
     x = c.x; y = c.y; z = c.z;
     
     dx = c.dx ; dy = c.dy ; dz = c.dz ;
@@ -317,9 +306,7 @@ Cellule & Cellule:: operator=(const Cellule &c){
     
     S = c.S;
     
-    
     fex = c.fex; fey = c.fey; fez = c.fez;
-    
     
     for(int l=0;l<5;l++){ 
         
@@ -328,6 +315,8 @@ Cellule & Cellule:: operator=(const Cellule &c){
         
          fluxi[l] = c.fluxi[l]; fluxj[l] = c.fluxj[l]; fluxk[l] = c.fluxk[l];  
 	       //flux_modif[l] = c.flux_modif[l];
+				 delta_w[l] =c.delta_w[l];
+				 
 				 dtfxi[l] = c.dtfxi[l]; dtfyj[l] = c.dtfyj[l]; dtfzk[l] = c.dtfzk[l];
 				 
         Qci[l] = c.Qci[l]; Qcj[l] = c.Qcj[l]; Qck[l] = c.Qck[l];
@@ -382,9 +371,7 @@ bool Cellule :: is_in_cell(double x0,double y0, double z0)
     bool k = false;
     
 		if( (( dx*(1./2.) - abs(x0-x) )>-1.*eps)  && (( dy*(1./2.) - abs(y0-y) )>-1.*eps) && (( dz*(1./2.) - abs(z0-z) )>-1.*eps) )
-	{
-        k= true;
-	}
+			{ k= true;}
     return k;
 }
 
@@ -445,15 +432,7 @@ void Cellule :: Affiche (){
 
 Grille::Grille(): grille(Nx+2*marge, vector< vector<Cellule> >(Ny+2*marge, vector<Cellule>(Nz+2*marge)) ){
 	//Grille::Grille(){ 
-	
-// 		grille.resize(Nx+2*marge);
-// 		for (int i = 0; i < Nx+2*marge; i++) {
-// 			grille[i].resize(Ny+2*marge);
-// 			
-// 			for (int j = 0; j <Ny+2*marge; j++)
-// 				grille[i][j].resize(Nz+2*marge);
-// 		}
-		
+			
     x = X0; y = Y0; z = Z0;
     
     dx = deltax; dy = deltay; dz = deltaz;
@@ -581,40 +560,10 @@ void Grille::in_cell(Point_3 p, int &i, int& j, int& k, bool& interieur){
 	k = (int) (floor(CGAL::to_double((p.operator[](2)-z)/dz))+marge);
 
 
-	if(i<0 || i>Nx+2*marge || j<0 || j>Ny+2*marge || k<0 || k>Nz+2*marge){
-		interieur= false ;
-	}
-	else {
-		interieur = true;
-// 		Cellule c= cellule(i,j,k);
-// 		if(std::abs(c.alpha -1.)<eps){
-// 			double x= CGAL::to_double(p.operator[](0));
-// 			double y= CGAL::to_double(p.operator[](1));
-// 			double z= CGAL::to_double(p.operator[](2));
-// 			Cellule cd= cellule(i+1,j,k);
-// 			if (cd.is_in_cell(x,y,z) ) {i=i+1;}
-// 			else{
-// 				Cellule cg= cellule(i-1,j,k);
-// 				if (cg.is_in_cell(x,y,z)) {i=i-1;}
-// 				else{
-// 					Cellule ch= cellule(i,j+1,k);
-// 					if (ch.is_in_cell(x,y,z)) {j=j+1;}
-// 					else{
-// 						Cellule cb= cellule(i,j-1,k);
-// 						if (cb.is_in_cell(x,y,z)) {j=j-1;}
-// 						else{
-// 							Cellule cd= cellule(i,j,k+1);
-// 							if (cd.is_in_cell(x,y,z)) {k=k+1;}
-// 							else{
-// 								Cellule cder= cellule(i,j,k-1);
-// 								if (cder.is_in_cell(x,y,z)) {k=k-1;}
-// 							}
-// 						}
-// 					}
-// 				}
-// 			}
-// 		} // end if alpha==1
-	} //end else 
+	if (i<0 || i>Nx+2*marge || j<0 || j>Ny+2*marge || k<0 || k>Nz+2*marge)
+		{interieur= false ;}
+	else {interieur = true;} //end else 
+
 }
 //Sous-programme de definition des conditions initiales 
 void Grille::init(){
@@ -1592,6 +1541,22 @@ void Grille::fnumx(const double sigma, double t){
         }
     }
     
+    if(BC_x_in ==  2 || BC_x_out ==  2){
+			for(int i=0;i<Nx+2*marge;i++){
+				for(int j=0;j<Ny+2*marge;j++){
+					for(int k=0;k<Nz+2*marge;k++){
+						if(i==Nx+marge-1){
+							grille[i][j][k].fluxi[0] = grille[marge-1][j][k].fluxi[0];
+							grille[i][j][k].fluxi[1] = grille[marge-1][j][k].fluxi[1];
+							grille[i][j][k].fluxi[2] = grille[marge-1][j][k].fluxi[2];
+							grille[i][j][k].fluxi[3] = grille[marge-1][j][k].fluxi[3];
+							grille[i][j][k].fluxi[4] = grille[marge-1][j][k].fluxi[4];
+						}
+					}
+				}
+			}
+		}
+    
 }
 
 
@@ -1995,6 +1960,22 @@ void Grille::fnumy(const double sigma, double t){
         }
     }
     
+    if(BC_y_in ==  2 || BC_y_out ==  2){
+			for(int i=0;i<Nx+2*marge;i++){
+				for(int j=0;j<Ny+2*marge;j++){
+					for(int k=0;k<Nz+2*marge;k++){
+						if(j==Ny+marge-1){
+							grille[i][j][k].fluxj[0] = grille[i][marge-1][k].fluxj[0];
+							grille[i][j][k].fluxj[1] = grille[i][marge-1][k].fluxj[1];
+							grille[i][j][k].fluxj[2] = grille[i][marge-1][k].fluxj[2];
+							grille[i][j][k].fluxj[3] = grille[i][marge-1][k].fluxj[3];
+							grille[i][j][k].fluxj[4] = grille[i][marge-1][k].fluxj[4];
+						}
+					}
+				}
+			}
+		}
+  
 }
 
 
@@ -2397,7 +2378,24 @@ void Grille::fnumz(const double sigma, double t){
                 
             } 
         }
-    }   
+    }
+    
+    
+    if(BC_z_in ==  2 || BC_z_out ==  2){
+			for(int i=0;i<Nx+2*marge;i++){
+				for(int j=0;j<Ny+2*marge;j++){
+					for(int k=0;k<Nz+2*marge;k++){
+						if(k==Nz+marge-1){
+							grille[i][j][k].fluxk[0] = grille[i][j][marge-1].fluxk[0];
+							grille[i][j][k].fluxk[1] = grille[i][j][marge-1].fluxk[1];
+							grille[i][j][k].fluxk[2] = grille[i][j][marge-1].fluxk[2];
+							grille[i][j][k].fluxk[3] = grille[i][j][marge-1].fluxk[3];
+							grille[i][j][k].fluxk[4] = grille[i][j][marge-1].fluxk[4];
+						}
+					}
+				}
+			}
+		}  
 }
 
 

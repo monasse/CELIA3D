@@ -34,11 +34,11 @@ public :
   bool is_in_cell(double x,double y, double z);
 
   void Affiche ();  //fonction auxilaire utile pour les test :)
+	
+// 	double getpdtx()const {return pdtx;} // return pdtx dans la cellule
+// 	double getpdty()const {return pdty;} // return pdty dans la cellule
+// 	double getpdtz()const {return pdtz;} // return pdtz dans la cellule
 
-protected:
-  //test 9 nov
-	double delta_w;
-	//fin test 9 nov
   double x;        //position du centre de la cellule 
   double y;
   double z; 
@@ -105,8 +105,9 @@ protected:
   double fluxj[5];     //Flux en haut de la cellule
   double fluxk[5];     //Flux en bas de la cellule
   
-  double flux_modif[5]; 
-	double phi_x;   //necessaire pour le calcul du flux à la parois
+  double flux_modif[5]; //modification flux pour les cellules coupees
+	double delta_w[5];    //quantitee balayee
+	double phi_x;        //necessaire pour le calcul du flux à la parois
   double phi_y;
   double phi_z;     
   double phi_v;  
@@ -255,15 +256,16 @@ class Grille
   void corentz(double sigma);
    
   void Solve(const double dt, double t, int n);
-  
-  void parois(Solide& S);  // Mise a jour de Kappai,kappaj,kappak et alpha   
+	void Forces_fluide(Solide& S, const double dt); //Calcul des Forces fluides et Moments fluides exerces sur le solide	
+  void parois(Solide& S,double dt);  // Mise a jour de Kappai,kappaj,kappak et alpha   
   void modif_fnum(const double dt);  //Modification du flux
   void mixage(); //Procedure de mixage pour le cellules avec c.alpha>0.5
   void fill_cel(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.)
 	//void fill_cel_old(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.) old version
-	void swap_modification_flux(Triangles& T3d_prev, Triangles& T3d_n, const double dt);
+	void swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt);
 	void cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,int& kn1, std::vector<Bbox>& box_cells, std::vector<Cellule>& Cells);
-	void swap(const double dt, Solide& S,int& n, int &n1, int& m);
+	void swap_2d(const double dt, Solide& S,int& n, int &n1, int& m);
+	void swap_3d(const double dt, Solide& S,int& n, int &n1, int& m);
 private :
 
   double x;          //position de l'origine

@@ -13,6 +13,7 @@
 #include <CGAL/Bbox_2.h>
 #include <CGAL/Timer.h>
 #include <CGAL/Triangulation_3.h>
+#include <CGAL/Triangulation_2.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Tetrahedron_3.h>
 #include <CGAL/algorithm.h>
@@ -48,6 +49,10 @@ typedef Triangulation::Finite_facets_iterator Finite_faces_iterator;
 typedef Triangulation::Finite_cells_iterator Finite_cells_iterator;
 typedef Polyhedron_3::Facet_iterator   Facet_iterator;
 typedef Triangles::iterator            Triangle3_iterator;
+
+
+//Triangulation 2d 
+typedef CGAL::Triangulation_2<Kernel>    Triangulation_2;
 
 ////Constrained Triangulation
 typedef CGAL::Triangulation_vertex_base_2<Kernel>                     Vb;

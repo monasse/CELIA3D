@@ -1,16 +1,11 @@
 #include <iostream>
 #include <ctime>
-
-//#include "fluide.hpp"
 #include "fluide.cpp"
-#include "couplage.cpp"
-//#include "parametres.hpp"
-#include "parametres.cpp"
 #include "solide.cpp"
-
+#include "couplage.cpp"
+#include "parametres.cpp"
 
 using namespace std;          // espace de nom standard
-
 
 int main(){
   char tempsF[]="resultats/tempsF.dat";
@@ -35,22 +30,16 @@ int main(){
 		cout <<"ouverture de .dat rate" << endl;
 	}
 	
-	double t=0.;
-
-
+	double t=0., dt=0.;
 	Solide S;
-	S.init("maillage2.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
-	//S.Affiche();
-
+	S.init("maillage.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	Grille Fluide;
 	Fluide.init();
-	Fluide.parois(S);
+	Fluide.parois(S, dt);
 	Fluide.BC();
 
-	int iter=0;
-	
+	int iter=0;	
 	clock_t start,end;
-	
 	start =clock();
 
 	int kimp = 0; //Numero de suivi de l'impression
@@ -61,7 +50,7 @@ int main(){
 	
 	double E0 = Fluide.Energie()+S.Energie();
 	double E0S= S.Energie();
-
+	double masse = Fluide.Masse();
 	S.Forces_internes();
 	
 	CGAL::Timer user_time, user_time2;
@@ -74,29 +63,37 @@ int main(){
 			next_timp += dtimp;
 		}
 	  //cout<<"Energie: "<< Fluide.Energie()+S.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
+<<<<<<< HEAD
 		cout<<"Energie: "<< Fluide.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 	  ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S << endl;
 	  double dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
 	 //double dt = 0.03;
+=======
+		cout<<"Energie Fluide: "<< Fluide.Energie() << " Energie Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
+		ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S <<" "<<Fluide.Masse() - masse <<endl;
+	   dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
+		//dt = 0.007;
+>>>>>>> origin/master
 		//Fluide.affiche("avant Solve");
 		user_time2.start();
 		Fluide.Solve(dt, t, n);
 		cout << "Temps calcul flux: " << user_time2.time() << " seconds." << endl;
 		user_time2.reset();
 		//Fluide.affiche("Solve");
+		Fluide.Forces_fluide(S,dt);
 		S.solve_position(dt);
 		S.Forces_internes();
 		S.solve_vitesse(dt);
-		Fluide.parois(S);
+		Fluide.parois(S,dt);
 		//S.Affiche();
-		Fluide.modif_fnum(dt);
-		//Fluide.affiche("modif_fnum");
 		user_time.start();
 		int n0=0.,n1=0., m=0.;
-		Fluide.swap(dt,S,n0,n1,m);
+		Fluide.swap_2d(dt,S,n0,n1,m);
 		cout << "Temps swap: " << user_time.time() << " seconds." << endl;
 		user_time.reset();
-		cout<<" triangles en n "<<n0<<" triangles en n+1 "<<n1<<" triangles sous maillage "<<m<<endl;
+		//cout<<"Triangles en n "<<n0<<" Triangles en n+1 "<<n1<<" Triangles sous maillage "<<m<<endl;
+		Fluide.modif_fnum(dt);
+		//Fluide.affiche("modif_fnum");
 		Fluide.mixage();
 		//Fluide.affiche("mixage");
 		Fluide.fill_cel(S);
@@ -118,12 +115,6 @@ int main(){
 	out <<"Temps de calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl;     
 	cout<<"nb iter= "<< iter<<endl;    
 	cout <<"Temps de calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl;  
-	
-// 	//test 8 nov
-// 	Fluide.affiche();
-// 	//fin test 8 nov
-	
+
 	return 0;
-	
-	
 }

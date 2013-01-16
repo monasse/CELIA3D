@@ -9,7 +9,7 @@ double Rho(double x,double y, double z){
   return rho; 
 } 
 double U(double x,double y, double z){ 
-   double u = 1.;
+   double u = 0.;
   return u; 
  }
  double V(double x,double y, double z){ 
@@ -26,7 +26,7 @@ double W(double x,double y, double z){
 
   double p; 
   if(x<0.16)
-	{p = 1.;}
+	{p = 5.;}
  else {p = 1.;}
 
   return p; 
