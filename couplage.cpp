@@ -9,9 +9,9 @@ void Grille::Forces_fluide(Solide& S, const double dt){
 		
 		S.solide[iter_s].Ffprev = S.solide[iter_s].Ff;
 		S.solide[iter_s].Mfprev = S.solide[iter_s].Mf;
-		Point_3 Xn(S.solide[iter_s].x0.operator[](0) + S.solide[iter_s].Dx.operator[](0), S.solide[iter_s].x0.operator[](1) + S.solide[iter_s].Dx.operator[](1),S.solide[iter_s].x0.operator[](2) + S.solide[iter_s].x0.operator[](2));
+		Point_3 Xn(S.solide[iter_s].x0.operator[](0) + S.solide[iter_s].Dx.operator[](0), S.solide[iter_s].x0.operator[](1) + S.solide[iter_s].Dx.operator[](1),S.solide[iter_s].x0.operator[](2) + S.solide[iter_s].Dx.operator[](2));
     double fx=0.; double fy=0.; double fz=0.;
-		Kernel::FT mx = S.solide[iter_s].Mf.x(),my = S.solide[iter_s].Mf.y(),mz = S.solide[iter_s].Mf.z();
+    Kernel::FT mx = 0.,my = 0.,mz = 0.;
 		
 		for(int it=0; it<S.solide[iter_s].triangles.size(); it++){
 			for(int iter=0; iter<S.solide[iter_s].Position_Triangles_interface[it].size(); iter++)
@@ -67,10 +67,10 @@ void Grille::modif_fnum(const double dt){
 						c.flux_modif[l] -= (1.-c.kappai)*c.dtfxi[l] - (1.-ci.kappai)*ci.dtfxi[l]
 						+ (1.-c.kappaj)*c.dtfyj[l] - (1.-cj.kappaj)*cj.dtfyj[l]
 						+ (1.-c.kappak)*c.dtfzk[l] - (1.-ck.kappak)*ck.dtfzk[l] - c.delta_w[l];
-						if(std::abs(c.flux_modif[l])>eps){
+						//if(std::abs(c.flux_modif[l])>eps){
 						c.flux_modif[l] /= (1.-c.alpha);
-						}
-						else {c.flux_modif[l] = 0.;}
+						//}
+						//else {c.flux_modif[l] = 0.;}
 					}		
 					//Mise a jour des valeurs dans le cellules
 					c.rho = c.rho0  +  c.flux_modif[0];

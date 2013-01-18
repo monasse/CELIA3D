@@ -819,8 +819,8 @@ void Particule::solve_position(double dt){
       etemp2 = x2;
       etemp3 = x3;
 			//Test : on fixe la rotation en x et y
-			etemp1 = 0.;
-			etemp2 = 0.;
+			//etemp1 = 0.;
+			//etemp2 = 0.;
 			//fin test */
       if(etemp1*etemp1+etemp2*etemp2+etemp3*etemp3>0.5){
 	    etemp1 /=2.;
@@ -1018,8 +1018,8 @@ void Particule::solve_vitesse(double dt){
       }
     }
     //Test pour fixer les composantes x et y de la rotation
-		omega1 = 0.;
-		omega2 = 0.;
+    //	omega1 = 0.;
+    //omega2 = 0.;
 		//fin test */
     omega = Vector_3(omega1,omega2,omega3);
 		/*//Test de fixer la rotation
@@ -1057,7 +1057,7 @@ double Particule::volume(){
 
 Vector_3 Particule::vitesse_parois(Point_3& X_f){
 		
-	Vector_3 V_f = u_half + cross_product(omega_half, Vector_3(Point_3(x0.operator[](0) + Dx.operator[](0), x0.operator[](1) + Dx.operator[](1),x0.operator[](2) + Dx.operator[](2)),X_f));
+  Vector_3 V_f = u_half + cross_product(omega_half, Vector_3(Point_3(x0.operator[](0) + Dx.operator[](0), x0.operator[](1) + Dx.operator[](1),x0.operator[](2) + Dx.operator[](2)),X_f));
 
 	return V_f;
 }	
