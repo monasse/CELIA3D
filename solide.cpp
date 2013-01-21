@@ -818,10 +818,10 @@ void Particule::solve_position(double dt){
       etemp1 = x1;
       etemp2 = x2;
       etemp3 = x3;
-			//Test : on fixe la rotation en x et y
-			etemp1 = 0.;
-			etemp2 = 0.;
-			//fin test */
+// 	  //Test : on fixe la rotation en x et y
+// 			etemp1 = 0.;
+// 			etemp2 = 0.;
+// 			//fin test 
       if(etemp1*etemp1+etemp2*etemp2+etemp3*etemp3>0.5){
 	    etemp1 /=2.;
 	    etemp2 /=2.;
@@ -1017,10 +1017,10 @@ void Particule::solve_vitesse(double dt){
 	omega3 -= Q[0][i]*z[i][j]*Q[1][j];
       }
     }
-    //Test pour fixer les composantes x et y de la rotation
-		omega1 = 0.;
-		omega2 = 0.;
-		//fin test */
+//     //Test pour fixer les composantes x et y de la rotation
+// 		omega1 = 0.;
+// 		omega2 = 0.;
+// 		//fin test 
     omega = Vector_3(omega1,omega2,omega3);
 		/*//Test de fixer la rotation
 		rot[0][0]= rot[1][1] = rot[2][2] =1.;

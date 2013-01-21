@@ -65,7 +65,7 @@ int main(){
 	  //cout<<"Energie: "<< Fluide.Energie()+S.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 		cout<<"Energie Fluide: "<< Fluide.Energie() << " Energie Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 		ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S <<" "<<Fluide.Masse() - masse <<endl;
-	   dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
+		dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
 		//dt = 0.007;
 		//Fluide.affiche("avant Solve");
 		user_time2.start();
