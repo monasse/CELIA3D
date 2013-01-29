@@ -50,7 +50,7 @@ int main(){
 
 	int kimp = 0; //Numero de suivi de l'impression
 	double next_timp = dtimp; //Instant de la prochaine impression
-	Fluide.impression(kimp);
+       	Fluide.impression(kimp);
 	S.impression(kimp);
 	kimp++;
 	

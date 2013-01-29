@@ -1,5 +1,6 @@
 #include "solide.hpp"
 #include "intersections.hpp"
+#include<iostream>
 #ifndef SOLIDE_CPP
 #define SOLIDE_CPP
 
@@ -1905,6 +1906,118 @@ void Solide::init(const char* s){
     solide[i].mvt_t = Aff_transformation_3(1,0,0,0,1,0,0,0,1);
     solide[i].mvt_tprev = Aff_transformation_3(1,0,0,0,1,0,0,0,1);
   }
+
+  //En cas de reprise
+  if(rep){
+    std::ostringstream oss;
+    oss << "resultats/solide" << numrep << ".vtk";
+    string s = oss.str();
+    const char* nom = s.c_str();
+    std::ifstream init(nom,std::ios::in);
+    string dump;
+    int nb_part = solide.size();
+    int nb_triangles = 0.;
+    for(int it=0; it<nb_part; it++){
+      nb_triangles += solide[it].triangles.size();
+    }
+    for(int it=0;it<5*nb_triangles+13;it++){
+      getline(init,dump);
+    }
+    cout << dump << endl;
+    //Recuperation du deplacement
+    for(int it=0; it<nb_part; it++){
+      double Dx,Dy,Dz;
+      init >> Dx >> Dy >> Dz;
+      solide[it].Dx = Vector_3(Dx,Dy,Dz);
+      for(int l= 0; l<solide[it].triangles.size(); l++){
+	getline(init,dump);
+      }
+    }
+    getline(init,dump);
+    getline(init,dump);
+    cout << dump << endl;
+    //Recuperation de la vitesse
+    for(int it=0; it<nb_part; it++){
+      double u,v,w;
+      init >> u >> v >> w;
+      solide[it].u = Vector_3(u,v,w);
+      for(int l= 0; l<solide[it].triangles.size(); l++){
+	getline(init,dump);
+      }
+    }
+    getline(init,dump);
+    getline(init,dump);
+    cout << dump << endl;
+    //Recuperation de la rotation en x
+    for(int it=0; it<nb_part; it++){
+      double rotxx,rotyx,rotzx;
+      init >> rotxx >> rotyx >> rotzx;
+      solide[it].rot[0][0] = rotxx;
+      solide[it].rot[1][0] = rotyx;
+      solide[it].rot[2][0] = rotzx;
+      for(int l= 0; l<solide[it].triangles.size(); l++){
+	getline(init,dump);
+      }
+    }
+    getline(init,dump);
+    getline(init,dump);
+    cout << dump << endl;
+    //Recuperation de la rotation en y
+    for(int it=0; it<nb_part; it++){
+      double rotxy,rotyy,rotzy;
+      init >> rotxy >> rotyy >> rotzy;
+      solide[it].rot[0][1] = rotxy;
+      solide[it].rot[1][1] = rotyy;
+      solide[it].rot[2][1] = rotzy;
+      for(int l= 0; l<solide[it].triangles.size(); l++){
+	getline(init,dump);
+      }
+    }
+    getline(init,dump);
+    getline(init,dump);
+    cout << dump << endl;
+    //Recuperation de la rotation en z
+    for(int it=0; it<nb_part; it++){
+      double rotxz,rotyz,rotzz;
+      init >> rotxz >> rotyz >> rotzz;
+      solide[it].rot[0][2] = rotxz;
+      solide[it].rot[1][2] = rotyz;
+      solide[it].rot[2][2] = rotzz;
+      for(int l= 0; l<solide[it].triangles.size(); l++){
+	getline(init,dump);
+      }
+    }
+    getline(init,dump);
+    getline(init,dump);
+    cout << dump << endl;
+    //Recuperation de la vitesse de rotation
+    for(int it=0; it<nb_part; it++){
+      double omegax,omegay,omegaz;
+      init >> omegax >> omegay >> omegaz;
+      solide[it].omega = Vector_3(omegax,omegay,omegaz);
+      for(int l= 0; l<solide[it].triangles.size(); l++){
+	getline(init,dump);
+      }
+    }
+    init.close();
+    //Mise a jour de differents parametres
+    for(int i=0; i<solide.size(); i++){
+      solide[i].Dxprev = solide[i].Dx;
+      solide[i].rotprev[0][0] = solide[i].rot[0][0];
+      solide[i].rotprev[1][1] = solide[i].rot[1][1];
+      solide[i].rotprev[2][2] = solide[i].rot[2][2];
+      solide[i].rotprev[0][1] = solide[i].rot[0][1];
+      solide[i].rotprev[0][2] = solide[i].rot[0][2];
+      solide[i].rotprev[1][0] = solide[i].rot[1][0];
+      solide[i].rotprev[1][2] = solide[i].rot[1][2];
+      solide[i].rotprev[2][0] = solide[i].rot[2][0];
+      solide[i].rotprev[2][1] = solide[i].rot[2][1];
+      solide[i].mvt_t = Aff_transformation_3(solide[i].rot[0][0],solide[i].rot[0][1],solide[i].rot[0][2],solide[i].Dx.operator[](0),solide[i].rot[1][0],solide[i].rot[1][1],solide[i].rot[1][2],solide[i].Dx.operator[](1),solide[i].rot[2][0],solide[i].rot[2][1],solide[i].rot[2][2],solide[i].Dx.operator[](2));
+      solide[i].mvt_tprev = Aff_transformation_3(solide[i].rotprev[0][0],solide[i].rotprev[0][1],solide[i].rotprev[0][2],solide[i].Dxprev.operator[](0),solide[i].rotprev[1][0],solide[i].rotprev[1][1],solide[i].rotprev[1][2],solide[i].Dxprev.operator[](1),solide[i].rotprev[2][0],solide[i].rotprev[2][1],solide[i].rotprev[2][2],solide[i].Dxprev.operator[](2));
+    }
+    update_triangles();
+  }
+  
 }
 
 
