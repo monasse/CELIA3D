@@ -160,7 +160,17 @@ void Grille:: mixage(){
 							}
 						}
 					}
-					if(test){std::cout<<"Pas de cellule cible pour le mixage"<<std::endl; }
+					std::cout<< "position du centre de la cellule : "<<grille[i][j][k].x << " "<<grille[i][j][k].y << " "<<grille[i][j][k].z << " "<< " rho "<<grille[i][j][k].rho  << " p "<<grille[i][j][k].p <<" alpha " << grille[i][j][k].alpha<<std::endl;
+					std::cout<<"cellules voisines : "<<std::endl;
+					for(int ii=-1; ii<=1 && test; ii++){
+						for(int jj=-1; jj<=1 && test; jj++){
+							for(int kk=-1; kk<=1 && test; kk++){
+								std::cout<<"alpha "<<grille[i+ii][j+jj][k+kk].alpha<< "  "<< " rho "<<grille[i+ii][j+jj][k+kk].rho << "p "<< grille[i+ii][j+jj][k+kk].p<<std::endl; 
+							}
+						}
+					}					if(test){std::cout<<"Pas de cellule cible pour le mixage"<<std::endl;
+
+ }
 				}// 0.5<c.alpha<1.
 			} //fin boucle sur la grille
 		}

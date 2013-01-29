@@ -9,6 +9,12 @@ using namespace std;          // espace de nom standard
 
 int main(){
   char tempsF[]="resultats/tempsF.dat";
+
+  //En cas de reprise
+  if(rep){
+    reprise();
+  }
+  
 	
 	//Ouverture des flux en donne en ecriture
 	std::ofstream out(tempsF,ios::out);
