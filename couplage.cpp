@@ -115,7 +115,7 @@ void Grille:: mixage(){
 					for(int ii=-1; ii<=1 && test; ii++){
 						for(int jj=-1; jj<=1 && test; jj++){
 							for(int kk=-1; kk<=1 && test; kk++){
-								if (grille[i+ii][j+jj][k+kk].alpha <eps)
+								if (grille[i+ii][j+jj][k+kk].alpha <eps && grille[i+ii][j+jj][k+kk].p>0. && grille[i+ii][j+jj][k+kk].rho>0.)
 								{
 									test=false;
 									cg = grille[i+ii][j+jj][k+kk];
@@ -163,7 +163,7 @@ void Grille:: mixage(){
 					
 					if(test){
 						
-					if (grille[i-2][j][k].alpha == 0.)
+						if (grille[i-2][j][k].alpha == 0. && grille[i-2][j][k].p>0. && grille[i-2][j][k].rho>0.)
 					{
 							cg = grille[i-2][j][k];
 							
@@ -203,7 +203,7 @@ void Grille:: mixage(){
 							grille[i-2][j][k] = cg;
 							test = false;
 						}
-						else if (grille[i+2][j][k].alpha == 0.)
+						else if (grille[i+2][j][k].alpha == 0. && grille[i+2][j][k].p>0. && grille[i+2][j][k].rho>0.)
 						{
 								cg = grille[i+2][j][k];
 								
@@ -245,7 +245,7 @@ void Grille:: mixage(){
 								test = false;
 							}
 							
-							else if (grille[i][j-2][k].alpha == 0.)
+							else if (grille[i][j-2][k].alpha == 0. && grille[i][j-2][k].p>0. && grille[i][j-2][k].rho>0.)
 							{
 									cg = grille[i][j-2][k];
 									
@@ -286,7 +286,7 @@ void Grille:: mixage(){
 									grille[i][j-2][k] = cg;
 									test = false;
 								}
-								else if (grille[i][j+2][k].alpha == 0.)
+								else if (grille[i][j+2][k].alpha == 0. && grille[i][j+2][k].p>0. && grille[i][j+2][k].rho>0.)
 								{
 										cg = grille[i][j+2][k];
 										
@@ -327,7 +327,7 @@ void Grille:: mixage(){
 										grille[i][j+2][k] = cg;
 										test = false;
 									}
-									else if (grille[i][j][k-2].alpha == 0.)
+									else if (grille[i][j][k-2].alpha == 0. && grille[i][j][k-2].p>0. && grille[i][j][k-2].rho>0.)
 									{
 											cg = grille[i][j][k-2];
 											
@@ -368,7 +368,7 @@ void Grille:: mixage(){
 											grille[i][j][k-2] = cg;
 											test = false;
 										}
-										else if(grille[i][j][k+2].alpha == 0.)
+										else if(grille[i][j][k+2].alpha == 0. && grille[i][j][k+2].p>0. && grille[i][j][k+2].rho>0.)
 										{
 												cg = grille[i][j][k+2];
 												
