@@ -1572,7 +1572,8 @@ void Solide::impression(int n){ //Sortie au format vtk
   } else {
     cout <<"ouverture de solide" << n << ".vtk rate" << endl;
   }
-//Initialisation du fichier vtk
+  vtk << setprecision(15);
+  //Initialisation du fichier vtk
   vtk << "# vtk DataFile Version 3.0" << endl;
   vtk << "#Simulation Euler" << endl;
   vtk << "ASCII" << endl;
@@ -1851,9 +1852,9 @@ void Solide::init(const char* s){
       }
       int voisin;
       maillage >> voisin;
-      Faces[j] = Face::Face(Vertex, voisin);
+      Faces[j] = Face(Vertex, voisin);
     }
-    P[i] = Particule::Particule(centre, xmin, ymin, zmin, xmax, ymax, zmax, Faces);
+    P[i] = Particule(centre, xmin, ymin, zmin, xmax, ymax, zmax, Faces);
     P[i].fixe = fixe;
     P[i].u = Vector_3(u,v,w);
     P[i].omega = Vector_3(theta,phi,psi);
