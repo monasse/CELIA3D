@@ -953,10 +953,9 @@ void Particule::solve_position(double dt){
   //Mise � jour de la transformation donnant le mouvement de la particule
   mvt_tprev = mvt_t;
   Aff_transformation_3 rotation(rot[0][0],rot[0][1],rot[0][2],rot[1][0],rot[1][1],rot[1][2],rot[2][0],rot[2][1],rot[2][2]);
-  Vector_3 M = Dx;
-  Vector_3 X0(Point_3(0,0,0),x0);
-  M = M+X0-rotation.transform(X0);
-  mvt_t = Aff_transformation_3(rot[0][0],rot[0][1],rot[0][2],M.operator[](0),rot[1][0],rot[1][1],rot[1][2],M.operator[](1),rot[2][0],rot[2][1],rot[2][2],M.operator[](2));
+  Aff_transformation_3 translation(CGAL::TRANSLATION,Vector_3(Point_3(0.,0.,0.),x0)+Dx);
+  Aff_transformation_3 translation_inv(CGAL::TRANSLATION,Vector_3(x0,Point_3(0.,0.,0.))-Dx);
+  mvt_t = translation*(rotation*translation_inv);
 }
 
 void Particule::solve_vitesse(double dt){
@@ -2008,8 +2007,11 @@ void Solide::init(const char* s){
       rot[2][0] = 2.*CGAL::to_double(-e0*solide[i].e.operator[](1)+solide[i].e.operator[](2)*solide[i].e.operator[](0));
       rot[2][1] = 2.*CGAL::to_double(e0*solide[i].e.operator[](0)+solide[i].e.operator[](2)*solide[i].e.operator[](1));
       rot[2][2] = 1.-2.*CGAL::to_double(solide[i].e.operator[](0)*solide[i].e.operator[](0)+solide[i].e.operator[](1)*solide[i].e.operator[](1));
-      solide[i].mvt_t = Aff_transformation_3(rot[0][0],rot[0][1],rot[0][2],solide[i].Dx.operator[](0),rot[1][0],rot[1][1],rot[1][2],solide[i].Dx.operator[](1),rot[2][0],rot[2][1],rot[2][2],solide[i].Dx.operator[](2));
-      solide[i].mvt_tprev = Aff_transformation_3(rot[0][0],rot[0][1],rot[0][2],solide[i].Dxprev.operator[](0),rot[1][0],rot[1][1],rot[1][2],solide[i].Dxprev.operator[](1),rot[2][0],rot[2][1],rot[2][2],solide[i].Dxprev.operator[](2));
+      Aff_transformation_3 rotation(rot[0][0],rot[0][1],rot[0][2],rot[1][0],rot[1][1],rot[1][2],rot[2][0],rot[2][1],rot[2][2]);
+      Aff_transformation_3 translation(CGAL::TRANSLATION,Vector_3(Point_3(0.,0.,0.),solide[i].x0)+solide[i].Dx);
+      Aff_transformation_3 translation_inv(CGAL::TRANSLATION,Vector_3(solide[i].x0,Point_3(0.,0.,0.))-solide[i].Dx);
+      solide[i].mvt_t = translation*(rotation*translation_inv);
+      solide[i].mvt_tprev = solide[i].mvt_t;
     }
     update_triangles();
   }
@@ -2170,8 +2172,8 @@ void Solide::Forces_internes(){
       if(solide[i].faces[j].voisin>=0){
 	int part = solide[i].faces[j].voisin;
 	Vector_3 Sn = 1./2.*cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos));
-	Point_3 c1 = solide[i].mvt_t(solide[i].faces[j].centre);
-	Point_3 c2 = solide[part].mvt_t(solide[i].faces[j].centre);
+	Point_3 c1 = solide[i].mvt_t.transform(solide[i].faces[j].centre);
+	Point_3 c2 = solide[part].mvt_t.transform(solide[i].faces[j].centre);
 	Vector_3 Delta_u(c1,c2);
 	solide[i].epsilon += 1./2./(solide[i].V+N_dim*nu/(1.-2.*nu)*solide[i].Vl)*CGAL::to_double(Sn*Delta_u);
       }
@@ -2183,11 +2185,11 @@ void Solide::Forces_internes(){
       if(solide[i].faces[j].voisin>=0){
 	int part = solide[i].faces[j].voisin;
 	double S = 1./2.*sqrt(CGAL::to_double(cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos)).squared_length()));
-	Vector_3 X1X2(solide[i].mvt_t(solide[i].x0),solide[part].mvt_t(solide[part].x0));
+	Vector_3 X1X2(solide[i].mvt_t.transform(solide[i].x0),solide[part].mvt_t.transform(solide[part].x0));
 	double DIJ = sqrt(CGAL::to_double(X1X2.squared_length()));
 	Vector_3 nIJ = X1X2/DIJ;
-	Point_3 c1 = solide[i].mvt_t(solide[i].faces[j].centre);
-	Point_3 c2 = solide[part].mvt_t(solide[i].faces[j].centre);
+	Point_3 c1 = solide[i].mvt_t.transform(solide[i].faces[j].centre);
+	Point_3 c2 = solide[part].mvt_t.transform(solide[i].faces[j].centre);
 	Vector_3 Delta_u(c1,c2);
 	Vector_3 XC1(solide[i].x0,solide[i].faces[j].centre);
 	Vector_3 XC2(solide[part].x0,solide[i].faces[j].centre);
@@ -2198,13 +2200,13 @@ void Solide::Forces_internes(){
 	//Force de deformation volumique
 	solide[i].Fi = solide[i].Fi + S*E*nu/(1.+nu)/(1.-2.*nu)*epsilonIJ*(nIJ+Delta_u/DIJ-(Delta_u*nIJ)/DIJ*nIJ);
 	//Moment des forces appliquees
-	solide[i].Mi = solide[i].Mi + cross_product(solide[i].mvt_t(XC1),S/solide[i].faces[j].D0*E/(1.+nu)*Delta_u);
-	solide[i].Mi = solide[i].Mi + cross_product(solide[i].mvt_t(XC1),S*E*nu/(1.+nu)/(1.-2.*nu)*epsilonIJ*(nIJ+Delta_u/DIJ-(Delta_u*nIJ)/DIJ*nIJ));
+	solide[i].Mi = solide[i].Mi + cross_product(solide[i].mvt_t.transform(XC1),S/solide[i].faces[j].D0*E/(1.+nu)*Delta_u);
+	solide[i].Mi = solide[i].Mi + cross_product(solide[i].mvt_t.transform(XC1),S*E*nu/(1.+nu)/(1.-2.*nu)*epsilonIJ*(nIJ+Delta_u/DIJ-(Delta_u*nIJ)/DIJ*nIJ));
 	//Moments de flexion/torsion
 	double alphan = (1.+2.*nu)*E/4./(1.+nu)/S*(solide[i].faces[j].Is+solide[i].faces[j].It);
 	double alphas = E/4./(1.+nu)/S*((3.+2.*nu)*solide[i].faces[j].Is-(1.+2.*nu)*solide[i].faces[j].It);
 	double alphat = E/4./(1.+nu)/S*((3.+2.*nu)*solide[i].faces[j].It-(1.+2.*nu)*solide[i].faces[j].Is);
-	solide[i].Mi = solide[i].Mi + S/solide[i].faces[j].D0*(alphan*cross_product(solide[i].mvt_t(solide[i].faces[j].normale),solide[part].mvt_t(solide[i].faces[j].normale))+alphas*cross_product(solide[i].mvt_t(solide[i].faces[j].s),solide[part].mvt_t(solide[i].faces[j].s))+alphat*cross_product(solide[i].mvt_t(solide[i].faces[j].t),solide[part].mvt_t(solide[i].faces[j].t)));
+	solide[i].Mi = solide[i].Mi + S/solide[i].faces[j].D0*(alphan*cross_product(solide[i].mvt_t.transform(solide[i].faces[j].normale),solide[part].mvt_t.transform(solide[i].faces[j].normale))+alphas*cross_product(solide[i].mvt_t.transform(solide[i].faces[j].s),solide[part].mvt_t.transform(solide[i].faces[j].s))+alphat*cross_product(solide[i].mvt_t.transform(solide[i].faces[j].t),solide[part].mvt_t.transform(solide[i].faces[j].t)));
       }
     }
   }
@@ -2222,8 +2224,8 @@ double Solide::Energie_potentielle(){
       if(solide[i].faces[j].voisin>=0){
 	int part = solide[i].faces[j].voisin;
 	Vector_3 Sn = 1./2.*cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos));
-	Point_3 c1 = solide[i].mvt_t(solide[i].faces[j].centre);
-	Point_3 c2 = solide[part].mvt_t(solide[i].faces[j].centre);
+	Point_3 c1 = solide[i].mvt_t.transform(solide[i].faces[j].centre);
+	Point_3 c2 = solide[part].mvt_t.transform(solide[i].faces[j].centre);
 	Vector_3 Delta_u(c1,c2);
 	solide[i].epsilon += 1./2./(solide[i].V+N_dim*nu/(1.-2.*nu)*solide[i].Vl)*CGAL::to_double(Sn*Delta_u);
       }
@@ -2237,11 +2239,11 @@ double Solide::Energie_potentielle(){
       if(solide[i].faces[j].voisin>=0){
 	int part = solide[i].faces[j].voisin;
 	double S = 1./2.*sqrt(CGAL::to_double(cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos)).squared_length()));
-	Vector_3 X1X2(solide[i].mvt_t(solide[i].x0),solide[part].mvt_t(solide[part].x0));
+	Vector_3 X1X2(solide[i].mvt_t.transform(solide[i].x0),solide[part].mvt_t.transform(solide[part].x0));
 	double DIJ = sqrt(CGAL::to_double(X1X2.squared_length()));
 	Vector_3 nIJ = X1X2/DIJ;
-	Point_3 c1 = solide[i].mvt_t(solide[i].faces[j].centre);
-	Point_3 c2 = solide[part].mvt_t(solide[i].faces[j].centre);
+	Point_3 c1 = solide[i].mvt_t.transform(solide[i].faces[j].centre);
+	Point_3 c2 = solide[part].mvt_t.transform(solide[i].faces[j].centre);
 	Vector_3 Delta_u(c1,c2);
 	Vector_3 XC1(solide[i].x0,solide[i].faces[j].centre);
 	Vector_3 XC2(solide[part].x0,solide[i].faces[j].centre);
@@ -2253,7 +2255,7 @@ double Solide::Energie_potentielle(){
 	double alphan = (1.+2.*nu)*E/4./(1.+nu)/S*(solide[i].faces[j].Is+solide[i].faces[j].It);
 	double alphas = E/4./(1.+nu)/S*((3.+2.*nu)*solide[i].faces[j].Is-(1.+2.*nu)*solide[i].faces[j].It);
 	double alphat = E/4./(1.+nu)/S*((3.+2.*nu)*solide[i].faces[j].It-(1.+2.*nu)*solide[i].faces[j].Is);
-	Ep += S/2./solide[i].faces[j].D0*(alphan*(1.-CGAL::to_double(solide[i].mvt_t(solide[i].faces[j].normale)*solide[part].mvt_t(solide[i].faces[j].normale)))+alphas*(1.-CGAL::to_double(solide[i].mvt_t(solide[i].faces[j].s)*solide[part].mvt_t(solide[i].faces[j].s)))+alphat*(1.-CGAL::to_double(solide[i].mvt_t(solide[i].faces[j].t)*solide[part].mvt_t(solide[i].faces[j].t))));
+	Ep += S/2./solide[i].faces[j].D0*(alphan*(1.-CGAL::to_double(solide[i].mvt_t.transform(solide[i].faces[j].normale)*solide[part].mvt_t.transform(solide[i].faces[j].normale)))+alphas*(1.-CGAL::to_double(solide[i].mvt_t.transform(solide[i].faces[j].s)*solide[part].mvt_t.transform(solide[i].faces[j].s)))+alphat*(1.-CGAL::to_double(solide[i].mvt_t.transform(solide[i].faces[j].t)*solide[part].mvt_t.transform(solide[i].faces[j].t))));
       }
     }
   }

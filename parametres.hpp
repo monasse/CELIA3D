@@ -27,8 +27,8 @@ const double Y0 = 0;
 const double Z0 = 0;
 
 const int Nx =103;                 //nombre de cellules de fluide selon x
-const int Ny =13;                 //nombre de cellules de fluide selon y
-const int Nz =13;                 //nombre de cellules de fluide selon z
+const int Ny =53;                 //nombre de cellules de fluide selon y
+const int Nz =53;                 //nombre de cellules de fluide selon z
 
 const double domainex = 4.;            //Largeur du domaine fluide selon x
 const double domainey = 2.;          //Largeur du domaine fluide selon y
@@ -47,7 +47,7 @@ const double E = 7000; //Module d'Young du materiau
 const double T = 4.;             //temps total de simulation
 const double cfl = 0.5;            //valeur de la cfl fluide
 const double cfls = 0.5;           //Valeur de la cfl solide
-const int nimp = 10000;                //Nombre d'impressions
+const int nimp = 10;                //Nombre d'impressions
 const double dtimp = T/nimp;        //Pas de temps entre deux impressions
 const int Nmax = 1000000;           //nombre maximal d'iterations en temps
 
