@@ -115,7 +115,7 @@ void Grille:: mixage(){
 					for(int ii=-1; ii<=1 && test; ii++){
 						for(int jj=-1; jj<=1 && test; jj++){
 							for(int kk=-1; kk<=1 && test; kk++){
-								if (grille[i+ii][j+jj][k+kk].alpha <eps)
+								if (grille[i+ii][j+jj][k+kk].alpha <eps && grille[i+ii][j+jj][k+kk].p>0.&& grille[i+ii][j+jj][k+kk].rho>0. )
 								{
 									test=false;
 									cg = grille[i+ii][j+jj][k+kk];

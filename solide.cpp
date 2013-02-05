@@ -717,16 +717,22 @@ void Particule::Affiche(){
 
 }
 
+inline int signe(const double x)
+{
+  return (x < 0.) ? -1 : 1 ;
+}
+
 void Particule::solve_position(double dt){
+  double rot[3][3];
   if(fixe){
     Dx = Vector_3(0.,0.,0.);
     Dxprev = Vector_3(0.,0.,0.);
     u = Vector_3(0.,0.,0.);
     u_half = u;
-    rot[0][0]= rot[1][1] = rot[2][2] =1.;
-    rot[0][1] = rot[0][2] =rot[1][0] = rot[1][2] = rot[2][0] = rot[2][1] = 0.;
-    rotprev[0][0]= rotprev[1][1] = rotprev[2][2] =1.;
-    rotprev[0][1] = rotprev[0][2] =rotprev[1][0] = rotprev[1][2] = rotprev[2][0] = rotprev[2][1] = 0.;
+    e = Vector_3(0.,0.,0.);
+    rot[0][0] = rot[1][1]= rot[2][2] =1.;
+    rot[0][1]=rot[0][2]=rot[1][0]=rot[1][2]=rot[2][0]=rot[2][1]=0.;
+    eprev = Vector_3(0.,0.,0.);
     omega = Vector_3(0.,0.,0.);
     omega_half = omega;
   } else {
@@ -749,17 +755,28 @@ void Particule::solve_position(double dt){
 			cout << "Erreur rotation rotref " << vectrot1 << " " << vectrot2 << " " << vectrot3 << endl;
 			//getchar();
 		}
-    //Calcul de la matrice de rotation totale depuis le rep�re inertiel jusqu'au temps t et stockage de rotprev
+    //Calcul de la matrice de rotation totale depuis le rep�re inertiel jusqu'au temps t et stockage de eprev
     double Q[3][3];
+    double e0 = sqrt(1.-CGAL::to_double(e.squared_length()));
+    //Recuperation de la matrice de rotation
+    rot[0][0] = 1.-2.*CGAL::to_double(e.operator[](1)*e.operator[](1)+e.operator[](2)*e.operator[](2));
+    rot[0][1] = 2.*CGAL::to_double(-e0*e.operator[](2)+e.operator[](0)*e.operator[](1));
+    rot[0][2] = 2.*CGAL::to_double(e0*e.operator[](1)+e.operator[](0)*e.operator[](2));
+    rot[1][0] = 2.*CGAL::to_double(e0*e.operator[](2)+e.operator[](1)*e.operator[](0));
+    rot[1][1] = 1.-2.*CGAL::to_double(e.operator[](0)*e.operator[](0)+e.operator[](2)*e.operator[](2));
+    rot[1][2] = 2.*CGAL::to_double(-e0*e.operator[](0)+e.operator[](1)*e.operator[](2));
+    rot[2][0] = 2.*CGAL::to_double(-e0*e.operator[](1)+e.operator[](2)*e.operator[](0));
+    rot[2][1] = 2.*CGAL::to_double(e0*e.operator[](0)+e.operator[](2)*e.operator[](1));
+    rot[2][2] = 1.-2.*CGAL::to_double(e.operator[](0)*e.operator[](0)+e.operator[](1)*e.operator[](1));
     for(int i=0;i<3;i++){
       for(int j=0;j<3;j++){
-	rotprev[i][j] = rot[i][j];
 	Q[i][j] = rot[i][0]*rotref[0][j];
 	Q[i][j] += rot[i][1]*rotref[1][j];
 	Q[i][j] += rot[i][2]*rotref[2][j];
       }
     }    
-    //Recuperation de e � partir de omega
+    eprev = e;
+    //Recuperation du e global a partir de omega
     double Omega[3];
     Omega[0] = Omega[1] = Omega[2] = 0.;
     for(int j=0;j<3;j++){
@@ -774,10 +791,10 @@ void Particule::solve_position(double dt){
       cout << "pas de temps trop grand : dt=" << dt << " Omega=" << Omega[0] << " " << Omega[1] << " " << Omega[2] << endl;
       getchar();
     }
-    double e0 = 1.;//sqrt((1+sqrt(1-norm2))/2.);
-    double e[3];
+    double eglob0 = 1.;//sqrt((1+sqrt(1-norm2))/2.);
+    double eglob[3];
     for(int j=0;j<3;j++){
-      e[j] = 0.;//dt*Omega[j]/2./e0;
+      eglob[j] = 0.;//dt*Omega[j]/2./eglob0;
     }
     //Recuperation de la matrice Zn
     double z[3][3];
@@ -835,20 +852,20 @@ void Particule::solve_position(double dt){
       err3 = fabs((dt*a[2]-2.*(d1-d2)*etemp1*etemp2)/(2.*(d1+d2)*etemp0)-etemp3);
     }
     //cout << k << endl;
-    e[0] = etemp1;
-    e[1] = etemp2;
-    e[2] = etemp3;
-    e0 = etemp0;
+    eglob[0] = etemp1;
+    eglob[1] = etemp2;
+    eglob[2] = etemp3;
+    eglob0 = etemp0;
     //Reconstruction de Z^n+1/2
-    z[0][0] = (-2.*(e[1]*e[1]+e[2]*e[2]))/dt;
-    z[0][1] = (-2.*e0*e[2]+2.*e[0]*e[1])/dt;
-    z[0][2] = (2.*e0*e[1]+2.*e[0]*e[2])/dt;
-    z[1][0] = (2.*e0*e[2]+2.*e[0]*e[1])/dt;
-    z[1][1] = (-2.*(e[0]*e[0]+e[2]*e[2]))/dt;
-    z[1][2] = (-2.*e0*e[0]+2.*e[1]*e[2])/dt;
-    z[2][0] = (-2.*e0*e[1]+2.*e[0]*e[2])/dt;
-    z[2][1] = (2.*e0*e[0]+2.*e[1]*e[2])/dt;
-    z[2][2] = (-2.*(e[0]*e[0]+e[1]*e[1]))/dt;
+    z[0][0] = (-2.*(eglob[1]*eglob[1]+eglob[2]*eglob[2]))/dt;
+    z[0][1] = (-2.*eglob0*eglob[2]+2.*eglob[0]*eglob[1])/dt;
+    z[0][2] = (2.*eglob0*eglob[1]+2.*eglob[0]*eglob[2])/dt;
+    z[1][0] = (2.*eglob0*eglob[2]+2.*eglob[0]*eglob[1])/dt;
+    z[1][1] = (-2.*(eglob[0]*eglob[0]+eglob[2]*eglob[2]))/dt;
+    z[1][2] = (-2.*eglob0*eglob[0]+2.*eglob[1]*eglob[2])/dt;
+    z[2][0] = (-2.*eglob0*eglob[1]+2.*eglob[0]*eglob[2])/dt;
+    z[2][1] = (2.*eglob0*eglob[0]+2.*eglob[1]*eglob[2])/dt;
+    z[2][2] = (-2.*(eglob[0]*eglob[0]+eglob[1]*eglob[1]))/dt;
     //Update de la matrice Q
     double Qprev[3][3];
     for(int i=0;i<3;i++){
@@ -891,6 +908,18 @@ void Particule::solve_position(double dt){
 	rot[i][j] += Q[i][2]*rotref[j][2];
       }
     }
+    //Calcul de e a partir de rot
+    double q1 = rot[2][1]-rot[1][2];
+    double q2 = rot[0][2]-rot[2][0];
+    double q3 = rot[1][0]-rot[0][1];
+    //e0m = sqrt((1.-sqrt(1.-(q1*q1+q2*q2+q3*q3)/4.))/2.);
+    //e0M = sqrt((1.+sqrt(1.-(q1*q1+q2*q2+q3*q3)/4.))/2.);
+    double e1,e2,e3;
+    e1 = signe(q1)*sqrt((1.+rot[0][0]-rot[1][1]-rot[2][2])/4.);
+    e2 = signe(q2)*sqrt((1.+rot[1][1]-rot[0][0]-rot[2][2])/4.);
+    e3 = signe(q3)*sqrt((1.+rot[2][2]-rot[0][0]-rot[1][1])/4.);
+    e = Vector_3(e1,e2,e3);
+    
     //Calcul de Omega^n+1/2
     double omega1 = 0.;
     for(int i=0;i<3;i++){
@@ -938,6 +967,25 @@ void Particule::solve_vitesse(double dt){
     u = u+(Fi+Ff)/2.*(dt/m);
     //Calcul de la matrice de rotation totale depuis le rep�re inertiel jusqu'au temps t
     double Q[3][3];
+    double e0 = sqrt(1.-CGAL::to_double(e.squared_length()));
+    //Recuperation de la matrice de rotation
+    double rot[3][3];
+    rot[0][0] = 1.-2.*CGAL::to_double(e.operator[](1)*e.operator[](1)+e.operator[](2)*e.operator[](2));
+    rot[0][1] = 2.*CGAL::to_double(-e0*e.operator[](2)+e.operator[](0)*e.operator[](1));
+    rot[0][2] = 2.*CGAL::to_double(e0*e.operator[](1)+e.operator[](0)*e.operator[](2));
+    rot[1][0] = 2.*CGAL::to_double(e0*e.operator[](2)+e.operator[](1)*e.operator[](0));
+    rot[1][1] = 1.-2.*CGAL::to_double(e.operator[](0)*e.operator[](0)+e.operator[](2)*e.operator[](2));
+    rot[1][2] = 2.*CGAL::to_double(-e0*e.operator[](0)+e.operator[](1)*e.operator[](2));
+    rot[2][0] = 2.*CGAL::to_double(-e0*e.operator[](1)+e.operator[](2)*e.operator[](0));
+    rot[2][1] = 2.*CGAL::to_double(e0*e.operator[](0)+e.operator[](2)*e.operator[](1));
+    rot[2][2] = 1.-2.*CGAL::to_double(e.operator[](0)*e.operator[](0)+e.operator[](1)*e.operator[](1));
+    for(int i=0;i<3;i++){
+      for(int j=0;j<3;j++){
+	Q[i][j] = rot[i][0]*rotref[0][j];
+	Q[i][j] += rot[i][1]*rotref[1][j];
+	Q[i][j] += rot[i][2]*rotref[2][j];
+      }
+    }    
     for(int i=0;i<3;i++){
       for(int j=0;j<3;j++){
 	Q[i][j] = rot[i][0]*rotref[0][j];
@@ -960,23 +1008,23 @@ void Particule::solve_vitesse(double dt){
       cout << "pas de temps trop grand : dt=" << dt << " Omega=" << Omega[0] << " " << Omega[1] << " " << Omega[2] << endl;
       getchar();
     }
-    double e0 = sqrt((1.+sqrt(1.-norm2))/2.);
-    double e[3];
+    double eglob0 = sqrt((1.+sqrt(1.-norm2))/2.);
+    double eglob[3];
     for(int j=0;j<3;j++){
-      e[j] = dt*Omega[j]/2./e0;
+      eglob[j] = dt*Omega[j]/2./eglob0;
     }
     //Recuperation de la matrice Zn+1/2
-    //double e0 = sqrt(1.-e[0]*e[0]-e[1]*e[1]-e[2]*e[2]);
+    //double eglob0 = sqrt(1.-eglob[0]*eglob[0]-eglob[1]*eglob[1]-eglob[2]*eglob[2]);
     double z[3][3];
-    z[0][0] = (-2.*(e[1]*e[1]+e[2]*e[2]))/dt;
-    z[0][1] = (-2.*e0*e[2]+2.*e[0]*e[1])/dt;
-    z[0][2] = (2.*e0*e[1]+2.*e[0]*e[2])/dt;
-    z[1][0] = (2.*e0*e[2]+2.*e[0]*e[1])/dt;
-    z[1][1] = (-2.*(e[0]*e[0]+e[2]*e[2]))/dt;
-    z[1][2] = (-2.*e0*e[0]+2.*e[1]*e[2])/dt;
-    z[2][0] = (-2.*e0*e[1]+2.*e[0]*e[2])/dt;
-    z[2][1] = (2.*e0*e[0]+2.*e[1]*e[2])/dt;
-    z[2][2] = (-2.*(e[0]*e[0]+e[1]*e[1]))/dt;
+    z[0][0] = (-2.*(eglob[1]*eglob[1]+eglob[2]*eglob[2]))/dt;
+    z[0][1] = (-2.*eglob0*eglob[2]+2.*eglob[0]*eglob[1])/dt;
+    z[0][2] = (2.*eglob0*eglob[1]+2.*eglob[0]*eglob[2])/dt;
+    z[1][0] = (2.*eglob0*eglob[2]+2.*eglob[0]*eglob[1])/dt;
+    z[1][1] = (-2.*(eglob[0]*eglob[0]+eglob[2]*eglob[2]))/dt;
+    z[1][2] = (-2.*eglob0*eglob[0]+2.*eglob[1]*eglob[2])/dt;
+    z[2][0] = (-2.*eglob0*eglob[1]+2.*eglob[0]*eglob[2])/dt;
+    z[2][1] = (2.*eglob0*eglob[0]+2.*eglob[1]*eglob[2])/dt;
+    z[2][2] = (-2.*(eglob[0]*eglob[0]+eglob[1]*eglob[1]))/dt;
     //Calcul de la matrice A
     double a[3];
     double d1 = (I[0]+I[1]+I[2])/2.-I[0];
@@ -1626,32 +1674,12 @@ void Solide::impression(int n){ //Sortie au format vtk
   }
   vtk << "\n";
   //Rotation en x
-  vtk << "VECTORS rotx double" << endl;
+  vtk << "VECTORS e double" << endl;
   //vtk << "LOOKUP_TABLE default" << endl;
   for(int it=0; it<nb_part; it++){
     for(int l= 0; l<solide[it].triangles.size(); l++)
     {
-      vtk << solide[it].rot[0][0] << " " << solide[it].rot[1][0] << " " << solide[it].rot[2][0] << endl;
-    }
-  }
-  vtk << "\n";
-  //Rotation en y
-  vtk << "VECTORS roty double" << endl;
-  //vtk << "LOOKUP_TABLE default" << endl;
-  for(int it=0; it<nb_part; it++){
-    for(int l= 0; l<solide[it].triangles.size(); l++)
-    {
-      vtk << solide[it].rot[0][1] << " " << solide[it].rot[1][1] << " " << solide[it].rot[2][1] << endl;
-    }
-  }
-  vtk << "\n";
-  //Rotation en z
-  vtk << "VECTORS rotz double" << endl;
-  //vtk << "LOOKUP_TABLE default" << endl;
-  for(int it=0; it<nb_part; it++){
-    for(int l= 0; l<solide[it].triangles.size(); l++)
-    {
-      vtk << solide[it].rot[0][2] << " " << solide[it].rot[1][2] << " " << solide[it].rot[2][2] << endl;
+      vtk << solide[it].e.operator[](0) << " " << solide[it].e.operator[](1) << " " << solide[it].e.operator[](2) << endl;
     }
   }
   vtk << "\n";
@@ -1894,15 +1922,8 @@ void Solide::init(const char* s){
     solide[i].Mi = Vector_3(0.,0.,0.);
     solide[i].Mf = Vector_3(0.,0.,0.);
     solide[i].Mfprev = Vector_3(0.,0.,0.);
-    solide[i].rotprev[0][0] = solide[i].rot[0][0] = 1.;
-    solide[i].rotprev[1][1] = solide[i].rot[1][1] = 1.;
-    solide[i].rotprev[2][2] = solide[i].rot[2][2] = 1.;
-    solide[i].rotprev[0][1] = solide[i].rot[0][1] = 0.;
-    solide[i].rotprev[0][2] = solide[i].rot[0][2] = 0.;
-    solide[i].rotprev[1][0] = solide[i].rot[1][0] = 0.;
-    solide[i].rotprev[1][2] = solide[i].rot[1][2] = 0.;
-    solide[i].rotprev[2][0] = solide[i].rot[2][0] = 0.;
-    solide[i].rotprev[2][1] = solide[i].rot[2][1] = 0.;
+    solide[i].e = Vector_3(0.,0.,0.);
+    solide[i].eprev = Vector_3(0.,0.,0.);
     solide[i].Inertie();
     solide[i].mvt_t = Aff_transformation_3(1,0,0,0,1,0,0,0,1);
     solide[i].mvt_tprev = Aff_transformation_3(1,0,0,0,1,0,0,0,1);
@@ -1949,41 +1970,11 @@ void Solide::init(const char* s){
     getline(init,dump);
     getline(init,dump);
     cout << dump << endl;
-    //Recuperation de la rotation en x
+    //Recuperation du vecteur de rotation
     for(int it=0; it<nb_part; it++){
-      double rotxx,rotyx,rotzx;
-      init >> rotxx >> rotyx >> rotzx;
-      solide[it].rot[0][0] = rotxx;
-      solide[it].rot[1][0] = rotyx;
-      solide[it].rot[2][0] = rotzx;
-      for(int l= 0; l<solide[it].triangles.size(); l++){
-	getline(init,dump);
-      }
-    }
-    getline(init,dump);
-    getline(init,dump);
-    cout << dump << endl;
-    //Recuperation de la rotation en y
-    for(int it=0; it<nb_part; it++){
-      double rotxy,rotyy,rotzy;
-      init >> rotxy >> rotyy >> rotzy;
-      solide[it].rot[0][1] = rotxy;
-      solide[it].rot[1][1] = rotyy;
-      solide[it].rot[2][1] = rotzy;
-      for(int l= 0; l<solide[it].triangles.size(); l++){
-	getline(init,dump);
-      }
-    }
-    getline(init,dump);
-    getline(init,dump);
-    cout << dump << endl;
-    //Recuperation de la rotation en z
-    for(int it=0; it<nb_part; it++){
-      double rotxz,rotyz,rotzz;
-      init >> rotxz >> rotyz >> rotzz;
-      solide[it].rot[0][2] = rotxz;
-      solide[it].rot[1][2] = rotyz;
-      solide[it].rot[2][2] = rotzz;
+      double ex,ey,ez;
+      init >> ex >> ey >> ez;
+      solide[it].e = Vector_3(ex,ey,ez);
       for(int l= 0; l<solide[it].triangles.size(); l++){
 	getline(init,dump);
       }
@@ -2004,17 +1995,21 @@ void Solide::init(const char* s){
     //Mise a jour de differents parametres
     for(int i=0; i<solide.size(); i++){
       solide[i].Dxprev = solide[i].Dx;
-      solide[i].rotprev[0][0] = solide[i].rot[0][0];
-      solide[i].rotprev[1][1] = solide[i].rot[1][1];
-      solide[i].rotprev[2][2] = solide[i].rot[2][2];
-      solide[i].rotprev[0][1] = solide[i].rot[0][1];
-      solide[i].rotprev[0][2] = solide[i].rot[0][2];
-      solide[i].rotprev[1][0] = solide[i].rot[1][0];
-      solide[i].rotprev[1][2] = solide[i].rot[1][2];
-      solide[i].rotprev[2][0] = solide[i].rot[2][0];
-      solide[i].rotprev[2][1] = solide[i].rot[2][1];
-      solide[i].mvt_t = Aff_transformation_3(solide[i].rot[0][0],solide[i].rot[0][1],solide[i].rot[0][2],solide[i].Dx.operator[](0),solide[i].rot[1][0],solide[i].rot[1][1],solide[i].rot[1][2],solide[i].Dx.operator[](1),solide[i].rot[2][0],solide[i].rot[2][1],solide[i].rot[2][2],solide[i].Dx.operator[](2));
-      solide[i].mvt_tprev = Aff_transformation_3(solide[i].rotprev[0][0],solide[i].rotprev[0][1],solide[i].rotprev[0][2],solide[i].Dxprev.operator[](0),solide[i].rotprev[1][0],solide[i].rotprev[1][1],solide[i].rotprev[1][2],solide[i].Dxprev.operator[](1),solide[i].rotprev[2][0],solide[i].rotprev[2][1],solide[i].rotprev[2][2],solide[i].Dxprev.operator[](2));
+      solide[i].eprev = solide[i].e;
+      double rot[3][3];
+      //Recuperation de la matrice de rotation
+      double e0 = sqrt(1.-CGAL::to_double(solide[i].e.squared_length()));
+      rot[0][0] = 1.-2.*CGAL::to_double(solide[i].e.operator[](1)*solide[i].e.operator[](1)+solide[i].e.operator[](2)*solide[i].e.operator[](2));
+      rot[0][1] = 2.*CGAL::to_double(-e0*solide[i].e.operator[](2)+solide[i].e.operator[](0)*solide[i].e.operator[](1));
+      rot[0][2] = 2.*CGAL::to_double(e0*solide[i].e.operator[](1)+solide[i].e.operator[](0)*solide[i].e.operator[](2));
+      rot[1][0] = 2.*CGAL::to_double(e0*solide[i].e.operator[](2)+solide[i].e.operator[](1)*solide[i].e.operator[](0));
+      rot[1][1] = 1.-2.*CGAL::to_double(solide[i].e.operator[](0)*solide[i].e.operator[](0)+solide[i].e.operator[](2)*solide[i].e.operator[](2));
+      rot[1][2] = 2.*CGAL::to_double(-e0*solide[i].e.operator[](0)+solide[i].e.operator[](1)*solide[i].e.operator[](2));
+      rot[2][0] = 2.*CGAL::to_double(-e0*solide[i].e.operator[](1)+solide[i].e.operator[](2)*solide[i].e.operator[](0));
+      rot[2][1] = 2.*CGAL::to_double(e0*solide[i].e.operator[](0)+solide[i].e.operator[](2)*solide[i].e.operator[](1));
+      rot[2][2] = 1.-2.*CGAL::to_double(solide[i].e.operator[](0)*solide[i].e.operator[](0)+solide[i].e.operator[](1)*solide[i].e.operator[](1));
+      solide[i].mvt_t = Aff_transformation_3(rot[0][0],rot[0][1],rot[0][2],solide[i].Dx.operator[](0),rot[1][0],rot[1][1],rot[1][2],solide[i].Dx.operator[](1),rot[2][0],rot[2][1],rot[2][2],solide[i].Dx.operator[](2));
+      solide[i].mvt_tprev = Aff_transformation_3(rot[0][0],rot[0][1],rot[0][2],solide[i].Dxprev.operator[](0),rot[1][0],rot[1][1],rot[1][2],solide[i].Dxprev.operator[](1),rot[2][0],rot[2][1],rot[2][2],solide[i].Dxprev.operator[](2));
     }
     update_triangles();
   }
@@ -2130,11 +2125,23 @@ double Solide::Energie_cinetique(){
     E += 1./2.*solide[i].m*u2;
     //Calcul de -1/2*tr(D j(Q^T omega)) = 1/2*(I1*Omega1^2+I2*Omega2^2+I3*Omega3^2)
     double Q[3][3];
+    double rot[3][3];
+    double e0 = sqrt(1.-CGAL::to_double(solide[i].e.squared_length()));
+    //Recuperation de la matrice de rotation
+    rot[0][0] = 1.-2.*CGAL::to_double(solide[i].e.operator[](1)*solide[i].e.operator[](1)+solide[i].e.operator[](2)*solide[i].e.operator[](2));
+    rot[0][1] = 2.*CGAL::to_double(-e0*solide[i].e.operator[](2)+solide[i].e.operator[](0)*solide[i].e.operator[](1));
+    rot[0][2] = 2.*CGAL::to_double(e0*solide[i].e.operator[](1)+solide[i].e.operator[](0)*solide[i].e.operator[](2));
+    rot[1][0] = 2.*CGAL::to_double(e0*solide[i].e.operator[](2)+solide[i].e.operator[](1)*solide[i].e.operator[](0));
+    rot[1][1] = 1.-2.*CGAL::to_double(solide[i].e.operator[](0)*solide[i].e.operator[](0)+solide[i].e.operator[](2)*solide[i].e.operator[](2));
+    rot[1][2] = 2.*CGAL::to_double(-e0*solide[i].e.operator[](0)+solide[i].e.operator[](1)*solide[i].e.operator[](2));
+    rot[2][0] = 2.*CGAL::to_double(-e0*solide[i].e.operator[](1)+solide[i].e.operator[](2)*solide[i].e.operator[](0));
+    rot[2][1] = 2.*CGAL::to_double(e0*solide[i].e.operator[](0)+solide[i].e.operator[](2)*solide[i].e.operator[](1));
+    rot[2][2] = 1.-2.*CGAL::to_double(solide[i].e.operator[](0)*solide[i].e.operator[](0)+solide[i].e.operator[](1)*solide[i].e.operator[](1));
     for(int j=0;j<3;j++){
       for(int k=0;k<3;k++){
-	Q[j][k] = solide[i].rot[j][0]*solide[i].rotref[0][k];
-	Q[j][k] += solide[i].rot[j][1]*solide[i].rotref[1][k];
-	Q[j][k] += solide[i].rot[j][2]*solide[i].rotref[2][k];
+	Q[j][k] = rot[j][0]*solide[i].rotref[0][k];
+	Q[j][k] += rot[j][1]*solide[i].rotref[1][k];
+	Q[j][k] += rot[j][2]*solide[i].rotref[2][k];
       }
     }  
     double Omega[3];
