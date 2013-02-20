@@ -9,21 +9,40 @@ using namespace std;          // espace de nom standard
 
 int main(){
   char tempsF[]="resultats/tempsF.dat";
-
+  char temps_reprise[]="resultats/temps_reprise.dat";
+  
   //En cas de reprise
+  double temps[numrep+1];
   if(rep){
     reprise();
+    std::ifstream in(temps_reprise,ios::in);
+    if(!in){
+      cout <<"ouverture de temps_reprise.dat rate" << endl;
+    }
+    for(int i=0;i<numrep+1;i++){
+      in >> temps[i];
+    }
+    //Récupération de l'energie
+    int result = system("cp resultats/energie.dat resultats/energie_reprise.dat");
   }
+  std::ifstream in_energie("resultats/energie_reprise.dat",ios::in);
   
 	
 	//Ouverture des flux en donne en ecriture
 	std::ofstream out(tempsF,ios::out);
+	std::ofstream sorties_reprise(temps_reprise,ios::out);
 	if(out)
 	{
 		// cout <<"ouverture de xt.vtk reussie" << endl;
 	} else {
 		cout <<"ouverture de .dat rate" << endl;
 	}
+	if(rep){
+	  for(int i=0;i<numrep+1;i++){
+	    sorties_reprise << temps[i] << endl;
+	  }
+	}
+	
 
 	char energie[]="resultats/energie.dat";
 	
@@ -35,8 +54,27 @@ int main(){
 	} else {
 		cout <<"ouverture de .dat rate" << endl;
 	}
+	double dE0rep,dE0Srep,dm0;
+	if(rep){
+	  double t_ener = 0.;
+	  double E,Es,dE,dEs,dm;
+	  for(int i=0;t_ener<temps[numrep];i++){
+	    in_energie >>t_ener >> E >> Es >> dE >> dEs >> dm;
+	    if(t_ener<=temps[numrep]){
+	      ener << t_ener << " " << E << " " << Es << " " << dE << " " << dEs << " " << dm << endl;
+	      dE0rep = dE;
+	      dE0Srep = dEs;
+	      dm0 = dm;
+	    }
+	  }
+	  int result = system("rm resultats/energie_reprise.dat");
+	}
+	
 	
 	double t=0., dt=0.;
+	if(rep){
+	  t = temps[numrep];
+	}
 	Solide S;
 	S.init("maillage.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	Grille Fluide;
@@ -50,13 +88,25 @@ int main(){
 
 	int kimp = 0; //Numero de suivi de l'impression
 	double next_timp = dtimp; //Instant de la prochaine impression
-       	Fluide.impression(kimp);
-	S.impression(kimp);
+	if(rep){
+	  kimp = numrep;
+	  next_timp = t+dtimp;
+	} else {
+	  Fluide.impression(kimp);
+	  S.impression(kimp);
+	}
 	kimp++;
 	
 	double E0 = Fluide.Energie()+S.Energie();
 	double E0S= S.Energie();
+	if(rep){
+	  E0 -= dE0rep;
+	  E0S -= dE0Srep;
+	}
 	double masse = Fluide.Masse();
+	if(rep){
+	  masse -= dm0;
+	}
 	S.Forces_internes();
 	
 	CGAL::Timer user_time, user_time2;
@@ -65,6 +115,7 @@ int main(){
 		if(t>next_timp){
 			Fluide.impression(kimp);
 			S.impression(kimp);
+			sorties_reprise << t << endl;
 			kimp++;
 			next_timp += dtimp;
 		}

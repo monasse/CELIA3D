@@ -717,9 +717,9 @@ void Particule::Affiche(){
 
 }
 
-inline int signe(const double x)
+inline double signe(const double x)
 {
-  return (x < 0.) ? -1 : 1 ;
+  return (x < 0.) ? -1. : 1. ;
 }
 
 void Particule::solve_position(double dt){
@@ -912,12 +912,10 @@ void Particule::solve_position(double dt){
     double q1 = rot[2][1]-rot[1][2];
     double q2 = rot[0][2]-rot[2][0];
     double q3 = rot[1][0]-rot[0][1];
-    //e0m = sqrt((1.-sqrt(1.-(q1*q1+q2*q2+q3*q3)/4.))/2.);
-    //e0M = sqrt((1.+sqrt(1.-(q1*q1+q2*q2+q3*q3)/4.))/2.);
     double e1,e2,e3;
-    e1 = signe(q1)*sqrt((1.+rot[0][0]-rot[1][1]-rot[2][2])/4.);
-    e2 = signe(q2)*sqrt((1.+rot[1][1]-rot[0][0]-rot[2][2])/4.);
-    e3 = signe(q3)*sqrt((1.+rot[2][2]-rot[0][0]-rot[1][1])/4.);
+    e1 = signe(q1)*sqrt(max((1.+rot[0][0]-rot[1][1]-rot[2][2])/4.,0.));
+    e2 = signe(q2)*sqrt(max((1.+rot[1][1]-rot[0][0]-rot[2][2])/4.,0.));
+    e3 = signe(q3)*sqrt(max((1.+rot[2][2]-rot[0][0]-rot[1][1])/4.,0.));
     e = Vector_3(e1,e2,e3);
     
     //Calcul de Omega^n+1/2

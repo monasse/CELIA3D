@@ -10,7 +10,7 @@ using std::string;
 
 //Flag pour la reprise : false si on ne reprend pas, true si on reprend
 int rep = false;
-int numrep = 4;//Numéro de la reprise
+int numrep = 46;//Numéro de la reprise
 
 
 //Parametres pour le fluide
@@ -47,7 +47,7 @@ const double E = 7000; //Module d'Young du materiau
 const double T = 4.;             //temps total de simulation
 const double cfl = 0.5;            //valeur de la cfl fluide
 const double cfls = 0.5;           //Valeur de la cfl solide
-const int nimp = 10;                //Nombre d'impressions
+const int nimp = 1000000;                //Nombre d'impressions
 const double dtimp = T/nimp;        //Pas de temps entre deux impressions
 const int Nmax = 1000000;           //nombre maximal d'iterations en temps
 
