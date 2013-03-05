@@ -8,9 +8,9 @@
 using namespace std;          // espace de nom standard
 
 int main(){
-  char tempsF[]="resultats/tempsF.dat";
+  char temps_it[]="resultats/temps.dat";
   char temps_reprise[]="resultats/temps_reprise.dat";
-  
+  char solide_center[]="resultats/solide_center.dat"; 
   //En cas de reprise
   double temps[numrep+1];
   if(rep){
@@ -22,20 +22,27 @@ int main(){
     for(int i=0;i<numrep+1;i++){
       in >> temps[i];
     }
-    //Récupération de l'energie
+    //Rï¿½cupï¿½ration de l'energie
     int result = system("cp resultats/energie.dat resultats/energie_reprise.dat");
   }
   std::ifstream in_energie("resultats/energie_reprise.dat",ios::in);
   
 	
 	//Ouverture des flux en donne en ecriture
-	std::ofstream out(tempsF,ios::out);
+	std::ofstream temps_iter(temps_it,ios::out);
 	std::ofstream sorties_reprise(temps_reprise,ios::out);
-	if(out)
+	std::ofstream center(solide_center,ios::out);
+	if(temps_iter)
 	{
-		// cout <<"ouverture de xt.vtk reussie" << endl;
+		// cout <<"ouverture de 'temps.dat' reussie" << endl;
 	} else {
-		cout <<"ouverture de .dat rate" << endl;
+		cout <<"ouverture de 'temps.dat' rate" << endl;
+	}
+	if(center)
+	{
+		// cout <<"ouverture de 'temps.dat' reussie" << endl;
+	} else {
+		cout <<"ouverture de 'solide_center.dat' rate" << endl;
 	}
 	if(rep){
 	  for(int i=0;i<numrep+1;i++){
@@ -108,7 +115,7 @@ int main(){
 	  masse -= dm0;
 	}
 	S.Forces_internes();
-	
+	int nb_part = S.size();
 	CGAL::Timer user_time, user_time2;
 	for (int n=0; (t<T) && n<Nmax; n++){
 		
@@ -122,8 +129,10 @@ int main(){
 	  //cout<<"Energie: "<< Fluide.Energie()+S.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 		cout<<"Energie Fluide: "<< Fluide.Energie() << " Energie Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 		ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S <<" "<<Fluide.Masse() - masse <<endl;
+		center<< t << " "<<S.solide[nb_part-1].x0.operator[](0) + S.solide[nb_part-1].Dx.operator[](0) << " "<<S.solide[nb_part-1].x0.operator[](1) + S.solide[nb_part-1].Dx.operator[](1) << " "<<S.solide[nb_part-1].x0.operator[](2) + S.solide[nb_part-1].Dx.operator[](2) <<endl;
+
+		
 		dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
-		//dt = 0.007;
 		//Fluide.affiche("avant Solve");
 		user_time2.start();
 		Fluide.Solve(dt, t, n);
@@ -150,7 +159,7 @@ int main(){
 		//Fluide.affiche("fill_cell");
 		Fluide.BC();
 		//Fluide.affiche("BC");
-		out<< n << " temps actuel "<<t<<" dt "<<dt<<"\n";
+		temps_iter<< n << " "<<t<<" "<<dt<<endl;
 		cout<<"iteration="<<n<< " dt="<<dt<<" t="<<t<<endl;
 		t+= dt;
 		iter++;
@@ -160,9 +169,9 @@ int main(){
 	Fluide.impression(kimp);
 	S.impression(kimp);
 	
-	out<< "Temps final  "<< t<<endl;
-	out<<"nb iter= "<< iter<<endl;    
-	out <<"Temps de calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl;     
+	temps_iter<< "Temps final  "<< t<<endl;
+	temps_iter<<"nb iter= "<< iter<<endl;    
+	temps_iter<<"Temps de calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl;     
 	cout<<"nb iter= "<< iter<<endl;    
 	cout <<"Temps de calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl;  
 

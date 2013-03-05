@@ -2004,19 +2004,19 @@ void Grille::swap_2d(const double dt, Solide& S, int& n, int &n1, int& m){
 
 
 		     //test 26 nov calcul aire faces
-					 // cout<< " aire face is : "<< std::sqrt(CGAL::to_double(S.solide[i].triangles_prev[j].squared_area () ))<<endl;
-					 double aire_f= std::sqrt(CGAL::to_double(S.solide[i].triangles_prev[j].squared_area () ));
-					 double volume_f= volume_prisme(S.solide[i].triangles_prev[j],S.solide[i].triangles[j]);
-						double a_n=0., a_n1=0., vol=0.;
-						for(int iter=0; iter<T3d_n1.size(); iter++){
-							a_n += std::sqrt(CGAL::to_double(T3d_n1[iter].squared_area () )); 
-							//a_n1 += std::sqrt(CGAL::to_double(Test2[iter].squared_area () )); 
-							vol += volume_prisme(T3d_n[iter], T3d_n1[iter]);
-							}
-							if (std::abs(vol)<eps){vol=0.;}
-							if (std::abs(a_n -aire_f)>0.0001){cout<< " aire n is : "<< a_n<< "aire direct "<<aire_f<< endl;}
-							if(std::abs(vol- volume_f)>0.00001){cout<<"volume balayee "<<vol<< "volume balayee n-n1 calcul direct "<<volume_f<<endl;}
-				//fin test 26 nov	calcul aire faces	 OK
+// 					 // cout<< " aire face is : "<< std::sqrt(CGAL::to_double(S.solide[i].triangles_prev[j].squared_area () ))<<endl;
+// 					 double aire_f= std::sqrt(CGAL::to_double(S.solide[i].triangles_prev[j].squared_area () ));
+// 					 double volume_f= volume_prisme(S.solide[i].triangles_prev[j],S.solide[i].triangles[j]);
+// 						double a_n=0., a_n1=0., vol=0.;
+// 						for(int iter=0; iter<T3d_n1.size(); iter++){
+// 							a_n += std::sqrt(CGAL::to_double(T3d_n1[iter].squared_area () )); 
+// 							//a_n1 += std::sqrt(CGAL::to_double(Test2[iter].squared_area () )); 
+// 							vol += volume_prisme(T3d_n[iter], T3d_n1[iter]);
+// 							}
+// 							if (std::abs(vol)<eps){vol=0.;}
+// 							if (std::abs(a_n -aire_f)>0.0001){cout<< " aire n is : "<< a_n<< "aire direct "<<aire_f<< endl;}
+// 							if(std::abs(vol- volume_f)>0.00001){cout<<"volume balayee "<<vol<< "volume balayee n-n1 calcul direct "<<volume_f<<endl;}
+// 				//fin test 26 nov	calcul aire faces	 OK
 				
 			time_1+=CGAL::to_double(user_time.time());
 		  user_time.reset();

@@ -1108,43 +1108,6 @@ Vector_3 Particule::vitesse_parois(Point_3& X_f){
 	return V_f;
 }	
 
-/*void Particule::forces_fluide(double dt){
-	//Calcul des Forces fluides et Moments fluides exerces sur le solide	
-	
-	Point_3 Xn(x0.operator[](0) + Dx.operator[](0), x0.operator[](1) + Dx.operator[](1),x0.operator[](2) + x0.operator[](2));
-	double fx=CGAL::to_double(Ff.x());
-	double fy=CGAL::to_double(Ff.y());
-	double fz=CGAL::to_double(Ff.z());
-	Kernel::FT mx = Mf.x(),my = Mf.y(),mz = Mf.z();
-	
-	for(int it=0; it<triangles.size(); it++){
-		for(int iter=0; iter<Position_Triangles_interface[it].size(); iter++)
-		{
-			double aire= std::sqrt(CGAL::to_double(Triangles_interface[it][iter].squared_area()));
-			if(dt>eps){	
-				int i= Position_Triangles_interface[it][iter][0]; 
-				int j= Position_Triangles_interface[it][iter][1]; 
-				int k= Position_Triangles_interface[it][iter][2]; 
-				double pdtx = 0.; //Fluide.grille[i][j][k].getpdtx();
-				double pdty = 0.; //Fluide.grille[i][j][k].getpdty();
-				double pdtz = 0.; //Fluide.grille[i][j][k].getpdtz();
-				double tempx = (pdtx/dt) * aire * (CGAL::to_double(normales[it].x()));
-				double tempy = (pdty/dt) * aire * (CGAL::to_double(normales[it].y()));
-				double tempz = (pdtz/dt) * aire * (CGAL::to_double(normales[it].z()));
-				
-				Vector_3 temp_Mf = cross_product(Vector_3(Xn,Point_3(centroid(Triangles_interface[it][iter].operator[](0),
-								 Triangles_interface[it][iter].operator[](1),Triangles_interface[it][iter].operator[](2)))), Vector_3(tempx,tempy,tempz));
-								 
-				fx-= tempx; fy-= tempy; fz-= tempz;
-				mx+= temp_Mf.x(); my+= temp_Mf.y(); mz+= temp_Mf.z();
-			}
-		}
-	}
-	
-	Ff = Vector_3(fx,fy,fz);
-	Mf = Vector_3(CGAL::to_double(mx),CGAL::to_double(my),CGAL::to_double(mz)); 
-	
-}*/	
 
 void Face::compProjectionIntegrals(double &P1, double &Pa, double &Pb, double &Paa, double &Pab, double &Pbb, double &Paaa, double &Paab, double &Pabb, double &Pbbb, int a, int b, int c){
   //Utilisation de la fonction decrite par Brian Mirtich 1996 (cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar)
@@ -2272,7 +2235,7 @@ double Solide::pas_temps(double t, double T){
   for(int i=0;i<size();i++){
     for(int j=0;j<solide[i].size();j++){
       if(solide[i].faces[j].voisin>=0){
-	dt = min(dt,cfls*solide[i].faces[j].D0/cs);
+	        dt = min(dt,cfls*solide[i].faces[j].D0/cs);
       }
     }
   }
