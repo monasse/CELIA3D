@@ -101,6 +101,7 @@ int main(){
 	} else {
 	  Fluide.impression(kimp);
 	  S.impression(kimp);
+	  sorties_reprise << t << endl;
 	}
 	kimp++;
 	
