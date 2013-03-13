@@ -1108,7 +1108,12 @@ Vector_3 Particule::vitesse_parois(Point_3& X_f){
 	return V_f;
 }	
 
-
+Vector_3 Particule::vitesse_parois_prev(Point_3& X_f){
+	
+	Vector_3 V_f = u_half + cross_product(omega_half, Vector_3(Point_3(x0.operator[](0) + Dxprev.operator[](0), x0.operator[](1) + Dxprev.operator[](1),x0.operator[](2) + Dxprev.operator[](2)),X_f));
+	
+	return V_f;
+}	
 void Face::compProjectionIntegrals(double &P1, double &Pa, double &Pb, double &Paa, double &Pab, double &Pbb, double &Paaa, double &Paab, double &Pabb, double &Pbbb, int a, int b, int c){
   //Utilisation de la fonction decrite par Brian Mirtich 1996 (cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar)
   P1 = Pa = Pb = Paa = Pab = Pbb = Paaa = Paab = Pabb = Pbbb = 0.;
@@ -1971,8 +1976,9 @@ void Solide::init(const char* s){
       Aff_transformation_3 rotation(rot[0][0],rot[0][1],rot[0][2],rot[1][0],rot[1][1],rot[1][2],rot[2][0],rot[2][1],rot[2][2]);
       Aff_transformation_3 translation(CGAL::TRANSLATION,Vector_3(Point_3(0.,0.,0.),solide[i].x0)+solide[i].Dx);
       Aff_transformation_3 translation_inv(CGAL::TRANSLATION,Vector_3(solide[i].x0,Point_3(0.,0.,0.))-solide[i].Dx);
+	  solide[i].mvt_tprev = solide[i].mvt_t;
       solide[i].mvt_t = translation*(rotation*translation_inv);
-      solide[i].mvt_tprev = solide[i].mvt_t;
+     
     }
     update_triangles();
   }

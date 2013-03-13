@@ -67,6 +67,7 @@ class Particule
   void solve_position(double dt);
   void solve_vitesse(double dt);
 	Vector_3 vitesse_parois(Point_3& X_f);  // condition de non-penetration a la parois
+	Vector_3 vitesse_parois_prev(Point_3& X_f);  // condition de non-penetration a la parois
   double min_x;
   double min_y;
   double min_z;

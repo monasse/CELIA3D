@@ -434,676 +434,6 @@ void Grille:: mixage(){
 
 
 
-// void Grille:: mixage(){
-// 	
-// 	Cellule cp, cg;
-// 	bool test=true;
-// 	for(int i=marge;i<Nx+marge;i++){
-// 		for(int j=marge;j<Ny+marge;j++){ 
-// 			for(int k=marge;k<Nz+marge;k++){
-// 				cp = grille[i][j][k];
-// 				if((cp.alpha>epsa || cp.p<0. || cp.rho<0.) && abs(cp.alpha-1.)>eps){
-// 					
-// 					if (grille[i-1][j][k].alpha == 0.)
-// 					{
-// 						cg = grille[i-1][j][k];
-// 						
-// 						cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
-// 						cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-// 						cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-// 						cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-// 						cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
-// 						
-// 						cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-// 						cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-// 						cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-// 						cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-// 						cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-// 						
-// 						cp.rho += cp.Mrho;
-// 						cp.impx += cp.Mimpx;
-// 						cp.impy += cp.Mimpy;
-// 						cp.impz += cp.Mimpz;
-// 						cp.rhoE += cp.MrhoE;
-// 						cp.u = cp.impx/cp.rho;
-// 						cp.v = cp.impy/cp.rho;
-// 						cp.w = cp.impz/cp.rho;
-// 						cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-// 						
-// 						
-// 						cg.rho += cg.Mrho;
-// 						cg.impx += cg.Mimpx;
-// 						cg.impy += cg.Mimpy;
-// 						cg.impz += cg.Mimpz;
-// 						cg.rhoE += cg.MrhoE;
-// 						cg.u = cg.impx/cg.rho;
-// 						cg.v = cg.impy/cg.rho;
-// 						cg.w = cg.impz/cg.rho;
-// 						cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-// 						 
-// 						grille[i][j][k] = cp;
-// 						grille[i-1][j][k] = cg;
-// 					}
-// 					else if (grille[i+1][j][k].alpha == 0.)
-// 					{
-// 						cg = grille[i+1][j][k];
-// 						
-// 						cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
-// 						cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-// 						cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-// 						cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-// 						cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
-// 						
-// 						
-// 						cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-// 						cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-// 						cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-// 						cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-// 						cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-// 						
-// 						cp.rho += cp.Mrho;
-// 						cp.impx += cp.Mimpx;
-// 						cp.impy += cp.Mimpy;
-// 						cp.impz += cp.Mimpz;
-// 						cp.rhoE += cp.MrhoE;
-// 						cp.u = cp.impx/cp.rho;
-// 						cp.v = cp.impy/cp.rho;
-// 						cp.w = cp.impz/cp.rho;
-// 						cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-// 						
-// 
-// 						
-// 						cg.rho += cg.Mrho;
-// 						cg.impx += cg.Mimpx;
-// 						cg.impy += cg.Mimpy;
-// 						cg.impz += cg.Mimpz;
-// 						cg.rhoE += cg.MrhoE;
-// 						cg.u = cg.impx/cg.rho;
-// 						cg.v = cg.impy/cg.rho;
-// 						cg.w = cg.impz/cg.rho;
-// 						cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-// 						
-// 						grille[i][j][k] = cp;
-// 						grille[i+1][j][k] = cg;
-// 					}
-// 					
-// 					else if (grille[i][j-1][k].alpha == 0.)
-// 					{
-// 						cg = grille[i][j-1][k];
-// 						
-// 						cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
-// 						cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-// 						cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-// 						cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-// 						cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
-// 						
-// 						cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-// 						cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-// 						cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-// 						cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-// 						cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-// 						
-// 						cp.rho += cp.Mrho;
-// 						cp.impx += cp.Mimpx;
-// 						cp.impy += cp.Mimpy;
-// 						cp.impz += cp.Mimpz;
-// 						cp.rhoE += cp.MrhoE;
-// 						cp.u = cp.impx/cp.rho;
-// 						cp.v = cp.impy/cp.rho;
-// 						cp.w = cp.impz/cp.rho;
-// 						cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-// 						
-// 
-// 						cg.rho += cg.Mrho;
-// 						cg.impx += cg.Mimpx;
-// 						cg.impy += cg.Mimpy;
-// 						cg.impz += cg.Mimpz;
-// 						cg.rhoE += cg.MrhoE;
-// 						cg.u = cg.impx/cg.rho;
-// 						cg.v = cg.impy/cg.rho;
-// 						cg.w = cg.impz/cg.rho;
-// 						cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-// 						
-// 						grille[i][j][k] = cp;
-// 						grille[i][j-1][k] = cg;
-// 					}
-// 					else if (grille[i][j+1][k].alpha == 0.)
-// 					{
-// 						cg = grille[i][j+1][k];
-// 						
-// 						cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
-// 						cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-// 						cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-// 						cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-// 						cp.MrhoE = (cg.rhoE - cp.rhoE)/(2.- cp.alpha);
-// 						
-// 						cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-// 						cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-// 						cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-// 						cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-// 						cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-// 						
-// 						cp.rho += cp.Mrho;
-// 						cp.impx += cp.Mimpx;
-// 						cp.impy += cp.Mimpy;
-// 						cp.impz += cp.Mimpz;
-// 						cp.rhoE += cp.MrhoE;
-// 						cp.u = cp.impx/cp.rho;
-// 						cp.v = cp.impy/cp.rho;
-// 						cp.w = cp.impz/cp.rho;
-// 						cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-// 						
-// 
-// 						cg.rho += cg.Mrho;
-// 						cg.impx += cg.Mimpx;
-// 						cg.impy += cg.Mimpy;
-// 						cg.impz += cg.Mimpz;
-// 						cg.rhoE += cg.MrhoE;
-// 						cg.u = cg.impx/cg.rho;
-// 						cg.v = cg.impy/cg.rho;
-// 						cg.w = cg.impz/cg.rho;
-// 						cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-// 						
-// 						grille[i][j][k] = cp;
-// 						grille[i][j+1][k] = cg;
-// 					}
-// 					else if (grille[i][j][k-1].alpha == 0.)
-// 					{
-// 						cg = grille[i][j][k-1];
-// 						
-// 						cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
-// 						cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-// 						cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-// 						cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-// 						cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
-// 						
-// 						cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-// 						cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-// 						cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-// 						cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-// 						cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-// 						
-// 						cp.rho += cp.Mrho;
-// 						cp.impx += cp.Mimpx;
-// 						cp.impy += cp.Mimpy;
-// 						cp.impz += cp.Mimpz;
-// 						cp.rhoE += cp.MrhoE;
-// 						cp.u = cp.impx/cp.rho;
-// 						cp.v = cp.impy/cp.rho;
-// 						cp.w = cp.impz/cp.rho;
-// 						cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-// 						
-// 						
-// 						cg.rho += cg.Mrho;
-// 						cg.impx += cg.Mimpx;
-// 						cg.impy += cg.Mimpy;
-// 						cg.impz += cg.Mimpz;
-// 						cg.rhoE += cg.MrhoE;
-// 						cg.u = cg.impx/cg.rho;
-// 						cg.v = cg.impy/cg.rho;
-// 						cg.w = cg.impz/cg.rho;
-// 						cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-// 						
-// 						grille[i][j][k] = cp;
-// 						grille[i][j][k-1] = cg;
-// 					}
-// 					else if(grille[i][j][k+1].alpha == 0.)
-// 					{
-// 						cg = grille[i][j][k+1];
-// 						
-// 						cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
-// 						cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-// 						cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-// 						cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-// 						cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
-// 						
-// 						cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-// 						cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-// 						cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-// 						cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-// 						cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-// 						
-// 						cp.rho += cp.Mrho;
-// 						cp.impx += cp.Mimpx;
-// 						cp.impy += cp.Mimpy;
-// 						cp.impz += cp.Mimpz;
-// 						cp.rhoE += cp.MrhoE;
-// 						cp.u = cp.impx/cp.rho;
-// 						cp.v = cp.impy/cp.rho;
-// 						cp.w = cp.impz/cp.rho;
-// 						cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-// 						
-// 	
-// 						cg.rho += cg.Mrho;
-// 						cg.impx += cg.Mimpx;
-// 						cg.impy += cg.Mimpy;
-// 						cg.impz += cg.Mimpz;
-// 						cg.rhoE += cg.MrhoE;
-// 						cg.u = cg.impx/cg.rho;
-// 						cg.v = cg.impy/cg.rho;
-// 						cg.w = cg.impz/cg.rho;
-// 						cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-// 						
-// 						grille[i][j][k] = cp;
-// 						grille[i][j][k+1] = cg;
-// 					}
-// 					
-// 					else if (grille[i-2][j][k].alpha == 0.)
-// 					{
-// 						cg = grille[i-2][j][k];
-// 						
-// 						cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
-// 						cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-// 						cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-// 						cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-// 						cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
-// 						
-// 						cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-// 						cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-// 						cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-// 						cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-// 						cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-// 						
-// 						cp.rho += cp.Mrho;
-// 						cp.impx += cp.Mimpx;
-// 						cp.impy += cp.Mimpy;
-// 						cp.impz += cp.Mimpz;
-// 						cp.rhoE += cp.MrhoE;
-// 						cp.u = cp.impx/cp.rho;
-// 						cp.v = cp.impy/cp.rho;
-// 						cp.w = cp.impz/cp.rho;
-// 						cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-// 						
-// 						cg.rho += cg.Mrho;
-// 						cg.impx += cg.Mimpx;
-// 						cg.impy += cg.Mimpy;
-// 						cg.impz += cg.Mimpz;
-// 						cg.rhoE += cg.MrhoE;
-// 						cg.u = cg.impx/cg.rho;
-// 						cg.v = cg.impy/cg.rho;
-// 						cg.w = cg.impz/cg.rho;
-// 						cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-// 						
-// 						grille[i][j][k] = cp;
-// 						grille[i-2][j][k] = cg;
-// 					}
-// 					else if (grille[i+2][j][k].alpha == 0.)
-// 					{
-// 						cg = grille[i+2][j][k];
-// 						
-// 						cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
-// 						cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-// 						cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-// 						cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-// 						cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
-// 						
-// 						cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-// 						cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-// 						cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-// 						cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-// 						cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-// 						
-// 						cp.rho += cp.Mrho;
-// 						cp.impx += cp.Mimpx;
-// 						cp.impy += cp.Mimpy;
-// 						cp.impz += cp.Mimpz;
-// 						cp.rhoE += cp.MrhoE;
-// 						cp.u = cp.impx/cp.rho;
-// 						cp.v = cp.impy/cp.rho;
-// 						cp.w = cp.impz/cp.rho;
-// 						cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-// 						
-// 						
-// 						cg.rho += cg.Mrho;
-// 						cg.impx += cg.Mimpx;
-// 						cg.impy += cg.Mimpy;
-// 						cg.impz += cg.Mimpz;
-// 						cg.rhoE += cg.MrhoE;
-// 						cg.u = cg.impx/cg.rho;
-// 						cg.v = cg.impy/cg.rho;
-// 						cg.w = cg.impz/cg.rho;
-// 						cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-// 						
-// 						grille[i][j][k] = cp;
-// 						grille[i+2][j][k] = cg;
-// 					}
-// 					
-// 					else if (grille[i][j-2][k].alpha == 0.)
-// 					{
-// 						cg = grille[i][j-2][k];
-// 						
-// 						cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
-// 						cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-// 						cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-// 						cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-// 						cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
-// 						
-// 						cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-// 						cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-// 						cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-// 						cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-// 						cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-// 						
-// 						cp.rho += cp.Mrho;
-// 						cp.impx += cp.Mimpx;
-// 						cp.impy += cp.Mimpy;
-// 						cp.impz += cp.Mimpz;
-// 						cp.rhoE += cp.MrhoE;
-// 						cp.u = cp.impx/cp.rho;
-// 						cp.v = cp.impy/cp.rho;
-// 						cp.w = cp.impz/cp.rho;
-// 						cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-// 						
-// 
-// 						cg.rho += cg.Mrho;
-// 						cg.impx += cg.Mimpx;
-// 						cg.impy += cg.Mimpy;
-// 						cg.impz += cg.Mimpz;
-// 						cg.rhoE += cg.MrhoE;
-// 						cg.u = cg.impx/cg.rho;
-// 						cg.v = cg.impy/cg.rho;
-// 						cg.w = cg.impz/cg.rho;
-// 						cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-// 						
-// 						grille[i][j][k] = cp;
-// 						grille[i][j-2][k] = cg;
-// 					}
-// 					else if (grille[i][j+2][k].alpha == 0.)
-// 					{
-// 						cg = grille[i][j+2][k];
-// 						
-// 						cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
-// 						cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-// 						cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-// 						cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-// 						cp.MrhoE = (cg.rhoE - cp.rhoE)/(2.- cp.alpha);
-// 						
-// 						cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-// 						cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-// 						cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-// 						cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-// 						cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-// 						
-// 						cp.rho += cp.Mrho;
-// 						cp.impx += cp.Mimpx;
-// 						cp.impy += cp.Mimpy;
-// 						cp.impz += cp.Mimpz;
-// 						cp.rhoE += cp.MrhoE;
-// 						cp.u = cp.impx/cp.rho;
-// 						cp.v = cp.impy/cp.rho;
-// 						cp.w = cp.impz/cp.rho;
-// 						cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-// 						
-// 						
-// 						cg.rho += cg.Mrho;
-// 						cg.impx += cg.Mimpx;
-// 						cg.impy += cg.Mimpy;
-// 						cg.impz += cg.Mimpz;
-// 						cg.rhoE += cg.MrhoE;
-// 						cg.u = cg.impx/cg.rho;
-// 						cg.v = cg.impy/cg.rho;
-// 						cg.w = cg.impz/cg.rho;
-// 						cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-// 						
-// 						grille[i][j][k] = cp;
-// 						grille[i][j+2][k] = cg;
-// 					}
-// 					else if (grille[i][j][k-2].alpha == 0.)
-// 					{
-// 						cg = grille[i][j][k-2];
-// 						
-// 						cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
-// 						cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-// 						cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-// 						cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-// 						cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
-// 						
-// 						cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-// 						cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-// 						cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-// 						cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-// 						cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-// 						
-// 						cp.rho += cp.Mrho;
-// 						cp.impx += cp.Mimpx;
-// 						cp.impy += cp.Mimpy;
-// 						cp.impz += cp.Mimpz;
-// 						cp.rhoE += cp.MrhoE;
-// 						cp.u = cp.impx/cp.rho;
-// 						cp.v = cp.impy/cp.rho;
-// 						cp.w = cp.impz/cp.rho;
-// 						cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-// 						
-// 
-// 						cg.rho += cg.Mrho;
-// 						cg.impx += cg.Mimpx;
-// 						cg.impy += cg.Mimpy;
-// 						cg.impz += cg.Mimpz;
-// 						cg.rhoE += cg.MrhoE;
-// 						cg.u = cg.impx/cg.rho;
-// 						cg.v = cg.impy/cg.rho;
-// 						cg.w = cg.impz/cg.rho;
-// 						cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-// 						
-// 						grille[i][j][k] = cp;
-// 						grille[i][j][k-2] = cg;
-// 					}
-// 					else if(grille[i][j][k+2].alpha == 0.)
-// 					{
-// 						cg = grille[i][j][k+2];
-// 						
-// 						cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
-// 						cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-// 						cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-// 						cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-// 						cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
-// 						
-// 						cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-// 						cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-// 						cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-// 						cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-// 						cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-// 						
-// 						cp.rho += cp.Mrho;
-// 						cp.impx += cp.Mimpx;
-// 						cp.impy += cp.Mimpy;
-// 						cp.impz += cp.Mimpz;
-// 						cp.rhoE += cp.MrhoE;
-// 						cp.u = cp.impx/cp.rho;
-// 						cp.v = cp.impy/cp.rho;
-// 						cp.w = cp.impz/cp.rho;
-// 						cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-// 						
-// 
-// 						cg.rho += cg.Mrho;
-// 						cg.impx += cg.Mimpx;
-// 						cg.impy += cg.Mimpy;
-// 						cg.impz += cg.Mimpz;
-// 						cg.rhoE += cg.MrhoE;
-// 						cg.u = cg.impx/cg.rho;
-// 						cg.v = cg.impy/cg.rho;
-// 						cg.w = cg.impz/cg.rho;
-// 						cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-// 						
-// 						grille[i][j][k] = cp;
-// 						grille[i][j][k+2] = cg;
-// 					}
-// 					else if(grille[i-1][j-1][k].alpha <= eps_relat)
-// 					{
-// 						cg = grille[i-1][j-1][k];
-// 						
-// 						cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
-// 						cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-// 						cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-// 						cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-// 						cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
-// 						
-// 						cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-// 						cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-// 						cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-// 						cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-// 						cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-// 						
-// 						cp.rho += cp.Mrho;
-// 						cp.impx += cp.Mimpx;
-// 						cp.impy += cp.Mimpy;
-// 						cp.impz += cp.Mimpz;
-// 						cp.rhoE += cp.MrhoE;
-// 						cp.u = cp.impx/cp.rho;
-// 						cp.v = cp.impy/cp.rho;
-// 						cp.w = cp.impz/cp.rho;
-// 						cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-// 						
-// 						
-// 						cg.rho += cg.Mrho;
-// 						cg.impx += cg.Mimpx;
-// 						cg.impy += cg.Mimpy;
-// 						cg.impz += cg.Mimpz;
-// 						cg.rhoE += cg.MrhoE;
-// 						cg.u = cg.impx/cg.rho;
-// 						cg.v = cg.impy/cg.rho;
-// 						cg.w = cg.impz/cg.rho;
-// 						cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-// 						
-// 						grille[i][j][k] = cp;
-// 						grille[i-1][j-1][k] = cg;
-// 					}
-// 					else if(grille[i-1][j+1][k].alpha <= eps_relat)
-// 					{
-// 						cg = grille[i-1][j+1][k];
-// 						
-// 						cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
-// 						cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-// 						cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-// 						cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-// 						cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
-// 						
-// 						cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-// 						cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-// 						cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-// 						cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-// 						cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-// 						
-// 						cp.rho += cp.Mrho;
-// 						cp.impx += cp.Mimpx;
-// 						cp.impy += cp.Mimpy;
-// 						cp.impz += cp.Mimpz;
-// 						cp.rhoE += cp.MrhoE;
-// 						cp.u = cp.impx/cp.rho;
-// 						cp.v = cp.impy/cp.rho;
-// 						cp.w = cp.impz/cp.rho;
-// 						cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-// 						
-// 						
-// 						cg.rho += cg.Mrho;
-// 						cg.impx += cg.Mimpx;
-// 						cg.impy += cg.Mimpy;
-// 						cg.impz += cg.Mimpz;
-// 						cg.rhoE += cg.MrhoE;
-// 						cg.u = cg.impx/cg.rho;
-// 						cg.v = cg.impy/cg.rho;
-// 						cg.w = cg.impz/cg.rho;
-// 						cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-// 						
-// 						grille[i][j][k] = cp;
-// 						grille[i-1][j+1][k] = cg;
-// 					}
-// 					else if(grille[i+1][j-1][k].alpha <= eps_relat)
-// 					{
-// 						cg = grille[i+1][j-1][k];
-// 						
-// 						cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
-// 						cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-// 						cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-// 						cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-// 						cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
-// 						
-// 						cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-// 						cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-// 						cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-// 						cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-// 						cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-// 						
-// 						cp.rho += cp.Mrho;
-// 						cp.impx += cp.Mimpx;
-// 						cp.impy += cp.Mimpy;
-// 						cp.impz += cp.Mimpz;
-// 						cp.rhoE += cp.MrhoE;
-// 						cp.u = cp.impx/cp.rho;
-// 						cp.v = cp.impy/cp.rho;
-// 						cp.w = cp.impz/cp.rho;
-// 						cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-// 						
-// 						
-// 						cg.rho += cg.Mrho;
-// 						cg.impx += cg.Mimpx;
-// 						cg.impy += cg.Mimpy;
-// 						cg.impz += cg.Mimpz;
-// 						cg.rhoE += cg.MrhoE;
-// 						cg.u = cg.impx/cg.rho;
-// 						cg.v = cg.impy/cg.rho;
-// 						cg.w = cg.impz/cg.rho;
-// 						cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-// 						
-// 						grille[i][j][k] = cp;
-// 						grille[i+1][j-1][k] = cg;
-// 					}
-// 					else if(grille[i+1][j+1][k].alpha <= eps_relat)
-// 					{
-// 						cg = grille[i+1][j+1][k];
-// 						
-// 						cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
-// 						cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-// 						cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-// 						cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-// 						cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
-// 						
-// 						cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-// 						cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-// 						cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-// 						cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-// 						cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-// 						
-// 						cp.rho += cp.Mrho;
-// 						cp.impx += cp.Mimpx;
-// 						cp.impy += cp.Mimpy;
-// 						cp.impz += cp.Mimpz;
-// 						cp.rhoE += cp.MrhoE;
-// 						cp.u = cp.impx/cp.rho;
-// 						cp.v = cp.impy/cp.rho;
-// 						cp.w = cp.impz/cp.rho;
-// 						cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);						
-// 
-// 						cg.rho += cg.Mrho;
-// 						cg.impx += cg.Mimpx;
-// 						cg.impy += cg.Mimpy;
-// 						cg.impz += cg.Mimpz;
-// 						cg.rhoE += cg.MrhoE;
-// 						cg.u = cg.impx/cg.rho;
-// 						cg.v = cg.impy/cg.rho;
-// 						cg.w = cg.impz/cg.rho;
-// 						cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-// 						
-// 						grille[i][j][k] = cp;
-// 						grille[i+1][j+1][k] = cg;
-// 					}
-// 					else {
-// 						if(test){std::cout<<"Pas de cellule cible pour le mixage"<<std::endl; 
-// 										std::cout<<" grille qui faut melanger "<<std::endl;
-// 										cp.Affiche();
-// 										test=false;
-// 						}
-// 					}
-// 					
-// 				}
-// 				
-// 			}
-// 		}
-// 	}
-// 	
-// } 
-
-
 void Grille::fill_cel(Solide& S){
 	
 	Cellule c, cm;
@@ -1604,7 +934,7 @@ void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,i
 
 }
 
-void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt){
+void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  Particule & P){
 	
 	CGAL::Timer user_time, user_time2;
 	double time=0.;
@@ -1624,8 +954,8 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt){
 		in_cell(center_prev, in, jn, kn, interieur);
 		in_cell(center_n, in1, jn1, kn1, interieur);
 		
-		Cellule c_cur= grille[in1][jn1][kn1];
-		if((std::abs(c_cur.alpha -1.)<eps)  && (interieur==true)){
+		//Cellule c_cur= grille[in1][jn1][kn1];
+		if((std::abs(grille[in1][jn1][kn1].alpha -1.)<eps)  && (interieur==true)){
 			double x= CGAL::to_double(center_n.operator[](0));
 			double y= CGAL::to_double(center_n.operator[](1));
 			double z= CGAL::to_double(center_n.operator[](2));
@@ -1654,17 +984,17 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt){
 		} // end if alpha==1
 		  
     Cellule c= grille[in1][jn1][kn1];
-
+		double volume_cel = c.dx*c.dy*c.dz;  
 		if ( (in==in1) && (jn==jn1) && (kn==kn1) && (interieur==true)){
 			// le prisme est contenu dans une seule cellule 
 			double volume_p=volume_prisme(T3d_prev[i],T3d_n[i]);
 			//calcul du volume
 			if( (std::abs(volume_p)>eps) && (std::abs(1.-c.alpha)>eps)){
-			c.delta_w[0] += volume_p*c.rho0/(c.dx*c.dy*c.dz); 
-			c.delta_w[1] += volume_p*c.impx0/(c.dx*c.dy*c.dz);
-			c.delta_w[2] += volume_p*c.impy0/(c.dx*c.dy*c.dz); 
-			c.delta_w[3] += volume_p*c.impz0/(c.dx*c.dy*c.dz); 
-			c.delta_w[4] += volume_p*c.rhoE0/(c.dx*c.dy*c.dz);
+				c.delta_w[0] += volume_p*c.rho0/volume_cel; 
+				c.delta_w[1] += volume_p*c.impx0/volume_cel;
+				c.delta_w[2] += volume_p*c.impy0/volume_cel; 
+				c.delta_w[3] += volume_p*c.impz0/volume_cel; 
+				c.delta_w[4] += volume_p*c.rhoE0/volume_cel;
 			grille[in1][jn1][kn1] = c;
 			}
 			//vol_test += volume_p;
@@ -1779,16 +1109,38 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt){
 			}//if inter box_cell inter box_prisme
 			
 			if(std::abs(volume)>eps){
-				c.delta_w[0] += volume*Cells[iter].rho0/(c.dx*c.dy*c.dz); 
-				c.delta_w[1] += volume*Cells[iter].impx0/(c.dx*c.dy*c.dz);
-				c.delta_w[2] += volume*Cells[iter].impy0/(c.dx*c.dy*c.dz); 
-				c.delta_w[3] += volume*Cells[iter].impz0/(c.dx*c.dy*c.dz); 
-				c.delta_w[4] += volume*Cells[iter].rhoE0/(c.dx*c.dy*c.dz);
+				c.delta_w[0] += volume*Cells[iter].rho0/volume_cel; 
+				c.delta_w[1] += volume*Cells[iter].impx0/volume_cel;
+				c.delta_w[2] += volume*Cells[iter].impy0/volume_cel; 
+				c.delta_w[3] += volume*Cells[iter].impz0/volume_cel; 
+				c.delta_w[4] += volume*Cells[iter].rhoE0/volume_cel;
 				grille[in1][jn1][kn1] = c;
 			}
 			//vol_test += volume;
 		 } // boucle sur les box_cells
 		}//end else 
+		
+			Vector_3 norm= orthogonal_vector(T3d_prev[i].operator[](0),T3d_prev[i].operator[](1),T3d_prev[i].operator[](2));
+			double norm2= sqrt(CGAL::to_double(norm*norm));
+			if(norm2>eps){ 
+				Cellule c_prev= grille[in][jn][kn];
+				Vector_3 n_prev = norm/norm2;
+				double aire_prev = sqrt(CGAL::to_double(T3d_prev[i].squared_area()));
+				c.phi_x += c_prev.pdtx * aire_prev *( CGAL::to_double(n_prev.x()))/volume_cel;
+				c.phi_y += c_prev.pdty * aire_prev *( CGAL::to_double(n_prev.y()))/volume_cel;
+				c.phi_z += c_prev.pdtz * aire_prev *( CGAL::to_double(n_prev.z()))/volume_cel;
+			
+				Vector_3 V_f = P.vitesse_parois_prev(center_prev);
+				c.phi_v += aire_prev * (CGAL::to_double(c.pdtx*n_prev.x()*V_f.x()  + c.pdty*n_prev.y()*V_f.y()+
+				c.pdtz*n_prev.z()*V_f.z()))/volume_cel;
+			
+				if (abs(c.phi_x)<=eps) {c.phi_x = 0.;} 
+				if (abs(c.phi_y)<=eps) {c.phi_y = 0.;} 
+				if (abs(c.phi_z)<=eps) {c.phi_z = 0.;} 
+				if (abs(c.phi_v)<=eps) {c.phi_v = 0.;} 
+			
+				grille[in1][jn1][kn1] = c;
+			}
 	} //end boucle sur les prismes
 }	
 
@@ -1892,7 +1244,7 @@ void Grille::swap_3d(const double dt, Solide& S, int& n, int &n1, int& m){
 			time_1+=CGAL::to_double(user_time.time());
 		  user_time.reset();
 		  user_time2.start();
-		  swap_face(T3d_n,T3d_n1,dt);
+			swap_face(T3d_n,T3d_n1,dt,S.solide[i] );
 			time_2+=CGAL::to_double(user_time2.time());
 		  user_time2.reset();
 		}
@@ -2068,7 +1420,7 @@ void Grille::swap_2d(const double dt, Solide& S, int& n, int &n1, int& m){
 //        if(std::abs(vol_tetra)<eps){vol_tetra=0.;}
 //        cout<< "volume tetra:                      "<<vol_tetra<<endl;
 // 			 //fin test 6 nov ok
-		   swap_face(T3d_n,T3d_n1,dt);
+       swap_face(T3d_n,T3d_n1,dt, S.solide[i]);
 		  //cout << "Temps swap_modification_flux: " << user_time2.time() << " seconds." << endl;
 			//cout << "nb sous triang face: " << T3d_n.size()<< endl;
 			time_2+=CGAL::to_double(user_time2.time());

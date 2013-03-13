@@ -339,24 +339,24 @@ void Grille::parois(Solide& S,double dt) {
 						
 					}
 					
-					for (int it= 0; it< v_lambda.size(); it++)
-					{
-						cel.phi_x += cel.pdtx * v_lambda[it] *( CGAL::to_double(v_n_lambda[it].x()))/volume_cel;
-						cel.phi_y += cel.pdty *v_lambda[it] *( CGAL::to_double(v_n_lambda[it].y()))/volume_cel;
-						cel.phi_z += cel.pdtz *v_lambda[it] *( CGAL::to_double(v_n_lambda[it].z()))/volume_cel;
-						bool in = false; Vector_3 V_f;
-						for (int iter_s=0; iter_s<nb_particules && in==false; iter_s++){
-							in = inside_convex_polygon(S.solide[iter_s] ,X_f[it]);
-							V_f = S.solide[iter_s].vitesse_parois(X_f[it]);
-						}
-            cel.phi_v += v_lambda[it] * (CGAL::to_double(cel.pdtx*v_n_lambda[it].x()*V_f.x()  + cel.pdty*v_n_lambda[it].y()*V_f.y()+
-                                          cel.pdtz*v_n_lambda[it].z()*V_f.z()))/volume_cel;
-             }
-					
-					if (abs(cel.phi_x)<=eps_relat) {cel.phi_x = 0.;} 
-					if (abs(cel.phi_y)<=eps_relat) {cel.phi_y = 0.;} 
-					if (abs(cel.phi_z)<=eps_relat) {cel.phi_z = 0.;} 
-					if (abs(cel.phi_v)<=eps_relat) {cel.phi_v = 0.;} 
+// 					for (int it= 0; it< v_lambda.size(); it++)
+// 					{
+// 						cel.phi_x += cel.pdtx * v_lambda[it] *( CGAL::to_double(v_n_lambda[it].x()))/volume_cel;
+// 						cel.phi_y += cel.pdty *v_lambda[it] *( CGAL::to_double(v_n_lambda[it].y()))/volume_cel;
+// 						cel.phi_z += cel.pdtz *v_lambda[it] *( CGAL::to_double(v_n_lambda[it].z()))/volume_cel;
+// 						bool in = false; Vector_3 V_f;
+// 						for (int iter_s=0; iter_s<nb_particules && in==false; iter_s++){
+// 							in = inside_convex_polygon(S.solide[iter_s] ,X_f[it]);
+// 							V_f = S.solide[iter_s].vitesse_parois(X_f[it]);
+// 						}
+//             cel.phi_v += v_lambda[it] * (CGAL::to_double(cel.pdtx*v_n_lambda[it].x()*V_f.x()  + cel.pdty*v_n_lambda[it].y()*V_f.y()+
+//                                           cel.pdtz*v_n_lambda[it].z()*V_f.z()))/volume_cel;
+//              }
+// 					
+// 					if (abs(cel.phi_x)<=eps_relat) {cel.phi_x = 0.;} 
+// 					if (abs(cel.phi_y)<=eps_relat) {cel.phi_y = 0.;} 
+// 					if (abs(cel.phi_z)<=eps_relat) {cel.phi_z = 0.;} 
+// 					if (abs(cel.phi_v)<=eps_relat) {cel.phi_v = 0.;} 
 					
 					cel.alpha = alpha/volume_cel;
 					cel.kappai = kappa[3]/(deltay * deltaz);

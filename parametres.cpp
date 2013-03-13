@@ -1,6 +1,6 @@
 #include "parametres.hpp"
 
-//Définition des conditions initiales pour le fluide
+//Dï¿½finition des conditions initiales pour le fluide
 //En cas de reprise
 double rhoi[Nx][Ny][Nz];
 double ui[Nx][Ny][Nz];
@@ -40,9 +40,9 @@ void reprise(){
   int Ninfo;
   init>>cells>>N>>Ninfo;
   //cout << N << endl;
-  //On enregistre le numéro du point de coin de (i,j,k) inférieur pour chaque cellule
+  //On enregistre le numï¿½ro du point de coin de (i,j,k) infï¿½rieur pour chaque cellule
   //Utilise fondamentalement la construction de la sortie fluide dans impression()
-  //Recuperation des indices où alpha est non nul
+  //Recuperation des indices oï¿½ alpha est non nul
   int index[N][3];
   int indice;
   double x,y,z;
@@ -242,7 +242,7 @@ void reprise(){
 double Rho(double x,double y, double z){ 
   double rho;
   if(x<1.5)
-  	{rho = 8.;} 
+  	{rho = 1.4;} 
    else {rho = 1.4;}
   //En cas de reprise
   if(rep){
@@ -301,7 +301,7 @@ double W(double x,double y, double z){
  double P(double x,double y, double z, double dx, double dy, double dz){ 
 
   double p; 
-  if(x<1.5){p = 116.5;} 
+  if(x<0.16){p = 5.;} 
   else {p = 1.;}
   //En cas de reprise
   if(rep){

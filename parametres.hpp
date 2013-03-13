@@ -9,13 +9,13 @@
 using std::string;
 
 //Flag pour la reprise : false si on ne reprend pas, true si on reprend
-int rep = true;
-int numrep = 3;//Numéro de la reprise
+int rep = false;
+int numrep = 3;//Numï¿½ro de la reprise
 
 
 //Parametres pour le fluide
 const double gam = 1.4;            //constante des gaz parfaits 
-const double eps = 0.00000000001;      //constante proche de 0 pour le controle 
+const double eps =  0.00000000000001;     //constante proche de 0 pour le controle 
 const double epsa = 0.5;           //fraction de cellule coupee
 const int ordremax = 11;           //ordre maximal du schema
 const int marge = 6;              //marge de cellules a appliquer au debut et a la fin du tableau des cellules  
@@ -26,40 +26,40 @@ const double X0 = 0;              //pozition de l'origine
 const double Y0 = 0;
 const double Z0 = 0;
 
-const int Nx =53;                 //nombre de cellules de fluide selon x
-const int Ny =27;                 //nombre de cellules de fluide selon y
-const int Nz =27;                 //nombre de cellules de fluide selon z
+const int Nx =73;                 //nombre de cellules de fluide selon x
+const int Ny =37;                 //nombre de cellules de fluide selon y
+const int Nz =37;                 //nombre de cellules de fluide selon z
 
-const double domainex = 4.;            //Largeur du domaine fluide selon x
-const double domainey = 2.;          //Largeur du domaine fluide selon y
-const double domainez = 2.;          //Largeur du domaine fluide selon z
+const double domainex = 2.;            //Largeur du domaine fluide selon x
+const double domainey = 1.;          //Largeur du domaine fluide selon y
+const double domainez = 1.;          //Largeur du domaine fluide selon z
 
 const double deltax = domainex/Nx;      //Pas d'espace pour le fluide selon x
 const double deltay = domainey/Ny;       //Pas d'espace pour le fluide selon y
 const double deltaz = domainez/Nz;       //Pas d'espace pour le fluide selon z
 
 //Parametres solides
-const double rhos = 100.; //Densite du solide 
+const double rhos = 10.; //Densite du solide 
 const double nu = 0.; //Coefficient de Poisson du materiau
-const double E = 7000; //Module d'Young du materiau
+const double E = 6.e5; //Module d'Young du materiau
 
 //Parametres temprels
-const double T = 4.;             //temps total de simulation
+const double T = 1.;             //temps total de simulation
 const double cfl = 0.5;            //valeur de la cfl fluide
 const double cfls = 0.5;           //Valeur de la cfl solide
-const int nimp = 100;                //Nombre d'impressions
+const int nimp = 10;                //Nombre d'impressions
 const double dtimp = T/nimp;        //Pas de temps entre deux impressions
-const int Nmax = 1000000;           //nombre maximal d'iterations en temps
+const int Nmax = 100000000;           //nombre maximal d'iterations en temps
 
 //Conditions aux limites
 //Type de CL :  1 = reflecting ("miroir"); 2 = periodic("periodique"); 3= outflow("transmisibles");
 
 const int BC_x_in =  2;                 // Inner Boundary Condition for x
 const int BC_x_out = 2;                 // Outer Boundary Condition for x
-const int BC_y_in =  1;                 // Inner Boundary Condition for y
-const int BC_y_out = 1;                 // Outer Boundary Condition for y
-const int BC_z_in =  1;                 // Inner Boundary Condition for z
-const int BC_z_out = 1;                 // Outer Boundary Condition for z
+const int BC_y_in =  2;                 // Inner Boundary Condition for y
+const int BC_y_out = 2;                 // Outer Boundary Condition for y
+const int BC_z_in =  2;                 // Inner Boundary Condition for z
+const int BC_z_out = 2;                 // Outer Boundary Condition for z
 
 double Rho(double x = 0.,double y = 0., double z = 0.);
 

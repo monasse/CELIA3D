@@ -133,7 +133,8 @@ int main(){
 		center<< t << " "<<S.solide[nb_part-1].x0.operator[](0) + S.solide[nb_part-1].Dx.operator[](0) << " "<<S.solide[nb_part-1].x0.operator[](1) + S.solide[nb_part-1].Dx.operator[](1) << " "<<S.solide[nb_part-1].x0.operator[](2) + S.solide[nb_part-1].Dx.operator[](2) <<endl;
 
 		
-		dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
+		//dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
+		dt = 0.005;
 		//Fluide.affiche("avant Solve");
 		user_time2.start();
 		Fluide.Solve(dt, t, n);
