@@ -10,7 +10,7 @@ using std::string;
 
 //Flag pour la reprise : false si on ne reprend pas, true si on reprend
 int rep = false;
-int numrep = 3;//Num�ro de la reprise
+int numrep = 0;//Numero de la reprise
 
 
 //Parametres pour le fluide

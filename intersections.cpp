@@ -412,7 +412,6 @@ void Grille::parois(Solide& S,double dt) {
 							}
 					} //fin boucle sur Triangles
 				} //fin boucle sur les particules
-				
 			} //fin boucle sur grille
 		}
 	}	

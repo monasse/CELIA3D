@@ -952,7 +952,7 @@ void Particule::solve_position(double dt){
   mvt_tprev = mvt_t;
   Aff_transformation_3 rotation(rot[0][0],rot[0][1],rot[0][2],rot[1][0],rot[1][1],rot[1][2],rot[2][0],rot[2][1],rot[2][2]);
   Aff_transformation_3 translation(CGAL::TRANSLATION,Vector_3(Point_3(0.,0.,0.),x0)+Dx);
-  Aff_transformation_3 translation_inv(CGAL::TRANSLATION,Vector_3(x0,Point_3(0.,0.,0.))-Dx);
+  Aff_transformation_3 translation_inv(CGAL::TRANSLATION,Vector_3(x0,Point_3(0.,0.,0.)));
   mvt_t = translation*(rotation*translation_inv);
 }
 
@@ -1103,7 +1103,7 @@ double Particule::volume(){
 
 Vector_3 Particule::vitesse_parois(Point_3& X_f){
 		
-	Vector_3 V_f = u_half + cross_product(omega_half, Vector_3(Point_3(x0.operator[](0) + Dx.operator[](0), x0.operator[](1) + Dx.operator[](1),x0.operator[](2) + Dx.operator[](2)),X_f));
+  Vector_3 V_f = u_half + cross_product(omega_half, Vector_3(Point_3(x0.operator[](0) + Dx.operator[](0), x0.operator[](1) + Dx.operator[](1),x0.operator[](2) + Dx.operator[](2)),X_f));
 
 	return V_f;
 }	
@@ -1496,8 +1496,8 @@ void Particule::Inertie(){
   }
   //Test 26/11/12
   rotref[0][0] = rotref[1][1] = rotref[2][2] = 1.;
-	rotref[0][1] = rotref[1][0] = rotref[0][2] = rotref[2][0] = rotref[1][2] = rotref[2][1] = 0.;
-	// Fin Test 26/11/12
+  rotref[0][1] = rotref[1][0] = rotref[0][2] = rotref[2][0] = rotref[1][2] = rotref[2][1] = 0.;
+  // Fin Test 26/11/12
 	
   for(int i=0;i<3;i++){
     for(int j=0;j<3;j++){
@@ -1975,10 +1975,10 @@ void Solide::init(const char* s){
       rot[2][2] = 1.-2.*CGAL::to_double(solide[i].e.operator[](0)*solide[i].e.operator[](0)+solide[i].e.operator[](1)*solide[i].e.operator[](1));
       Aff_transformation_3 rotation(rot[0][0],rot[0][1],rot[0][2],rot[1][0],rot[1][1],rot[1][2],rot[2][0],rot[2][1],rot[2][2]);
       Aff_transformation_3 translation(CGAL::TRANSLATION,Vector_3(Point_3(0.,0.,0.),solide[i].x0)+solide[i].Dx);
-      Aff_transformation_3 translation_inv(CGAL::TRANSLATION,Vector_3(solide[i].x0,Point_3(0.,0.,0.))-solide[i].Dx);
-	  solide[i].mvt_tprev = solide[i].mvt_t;
+
+      Aff_transformation_3 translation_inv(CGAL::TRANSLATION,Vector_3(solide[i].x0,Point_3(0.,0.,0.)));
+      solide[i].mvt_tprev = solide[i].mvt_t;
       solide[i].mvt_t = translation*(rotation*translation_inv);
-     
     }
     update_triangles();
   }
