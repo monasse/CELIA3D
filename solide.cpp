@@ -1850,9 +1850,9 @@ void Solide::init(const char* s){
       }
       int voisin;
       maillage >> voisin;
-      Faces[j] = Face::Face(Vertex, voisin);
+      Faces[j] = Face(Vertex, voisin);
     }
-    P[i] = Particule::Particule(centre, xmin, ymin, zmin, xmax, ymax, zmax, Faces);
+    P[i] = Particule(centre, xmin, ymin, zmin, xmax, ymax, zmax, Faces);
     P[i].fixe = fixe;
     P[i].u = Vector_3(u,v,w);
     P[i].omega = Vector_3(theta,phi,psi);
