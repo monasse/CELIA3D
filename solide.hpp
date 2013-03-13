@@ -111,8 +111,8 @@ class Particule
   Vector_3 u_half; //Vitesse de la particule a t-dt/2
   Vector_3 omega; //Vecteur rotation au temps t
   Vector_3 omega_half;//Vecteur rotation au temps t-dt/2
-  double rot[3][3]; //Matrice de rotation de la particule a t
-  double rotprev[3][3]; //Matrice de rotation de la particule a t-dt
+  Vector_3 e; //Vecteur de rotation de la particule a t
+  Vector_3 eprev; //Vecteur de rotation de la particule a t-dt
   Aff_transformation_3 mvt_t; //Transformation affine de la particule au temps t
   Aff_transformation_3 mvt_tprev; //Transformation affine de la particule au temps t-dt
 };  
