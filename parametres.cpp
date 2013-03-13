@@ -241,7 +241,7 @@ void reprise(){
 
 double Rho(double x,double y, double z){ 
   double rho;
-  if(x<1.5)
+  if(x<-1.5)
   	{rho = 8.;} 
    else {rho = 1.4;}
   //En cas de reprise
@@ -257,7 +257,7 @@ double Rho(double x,double y, double z){
   return rho; 
 } 
 double U(double x,double y, double z){ 
-  double u = 0.;
+  double u = 1.;
   //En cas de reprise
   if(rep){
     int i = (int) ((x)/deltax);
@@ -301,7 +301,7 @@ double W(double x,double y, double z){
  double P(double x,double y, double z, double dx, double dy, double dz){ 
 
   double p; 
-  if(x<1.5){p = 116.5;} 
+  if(x<-1.5){p = 116.5;} 
   else {p = 1.;}
   //En cas de reprise
   if(rep){

@@ -9,7 +9,7 @@
 using std::string;
 
 //Flag pour la reprise : false si on ne reprend pas, true si on reprend
-int rep = true;
+int rep = false;
 int numrep = 3;//Numéro de la reprise
 
 
@@ -44,7 +44,7 @@ const double nu = 0.; //Coefficient de Poisson du materiau
 const double E = 7000; //Module d'Young du materiau
 
 //Parametres temprels
-const double T = 4.;             //temps total de simulation
+const double T = 1.;             //temps total de simulation
 const double cfl = 0.5;            //valeur de la cfl fluide
 const double cfls = 0.5;           //Valeur de la cfl solide
 const int nimp = 100;                //Nombre d'impressions
@@ -56,10 +56,10 @@ const int Nmax = 1000000;           //nombre maximal d'iterations en temps
 
 const int BC_x_in =  2;                 // Inner Boundary Condition for x
 const int BC_x_out = 2;                 // Outer Boundary Condition for x
-const int BC_y_in =  1;                 // Inner Boundary Condition for y
-const int BC_y_out = 1;                 // Outer Boundary Condition for y
-const int BC_z_in =  1;                 // Inner Boundary Condition for z
-const int BC_z_out = 1;                 // Outer Boundary Condition for z
+const int BC_y_in =  2;                 // Inner Boundary Condition for y
+const int BC_y_out = 2;                 // Outer Boundary Condition for y
+const int BC_z_in =  2;                 // Inner Boundary Condition for z
+const int BC_z_out = 2;                 // Outer Boundary Condition for z
 
 double Rho(double x = 0.,double y = 0., double z = 0.);
 

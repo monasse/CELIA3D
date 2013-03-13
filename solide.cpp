@@ -1971,8 +1971,8 @@ void Solide::init(const char* s){
       Aff_transformation_3 rotation(rot[0][0],rot[0][1],rot[0][2],rot[1][0],rot[1][1],rot[1][2],rot[2][0],rot[2][1],rot[2][2]);
       Aff_transformation_3 translation(CGAL::TRANSLATION,Vector_3(Point_3(0.,0.,0.),solide[i].x0)+solide[i].Dx);
       Aff_transformation_3 translation_inv(CGAL::TRANSLATION,Vector_3(solide[i].x0,Point_3(0.,0.,0.))-solide[i].Dx);
-      solide[i].mvt_t = translation*(rotation*translation_inv);
       solide[i].mvt_tprev = solide[i].mvt_t;
+      solide[i].mvt_t = translation*(rotation*translation_inv);
     }
     update_triangles();
   }
