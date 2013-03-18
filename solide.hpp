@@ -7,7 +7,7 @@ class Vertex
 public:
   Vertex();
   Vertex(const Point_3 p, std::vector<int> & parts);
-	//Vertex & operator=(const  Vertex &V); // operateur = surcharge pour l'affectation
+	Vertex & operator=(const  Vertex &V); // operateur = surcharge pour l'affectation
   Point_3 pos;
   int num;// numero du point dans le maillage de construction
   
@@ -23,7 +23,7 @@ public:
   Face();//:vertex(std::vector<Vertex>(1)){}
   Face(std::vector<Vertex> & v, int part);
   Face(std::vector<Vertex> & v, int part, double dist);
-	//Face & operator=(const  Face &F); // operateur = surcharge pour l'affectation
+	Face & operator=(const  Face &F); // operateur = surcharge pour l'affectation
   int size(){
 	return vertex.size();
   }
@@ -57,7 +57,7 @@ class Particule
 			const double x_max, const double y_max,const double z_max, 
 			std::vector<Face> & F);
   ~Particule();
-	//Particule & operator=(const Particule &P); // operateur = surcharge pour l'affectation
+	Particule & operator=(const Particule &P); // operateur = surcharge pour l'affectation
 	void Affiche();  //fonction auxilaire utile pour les tests
   double volume(); 
   void CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &Tz, double &Txx, double &Tyy, double &Tzz, double &Txy, double &Tyz, double &Tzx);
@@ -126,6 +126,7 @@ public:
   Solide();//:solide(std::vector<Particule>(1)){}
   Solide(std::vector<Particule> & Part);
   ~Solide();
+	Solide & operator=(const Solide &S); // operateur = surcharge pour l'affectation
 	void Affiche();  //fonction auxilaire utile pour les test
   int size(){
 	return solide.size();

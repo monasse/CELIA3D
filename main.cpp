@@ -164,6 +164,7 @@ int main(){
 		cout<<"iteration="<<n<< " dt="<<dt<<" t="<<t<<endl;
 		t+= dt;
 		iter++;
+
 	}
 	end=clock();
 	
