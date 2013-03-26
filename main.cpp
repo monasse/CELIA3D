@@ -83,7 +83,7 @@ int main(){
 	  t = temps[numrep];
 	}
 	Solide S;
-	S.init("maillage.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
+	S.init("maillage4.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	Grille Fluide;
 	Fluide.init();
 	Fluide.parois(S, dt);

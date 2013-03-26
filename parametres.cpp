@@ -256,7 +256,7 @@ double Rho(double x,double y, double z){
   return rho; 
 } 
 double U(double x,double y, double z){ 
-  double u = 1.;
+  double u = 0.;
   //En cas de reprise
   if(rep){
     int i = (int) ((x)/deltax);

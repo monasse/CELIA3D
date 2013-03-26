@@ -457,7 +457,7 @@ void Grille::fill_cel(Solide& S){
 					Vector_3 V_f(0.,0.,0.); //Vitesse de la paroi au point projete
 				  double dist_min = 10000000.;
 				  for(int iter=0; iter<nb_part; iter++){
-					for(int it=0;it<S.solide[iter].size();it++){
+						for(int it=0;it<S.solide[iter].triangles.size();it++){
 					  if(S.solide[iter].fluide[it]){
 							Plane_3 P(S.solide[iter].triangles[it].operator[](0),S.solide[iter].triangles[it].operator[](1),S.solide[iter].triangles[it].operator[](2));
 						for(int k=3;k<S.solide[iter].triangles.size() && P.is_degenerate();k++){//Test si le plan est degenere
@@ -1344,6 +1344,7 @@ void Grille::swap_2d(const double dt, Solide& S, int& n, int &n1, int& m){
 // 	vector< vector< vector<double > > > Test(Nx+2*marge, vector< vector<double> >(Ny+2*marge, vector<double>(Nz+2*marge,0.)) );
 	for(int i=0;i<S.solide.size();i++){
 		for (int j=0; j<S.solide[i].triangles.size(); j++){
+			if (S.solide[i].fluide[j]){
 			Triangles T3d_n,T3d_n1;
 			user_time.start();
 			n+= S.solide[i].Triangles_interface_prev[j].size();
@@ -1425,6 +1426,7 @@ void Grille::swap_2d(const double dt, Solide& S, int& n, int &n1, int& m){
 			//cout << "nb sous triang face: " << T3d_n.size()<< endl;
 			time_2+=CGAL::to_double(user_time2.time());
 		  user_time2.reset();
+			}
 		}
 	}
 	//cout << "Temps sous-maillage face: " << time_1 << " seconds." << endl;

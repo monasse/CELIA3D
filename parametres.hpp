@@ -10,12 +10,12 @@ using std::string;
 
 //Flag pour la reprise : false si on ne reprend pas, true si on reprend
 int rep = false;
-int numrep = 0;//Numero de la reprise
+int numrep = 3;//Num�ro de la reprise
 
 
 //Parametres pour le fluide
 const double gam = 1.4;            //constante des gaz parfaits 
-const double eps =  0.00000000000001;     //constante proche de 0 pour le controle 
+const double eps = 0.00000000001;      //constante proche de 0 pour le controle 
 const double epsa = 0.5;           //fraction de cellule coupee
 const int ordremax = 11;           //ordre maximal du schema
 const int marge = 6;              //marge de cellules a appliquer au debut et a la fin du tableau des cellules  
@@ -26,30 +26,30 @@ const double X0 = 0;              //pozition de l'origine
 const double Y0 = 0;
 const double Z0 = 0;
 
-const int Nx =73;                 //nombre de cellules de fluide selon x
-const int Ny =37;                 //nombre de cellules de fluide selon y
-const int Nz =37;                 //nombre de cellules de fluide selon z
+const int Nx =53;                 //nombre de cellules de fluide selon x
+const int Ny =53;                 //nombre de cellules de fluide selon y
+const int Nz =53;                 //nombre de cellules de fluide selon z
 
 const double domainex = 2.;            //Largeur du domaine fluide selon x
-const double domainey = 1.;          //Largeur du domaine fluide selon y
-const double domainez = 1.;          //Largeur du domaine fluide selon z
+const double domainey = 2.;          //Largeur du domaine fluide selon y
+const double domainez = 2.;          //Largeur du domaine fluide selon z
 
 const double deltax = domainex/Nx;      //Pas d'espace pour le fluide selon x
 const double deltay = domainey/Ny;       //Pas d'espace pour le fluide selon y
 const double deltaz = domainez/Nz;       //Pas d'espace pour le fluide selon z
 
 //Parametres solides
-const double rhos = 10.; //Densite du solide 
+const double rhos = 100.; //Densite du solide 
 const double nu = 0.; //Coefficient de Poisson du materiau
-const double E = 6.e5; //Module d'Young du materiau
+const double E = 7000; //Module d'Young du materiau
 
 //Parametres temprels
 const double T = 1.;             //temps total de simulation
 const double cfl = 0.5;            //valeur de la cfl fluide
 const double cfls = 0.5;           //Valeur de la cfl solide
-const int nimp = 10;                //Nombre d'impressions
+const int nimp = 100;                //Nombre d'impressions
 const double dtimp = T/nimp;        //Pas de temps entre deux impressions
-const int Nmax = 100000000;           //nombre maximal d'iterations en temps
+const int Nmax = 10000000;           //nombre maximal d'iterations en temps
 
 //Conditions aux limites
 //Type de CL :  1 = reflecting ("miroir"); 2 = periodic("periodique"); 3= outflow("transmisibles");
@@ -70,5 +70,6 @@ double V(double x = 0.,double y = 0., double z = 0.);
 double W(double x = 0.,double y = 0., double z = 0.);
 
 double P(double x = 0.,double y = 0., double z = 0., double dx = deltax, double dy = deltay, double dz = deltaz); 
+
 
 #endif

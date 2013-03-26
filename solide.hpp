@@ -76,9 +76,9 @@ class Particule
   double max_z;
   bool cube;
 
-  int size(){
-	return faces.size();
-  }
+//   int size(){
+// 	return faces.size();
+//   }
   std::vector<Face> faces;
   Triangles triangles;
   Triangles triangles_prev;

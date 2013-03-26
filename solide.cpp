@@ -721,7 +721,7 @@ Particule & Particule:: operator=(const Particule &P){
 		fluide_prev[i] = P.fluide_prev[i];
 	}
 	
-	Points_interface.resize(P.triangles.size(), std::vector<Point_3>(0));
+	Points_interface.resize(P.Points_interface.size(), std::vector<Point_3>(0));
 	for(int i= 0; i< P.triangles.size(); i++){
 		Points_interface[i].resize(P.Points_interface[i].size());
 		for(int j=0; j<P.Points_interface[i].size(); j++ ){
@@ -729,7 +729,7 @@ Particule & Particule:: operator=(const Particule &P){
 		}
 	}
 	
-	Points_interface_prev.resize(P.triangles.size(), std::vector<Point_3>(0));
+	Points_interface_prev.resize(P.Points_interface_prev.size(), std::vector<Point_3>(0));
 	for(int i= 0; i< P.triangles.size(); i++){
 		Points_interface_prev[i].resize(P.Points_interface_prev[i].size());
 		for(int j=0; j<P.Points_interface_prev[i].size(); j++ ){
@@ -737,7 +737,7 @@ Particule & Particule:: operator=(const Particule &P){
 		}
 	}
 	
-	Triangles_interface.resize(P.triangles.size(), std::vector<Triangle_3>(0));
+	Triangles_interface.resize(P.Triangles_interface.size(), std::vector<Triangle_3>(0));
 	for(int i= 0; i< P.triangles.size(); i++){
 		Triangles_interface[i].resize(P.Triangles_interface[i].size());
 		for(int j=0; j<P.Triangles_interface[i].size(); j++ ){
@@ -745,14 +745,14 @@ Particule & Particule:: operator=(const Particule &P){
 		}
 	}
 	
-	Triangles_interface_prev.resize(P.triangles.size(), std::vector<Triangle_3>(0));
+	Triangles_interface_prev.resize(P.Triangles_interface_prev.size(), std::vector<Triangle_3>(0));
 	for(int i= 0; i< P.triangles.size(); i++){
 		Triangles_interface_prev[i].resize(P.Triangles_interface_prev[i].size());
 		for(int j=0; j<P.Triangles_interface_prev[i].size(); j++ ){
 			Triangles_interface_prev[i][j] = P.Triangles_interface_prev[i][j];
 		}
 	}
-	Position_Triangles_interface.resize(P.triangles.size(), std::vector< std::vector<int> >(0));
+	Position_Triangles_interface.resize(P.Position_Triangles_interface.size(), std::vector< std::vector<int> >(0));
 	for(int i= 0; i< P.triangles.size(); i++){
 		Position_Triangles_interface[i].resize(P.Position_Triangles_interface[i].size());
 		for(int j=0; j<P.Position_Triangles_interface[i].size(); j++ ){
@@ -763,7 +763,7 @@ Particule & Particule:: operator=(const Particule &P){
 		}
 	}
 	
-	Position_Triangles_interface_prev.resize(P.triangles.size(), std::vector< std::vector<int> >(0));
+	Position_Triangles_interface_prev.resize(P.Position_Triangles_interface_prev.size(), std::vector< std::vector<int> >(0));
 	for(int i= 0; i< P.triangles.size(); i++){
 		Position_Triangles_interface_prev[i].resize(P.Position_Triangles_interface_prev[i].size());
 		for(int j=0; j<P.Position_Triangles_interface_prev[i].size(); j++ ){
@@ -1271,7 +1271,7 @@ void Face::compFaceIntegrals(double &Fa, double &Fb, double &Fc, double &Faa, do
 void Particule::CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &Tz, double &Txx, double &Tyy, double &Tzz, double &Txy, double &Tyz, double &Tzx){
   //Utilisation de la fonction decrite par Brian Mirtich 1996 (cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar)
   T1 = Tx=Ty=Tz=Txx=Tyy=Tzz=Txy=Tyz=Tzx=0.;
-  for(int i=0;i<size();i++){
+	for(int i=0;i<faces.size();i++){
     double Fx,Fy,Fz,Fxx,Fyy,Fzz,Fxxx,Fyyy,Fzzz,Fxxy,Fyyz,Fzzx;
     double nx,ny,nz,na,nb,nc;
     nx=CGAL::to_double(faces[i].normale.operator[](0));
@@ -1606,7 +1606,7 @@ void Particule::Inertie(){
   }
 
   //Calcul des moments d'inertie des faces (pour le calcul des torsions)
-  for(int i=0;i<size();i++){
+  for(int i=0;i<faces.size();i++){
     faces[i].Inertie();
   }
   /*Test
@@ -1630,7 +1630,7 @@ void Particule::Inertie(){
 
 void Particule::Volume_libre(){
   Vl = 0.;
-  for(int i=0;i<size();i++){
+  for(int i=0;i<faces.size();i++){
     if(faces[i].voisin == -1){
       Vector_3 v1(faces[i].vertex[0].pos,faces[i].vertex[1].pos);
       Vector_3 v2(faces[i].vertex[0].pos,faces[i].vertex[2].pos);
@@ -1946,7 +1946,7 @@ void Solide::init(const char* s){
   //Boucle de mise a jour des particules sur les sommets du maillage
   //Mise a jour des distances a l'equilibre entre particules en meme temps
   for(int i=0;i<P.size();i++){
-    for(int j=0;j<P[i].size();j++){
+    for(int j=0;j<P[i].faces.size();j++){
       for(int k=0;k<P[i].faces[j].size();k++){
 	for(int l=0;l<P.size();l++){
 	  if(points_particules[P[i].faces[j].vertex[k].num][l]){
@@ -2224,7 +2224,7 @@ void Solide::Forces_internes(){
   for(int i=0;i<size();i++){
     solide[i].Volume_libre();
     solide[i].epsilon = 0.;
-    for(int j=0;j<solide[i].size();j++){
+    for(int j=0;j<solide[i].faces.size();j++){
       if(solide[i].faces[j].voisin>=0){
 	int part = solide[i].faces[j].voisin;
 	Vector_3 Sn = 1./2.*cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos));
@@ -2237,7 +2237,7 @@ void Solide::Forces_internes(){
   }
   //Calcul des forces pour chaque particule
   for(int i=0;i<size();i++){
-    for(int j=0;j<solide[i].size();j++){
+    for(int j=0;j<solide[i].faces.size();j++){
       if(solide[i].faces[j].voisin>=0){
 	int part = solide[i].faces[j].voisin;
 	double S = 1./2.*sqrt(CGAL::to_double(cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos)).squared_length()));
@@ -2276,7 +2276,7 @@ double Solide::Energie_potentielle(){
   for(int i=0;i<size();i++){
     solide[i].Volume_libre();
     solide[i].epsilon = 0.;
-    for(int j=0;j<solide[i].size();j++){
+    for(int j=0;j<solide[i].faces.size();j++){
       if(solide[i].faces[j].voisin>=0){
 	int part = solide[i].faces[j].voisin;
 	Vector_3 Sn = 1./2.*cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos));
@@ -2291,7 +2291,7 @@ double Solide::Energie_potentielle(){
   }
   //Calcul de l'energie pour chaque lien
   for(int i=0;i<size();i++){
-    for(int j=0;j<solide[i].size();j++){
+    for(int j=0;j<solide[i].faces.size();j++){
       if(solide[i].faces[j].voisin>=0){
 	int part = solide[i].faces[j].voisin;
 	double S = 1./2.*sqrt(CGAL::to_double(cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos)).squared_length()));
@@ -2328,7 +2328,7 @@ double Solide::pas_temps(double t, double T){
   //Restriction CFL li�e aux forces internes
   double cs = sqrt(E*(1.-nu)/rhos/(1.+nu)/(1.-2.*nu));
   for(int i=0;i<size();i++){
-    for(int j=0;j<solide[i].size();j++){
+    for(int j=0;j<solide[i].faces.size();j++){
       if(solide[i].faces[j].voisin>=0){
 	        dt = min(dt,cfls*solide[i].faces[j].D0/cs);
       }
