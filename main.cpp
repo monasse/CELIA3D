@@ -117,7 +117,9 @@ int main(){
 	}
 	S.Forces_internes();
 	int nb_part = S.size();
-	CGAL::Timer user_time, user_time2;
+	int nb_iter_implicit=0;
+	CGAL::Timer user_time, user_time2, user_time3,user_time4,user_time5;
+	double temps_flux=0., temps_solide_f_int=0., temps_couplage=0., temps_swap=0., temps_intersections=0., temps_semi_implicit=0.;
 	for (int n=0; (t<T) && n<Nmax; n++){
 		
 		if(t>next_timp){
@@ -127,6 +129,8 @@ int main(){
 			kimp++;
 			next_timp += dtimp;
 		}
+		cout<<"iteration="<<n<< " dt="<<dt<<" t="<<t<<endl;
+		
 	  //cout<<"Energie: "<< Fluide.Energie()+S.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 		cout<<"Energie Fluide: "<< Fluide.Energie() << " Energie Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 		ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S <<" "<<Fluide.Masse() - masse <<endl;
@@ -137,19 +141,55 @@ int main(){
 		//Fluide.affiche("avant Solve");
 		user_time2.start();
 		Fluide.Solve(dt, t, n);
-		cout << "Temps calcul flux: " << user_time2.time() << " seconds." << endl;
+		//cout << "Temps calcul flux: " << user_time2.time() << " seconds." << endl;
+		temps_flux += CGAL::to_double(user_time2.time());
 		user_time2.reset();
 		//Fluide.affiche("Solve");
+		S.Forces_internes();
+		temps_solide_f_int += CGAL::to_double(user_time3.time());
+		user_time3.reset();
+		if(explicite){ //algo de couplage explicit
 		Fluide.Forces_fluide(S,dt);
 		S.solve_position(dt);
-		S.Forces_internes();
+		user_time3.start();
 		S.solve_vitesse(dt);
+		user_time4.start();
 		Fluide.parois(S,dt);
+		temps_intersections += CGAL::to_double(user_time4.time());
+		user_time4.reset();
 		//S.Affiche();
+		}
+		
+		else{ //algo de couplage semi-implicit
+			//semi-implicit
+			int kmax=50;
+			double erreur = 1.;
+			user_time5.start();
+			Solide Sk = S;
+			Solide Sk_prev = Sk;
+			int k;
+			for(k=0;(erreur>1.e-19) && (k<kmax) ;k++){
+				Fluide.Forces_fluide(Sk,dt);
+				copy_f_m(S,Sk);
+				Sk_prev = Sk; 
+				Sk = S ; 
+				Sk.solve_position(dt);
+				Sk.solve_vitesse(dt);
+				Fluide.parois(Sk,dt);
+				erreur = error(Sk, Sk_prev);
+				//cout<<" erreur := "<<erreur<<endl;
+			}//fin boucle 
+			S=Sk;
+			temps_semi_implicit += CGAL::to_double(user_time4.time());
+			user_time5.reset();
+			cout<<"nb iteration semi-implicit "<<k<<endl;
+			nb_iter_implicit += k;
+			//semi-implicit	
+		}
 		user_time.start();
-		int n0=0.,n1=0., m=0.;
-		Fluide.swap_2d(dt,S,n0,n1,m);
-		cout << "Temps swap: " << user_time.time() << " seconds." << endl;
+		Fluide.swap_2d(dt,S);
+		//cout << "Temps swap: " << user_time.time() << " seconds." << endl;
+		temps_swap += CGAL::to_double(user_time.time());
 		user_time.reset();
 		//cout<<"Triangles en n "<<n0<<" Triangles en n+1 "<<n1<<" Triangles sous maillage "<<m<<endl;
 		Fluide.modif_fnum(dt);
@@ -160,8 +200,7 @@ int main(){
 		//Fluide.affiche("fill_cell");
 		Fluide.BC();
 		//Fluide.affiche("BC");
-		temps_iter<< n << " "<<t<<" "<<dt<<endl;
-		cout<<"iteration="<<n<< " dt="<<dt<<" t="<<t<<endl;
+		//temps_iter<< n << " "<<t<<" "<<dt<<endl;
 		t+= dt;
 		iter++;
 
@@ -173,7 +212,13 @@ int main(){
 	
 	temps_iter<< "Temps final  "<< t<<endl;
 	temps_iter<<"nb iter= "<< iter<<endl;    
-	temps_iter<<"Temps de calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl;     
+	temps_iter<<"Temps de calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl; 
+	temps_iter<<"temps calcul flux " <<temps_flux<< endl; 
+	temps_iter<<"temps calcul solide forces internes " <<temps_solide_f_int<< endl; 
+	temps_iter<<"temps quantite swap " <<temps_swap << endl; 
+	temps_iter<<"temps intersections " << temps_intersections<< endl; 
+	temps_iter<<"temps semi-implicit" << temps_semi_implicit<< endl; 
+	temps_iter<<"temps couplage " << temps_swap + temps_intersections + temps_semi_implicit<< endl; 
 	cout<<"nb iter= "<< iter<<endl;    
 	cout <<"Temps de calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl;  
 

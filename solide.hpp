@@ -149,5 +149,6 @@ public:
 bool box_inside_convex_polygon(const Particule& S, const Bbox& cell);  
 bool inside_convex_polygon(const Particule& S, const Point_3& P);  
 bool inside_box(const Bbox& cell, const Point_3& P);
-
+double error(Solide& S1, Solide& S2);
+void copy_f_m(Solide& S1, Solide& S2);
 #endif

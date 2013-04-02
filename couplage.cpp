@@ -1119,12 +1119,12 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 			//vol_test += volume;
 		 } // boucle sur les box_cells
 		}//end else 
-		
-			Vector_3 norm= orthogonal_vector(T3d_prev[i].operator[](0),T3d_prev[i].operator[](1),T3d_prev[i].operator[](2));
-			double norm2= sqrt(CGAL::to_double(norm*norm));
-			if(norm2>eps){ 
+		if (explicite){//explicit algo
+			Vector_3 norm_prev= orthogonal_vector(T3d_prev[i].operator[](0),T3d_prev[i].operator[](1),T3d_prev[i].operator[](2));
+			double norm2_prev= sqrt(CGAL::to_double(norm_prev*norm_prev));
+			if(norm2_prev>eps){ 
 				Cellule c_prev= grille[in][jn][kn];
-				Vector_3 n_prev = norm/norm2;
+				Vector_3 n_prev = norm_prev/norm2_prev;
 				double aire_prev = sqrt(CGAL::to_double(T3d_prev[i].squared_area()));
 				c.phi_x += c_prev.pdtx * aire_prev *( CGAL::to_double(n_prev.x()))/volume_cel;
 				c.phi_y += c_prev.pdty * aire_prev *( CGAL::to_double(n_prev.y()))/volume_cel;
@@ -1141,6 +1141,27 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 			
 				grille[in1][jn1][kn1] = c;
 			}
+		}//explicit algo
+		else {//semi_implicit algo
+			Vector_3 norm= orthogonal_vector(T3d_n[i].operator[](0),T3d_n[i].operator[](1),T3d_n[i].operator[](2));
+			double norm2= sqrt(CGAL::to_double(norm*norm));
+			if(norm2>eps){ 
+				Vector_3 n = norm/norm2;
+				double aire = sqrt(CGAL::to_double(T3d_n[i].squared_area()));
+				c.phi_x += c.pdtx * aire *( CGAL::to_double(n.x()))/(c.dx*c.dy*c.dz);
+				c.phi_y += c.pdty * aire *( CGAL::to_double(n.y()))/(c.dx*c.dy*c.dz);
+				c.phi_z += c.pdtz * aire *( CGAL::to_double(n.z()))/(c.dx*c.dy*c.dz);
+				Vector_3 V_f = P.vitesse_parois(center_n);
+				c.phi_v += aire * (CGAL::to_double(c.pdtx*n.x()*V_f.x()  + c.pdty*n.y()*V_f.y() + c.pdtz*n.z()*V_f.z()))/(c.dx*c.dy*c.dz);
+				
+				if (abs(c.phi_x)<=eps) {c.phi_x = 0.;} 
+				if (abs(c.phi_y)<=eps) {c.phi_y = 0.;} 
+				if (abs(c.phi_z)<=eps) {c.phi_z = 0.;} 
+				if (abs(c.phi_v)<=eps) {c.phi_v = 0.;} 
+				grille[in1][jn1][kn1] = c;
+			}
+		} //semi_implicit algo
+		
 	} //end boucle sur les prismes
 }	
 
@@ -1335,7 +1356,7 @@ void sous_maillage_faceTn_faceTn1_2d(Triangle_3& Tn, Triangles& tn, Triangle_3& 
 }
 
 
-void Grille::swap_2d(const double dt, Solide& S, int& n, int &n1, int& m){
+void Grille::swap_2d(const double dt, Solide& S){
 	
 	CGAL::Timer user_time, user_time2;
 	double time_1=0., time_2=0.;
@@ -1347,14 +1368,10 @@ void Grille::swap_2d(const double dt, Solide& S, int& n, int &n1, int& m){
 			if (S.solide[i].fluide[j]){
 			Triangles T3d_n,T3d_n1;
 			user_time.start();
-			n+= S.solide[i].Triangles_interface_prev[j].size();
-			n1+=S.solide[i].Triangles_interface[j].size() ;
 			sous_maillage_faceTn_faceTn1_2d(S.solide[i].triangles_prev[j], S.solide[i].Triangles_interface_prev[j] ,
 										 S.solide[i].triangles[j], S.solide[i].Triangles_interface[j],
 										 S.solide[i].normales[j], T3d_n,T3d_n1);
 	     //cout << "Temps sous-maillage face: " << user_time.time() << " seconds." << endl;
-			 m+= T3d_n.size();
-
 
 		     //test 26 nov calcul aire faces
 // 					 // cout<< " aire face is : "<< std::sqrt(CGAL::to_double(S.solide[i].triangles_prev[j].squared_area () ))<<endl;

@@ -2338,6 +2338,30 @@ double Solide::pas_temps(double t, double T){
   return dt;
 }
 
+double error(Solide& S1, Solide& S2){
+	
+	double erreur = -1.;
+	
+	for(int it=0; it<S1.size(); it++){
+		
+		int h_max = std::max(std::max((S1.solide[it].max_x - S1.solide[it].min_x),(S1.solide[it].max_y - S1.solide[it].min_y)),              (S1.solide[it].max_z - S1.solide[it].min_z)); 
+		double err1 = std::max(std::max(std::abs(CGAL::to_double(S1.solide[it].Dx.operator[](0) - S2.solide[it].Dx.operator[](0))), std::abs(CGAL::to_double(S1.solide[it].Dx.operator[](1) - S2.solide[it].Dx.operator[](1)) )), std::abs(CGAL::to_double(S1.solide[it].Dx.operator[](2) - S2.solide[it].Dx.operator[](2)))); 
+		double err2 = std::max(std::max(std::abs(CGAL::to_double(S1.solide[it].e.operator[](0) - S2.solide[it].e.operator[](0))), std::abs(CGAL::to_double(S1.solide[it].e.operator[](1) - S2.solide[it].e.operator[](1)))), std::abs(CGAL::to_double(S1.solide[it].e.operator[](2) - S2.solide[it].e.operator[](2)))); ;
+		double erreur_temp = err1 + h_max * err2;
+		erreur = std::max(erreur_temp, erreur);
+	}
+	
+	return erreur;
+}	
 
+
+void copy_f_m(Solide& S1, Solide& S2){
+	
+	for(int it=0; it<S1.size(); it++){
+		S1.solide[it].Ff =  S2.solide[it].Ff ;
+		S1.solide[it].Mf =  S2.solide[it].Mf ;
+	}
+	
+}	
 
 #endif
