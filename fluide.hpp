@@ -264,7 +264,7 @@ class Grille
 	//void fill_cel_old(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.) old version
 	void swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  Particule & P);
 	void cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,int& kn1, std::vector<Bbox>& box_cells, std::vector<Cellule>& Cells);
-	void swap_2d(const double dt, Solide& S,int& n, int &n1, int& m);
+	void swap_2d(const double dt, Solide& S);
 	void swap_3d(const double dt, Solide& S,int& n, int &n1, int& m);
 private :
 

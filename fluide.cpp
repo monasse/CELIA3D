@@ -691,7 +691,7 @@ void Grille::melange(const double dt){
 		for(int j=marge;j<Ny+marge;j++){
 			for(int k=marge;k<Nz+marge;k++){
 				Cellule c = grille[i][j][k];
-				if(c.rho<0. && abs(c.alpha-1.)>eps){
+				if(c.rho<0. ){
 					cout << "densite negative en : " << c.x << " " << c.y << " " << c.z <<" rho " << c.rho << endl;
 					c.rho = c.rho0;
 					c.u = c.impx0/c.rho;
@@ -703,7 +703,7 @@ void Grille::melange(const double dt){
 					c.impz = c.impz0;
 					c.rhoE = c.rhoE0;
 				}
-				if(c.p<0. && abs(c.alpha-1.)>eps){
+				if(c.p<0. ){
 					cout << "pression negative en : " << c.x << " " << c.y << " " << c.z << " p " << c.p << endl;
 					c.rho = c.rho0;
 					c.u = c.impx0/c.rho;

@@ -12,6 +12,9 @@ using std::string;
 int rep = false;
 int numrep = 3;//Num�ro de la reprise
 
+//Flag pour le type de schema : true pour un algo de couplage explicit et false pour un algo de couplage semi-implicit
+bool explicite = true;
+
 
 //Parametres pour le fluide
 const double gam = 1.4;            //constante des gaz parfaits 
@@ -44,7 +47,7 @@ const double nu = 0.; //Coefficient de Poisson du materiau
 const double E = 7000; //Module d'Young du materiau
 
 //Parametres temprels
-const double T = 1.;             //temps total de simulation
+const double T = 0.5;             //temps total de simulation
 const double cfl = 0.5;            //valeur de la cfl fluide
 const double cfls = 0.5;           //Valeur de la cfl solide
 const int nimp = 100;                //Nombre d'impressions
