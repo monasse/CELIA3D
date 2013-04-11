@@ -5,6 +5,45 @@
 #include "couplage.cpp"
 #include "parametres.cpp"
 
+
+/*!
+ \mainpage 
+ \section intro Introduction
+ Code de simulation 3d d'interaction fluide-structure.
+ La m&eacute;thode num&eacute;rique de couplage utilise une approche de type Volumes Finis de l'interaction fluide-structure.\n
+ Le solide est mod&eacute;lise selon une description de type &quot;&eacute;l&eacute;ments discrets" (Mka3d).\n
+ Le fluide est trait&eacute; par une m&eacute;thode de Volumes Finis, le calcul des flux num&eacute;riques utilise le sch&eacute;ma OSMP (CHORUS).
+
+ \section description Description du projet
+ 
+ Pour utiliser le logiciel:
+ - installer la <b> libraire CGAL-4.0 </b>
+ - cgal_create_cmake_script
+ - cmake .
+ - make: compilation 
+ - ./main: execution 
+ 
+ Ce que vous devez remplir pour lancer une simulation:
+ 
+ - \a parametres.hpp: remplir les param&egrave;tres du probl&egrave;me 
+ - \a parametres.cpp: l'&eacute;tat initial du fluide: densit&eacute;, pression, vitesse
+ - cr&eacute;ation du fichier <b> "maillage.dat" </b>d&eacute;finissant le maillage pour le solide.\note Attention, respecter la syntaxe expliqu&eacute;e dans le fichier \b README
+ 
+ \remark 
+ Les proc&eacute;dures concernant le fluide se trouvent dans les fichiers fluide.hpp et fluide.cpp. Celles concernant le solide dans solide.hpp et solide.cpp. Les proc&eacute;dures r&eacute;alisant le couplage sont regroupes dans les fichiers couplage.cpp, intersections.hpp et intersections.cpp. Les fichiers parametres.hpp et parametres.cpp sont d&eacute;di&eacute;es aux d&eacute;finitions des param&eacute;tr&eacute;s du probl&egrave;me (param&eacute;tr&eacute;s physique, li&eacute;es aux maillages fluide et solide, au couplage, etc.). La r&eacute;solution du probl&egrave;me se fait dans le fichier principal main.cpp. 
+ 
+ \authors Maria Adela PUSCAS et Laurent MONASSE
+ */
+/*!
+*  \file main.cpp
+*  \brief Fonction principale. Initialisation du probl&egrave;me et r&eacute;solution.
+*  \author M. A. PUSCAS et L. MONASSE
+*  \version 1.0
+*  \date 06/04/2013
+*
+*/
+
+
 using namespace std;          // espace de nom standard
 
 int main(){
@@ -22,7 +61,7 @@ int main(){
     for(int i=0;i<numrep+1;i++){
       in >> temps[i];
     }
-    //R�cup�ration de l'energie
+    //Recuperation de l'energie
     int result = system("cp resultats/energie.dat resultats/energie_reprise.dat");
   }
   std::ifstream in_energie("resultats/energie_reprise.dat",ios::in);
@@ -83,7 +122,7 @@ int main(){
 	  t = temps[numrep];
 	}
 	Solide S;
-	S.init("maillage4.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
+	S.init("maillage.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	Grille Fluide;
 	Fluide.init();
 	Fluide.parois(S, dt);
@@ -170,7 +209,7 @@ int main(){
 			int k;
 			for(k=0;(erreur>1.e-19) && (k<kmax) ;k++){
 				Fluide.Forces_fluide(Sk,dt);
-				copy_f_m(S,Sk);
+				copy_f_m(S,Sk); //attention c'est tres important d'appeller cette fonction car sinon on va ecraser les valeurs Sk.F_f et Sk.M_f!!!!!
 				Sk_prev = Sk; 
 				Sk = S ; 
 				Sk.solve_position(dt);

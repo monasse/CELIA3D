@@ -1,13 +1,23 @@
 #include "parametres.hpp"
 
-//D�finition des conditions initiales pour le fluide
-//En cas de reprise
-double rhoi[Nx][Ny][Nz];
-double ui[Nx][Ny][Nz];
-double vi[Nx][Ny][Nz];
-double wi[Nx][Ny][Nz];
-double pi[Nx][Ny][Nz];
+/*!
+ *  \file parametres.cpp
+ * \brief Initialisation des variables fluide: densit&eacute;, pression, vitesse
+ */
 
+// En cas de reprise definition des conditions initiales pour le fluide
+double rhoi[Nx][Ny][Nz]; //!< En cas de reprise (\a rep=true) definition des conditions initiales pour le fluide: densite
+double ui[Nx][Ny][Nz]; //!< En cas de reprise (\a rep=true) definition des conditions initiales pour le fluide:vitesse selon x
+double vi[Nx][Ny][Nz]; //!< En cas de reprise (\a rep=true) definition des conditions initiales pour le fluide: vitesse selon y
+double wi[Nx][Ny][Nz]; //!< En cas de reprise (\a rep=true) definition des conditions initiales pour le fluide: vitesse selon z
+double pi[Nx][Ny][Nz]; //!< En cas de reprise (\a rep=true) definition des conditions initiales pour le fluide: pression
+
+/**
+ \fn void reprise()
+ \brief Reprise d'une simulation (param&egrave;tre \a rep=true): initialisation des variables du probl&egrave;me &egrave; partir des fichier "resultats/fluide" << \a numrep << ".vtk" et "resultats/solide" << \a numrep << ".vtk". 
+ \note Fonction utilis&eacute;e principalement pour le debugage. <b> Il  n'est pas n&eacute;cessaire de la re-coder! </b>
+ \return void
+ */
 void reprise(){
   std::ostringstream oss;
   oss << "resultats/fluide" << numrep << ".vtk";
@@ -40,9 +50,9 @@ void reprise(){
   int Ninfo;
   init>>cells>>N>>Ninfo;
   //cout << N << endl;
-  //On enregistre le num�ro du point de coin de (i,j,k) inf�rieur pour chaque cellule
+  //On enregistre le numero du point de coin de (i,j,k) inferieur pour chaque cellule
   //Utilise fondamentalement la construction de la sortie fluide dans impression()
-  //Recuperation des indices o� alpha est non nul
+  //Recuperation des indices ou alpha est non nul
   int index[N][3];
   int indice;
   double x,y,z;
@@ -235,9 +245,17 @@ void reprise(){
 	wi[itemp][jtemp][ktemp] = w;
       }
     }
-    //cout << wi[i][j][k];
   }
 }
+
+
+/**
+ \fn double Rho(double x,double y, double z)
+ \brief Initialisation du probl&egrave;me: valeur initiale de la densit&eacute; du fluide:
+ * -rho
+\param (x,y,z) la position du centre de la cellule
+ \return double
+ */
 
 double Rho(double x,double y, double z){ 
   double rho;
@@ -255,8 +273,16 @@ double Rho(double x,double y, double z){
   }
   return rho; 
 } 
+
+/**
+ \fn double U(double x,double y, double z)
+ \brief Initialisation du probl&egrave;me: valeur de la vitesse du fluide suivant x :
+ * -u
+ \param (x,y,z) la position du centre de la cellule
+ \return double
+ */
 double U(double x,double y, double z){ 
-  double u = 0.;
+  double u = 1.;
   //En cas de reprise
   if(rep){
     int i = (int) ((x)/deltax);
@@ -269,6 +295,13 @@ double U(double x,double y, double z){
   }
   return u; 
  }
+/**
+ \fn double V(double x,double y, double z)
+ \brief Initialisation du probl&egrave;me: valeur de la vitesse du fluide: suivant y 
+ * -v
+ \param (x,y,z) la position du centre de la cellule
+ \return double
+ */
  double V(double x,double y, double z){ 
   double v = 0.; 
   //En cas de reprise
@@ -283,6 +316,13 @@ double U(double x,double y, double z){
   }
   return v; 
  } 
+/**
+ \fn double W(double x,double y, double z)
+ \brief Initialisation du probl&egrave;me: valeur de la vitesse du fluide suivant z :
+ * -w
+ \param (x,y,z) la position du centre de la cellule
+ \return double
+ */
 double W(double x,double y, double z){ 
    double w = 0.; 
    //En cas de reprise
@@ -297,6 +337,14 @@ double W(double x,double y, double z){
    }
    return w; 
  } 
+/**
+ \fn double P(double x,double y, double z,double dx, double dy, double dz)
+ \brief Initialisation du probl&egrave;me: valeur de la pression du fluide:
+ * -p
+ \param (x,y,z) la position du centre de la cellule 
+ \param (dx, dy,dz) la taille de la cellule
+ \return double
+ */
  double P(double x,double y, double z, double dx, double dy, double dz){ 
 
   double p;

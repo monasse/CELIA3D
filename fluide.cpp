@@ -1,9 +1,14 @@
+/*!
+ *  \file fluide.cpp
+ *  \brief D&eacute;finition des m&eacute;thodes des classes Cellule et Grille . 
+ * Les procédures sp&eacute;cifiques au couplage sont pr&eacute;c&egrave;des d'un "warning"
+ */
 #include <iostream> 
 #include <stdio.h> 
 #include <fstream> 
 #include <math.h> 
 #include "fluide.hpp"
-#include "abs.hpp"
+
 
 
 #ifndef FLUIDE_CPP
@@ -11,10 +16,17 @@
 
 using namespace std;  // espace de nom standard
 
+inline double sign(const double x)
+{
+    return (x < 0.) ? -1. : 1. ;
+}
 
 //Definition des methodes de la classe Cellule 
 
-//Constructeur 
+/**
+ \fn Cellule::Cellule()
+ \brief Constructeur par defaut 
+*/
 
 Cellule::Cellule()
 {
@@ -99,7 +111,11 @@ Cellule::Cellule()
     
 }
 
-
+/**
+ \fn Cellule::Cellule(double x0, double y0, double z0)
+ \brief Surcharge du constructeur
+ \param (x0,y0,z0) Coordonnees du centre de la cellule
+ */
 Cellule::Cellule(double x0, double y0, double z0)
 {
 
@@ -183,7 +199,12 @@ Cellule::Cellule(double x0, double y0, double z0)
     
 }
 
-
+/**
+\fn Cellule::Cellule(double x0, double y0, double z0, double dx0, double dy0, double dz0)
+ \brief Surcharge du constructeur
+ \param (x0,y0,z0) Coordonnees du centre de la cellule
+ \param (dx0,dy0,dz0) Taille de la cellule
+ */
 
 Cellule::Cellule(double x0, double y0, double z0, double dx0, double dy0, double dz0)
 {
@@ -268,6 +289,13 @@ Cellule::Cellule(double x0, double y0, double z0, double dx0, double dy0, double
     } 
     
 }
+
+/**
+ \fn Cellule & Cellule:: operator=(const Cellule &c)
+ \brief operateur = Surcharge pour l'affectation
+ \param c Cellule
+ \return Cellule
+ */
 
 Cellule & Cellule:: operator=(const Cellule &c){
     
@@ -361,11 +389,20 @@ Cellule & Cellule:: operator=(const Cellule &c){
     return *this; //renvoye le pointeur de l'object
 }
 
-
+/**
+ \fn Cellule::~Cellule()
+ \brief Destructeur.
+ */ 
 //Destructeur
 Cellule::~Cellule(){
 }
 
+/**
+ \fn bool Cellule :: is_in_cell(double x0,double y0, double z0)
+ \brief Fonction testant si le point (x0,y0,z0) est dans la cellule
+ \param (x0,y0,z0) un point
+ \return true si (x0,y0,z0) appartient a la cellule, false sinon
+ */
 bool Cellule :: is_in_cell(double x0,double y0, double z0)
 {
     bool k = false;
@@ -375,10 +412,14 @@ bool Cellule :: is_in_cell(double x0,double y0, double z0)
     return k;
 }
 
+/**
+ \fn void Cellule :: Affiche ()
+ \brief Fonction auxilaire utile pour les tests
+ */
 void Cellule :: Affiche (){
     
 	  
-  cout<<"max "<< " x = "<< x+dx/2<< " y = "<<y+dy/2<< " z = "<<z+dz/2<<endl;
+    cout<<"max "<< " x = "<< x+dx/2<< " y = "<<y+dy/2<< " z = "<<z+dz/2<<endl;
 	cout<<"min "<< " x = "<< x-dx/2<< " y = "<<y-dy/2<< " z = "<<z-dz/2<<endl;
 
 		//if(std::abs(alpha-1.)<eps){
@@ -429,25 +470,31 @@ void Cellule :: Affiche (){
 //Definition des methodes de la classe Grille 
 
 //Constructeur
-
+/**
+ \fn Grille::Grille()
+ \brief Constructeur par defaut
+ \details La variable grille represente le maillage fluide, c'est un tableau 3d des \a Cellule
+ */
 Grille::Grille(): grille(Nx+2*marge, vector< vector<Cellule> >(Ny+2*marge, vector<Cellule>(Nz+2*marge)) ){
-	//Grille::Grille(){ 
-			
-    x = X0; y = Y0; z = Z0;
     
+    x = X0; y = Y0; z = Z0;
     dx = deltax; dy = deltay; dz = deltaz;
     
     for(int i=0;i<Nx+2*marge;i++){
         for(int j=0;j<Ny+2*marge;j++){ 
             for(int k=0;k<Nz+2*marge;k++){ 
-//                 Cellule c(x+dx/2.+(i-marge)*dx,y+dy/2.+(j-marge)*dy, z+dz/2.+(k-marge)*dz,dx, dy, dz); 
-//                grille[i][j][k] = c;
-							grille[i][j][k] = Cellule(x+dx/2.+(i-marge)*dx,y+dy/2.+(j-marge)*dy, z+dz/2.+(k-marge)*dz,dx, dy, dz);
+						grille[i][j][k] = Cellule(x+dx/2.+(i-marge)*dx,y+dy/2.+(j-marge)*dy, z+dz/2.+(k-marge)*dz,dx, dy, dz);
             }
         } 
     }
 } 
-
+/**
+ \fn Grille::Grille(int Nx0, int Ny0, int Nz0, double dx0, double x0, double dy0,double y0, double dz0, double z0)
+  \brief Surcharge du constructeur
+ \param (x0, y0, z0) Position de l'origine (du domaine fluide)
+ \param (dx0,dy0,dz0) Pas d'espace
+ \param (Nx0, Ny0, Nz0) Nombre de cellules fluide en x, y et z
+ */
 Grille::Grille(int Nx0, int Ny0, int Nz0, double dx0, double x0, double dy0,double y0, double dz0, double z0):grille
                (Nx0+2*marge, vector< vector<Cellule> > (Ny0+2*marge, vector<Cellule>(Nz0+2*marge))){ 
      
@@ -465,12 +512,18 @@ Grille::Grille(int Nx0, int Ny0, int Nz0, double dx0, double x0, double dy0,doub
         } 
     }
 }
-
+/**
+ \fn Grille::~Grille()
+ \brief Destructeur.
+ */ 
 //Destructeur
 Grille::~Grille(){
 }
 
-
+/**
+ \fn void Grille:: affiche()
+ \brief Fonction auxilaire utile pour les tests
+ */
 void Grille:: affiche()
 {
 		double vol=0.;
@@ -487,22 +540,12 @@ void Grille:: affiche()
     }
   // cout<<"volume solide := "<<vol<<endl;
 
-// 	 //test 8 nov
-// 	 double somme_n=0., somme_n0=0.;
-// 	 for(int i=0;i<Nx+2*marge;i++){
-// 		 for(int j=0;j<Ny+2*marge;j++){
-// 			 for(int k=0;k<Nz+2*marge;k++){
-// 				 Cellule  c = grille[i][j][k];
-// 				 somme_n += c.alpha;
-// 				 somme_n0 +=c.alpha0;
-// 			 }
-// 		 }
-// 	 }
-// 	 cout<<"alpha n+1 "<<somme_n<<endl; cout<<"alpha n "<<somme_n0<<endl;
-// 	 //fin test 8 nov
 	
 }
-
+/**
+ \fn void Grille:: affiche(string r)
+ \brief Fonction auxilaire utile pour les tests
+ */
 void Grille:: affiche(string r)
 {
     int s=0;
@@ -522,11 +565,21 @@ void Grille:: affiche(string r)
 		}
 }
 
-//Accss a une cellule i 
+/**
+ \fn Cellule Grille::cellule(int i,int j, int k)
+ \brief Acces a la cellule (i,j, k)
+ \param (i,j,k) index de la cellule
+ \return cellule
+ */
 Cellule Grille::cellule(int i,int j, int k){ 
     return grille[i][j][k]; 
 }
-
+/**
+ \fn Cellule Grille::in_cell(Point_3 p)
+ \brief Acces a la cellule contenant le point \a p
+ \param p un point
+ \return Cellule  cellule qui contient \a p
+ */
 Cellule Grille::in_cell(Point_3 p){
   int i,j,k;
   i = (int) (floor(CGAL::to_double((p.operator[](0)-x)/dx))+marge);
@@ -552,7 +605,14 @@ Cellule Grille::in_cell(Point_3 p){
   }
   return cellule(i,j,k);
 }
-
+/**
+ \fn void Grille::in_cell(Point_3 p, int &i, int& j, int& k, bool& interieur)
+ \brief Acces a la cellule contenant le point \a p
+ \param p un point
+ \param (i,j,k) index de la cellule qui contient le point \a p
+ \param interieur = true si le point \a p se trouve a l'interieur du domaine, false sinon 
+ \return void
+ */
 void Grille::in_cell(Point_3 p, int &i, int& j, int& k, bool& interieur){
 	
 	i = (int) (floor(CGAL::to_double((p.operator[](0)-x)/dx))+marge);
@@ -565,7 +625,11 @@ void Grille::in_cell(Point_3 p, int &i, int& j, int& k, bool& interieur){
 	else {interieur = true;} //end else 
 
 }
-//Sous-programme de definition des conditions initiales 
+/**
+ \fn void Grille::init()
+ \brief Definition des conditions initiales 
+ \return void
+ */
 void Grille::init(){
     
     Cellule c; 
@@ -592,9 +656,13 @@ void Grille::init(){
         
 }
 
-
-
-//Sous-programme de calcul du pas de temps fluide
+/**
+ \fn double Grille::pas_temps(double t, double T)
+ \brief Calcul du pas de temps fluide
+ \param T temps total de simulation
+ \param t temps curent de simulation
+ \return le pas de temps 
+ */
 double Grille::pas_temps(double t, double T){ 
     
     double dt = 10000.;
@@ -613,11 +681,13 @@ double Grille::pas_temps(double t, double T){
     dt = min(dt,T-t); 
     return dt; 
 }
-
-//Calcul des quantites conservatives totales 
+/**
+ \fn double Grille::Masse()
+ \brief Calcul de la masse totale du fluide
+ \return  masse du fluide
+ */
 double Grille::Masse(){ 
     double m = 0.; 
-    //Cellule c; 
     for(int i=marge;i<Nx+marge;i++){
         for(int j=marge;j<Ny+marge;j++){
             for(int k=marge;k<Nz+marge;k++){
@@ -628,7 +698,11 @@ double Grille::Masse(){
     } 
     return m; 
 } 
-
+/**
+ \fn double Grille::Impulsionx()
+ \brief Calcul de l'impulsion du fluide selon x
+ \return impulsion du fluide selon x
+ */
 double Grille::Impulsionx(){ 
     double impx = 0.; 
     //Cellule c ;
@@ -642,38 +716,47 @@ double Grille::Impulsionx(){
     } 
     return impx; 
 }
-
+/**
+ \fn double Grille::Impulsiony()
+ \brief Calcul de l'impulsion du fluide selon y
+ \return impulsion du fluide selon y
+ */
 double Grille::Impulsiony(){ 
     double impy = 0.; 
-    //Cellule c ;  
     for(int i=marge;i<Nx+marge;i++){
         for(int j=marge;j<Ny+marge;j++){
             for(int k=marge;k<Nz+marge;k++){
-							Cellule c = grille[i][j][k];  
+                Cellule c = grille[i][j][k];  
                 impy += c.impy*c.dx*c.dy*c.dz*(1.-c.alpha);
             }
         }
     } 
     return impy; 
 }
-
+/**
+ \fn double Grille::Impulsionz()
+ \brief Calcul de l'impulsion du fluide selon z
+ \return impulsion du fluide selon z
+ */
 double Grille::Impulsionz(){ 
     double impz = 0.; 
-    //Cellule c ;
     for(int i=marge;i<Nx+marge;i++){
         for(int j=marge;j<Ny+marge;j++){
             for(int k=marge;k<Nz+marge;k++){
-							Cellule c = grille[i][j][k];  
+                Cellule c = grille[i][j][k];  
                 impz += c.impz*c.dx*c.dy*c.dz*(1.-c.alpha);
             }
         }
     } 
     return impz; 
 }
-
+/**
+ \fn double Grille::Energie()
+ \brief Calcul de l'energie totale du fluide 
+ \return energie du fluide
+ */
 double Grille::Energie(){ 
     double E = 0.; 
-   // Cellule c ;
     for(int i=marge;i<Nx+marge;i++){ 
         for(int j=marge;j<Ny+marge;j++){ 
             for(int k=marge;k<Nz+marge;k++){
@@ -684,14 +767,18 @@ double Grille::Energie(){
     }
     return E; 
 } 
-
-//Fonction qui melange les cellules a densite ou pression negative 
+/**
+ \fn void Grille::melange(const double dt)
+ \brief Fonction qui melange les cellules a densite ou pression negative 
+ \param dt pas de temps
+ \return void
+ */
 void Grille::melange(const double dt){ 
 	for(int i=marge;i<Nx+marge;i++){
 		for(int j=marge;j<Ny+marge;j++){
 			for(int k=marge;k<Nz+marge;k++){
 				Cellule c = grille[i][j][k];
-				if(c.rho<0. ){
+				if(c.rho<0.){
 					cout << "densite negative en : " << c.x << " " << c.y << " " << c.z <<" rho " << c.rho << endl;
 					c.rho = c.rho0;
 					c.u = c.impx0/c.rho;
@@ -703,7 +790,7 @@ void Grille::melange(const double dt){
 					c.impz = c.impz0;
 					c.rhoE = c.rhoE0;
 				}
-				if(c.p<0. ){
+				if(c.p<0.){
 					cout << "pression negative en : " << c.x << " " << c.y << " " << c.z << " p " << c.p << endl;
 					c.rho = c.rho0;
 					c.u = c.impx0/c.rho;
@@ -723,9 +810,13 @@ void Grille::melange(const double dt){
 	}
 }
 
-
-//Resolution des equations pour le fluide dans la direction x
-
+/**
+ \fn void Grille::solve_fluidx(const double dt)
+ \brief Resolution des equations pour le fluide dans la direction x
+ \warning Stockage de la pression utilise pendant le pas de temps \a pdtx . Parametre specifique au  couplage!
+ \param dt pas de temps
+ \return void
+ */
 void Grille::solve_fluidx(const double dt){ 
     
    const double sigma = dt/dx; 
@@ -765,9 +856,13 @@ void Grille::solve_fluidx(const double dt){
     melange(dt);   
 } 
 
-
-//Resolution des equations pour le fluide dans la direction y
-
+/**
+ \fn void Grille::solve_fluidy(const double dt)
+ \brief Resolution des equations pour le fluide dans la direction y
+ \warning Stockage de la pression utilise pendant le pas de temps \a pdty . Parametre specifique au  couplage!
+ \param dt pas de temps
+ \return void
+ */
 void Grille::solve_fluidy(const double dt){ 
     const double sigma = dt/dy; 
     double dw1 =0., dw2=0., dw3=0., dw4=0., dw5 = 0.;
@@ -807,7 +902,13 @@ void Grille::solve_fluidy(const double dt){
     melange(dt);    
 } 
 
-
+/**
+ \fn void Grille::solve_fluidz(const double dt)
+ \brief Resolution des equations pour le fluide dans la direction z
+ \warning Stockage de la pression utilise pendant le pas de temps \a pdtz . Parametre specifique au  couplage!
+ \param dt pas de temps
+ \return void
+ */
 void Grille::solve_fluidz(const double dt){
     
    const double sigma = dt/dz;
@@ -848,8 +949,12 @@ void Grille::solve_fluidz(const double dt){
     melange(dt);  
 }
 
-
-//Correction d'entropie selon x
+/**
+ \fn void Grille::corentx(double sigma)
+ \brief Correction d'entropie selon x 
+ \param sigma = \a dt/dx : pas de temps/ pas d'espace pour le fluide selon x
+ \return void
+ */
 void Grille::corentx(double sigma){
     
     //Initialisation des variables
@@ -948,8 +1053,12 @@ void Grille::corentx(double sigma){
     //Modification des flux
     
 }//Fin de la correction d'entropie selon x
-
-//Correction d'entropie selon y
+/**
+ \fn void Grille::corenty(double sigma)
+ \brief Correction d'entropie selon y 
+ \param sigma = \a dt/dy : pas de temps/ pas d'espace pour le fluide selon y
+ \return void
+ */
 void Grille::corenty(double sigma){
     
     //Initialisation des variables
@@ -1045,7 +1154,12 @@ void Grille::corenty(double sigma){
 }  //Fin de la correction d'entropie selon y
 
 
-//Correction d'entropie selon z
+/**
+ \fn void Grille::corentz(double sigma)
+ \brief Correction d'entropie selon z 
+ \param sigma = \a dt/dz : pas de temps/ pas d'espace pour le fluide selon z
+ \return void
+ */
 void Grille::corentz(double sigma){
     //Initialisation des variables
     //Cellule cel;
@@ -1141,8 +1255,13 @@ void Grille::corentz(double sigma){
     
 }  //Fin de la correction d'entropie selon z
 
-
-//Calcul du flux en x entre les cellules 
+/**
+ \fn void Grille::fnumx(const double sigma, double t)
+ \brief Calcul du flux en x entre les cellules F
+ \param sigma = \a dt/dx : pas de temps/ pas d'espace pour le fluide selon x
+ \param t temps curent de simulation
+ \return void
+ */ 
 void Grille::fnumx(const double sigma, double t){ 
    // Cellule c, ci, cg, cd, cg2, cg3, cg4, cg5, cd2, cd3, cd4;
     //Initialisation du flux au flux centre
@@ -1560,7 +1679,13 @@ void Grille::fnumx(const double sigma, double t){
 }
 
 
-//Calcul du flux en y entre les cellules 
+/**
+ \fn void Grille::fnumy(const double sigma, double t)
+ \brief Calcul du flux en y entre les cellules G
+ \param sigma = \a dt/dy : pas de temps/ pas d'espace pour le fluide selon y
+ \param t temps curent de simulation
+ \return void
+ */
 void Grille::fnumy(const double sigma, double t){ 
     
     //Cellule c, cj, camont, cg, cd, cg2, cg3, cg4, cg5, cd2, cd3, cd4;
@@ -1980,7 +2105,13 @@ void Grille::fnumy(const double sigma, double t){
 
 
 
-//Calcul du flux en z entre les cellules 
+/**
+ \fn void Grille::fnumz(const double sigma, double t)
+ \brief Calcul du flux en z entre les cellules H
+ \param sigma = \a dt/dz : pas de temps/ pas d'espace pour le fluide selon z
+ \param t temps curent de simulation
+ \return void
+ */
 void Grille::fnumz(const double sigma, double t){ 
     //Cellule c, ck, cd, cg, cg2, cg3, cg4, cg5, cd2, cd3, cd4, camont;
     //Initialisation du flux au flux centre
@@ -2399,22 +2530,30 @@ void Grille::fnumz(const double sigma, double t){
 }
 
 
-
+/**
+ \fn void Grille::Solve(const double dt, double t, int n)
+ \brief Resolution equations fluide
+ \details Alternance directionnelle a chaque pas de temps
+ \param t temps curent de simulation
+ \param dt pas de temps 
+ \param n  numero de l'iteration en temps
+ \return void
+ */
 void Grille::Solve(const double dt, double t, int n){
     
     //Cellule c;   
     for(int i=0;i<Nx+2*marge;i++){
         for(int j=0;j<Ny+2*marge;j++){
             for(int k=0;k<Nz+2*marge;k++){
-							Cellule  c = grille[i][j][k];
+				Cellule  c = grille[i][j][k];
                 c.rho0 = c.rho;
                 c.impx0 = c.impx;
                 c.impy0 = c.impy;
                 c.impz0 = c.impz;
                 c.rhoE0 = c.rhoE;
-								c.p1=c.p;
-								c.alpha0=c.alpha;
-								c.kappai0 = c.kappai; c.kappaj0 = c.kappaj; c.kappak0 = c.kappak;
+				c.p1=c.p;
+				c.alpha0=c.alpha;
+				c.kappai0 = c.kappai; c.kappaj0 = c.kappaj; c.kappak0 = c.kappak;
                 grille[i][j][k] = c;
             }
         }
@@ -2517,8 +2656,12 @@ void Grille::Solve(const double dt, double t, int n){
     
 }
 
-
-
+/**
+ \fn void Grille::BC()
+ \brief Conditions aux limites 
+ \details Type de CL :  1 = reflecting ("miroir"); 2 = periodic("periodique"); 3= outflow("transmisibles").
+ \return void
+ */
 void Grille::BC(){ 
     
     // Inner Boundary Condition for x
@@ -2840,7 +2983,12 @@ void Grille::BC(){
 } 
 
 
-
+/**
+ \fn void Grille::impression(int n)
+ \brief Impression des resultats 
+ \param n numero de l'iteration en temps
+ \return void
+ */
 void Grille::impression(int n){
     
 /*	
@@ -3027,219 +3175,6 @@ void Grille::impression(int n){
             }
         }
     }
-    
-    
-    //Impression du fichier vtk
-    //   const char* fluidevtk2;
-    //   {
-    //     std::ostringstream oss;
-    //     oss << "resultats/Test" << n << ".vtk";
-    //     string s = oss.str();
-    //     //cout << s << endl;
-    //     fluidevtk2 = s.c_str();
-    //   }
-    //   //Ouverture des flux en donne en ecriture
-    //   std::ofstream vtk2(fluidevtk2,ios::out);
-    //   if(vtk2)
-    //     {
-    //      // cout <<"ouverture de xt.vtk reussie" << endl;
-    //     } else {
-    //     cout <<"ouverture de xt" << n << ".vtk rate" << endl;
-    //   }
-    //   //Initialisation du fichier vtk
-    //   vtk2 << "# vtk DataFile Version 3.0" << endl;
-    //   vtk2 << "#Simulation Euler" << endl;
-    //   vtk2 << "ASCII" << endl;
-    //   vtk2<<"DATASET RECTILINEAR_GRID"<<endl;
-    //   vtk2<<"DIMENSIONS"<<" "<< Nx <<" "<<Ny<<" "<<Nz<<endl;
-    // 
-    //   vtk2<<"X_COORDINATES"<< " "<< Nx<<" " <<"float"<<endl;
-    //   for(int i=marge;i<Nx+marge;i++){
-    //        vtk2<< x+dx/2.+(i-marge)*dx << " ";
-    // 
-    //   }
-    // vtk2<<endl;
-    // 
-    // vtk2<<"Y_COORDINATES"<< " "<< Ny<<" "<<"float"<<endl;
-    // 
-    //     for(int j=marge;j<Ny+marge;j++){ 
-    //        vtk2<<y+dy/2.+(j-marge)*dy<< " ";
-    //   }
-    // vtk2<<endl;
-    // 
-    // vtk2<<"Z_COORDINATES"<< " "<< Nz<<" "<<"float"<<endl;
-    // 	for(int k=marge;k<Nz+marge;k++){ 
-    //         vtk2<<z+dz/2.+(k-marge)*dz<< " ";
-    //   }
-    // vtk2<<endl;
-    // 
-    // vtk2<<"POINT_DATA"<<" "<< Nx * Ny *Nz <<endl;
-    // vtk2<<"SCALARS Densite double"<<endl;
-    // vtk2<<"LOOKUP_TABLE default"<<endl;
-    // for(int k=marge; k<Nz+marge; k++){ 
-    //     for(int j=marge; j<Ny+marge; j++){ 
-    // 	for(int i=marge; i<Nx+marge; i++){
-    // 
-    // 		vtk2 << grille[i][j][k].rho << endl;
-    // 
-    //       }
-    //     }
-    //   }
-    // 
-    // vtk2<<"SCALARS Pression double"<<endl;
-    // vtk2<<"LOOKUP_TABLE default"<<endl;
-    // for(int k=marge; k<Nz+marge; k++){ 
-    //     for(int j=marge; j<Ny+marge; j++){ 
-    // 	for(int i=marge; i<Nx+marge; i++){
-    // 
-    // 		vtk2 << grille[i][j][k].p << endl;
-    // 
-    //       }
-    //     }
-    //   }
-    // 
-    // vtk2<<"SCALARS U double"<<endl;
-    // vtk2<<"LOOKUP_TABLE default"<<endl;
-    // for(int k=marge; k<Nz+marge; k++){ 
-    //     for(int j=marge; j<Ny+marge; j++){ 
-    // 	for(int i=marge; i<Nx+marge; i++){
-    // 
-    // 		vtk2 << grille[i][j][k].u << endl;
-    // 
-    //       }
-    //     }
-    //   }
-    // 
-    // vtk2<<"SCALARS V double"<<endl;
-    // vtk2<<"LOOKUP_TABLE default"<<endl;
-    // for(int k=marge; k<Nz+marge; k++){ 
-    //     for(int j=marge; j<Ny+marge; j++){ 
-    // 	for(int i=marge; i<Nx+marge; i++){
-    // 
-    // 		vtk2 << grille[i][j][k].v << endl;
-    // 
-    //       }
-    //     }
-    //   }
-    // 
-    // vtk2<<"SCALARS W double"<<endl;
-    // vtk2<<"LOOKUP_TABLE default"<<endl;
-    // for(int k=marge; k<Nz+marge; k++){ 
-    //     for(int j=marge; j<Ny+marge; j++){ 
-    // 	for(int i=marge; i<Nx+marge; i++){
-    // 
-    // 		vtk2 << grille[i][j][k].w << endl;
-    // 
-    //       }
-    //     }
-    //   }
-    
-    //   int nb_points = (Nx+1)*(Ny+1) *(Nz+1);
-    //   int values = 5; 
-    //   int n_cells = (Nx)*(Ny)*(Nz);
-    //   char name[30] = "Simulation Euler"; 
-    //   double tab_points[nb_points][N_dim];
-    //   double tab_values[n_cells][values];
-    //   int tab_connectivity[n_cells][8];
-    //   
-    //   int b=0;
-    //    for(int k=0; k<Nz+1; k++){ 
-    //    for(int j=0; j<Ny+1; j++){ 
-    //     for(int i=0; i<Nx+1; i++){
-    //      tab_points[b][0] = i*dx; 
-    //      tab_points[b][1] = j*dy;
-    //      tab_points[b][2] = k*dz;
-    //      b++;
-    // 	}
-    //     }
-    //   }
-    //   Affiche
-    //   cout<<"tab conectivity : " <<endl;
-    //    int l=0;
-    //    for(int k=0; k<Nz; k++){ 
-    //     for(int j=0; j<Ny; j++){ 
-    //      for(int i=0; i<Nx; i++){
-    //      tab_connectivity[l][0] = i+j*(Nx+1)+k*(Nx+1)*(Ny+1)+1;
-    // 	tab_connectivity[l][1] = (i+1)+j*(Nx+1)+k*(Nx+1)*(Ny+1)+1;
-    // 	tab_connectivity[l][2] = (i+1)+(j+1)*(Nx+1) + k*(Nx+1)*(Ny+1)+1;
-    // 	tab_connectivity[l][3] = i+(j+1)*(Nx+1) + k*(Nx+1)*(Ny+1)+1;
-    // 	tab_connectivity[l][4] = i+j*(Nx+1)+(k+1)*(Nx+1)*(Ny+1)+1;
-    // 	tab_connectivity[l][5] = (i+1)+j*(Nx+1) + (k+1)*(Nx+1)*(Ny+1) +1;
-    // 	tab_connectivity[l][6] = (i+1)+(j+1)*(Nx+1)+(k+1)*(Nx+1)*(Ny+1)+1;
-    // 	tab_connectivity[l][7] = i+(j+1)*(Nx+1)+(k+1)*(Nx+1)*(Ny+1)+1;
-    // 	l++;
-    // 	  
-    //         }
-    //       }      
-    //   }
-    //   int r=0;
-    //   for(int k=marge; k<Nz+marge; k++){ 
-    //     for(int j=marge; j<Ny+marge; j++){ 
-    // 	for(int i=marge; i<Nx+marge; i++){
-    // 
-    // 		tab_values[r][0] = grille[i][j][k].rho;
-    // 		r++;
-    // 
-    //       }
-    //     }
-    //   }
-    // 
-    //   //Impression du fichier inp
-    //    const char* fluideinp;
-    //    {
-    //      std::ostringstream oss;
-    //      oss << "resultats/fluide." << n<< ".inp";
-    //      string s = oss.str();
-    //      cout << s << endl;
-    //      fluideinp = s.c_str();
-    //    }
-    //   
-    //   std::ofstream out(fluideinp,ios::out);
-    //     if(out)
-    //       {
-    //       // cout <<"ouverture de fluide"<< n << ".inp reussie" << endl;
-    //       } else {
-    //       cout <<"ouverture de fluide" << n << ".inp rate" << endl;
-    //     }
-    //     
-    //     //Write the mesh info
-    //      out << nb_points << " "
-    //        << n_cells << " "
-    //        << 1
-    //        << " 0 0\n";
-    //      
-    //      
-    //      // Write the coordinates
-    //       
-    //       
-    //      int k=1; // 1-based node number for UCD
-    //      
-    //      for(int l=0; l<nb_points; l++){ 
-    //          	 
-    //         out << k++ << "\t";
-    //      	out<< tab_points[l][0]<<" " << tab_points[l][1]<<" " << tab_points[l][2]<<"\n";
-    //    
-    //        }
-    // 
-    //         int m=1; // 1-based node number for UCD
-    //         
-    //         for(int l=0; l<n_cells; l++){ 
-    //             	 
-    //             out << m++  <<" "<< 0<<" "<<"hex" << "\t";
-    //         	out<< tab_connectivity[l][0]<<" " << tab_connectivity[l][1]<<" " << tab_connectivity[l][2]<<" " << tab_connectivity[l][3]<<" " 
-    //         	   << tab_connectivity[l][4]<<" " << tab_connectivity[l][5]<<" " << tab_connectivity[l][6]<<" " << tab_connectivity[l][7]<<"\n";
-    // 
-    //           }
-    //           
-    
-    // out<<1<<""<< 1<<endl;
-    // out<<"pressure,"<<endl;
-    // 
-    // int j=1; // 1-based node number for UCD
-    //         
-    //         for(int l=0; l<n_cells; l++){ 
-    //        out << j++<< " "<< tab_values[l][0] <<"\n";
-    //}
     
 }
 #endif

@@ -1,7 +1,34 @@
+/*!
+   \file couplage.cpp
+   \brief D&eacute;finitions des fonctions specifiqu&eacute;es au couplage.
+   \details Calcul des Forces et Moments fluides exerces sur le solide, modifications flux fluide, remplissage des cellule fant&ocirc;mes, calcul de la quantit&eacute; balay&eacute;e.
+   \warning  <b> Proc&eacute;dures sp&eacute;cifique au couplage! </b>
+ */
+
+
 #include "fluide.hpp"
 #include "intersections.cpp"
 
-//Calcul des Forces fluides et Moments fluides exerces sur le solide	
+/*!
+* \fn void Grille::Forces_fluide(Solide& S, const double dt)
+* \brief Calcul des Forces et Moments fluides exerces sur le Solide.
+* \details Soit \a f un morceau d'interface, la force de pression exercée par le fluide sur l'interface \a f est donne par :
+\f{eqnarray*}{
+	F_f  =  (- p^x \, A_f n^{x}_f, \,- p^y \,A_f n^{y}_f, \,- p^z \,A_f n^{z}_f )^t
+\f} \n
+où  \f$ A_f \f$ est l'aire de l'interface f,  \f$ n_f \f$ est la normale exterieure &agrave; l'interface f et \f$ p^x, p^y, p^z \f$ sont les  \a pdtx, 
+\a  pdty et \a  pdtz (expliqu&eacute; dans la class Cellule) les pressions efficaces selon les direction x, y et z pendant le pas de temps dt.
+Le moment fluide exerce sur f est donne par :
+\f{eqnarray*}{
+	M_f = F_f  \wedge (X_f - X_I),
+\f}
+où \f$ X_f \f$ est le centre de l'interface f et \f$  X_I \f$ est le centre de la particule qui contient f.
+Ces forces vont &ecirc;tre transmises au Solide comme des forces exerc&eacute;es par le fluide sur le solide pendant le pas de temps.
+* \param S Solide
+* \param dt pas de temps
+* \warning <b> proc&eacute;dure sp&eacute;cifique au couplage! </b>
+* \return void
+*/
 void Grille::Forces_fluide(Solide& S, const double dt){
 	
 	//Mise à jour des Forces fluides et Moments fluides exerces sur le solide 
@@ -39,13 +66,28 @@ void Grille::Forces_fluide(Solide& S, const double dt){
 		
 		S.solide[iter_s].Ff = Vector_3(fx,fy,fz);
 		S.solide[iter_s].Mf = Vector_3(CGAL::to_double(mx),CGAL::to_double(my),CGAL::to_double(mz)); 
-		//cout<<" Ff "<< S.solide[iter_s].Ff <<endl;
-		//cout<<" Mf "<< S.solide[iter_s].Mf <<endl;
 	} //fin boucle sur les particules
 	
 }	
 
-
+/*!
+* \fn void Grille::modif_fnum(const double dt)
+*  \brief Modification des flux fluide et bilan discret sur la cellule (m&eacute;thode de fronti&egrave;res immerg&eacute;es).
+*  \details C'est &agrave; cette &eacute;tape que le fluide "voie" la pr&eacute;sence du solide, on calcule la valeur finale de l'&eacute;tat \f$ U^{n+1}_{i, j, k}\f$  dans la cellule en utilisant:
+\f{eqnarray*}{
+	\left( 1-  \Lambda_{i,j,k}^{n+1} \right) U^{n+1}_{i,j,k}   = \left( 1-  \Lambda_{i,j,k} ^{n+1}\right) U^n_{i,j,k}  + \Delta t \, \left(   \frac{(1-\lambda_{i-1/2,j,k}^{n+1} )}{\Delta x_{ i,j,k}} F_{i-1/2, j, k}^{n+1/2} -\frac{(1-\lambda_{i+1/2,j,k}^{n+1} )}{\Delta x_{ i,j,k}} F_{i+1/2, j, k}^{n+1/2}  + ...\right)	\f}
+	\f{eqnarray*}{+  \frac{\Delta t}{V_{i,j,k}} \sum_{f \in C_{i,j,k}}{A_{f}} {\phi}_{f_{ i,j,k}}  +   \sum_{f \in C_{i,j,k}} \Delta U^{n, n+1}_{f_{ i,j,k}}  .
+	\f}
+	où	\f$ \Lambda_{i,j,k}^{n+1} \f$ est l'atribut \a alpha de la class Cellule (fraction occup&eacute; par du solide dans la cellule(i,j,k)),\n
+	\f$ \lambda_{i+1/2,j,k}^{n+1} \f$  l'atribut \a kappai de la class Cellule (fraction occup&eacute; par du solide sur le faces de la cellule(i,j,k)),\n
+	\f$ F_{i+1/2, j, k}^{n+1/2} \f$  l'atribut \a  fluxi de la classe Cellule (flux &agrave; droite dans la cellule(i,j,k)), \n
+	\f$ V_{i,j,k} \f$ le volume de la cellule(i,j,k), \n
+	\f$ {\phi}_{f_{ i,j,k}} = (0, phi\_x, phi\_y,phi\_z, phi\_v)^t 	\f$: \f$ phi\_x, phi\_y, phi\_z, phi\_v \f$ sont les flux &agrave; la parois (des atributs de la classe Cellule),\n
+	\f$ \Delta U^{n, n+1}_{f_{ i,j,k}} 	\f$ l'attribut \a delta_w de la classe Cellule (quantit&eacute;e balay&eacute;e).
+*	\param dt pas de temps
+*	\warning <b> proc&eacute;dure sp&eacute;cifique au couplage! </b>
+*	\return void
+*/
 void Grille::modif_fnum(const double dt){
 	
 	Cellule c,ci,cj,ck; 
@@ -67,12 +109,9 @@ void Grille::modif_fnum(const double dt){
 						c.flux_modif[l] -= (1.-c.kappai)*c.dtfxi[l] - (1.-ci.kappai)*ci.dtfxi[l]
 						+ (1.-c.kappaj)*c.dtfyj[l] - (1.-cj.kappaj)*cj.dtfyj[l]
 						+ (1.-c.kappak)*c.dtfzk[l] - (1.-ck.kappak)*ck.dtfzk[l] - c.delta_w[l];
-						//if(std::abs(c.flux_modif[l])>eps){
 						c.flux_modif[l] /= (1.-c.alpha);
-						//}
-						//else {c.flux_modif[l] = 0.;}
 					}		
-					//Mise a jour des valeurs dans le cellules
+					//Mise a jour des valeurs dans les cellules
 					c.rho = c.rho0  +  c.flux_modif[0];
 					c.impx = c.impx0 + c.flux_modif[1];
 					c.impy = c.impy0 + c.flux_modif[2];
@@ -83,24 +122,34 @@ void Grille::modif_fnum(const double dt){
 					c.w = c.impz/c.rho;
 					c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2. - c.rho*c.w*c.w/2.);
 				}
-				else {
-					c.rho = 0.;
-					c.impx = 0.;
-					c.impy = 0.;
-					c.impz = 0.;
-					c.rhoE = 0.;
-					c.u = 0.;
-					c.v = 0.;
-					c.w = 0.;
-					c.p = 0.;;
-				}
+// 				else {
+// 					c.rho = 0.;
+// 					c.impx = 0.;
+// 					c.impy = 0.;
+// 					c.impz = 0.;
+// 					c.rhoE = 0.;
+// 					c.u = 0.;
+// 					c.v = 0.;
+// 					c.w = 0.;
+// 					c.p = 0.;;
+// 				}
 				grille[i][j][k] = c;      
 			}
 		}
 	}
 }
 
-
+/*!
+* \fn void Grille:: mixage()
+*  \brief M&eacute;lange conservatif des petites cellules coup&eacute;es.
+*  \details On d&eacute;finit une petite cellule tel que \f$ alpha > epsa \f$ (\a alpha: fraction occupé par du solide dans la cellule, atribut de la class Cellule et \a epsa: fraction de cellule coup&eacute;e d&eacute;finite dans parametres.hpp ), afin ne pas modifier le pas de temps tout en garantissant la condition de CFL, les petites cellules sont fusionn&eacute;es avec leurs voisines. On note \a p une petite cellule et \a g une cellule voisine avec \a p compl&egrave;tement fluide~(\f$ alpha_g = 0 \f$ ). On d&eacute;finit les termes d'&eacute;change suivants :
+\f{eqnarray*}{ E_{pg} = \frac{alpha_p+ alpha_g}{alpha_g} (U_g - U_{p}), \quad  E_{gp} = \frac{alpha_p+ alpha_g}{alpha_p} (U_p - U_{g}) \f}
+et on pose:
+\f{eqnarray*}{
+U_p = U_{p} + E_{pg}, \quad  \quad U_g = U_{g} + E_{gg} \f}
+*	\warning <b> proc&eacute;dure sp&eacute;cifique au couplage! </b>
+*	\return void
+*/
 void Grille:: mixage(){
 	
 	Cellule cp, cg;
@@ -432,7 +481,15 @@ void Grille:: mixage(){
 
 
 
-
+/*!
+* \fn void Grille::fill_cel(Solide& S)
+*  \brief Remplissage des cellules fictives (\a alpha = 1)
+*  \details Afin de calculer les flux pr&egrave;s de l'interface solide-fluide, on definit dans les Cellule compl&egrave;tement occup&eacute;es par le Solide (\a alpha = 1) un &eacute;tat fictif qui sera &eacute;gale &agrave; la valeur de l'&eacute;tat de la maille miroir par rapport &agrave; l'interface. \n
+Algo: on cherche l'interface la plus proche du centre de la cellule (boucle sur toute les faces du Solide) et on calcul la projection du centre de la cellule par rapport a cette interface via la fonction <b> CGAL projection(Point_3) </b> .
+*	\param S  Solide 
+*	\warning <b> proc&eacute;dure sp&eacute;cifique au couplage! </b>
+*	\return void
+*/
 
 void Grille::fill_cel(Solide& S){
 	
@@ -724,83 +781,6 @@ Triangle_3 tr(Triangle_3 Tn1, Triangle_2 T){
 	
 	return Triangle_3(s, r, v);
 }
-
-
-
- CDT sous_maillage_face(Triangles_2& Tn1, Triangles_2& Tn_n1, CDT &cdt){
- 	
- 	std::vector<Bbox_2> boxesTn1, boxesTn_n1; //tres outil pour les intersections 
- 	
- 	for(Triangle2_iterator it= Tn1.begin(); it!= Tn1.end(); ++it){  //on associe a chaque triangle un Box(une boite contenant le triangle)
- 		boxesTn1.push_back(Bbox_2(it->bbox()));
- 	}
- 	
- 	for(Triangle2_iterator it= Tn_n1.begin(); it!= Tn_n1.end(); ++it){
- 		boxesTn_n1.push_back(Bbox_2(it->bbox()));
- 	}
- 	
- 	Triangle_2 t;
- 	Point_2 P;
- 	Segment_2 seg;
- 	std::vector<Point_2> vPoints; 
- 	
- 	std::vector<Point_2> intPoints; //vector de Point_2 d'intersection
- 	std::vector<Segment_2> intSeg;  //vector de Segment_2 d'intersection a conserver dans la triangularisation de la face 
- 	CGAL::Timer user_time, user_time2;
- 	user_time.start();
- 	for(int i=0; i<boxesTn1.size(); i++ ){ 
- 		for(int j=0; j<boxesTn_n1.size(); j++ ){
- 			//cout<<"Triangle 1: "<<Tn1[i]<<" Triangle 2: "<<Tn_n1[j]<<endl;
- 			if (CGAL::do_overlap( boxesTn1[i],boxesTn_n1[j]) ) //test d'intersection des Box 
- 			{
- 					if (CGAL::do_intersect(Tn1[i],Tn_n1[j]) ){ // test d'intersection des triangles contenues dans les Box
- 						
- 						CGAL::Object result = CGAL::intersection(Tn1[i],Tn_n1[j]); //calcul d'intersection entre les deux triangles
- 						
- 						if(CGAL::assign(P,result)){ 
- 							intPoints.push_back(P);
- 						}
- 						else if(CGAL::assign(seg,result)){
- 							intSeg.push_back(seg);
- 							
- 						}
- 						else if(CGAL::assign(t,result)){
- 							Segment_2 s1(t.operator[](0), t.operator[](1));
- 							Segment_2 s2(t.operator[](1), t.operator[](2));
- 							Segment_2 s3(t.operator[](2), t.operator[](0));
- 							intSeg.push_back(s1);	
- 							intSeg.push_back(s2);	
- 							intSeg.push_back(s3);							
- 						}
- 						else if(CGAL::assign(vPoints,result)){ 
- 							for(int l= 0; l<vPoints.size(); l++)
- 							{
- 								intPoints.push_back(vPoints[l]);
- 							}
- 							
- 						}
- 						else {cout<<"Intersection type: ? in sous_maillage_face"<<endl;
- 									cout<<"Triangle 1: "<<Tn1[i]<<" Triangle 2: "<<Tn_n1[j]<<endl;
- 						}
- 						
- 					}
- 				}
- 			}
- 		}
- 		//cout << "Intersection triangles 2d pour une face time is: " << user_time.time() << " seconds." <<"nb des triangles " <<boxesTn1.size()+boxesTn_n1.size() <<endl;
- 		
- 		user_time2.start();
- 	  cdt.insert(intPoints.begin(), intPoints.end()); //insertion des points d'intersection dans le maillage
- 	 
- 	 for(int i = 0; i<intSeg.size(); i++){
- 		 //construction du maillage 2d sous la contrainte "intSeg[i] est une arrete dans le maillage"
- 		 cdt.insert_constraint(intSeg[i].operator[](0), intSeg[i].operator[](1));
- 	 }
- 	 //cout << "construction sous-maillage sous contrainte pour une face time is: " << user_time2.time() << " seconds." <<endl;
- 	return cdt;
- }	
- 
- 
 
 
 double volume_prisme(const Triangle_3& T1,const Triangle_3& T2){
@@ -1165,7 +1145,225 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 	} //end boucle sur les prismes
 }	
 
+/**
+\fn void Sous_Maillage_2d(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2& tri2)
+\brief Construction sous-maillage d'une face du Solide.
+\details Un decoupage en triangles de la face au temps n et n+1 de tel que chaque triangles soit entierement contenu dans une cellule au temps n et n+1 (pas neccesairement la même cellule).
+\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
+\param Tn
+\param Tn1
+\param tri2
+\return void
+*/
+void Sous_Maillage_2d(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2& tri2){
+	
+	std::vector<Bbox_2> boxesTn(Tn.size()), boxesTn1(Tn1.size()); //tres outil pour les intersections 
+	//on associe a chaque triangle un Box (une boite contenant le triangle)
+	for(int it=0; it< Tn.size(); it++){
+		boxesTn[it] = Tn[it].bbox();
+	}
+	for(int iter=0; iter< Tn1.size(); iter++){
+		boxesTn1[iter] = Tn1[iter].bbox();
+	}
+	Triangle_2 tri;
+	std::vector<Point_2> vPoints; 
+	int k=0;
+	CGAL::Timer user_time;
+	user_time.start();
+	for(int i=0; i<boxesTn.size(); i++){ 
+		for(int j=0; j<boxesTn1.size(); j++){
+			if (CGAL::do_overlap(boxesTn[i],boxesTn1[j])){ //test d'intersection des Box 
+				if (CGAL::do_intersect(Tn[i],Tn1[j])){ // test d'intersection des triangles contenues dans les Box
+					CGAL::Object result = CGAL::intersection(Tn[i],Tn1[j]); //calcul d'intersection entre les deux triangles
+					if(CGAL::assign(tri,result)){ tri2.push_back(tri); }
+					else if(CGAL::assign(vPoints,result)){
+						Triangulation_2 T;
+						T.insert(vPoints.begin(), vPoints.end());
+						if( (T.is_valid() ) && (T.dimension() == 2)){
+							for (Triangulation_2::Finite_faces_iterator fit=T.finite_faces_begin(); fit!=T.finite_faces_end();++fit)
+							{ 
+								Point_2 s = fit->vertex(0)->point();
+								Point_2 v = fit->vertex(1)->point();
+								Point_2 r = fit->vertex(2)->point();
+								if(Triangle_2(s,v,r).area()>eps){ tri2.push_back(Triangle_2(s,v,r));}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}	
+/**
+\fn void sous_maillage_faceTn_faceTn1_2d(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1)
+\brief Decoupage en triangles de la face au temps n et n+1.
+\details 
+\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage!</b> 
+\param Tn
+\param tn
+\param Tn1
+\param tn1
+\param N
+\param T3d_n
+\param T3d_n1
+\return void
+*/
+void sous_maillage_faceTn_faceTn1_2d(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1){
+	
+	CGAL::Timer user_time, user_time2, user_time3, user_time4 ;
+	double time=0.;	
+	user_time.start();
+	// transf barycentrique de tn 
+	Triangles tn_n1(tn.size());
+	for(int i=0; i<tn.size(); i++){		
+		tn_n1[i] = tr(Tn, Tn1, tn[i]);
+	}
+	user_time.reset();
+	
+	Triangles_2 Tn_n1_2_test(tn_n1.size());
+	for(int i=0; i<tn_n1.size(); i++){
+		Tn_n1_2_test[i] = tr(Tn1, tn_n1[i]);
+	}
+	
+	Triangles_2 Tn1_2_test(tn1.size());
+	for(int i=0; i<tn1.size(); i++){
+		Tn1_2_test[i] =tr(Tn1, tn1[i]);
+	}
+	Triangles_2 tri2;
+	Sous_Maillage_2d(Tn1_2_test, Tn_n1_2_test, tri2);
+	T3d_n1.resize(tri2.size());
+	for(int i=0; i<T3d_n1.size(); i++){
+		Triangle_3 Tri = tr(Tn1,tri2[i]);
+		Vector_3 vect0(Tri.operator[](0),Tri.operator[](1));
+		Vector_3 vect1(Tri.operator[](0),Tri.operator[](2));
+		Vector_3 normale = CGAL::cross_product(vect0,vect1);
+		if (normale*N > 0.){ T3d_n1[i] =  Tri; }
+		else{ T3d_n1[i] = Triangle_3(Tri.operator[](0),Tri.operator[](2),Tri.operator[](1));} 
+	}
+	T3d_n.resize(T3d_n1.size());
+	for(int i=0; i<T3d_n1.size(); i++){ 
+		T3d_n[i] = tr(Tn1,Tn,T3d_n1[i]);
+	}
+}
 
+/**
+\fn void Grille::swap_2d(const double dt, Solide& S)
+\brief Calcul de la quantit&eacute; balay&eacute;e
+\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b> 
+\param S Solide
+\param dt pas de temps
+\return void
+*/
+void Grille::swap_2d(const double dt, Solide& S){
+	
+	//CGAL::Timer user_time, user_time2;
+	//double time_1=0., time_2=0.;
+	
+	for(int i=0;i<S.solide.size();i++){
+		for (int j=0; j<S.solide[i].triangles.size(); j++){
+			if (S.solide[i].fluide[j]){
+			Triangles T3d_n,T3d_n1;
+			//user_time.start();
+			sous_maillage_faceTn_faceTn1_2d(S.solide[i].triangles_prev[j], S.solide[i].Triangles_interface_prev[j] ,
+										 S.solide[i].triangles[j], S.solide[i].Triangles_interface[j],
+										 S.solide[i].normales[j], T3d_n,T3d_n1);
+				
+			//time_1+=CGAL::to_double(user_time.time());
+		  //user_time.reset();
+		  //user_time2.start();
+      swap_face(T3d_n,T3d_n1,dt, S.solide[i]);
+			//time_2+=CGAL::to_double(user_time2.time());
+		  //user_time2.reset();
+			}
+		}
+	}
+}
+
+/**
+\fn CDT Sous_Maillage_3d(Triangles_2& Tn1, Triangles_2& Tn_n1, CDT &cdt)
+\brief Construction sous-maillage sous contrainte pour une face du Solide.
+\details Un decoupage en triangles de la face au temps n et n+1 de tel que chaque triangles soit entierement contenu dans une cellule au temps n et n+1 (pas neccesairement la même cellule).
+\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! Il  n'est pas n&eacute;cessaire de la re-coder car c'est une ancienne m&eacute;thode(plus co&ucirc;teuse que la nouvelle version)!!! </b> 
+\return CDT
+*/
+CDT Sous_Maillage_3d(Triangles_2& Tn1, Triangles_2& Tn_n1, CDT &cdt){
+	
+	std::vector<Bbox_2> boxesTn1, boxesTn_n1; //tres outil pour les intersections 
+	
+	for(Triangle2_iterator it= Tn1.begin(); it!= Tn1.end(); ++it){  //on associe a chaque triangle un Box(une boite contenant le triangle)
+		boxesTn1.push_back(Bbox_2(it->bbox()));
+	}
+	
+	for(Triangle2_iterator it= Tn_n1.begin(); it!= Tn_n1.end(); ++it){
+		boxesTn_n1.push_back(Bbox_2(it->bbox()));
+	}
+	
+	Triangle_2 t;
+	Point_2 P;
+	Segment_2 seg;
+	std::vector<Point_2> vPoints; 
+	
+	std::vector<Point_2> intPoints; //vector de Point_2 d'intersection
+	std::vector<Segment_2> intSeg;  //vector de Segment_2 d'intersection a conserver dans la triangularisation de la face 
+	CGAL::Timer user_time, user_time2;
+	user_time.start();
+	for(int i=0; i<boxesTn1.size(); i++ ){ 
+		for(int j=0; j<boxesTn_n1.size(); j++ ){
+			//cout<<"Triangle 1: "<<Tn1[i]<<" Triangle 2: "<<Tn_n1[j]<<endl;
+			if (CGAL::do_overlap( boxesTn1[i],boxesTn_n1[j]) ) //test d'intersection des Box 
+			{
+				if (CGAL::do_intersect(Tn1[i],Tn_n1[j]) ){ // test d'intersection des triangles contenues dans les Box
+					
+					CGAL::Object result = CGAL::intersection(Tn1[i],Tn_n1[j]); //calcul d'intersection entre les deux triangles
+					
+					if(CGAL::assign(P,result)){ 
+						intPoints.push_back(P);
+					}
+					else if(CGAL::assign(seg,result)){
+						intSeg.push_back(seg);
+						
+					}
+					else if(CGAL::assign(t,result)){
+						Segment_2 s1(t.operator[](0), t.operator[](1));
+						Segment_2 s2(t.operator[](1), t.operator[](2));
+						Segment_2 s3(t.operator[](2), t.operator[](0));
+						intSeg.push_back(s1);	
+						intSeg.push_back(s2);	
+						intSeg.push_back(s3);							
+					}
+					else if(CGAL::assign(vPoints,result)){ 
+						for(int l= 0; l<vPoints.size(); l++)
+						{
+							intPoints.push_back(vPoints[l]);
+						}
+						
+					}
+					else {cout<<"Intersection type: ? in sous_maillage_face"<<endl;
+					cout<<"Triangle 1: "<<Tn1[i]<<" Triangle 2: "<<Tn_n1[j]<<endl;
+					}
+					
+				}
+			}
+		}
+	}
+	//cout << "Intersection triangles 2d pour une face time is: " << user_time.time() << " seconds." <<"nb des triangles " <<boxesTn1.size()+boxesTn_n1.size() <<endl;
+	
+	user_time2.start();
+	cdt.insert(intPoints.begin(), intPoints.end()); //insertion des points d'intersection dans le maillage
+	
+	for(int i = 0; i<intSeg.size(); i++){
+		//construction du maillage 2d sous la contrainte "intSeg[i] est une arrete dans le maillage"
+		cdt.insert_constraint(intSeg[i].operator[](0), intSeg[i].operator[](1));
+	}
+	//cout << "construction sous-maillage sous contrainte pour une face time is: " << user_time2.time() << " seconds." <<endl;
+	return cdt;
+}	
+/**
+\fn void sous_maillage_faceTn_faceTn1_3d(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1)
+\brief Decoupage en triangles de la face au temps n et n+1.
+\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! Il  n'est pas n&eacute;cessaire de la re-coder car c'est une ancienne m&eacute;thode(plus co&ucirc;teuse que la nouvelle version)!!! </b> 
+\return void
+*/
 void sous_maillage_faceTn_faceTn1_3d(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1){
 	
 	CGAL::Timer user_time, user_time2, user_time3, user_time4 ;
@@ -1206,7 +1404,7 @@ void sous_maillage_faceTn_faceTn1_3d(Triangle_3& Tn, Triangles& tn, Triangle_3& 
 	// sous maillage triangulaire de l'interface
 	CDT cdt;
 	cdt.insert(Ap); cdt.insert(Bp); cdt.insert(Cp);
-	sous_maillage_face(Tn1_2, Tn_n1_2, cdt);
+	Sous_Maillage_3d(Tn1_2, Tn_n1_2, cdt);
 	assert(cdt.is_valid());
 	//	cout << "Sous-maillage en 2d pour une face time is: " << user_time3.time() << " seconds." << endl;
 	user_time3.reset();
@@ -1246,208 +1444,31 @@ void sous_maillage_faceTn_faceTn1_3d(Triangle_3& Tn, Triangles& tn, Triangle_3& 
 	}
 	
 }
-
-
-void Grille::swap_3d(const double dt, Solide& S, int& n, int &n1, int& m){
-	
-	CGAL::Timer user_time, user_time2;
-	double time_1=0., time_2=0.;
-	for(int i=0;i<S.solide.size();i++){
-		for (int j=0; j<S.solide[i].triangles.size(); j++){
-			Triangles T3d_n,T3d_n1;
-			user_time.start();
-			n+= S.solide[i].Triangles_interface_prev[j].size();
-			n1+=S.solide[i].Triangles_interface[j].size() ;
-			sous_maillage_faceTn_faceTn1_3d(S.solide[i].triangles_prev[j], S.solide[i].Triangles_interface_prev[j] ,
-										 S.solide[i].triangles[j], S.solide[i].Triangles_interface[j],
-										 S.solide[i].normales[j], T3d_n,T3d_n1);
-			m+= T3d_n.size();
-			time_1+=CGAL::to_double(user_time.time());
-		  user_time.reset();
-		  user_time2.start();
-			swap_face(T3d_n,T3d_n1,dt,S.solide[i] );
-			time_2+=CGAL::to_double(user_time2.time());
-		  user_time2.reset();
-		}
-	}
-	//cout << "Temps sous-maillage face: " << time_1 << " seconds." << endl;
-	//cout << "Temps swap_modification_flux: " << time_2 << " seconds." << endl;
-	
-}
-
-
-void Sous_Maillage_2d(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2& tri2){
-	
-	std::vector<Bbox_2> boxesTn(Tn.size()), boxesTn1(Tn1.size()); //tres outil pour les intersections 
-	//on associe a chaque triangle un Box (une boite contenant le triangle)
-	for(int it=0; it< Tn.size(); it++){
-		boxesTn[it] = Tn[it].bbox();
-	}
-	for(int iter=0; iter< Tn1.size(); iter++){
-		boxesTn1[iter] = Tn1[iter].bbox();
-	}
-	Triangle_2 tri;
-	std::vector<Point_2> vPoints; 
-	int k=0;
-	CGAL::Timer user_time;
-	user_time.start();
-	for(int i=0; i<boxesTn.size(); i++){ 
-		for(int j=0; j<boxesTn1.size(); j++){
-			if (CGAL::do_overlap(boxesTn[i],boxesTn1[j])){ //test d'intersection des Box 
-				if (CGAL::do_intersect(Tn[i],Tn1[j])){ // test d'intersection des triangles contenues dans les Box
-					CGAL::Object result = CGAL::intersection(Tn[i],Tn1[j]); //calcul d'intersection entre les deux triangles
-					if(CGAL::assign(tri,result)){ tri2.push_back(tri); }
-					else if(CGAL::assign(vPoints,result)){
-						Triangulation_2 T;
-						T.insert(vPoints.begin(), vPoints.end());
-						if( (T.is_valid() ) && (T.dimension() == 2)){
-							for (Triangulation_2::Finite_faces_iterator fit=T.finite_faces_begin(); fit!=T.finite_faces_end();++fit)
-							{ 
-								Point_2 s = fit->vertex(0)->point();
-								Point_2 v = fit->vertex(1)->point();
-								Point_2 r = fit->vertex(2)->point();
-								if(Triangle_2(s,v,r).area()>eps){ tri2.push_back(Triangle_2(s,v,r));}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}	
-void sous_maillage_faceTn_faceTn1_2d(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1){
-	
-	CGAL::Timer user_time, user_time2, user_time3, user_time4 ;
-	double time=0.;	
-	user_time.start();
-	// transf barycentrique de tn 
-	Triangles tn_n1(tn.size());
-	for(int i=0; i<tn.size(); i++){		
-		tn_n1[i] = tr(Tn, Tn1, tn[i]);
-	}
-	user_time.reset();
-	
-	Triangles_2 Tn_n1_2_test(tn_n1.size());
-	for(int i=0; i<tn_n1.size(); i++){
-		Tn_n1_2_test[i] = tr(Tn1, tn_n1[i]);
-	}
-	
-	Triangles_2 Tn1_2_test(tn1.size());
-	for(int i=0; i<tn1.size(); i++){
-		Tn1_2_test[i] =tr(Tn1, tn1[i]);
-	}
-	Triangles_2 tri2;
-	Sous_Maillage_2d(Tn1_2_test, Tn_n1_2_test, tri2);
-	//cout<<" size "<<tri2.size()<<endl;
-	T3d_n1.resize(tri2.size());
-	for(int i=0; i<T3d_n1.size(); i++){
-		Triangle_3 Tri = tr(Tn1,tri2[i]);
-		Vector_3 vect0(Tri.operator[](0),Tri.operator[](1));
-		Vector_3 vect1(Tri.operator[](0),Tri.operator[](2));
-		Vector_3 normale = CGAL::cross_product(vect0,vect1);
-		if (normale*N > 0.){ T3d_n1[i] =  Tri; }
-		else{ T3d_n1[i] = Triangle_3(Tri.operator[](0),Tri.operator[](2),Tri.operator[](1));} 
-	}
-	T3d_n.resize(T3d_n1.size());
-	for(int i=0; i<T3d_n1.size(); i++){ 
-		T3d_n[i] = tr(Tn1,Tn,T3d_n1[i]);
-	}
-	
-}
-
-
-void Grille::swap_2d(const double dt, Solide& S){
-	
-	CGAL::Timer user_time, user_time2;
-	double time_1=0., time_2=0.;
-
-// 	double var=0.;
-// 	vector< vector< vector<double > > > Test(Nx+2*marge, vector< vector<double> >(Ny+2*marge, vector<double>(Nz+2*marge,0.)) );
+/**
+\fn void Grille::swap_3d(const double dt, Solide& S)
+\brief Calcul de la quantit&eacute; balay&eacute;e
+\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! Il  n'est pas n&eacute;cessaire de la re-coder car c'est une ancienne m&eacute;thode(plus co&ucirc;teuse que la nouvelle version)!!! </b> 
+\return void
+*/
+void Grille::swap_3d(const double dt, Solide& S){
+	//CGAL::Timer user_time, user_time2;
+	//double time_1=0., time_2=0.;
 	for(int i=0;i<S.solide.size();i++){
 		for (int j=0; j<S.solide[i].triangles.size(); j++){
 			if (S.solide[i].fluide[j]){
-			Triangles T3d_n,T3d_n1;
-			user_time.start();
-			sous_maillage_faceTn_faceTn1_2d(S.solide[i].triangles_prev[j], S.solide[i].Triangles_interface_prev[j] ,
-										 S.solide[i].triangles[j], S.solide[i].Triangles_interface[j],
-										 S.solide[i].normales[j], T3d_n,T3d_n1);
-	     //cout << "Temps sous-maillage face: " << user_time.time() << " seconds." << endl;
-
-		     //test 26 nov calcul aire faces
-// 					 // cout<< " aire face is : "<< std::sqrt(CGAL::to_double(S.solide[i].triangles_prev[j].squared_area () ))<<endl;
-// 					 double aire_f= std::sqrt(CGAL::to_double(S.solide[i].triangles_prev[j].squared_area () ));
-// 					 double volume_f= volume_prisme(S.solide[i].triangles_prev[j],S.solide[i].triangles[j]);
-// 						double a_n=0., a_n1=0., vol=0.;
-// 						for(int iter=0; iter<T3d_n1.size(); iter++){
-// 							a_n += std::sqrt(CGAL::to_double(T3d_n1[iter].squared_area () )); 
-// 							//a_n1 += std::sqrt(CGAL::to_double(Test2[iter].squared_area () )); 
-// 							vol += volume_prisme(T3d_n[iter], T3d_n1[iter]);
-// 							}
-// 							if (std::abs(vol)<eps){vol=0.;}
-// 							if (std::abs(a_n -aire_f)>0.0001){cout<< " aire n is : "<< a_n<< "aire direct "<<aire_f<< endl;}
-// 							if(std::abs(vol- volume_f)>0.00001){cout<<"volume balayee "<<vol<< "volume balayee n-n1 calcul direct "<<volume_f<<endl;}
-// 				//fin test 26 nov	calcul aire faces	 OK
-				
-			time_1+=CGAL::to_double(user_time.time());
-		  user_time.reset();
-		  user_time2.start();
-			
-// 			//test 5 nov calcul volume
-// 			cout<< "volume balayee n-n1 calcul direct: "<<volume_prisme(S.solide[i].triangles_prev[j],S.solide[i].triangles[j])<<endl;
-// 			double vol=0., vol_tetra=0.;
-// 			for(int iter=0; iter<T3d_n1.size(); iter++){
-// 				//double vol=0., vol_tetra=0.;
-// 				vol += volume_prisme(T3d_n[iter],T3d_n1[iter]);
-// 				//test 6 nov
-// 				Point_3 a = centroid(T3d_n[iter].operator[](1),T3d_n1[iter].operator[](1), T3d_n[iter].operator[](2),T3d_n1[iter].operator[](2));
-// 				Point_3 b = centroid(T3d_n[iter].operator[](0),T3d_n1[iter].operator[](0), T3d_n[iter].operator[](2),T3d_n1[iter].operator[](2));
-// 				Point_3 c = centroid(T3d_n[iter].operator[](0),T3d_n1[iter].operator[](0), T3d_n[iter].operator[](1),T3d_n1[iter].operator[](1));
-// 				
-// 				Tetrahedron tet0 (T3d_n[iter].operator[](0),T3d_n1[iter].operator[](0), c, b);
-// 				vol_tetra+= volume_tetra(tet0);
-// 				Tetrahedron tet1 (T3d_n[iter].operator[](1),T3d_n1[iter].operator[](1), a, c);
-// 				vol_tetra+= volume_tetra(tet1);
-// 				Tetrahedron tet2 (T3d_n[iter].operator[](2),T3d_n1[iter].operator[](2), b, a);
-// 				vol_tetra+= volume_tetra(tet2);
-// 				Tetrahedron tet3 (T3d_n[iter].operator[](0),T3d_n[iter].operator[](1), T3d_n[iter].operator[](2), c);
-// 				vol_tetra+= volume_tetra(tet3);
-// 				Tetrahedron tet4 (T3d_n[iter].operator[](0),c, T3d_n[iter].operator[](2), b);
-// 				vol_tetra+= volume_tetra(tet4);
-// 				Tetrahedron tet5 (T3d_n[iter].operator[](1),a, T3d_n[iter].operator[](2), c);
-// 				vol_tetra+= volume_tetra(tet5);
-// 				Tetrahedron tet6 (a,c,b, T3d_n[iter].operator[](2));
-// 				vol_tetra+= volume_tetra(tet6);
-// 				Tetrahedron tet7 (a,b,c, T3d_n1[iter].operator[](2));
-// 				vol_tetra+= volume_tetra(tet7);
-// 				Tetrahedron tet8 (a, T3d_n1[iter].operator[](1),T3d_n1[iter].operator[](2),c);
-// 				vol_tetra+= volume_tetra(tet8);
-// 				Tetrahedron tet9 (T3d_n1[iter].operator[](0),T3d_n1[iter].operator[](2),c,b);
-// 				vol_tetra+= volume_tetra(tet9);
-// 				Tetrahedron tet10 (T3d_n1[iter].operator[](0),T3d_n1[iter].operator[](1),c,T3d_n1[iter].operator[](2));
-// 				vol_tetra+= volume_tetra(tet10);
-// 				
-// // 				if( std::abs(vol - vol_tetra)>eps ){ 
-// // 					 cout<<"volume prisme "<< vol<<" i= "<< i<<endl; 
-// // 					 cout<<"volume  tetra"<< vol_tetra<<endl;
-// // 				}
-// 			}
-// 			if(std::abs(vol)<eps){vol=0.;}
-// 			cout<< "volume balayee n-n1:               "<<vol<<endl;
-// 			//fin test 5 nov	calcul volume	 OK
-// 
-//        if(std::abs(vol_tetra)<eps){vol_tetra=0.;}
-//        cout<< "volume tetra:                      "<<vol_tetra<<endl;
-// 			 //fin test 6 nov ok
-       swap_face(T3d_n,T3d_n1,dt, S.solide[i]);
-		  //cout << "Temps swap_modification_flux: " << user_time2.time() << " seconds." << endl;
-			//cout << "nb sous triang face: " << T3d_n.size()<< endl;
-			time_2+=CGAL::to_double(user_time2.time());
-		  user_time2.reset();
+				Triangles T3d_n,T3d_n1;
+				//user_time.start();
+				sous_maillage_faceTn_faceTn1_3d(S.solide[i].triangles_prev[j], S.solide[i].Triangles_interface_prev[j] ,
+																				S.solide[i].triangles[j], S.solide[i].Triangles_interface[j],
+																				S.solide[i].normales[j], T3d_n,T3d_n1);
+				 //time_1+=CGAL::to_double(user_time.time());
+				//user_time.reset();
+				// user_time2.start();
+				swap_face(T3d_n,T3d_n1,dt,S.solide[i] );
+				//time_2+=CGAL::to_double(user_time2.time());
+				// user_time2.reset();
 			}
 		}
 	}
-	//cout << "Temps sous-maillage face: " << time_1 << " seconds." << endl;
-	//cout << "Temps swap_modification_flux: " << time_2 << " seconds." << endl;
-
 }
 

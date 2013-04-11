@@ -1,48 +1,56 @@
+/*!
+ *  \file solide.hpp
+ *  \brief D&eacute;finition des classes d&eacute;crivant le Solide.
+ * Les membres sp&eacute;cifiques au couplage sont pr&eacute;c&egrave;des d'un "warning".
+ */
+
 #include "intersections.hpp"
 #ifndef SOLIDE_HPP
 #define SOLIDE_HPP
 
+//! D&eacute;finition de la classe Vertex
 class Vertex 
 {
 public:
   Vertex();
   Vertex(const Point_3 p, std::vector<int> & parts);
-	Vertex & operator=(const  Vertex &V); // operateur = surcharge pour l'affectation
-  Point_3 pos;
-  int num;// numero du point dans le maillage de construction
+  Vertex & operator=(const  Vertex &V); // op&eacute;rateur = surcharge pour l'affectation
+  Point_3 pos; //!< Coordonn&eacute;es du sommet
+  int num;//!< Num&eacute;ro du point dans le maillage de construction
   
   int size(){
 	return particules.size();
   }
-  std::vector<int> particules;
+  std::vector<int> particules; //!< Liste de particules auxquelles \a poz appartient 
 };
 
+//! D&eacute;finition de la classe Face
 class Face
 {
 public:
   Face();//:vertex(std::vector<Vertex>(1)){}
   Face(std::vector<Vertex> & v, int part);
   Face(std::vector<Vertex> & v, int part, double dist);
-	Face & operator=(const  Face &F); // operateur = surcharge pour l'affectation
+  Face & operator=(const  Face &F); // op&eacute;rateur = surcharge pour l'affectation
   int size(){
 	return vertex.size();
   }
   void compFaceIntegrals(double &Fa, double &Fb, double &Fc, double &Faa, double &Fbb, double &Fcc, double &Faaa, double &Fbbb, double &Fccc, double &Faab, double &Fbbc, double &Fcca, double na,double nb, double nc, int a, int b, int c);
   void compProjectionIntegrals(double &P1, double &Pa, double &Pb, double &Paa, double &Pab, double &Pbb, double &Paaa, double &Paab, double &Pabb, double &Pbbb, int a, int b, int c);
   void Inertie();
-  Point_3 centre;
-  Vector_3 normale;
-  double Is; //Premier moment d'inertie de la face
-  double It; //Second moment d'inertie de la face
-  Vector_3 s; //Vecteur selon le premier axe principal d'inertie de la face
-  Vector_3 t; //Vecteur selon le second axe principal d'inertie de la face
-  std::vector<Vertex> vertex;
-  int voisin;
-  double D0; //Distance a l'equilibre avec la particule voisine
+  Point_3 centre; //!< Centre de la face
+  Vector_3 normale; //!< Normale sortante &agrave; la face
+  double Is; //!< Premier moment d'inertie de la face
+  double It; //!< Second moment d'inertie de la face
+  Vector_3 s; //!< Vecteur selon le premier axe principal d'inertie de la face
+  Vector_3 t; //!< Vecteur selon le second axe principal d'inertie de la face
+  std::vector<Vertex> vertex; //!< Les sommets de la face
+  int voisin; //!< Le num&eacute;ro de la particule voisine. -1 si le voisin est le fluide
+  double D0; //!< Distance &agrave; l'&eacute;quilibre avec la particule voisine
 };
 
   
-
+//! D&eacute;finition de la classe Particule
 class Particule
 {
 
@@ -57,67 +65,123 @@ class Particule
 			const double x_max, const double y_max,const double z_max, 
 			std::vector<Face> & F);
   ~Particule();
-	Particule & operator=(const Particule &P); // operateur = surcharge pour l'affectation
+	Particule & operator=(const Particule &P); // opérateur = surcharge pour l'affectation
 	void Affiche();  //fonction auxilaire utile pour les tests
   double volume(); 
   void CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &Tz, double &Txx, double &Tyy, double &Tzz, double &Txy, double &Tyz, double &Tzx);
   void Inertie();
   void Volume_libre();
-	//void forces_fluide(double dt); 	// Forces fluides et Moments fluides exerces sur le solide	
   void solve_position(double dt);
   void solve_vitesse(double dt);
-	Vector_3 vitesse_parois(Point_3& X_f);  // condition de non-penetration a la parois
-	Vector_3 vitesse_parois_prev(Point_3& X_f);  // condition de non-penetration a la parois
-  double min_x;
-  double min_y;
-  double min_z;
-  double max_x;
-  double max_y;
-  double max_z;
-  bool cube;
+  Vector_3 vitesse_parois(Point_3& X_f);  
+  Vector_3 vitesse_parois_prev(Point_3& X_f);  
+  double min_x; //!< la plus petite coordonnée  de la particule selon x
+  double min_y; //!< la plus petite coordonnée  de la particule selon y
+  double min_z; //!< la plus petite coordonnée  de la particule selon z
+  double max_x; //!< la plus grande coordonnée  de la particule selon x
+  double max_y; //!< la plus petite coordonnée  de la particule selon y
+  double max_z; //!< la plus petite coordonnée  de la particule selon z
+  bool cube; //!< = true si la particule est un cube, false sinon
 
-//   int size(){
-// 	return faces.size();
-//   }
-  std::vector<Face> faces;
-  Triangles triangles;
-  Triangles triangles_prev;
-  std::vector<Vector_3> normales;
-  std::vector<Vector_3> normales_prev;
-  std::vector<bool> fluide;
-  std::vector<bool> fluide_prev;
-  std::vector< std::vector<Point_3> > Points_interface;
-	std::vector< std::vector<Point_3> > Points_interface_prev;
-  std::vector< std::vector<Triangle_3> > Triangles_interface;
-	std::vector< std::vector< std::vector<int> > > Position_Triangles_interface;
-	std::vector< std::vector<Triangle_3> > Triangles_interface_prev;
-	std::vector< std::vector<std::vector<int> > > Position_Triangles_interface_prev;
-  bool fixe;
-  double m; //masse de la particule
-  double V; //Volume de la particule
-  double Vl; //Volume libre de la particule (pour le calcul de epsilon)
-  double epsilon; //Deformation volumique globale de la particule
-  double I[3]; //Moments d'inertie de la particule
-  double rotref[3][3]; //Matrice de rotation Q_0 telle que la matrice d'inertie R s'ecrit : R = Q_0*R_0*Q_0^-1, avec R_0=diag(I1,I2,I3)
-  Point_3 x0; //Position du centre de la particule a t=0
-  Vector_3 Dx; //Deplacement du centre de la particule a t
-  Vector_3 Dxprev; //Deplacement du centre de la particule a t-dt
-  Vector_3 Fi; //Forces interieures du solide
-  Vector_3 Ff; //Forces fluides exercees sur le solide entre t et t+dt/2
-  Vector_3 Ffprev; //Forces fluides exercees sur le solide entre t-dt/2 et t
-  Vector_3 Mi; //Moments interieurs du solide
-  Vector_3 Mf; //Moments fluides exerces sur le solide entre t et t+dt/2
-  Vector_3 Mfprev; //Moments fluides exerces sur le solide entre t-dt/2 et t
-  Vector_3 u; //Vitesse de la particule a t
-  Vector_3 u_half; //Vitesse de la particule a t-dt/2
-  Vector_3 omega; //Vecteur rotation au temps t
+  std::vector<Face> faces; //!< liste des faces de la particule
+    
+    /*! 
+     * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+     */  
+  Triangles triangles; //!< Triangulation des faces de la particule au temps n
+    
+    /*! 
+     * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+     */
+  Triangles triangles_prev; //!< Triangulation des faces de la particule au temps n-dt
+    
+    /*! 
+     * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+     */
+  std::vector<Vector_3> normales; //!< normales extérieures aux \a triangles
+    
+    /*! 
+     * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+     */
+  std::vector<Vector_3> normales_prev; //!< normales extérieures aux \a triangles_prev
+    
+    /*! 
+     * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+     */
+  std::vector<bool> fluide; //!< =true si \a triangles en contact avec le fluide
+    
+    /*! 
+     * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+     */
+    std::vector<bool> fluide_prev; //!< =true si \a triangles_prev en contact avec le fluide
+    /*! 
+     * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+     */
+  std::vector< std::vector<Point_3> > Points_interface; //!< Liste des points d'intersection de \a triangles avec la grille fluide au temps n 
+    
+    /*! 
+     * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+     */
+    std::vector< std::vector<Point_3> > Points_interface_prev; //!< Liste des points d'intersection de \a triangles_prev avec la grille fluide au temps n-dt 
+    /*! 
+     * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+     */
+    std::vector< std::vector<Triangle_3> > Triangles_interface; //!< Triangulation des \a triangles au temps n  
+    
+    /*! 
+     * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+     */
+		std::vector< std::vector< std::vector<int> > > Position_Triangles_interface; //!< index de la cellule o&ugrave; se trouve \a Triangles_interface au temps n
+    
+    /*! 
+     * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+     */
+    std::vector< std::vector<Triangle_3> > Triangles_interface_prev; //!< Triangulation des \a triangles_prev au temps n  
+    
+    /*! 
+     * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+     */
+		std::vector< std::vector<std::vector<int> > > Position_Triangles_interface_prev; //!< index de la cellule o&Ugrave; se trouve \a Triangles_interface au temps n-dt
+
+  bool fixe; //!< =true si la particule est fixée, false sinon
+  double m; //!< Masse de la particule
+  double V; //!< Volume de la particule
+  double Vl; //!< Volume libre de la particule (pour le calcul de epsilon)
+  double epsilon; //!< Déformation volumique globale de la particule
+  double I[3]; //!< Moments d'inertie de la particule
+  double rotref[3][3]; //!<Matrice de rotation Q_0 telle que la matrice d'inertie R s'ecrit : R = Q_0*R_0*Q_0^-1, avec R_0=diag(I1,I2,I3)
+  Point_3 x0; //!<Position du centre de la particule &agrave; t=0
+  Vector_3 Dx; //!<Déplacement du centre de la particule en t
+  Vector_3 Dxprev; //!<Déplacement du centre de la particule en t-dt
+  Vector_3 Fi; //!<Forces intérieures du solide
+    /*! 
+     * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+     */
+  Vector_3 Ff; //!<Forces fluides exercées sur le solide entre t et t+dt/2
+    /*! 
+     * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+     */
+  Vector_3 Ffprev; //!< Forces fluides exercees sur le solide entre t-dt/2 et t
+  Vector_3 Mi; //!< Moments intérieurs du solide
+    /*! 
+     * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+     */
+  Vector_3 Mf; //!< Moments fluides exerces sur le solide entre t et t+dt/2
+    /*! 
+     * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+     */
+  Vector_3 Mfprev; //!< Moments fluides exerces sur le solide entre t-dt/2 et t
+  Vector_3 u; //!<Vitesse de la particule a t
+  Vector_3 u_half; //!<Vitesse de la particule a t-dt/2
+  Vector_3 omega; //!<Vecteur rotation au temps t
   Vector_3 omega_half;//Vecteur rotation au temps t-dt/2
-  Vector_3 e; //Vecteur de rotation de la particule a t
-  Vector_3 eprev; //Vecteur de rotation de la particule a t-dt
-  Aff_transformation_3 mvt_t; //Transformation affine de la particule au temps t
-  Aff_transformation_3 mvt_tprev; //Transformation affine de la particule au temps t-dt
-};  
-  
+  Vector_3 e; //!<Vecteur de rotation de la particule a t
+  Vector_3 eprev; //!<Vecteur de rotation de la particule a t-dt
+  Aff_transformation_3 mvt_t; //!<Transformation affine de la particule au temps t
+  Aff_transformation_3 mvt_tprev; //!<Transformation affine de la particule au temps t-dt
+}; 
+
+//! Définition de la classe Solide  
 class Solide
 {
 	
@@ -126,7 +190,7 @@ public:
   Solide();//:solide(std::vector<Particule>(1)){}
   Solide(std::vector<Particule> & Part);
   ~Solide();
-	Solide & operator=(const Solide &S); // operateur = surcharge pour l'affectation
+	Solide & operator=(const Solide &S); // opérateur = surcharge pour l'affectation
 	void Affiche();  //fonction auxilaire utile pour les test
   int size(){
 	return solide.size();
@@ -135,20 +199,19 @@ public:
   void init(const char* s);
   void solve_position(double dt);
   void solve_vitesse(double dt);
-	//void Forces_fluide(double dt);
   void Forces_internes();
-	void update_triangles();
+  void update_triangles();
   double Energie();
   double Energie_potentielle();
   double Energie_cinetique();
   double pas_temps(double t, double T);
   // private :
-  std::vector<Particule> solide;
+  std::vector<Particule> solide; //!< Maillage solide
 };
 
+bool inside_box(const Bbox& cell, const Point_3& P);
 bool box_inside_convex_polygon(const Particule& S, const Bbox& cell);  
 bool inside_convex_polygon(const Particule& S, const Point_3& P);  
-bool inside_box(const Bbox& cell, const Point_3& P);
 double error(Solide& S1, Solide& S2);
 void copy_f_m(Solide& S1, Solide& S2);
 #endif
