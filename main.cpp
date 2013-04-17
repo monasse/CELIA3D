@@ -9,9 +9,9 @@
 /*!
  \mainpage 
  \section intro Introduction
- Code de simulation 3d d'interaction fluide-structure.
+ Code de simulation 3d d'interaction fluide-structure (CELIA_3d).
  La m&eacute;thode num&eacute;rique de couplage utilise une approche de type Volumes Finis de l'interaction fluide-structure.\n
- Le solide est mod&eacute;lise selon une description de type &quot;&eacute;l&eacute;ments discrets" (Mka3d).\n
+ Le solide est mod&eacute;lis&eacute; selon une description de type &quot;&eacute;l&eacute;ments discrets" (Mka3d).\n
  Le fluide est trait&eacute; par une m&eacute;thode de Volumes Finis, le calcul des flux num&eacute;riques utilise le sch&eacute;ma OSMP (CHORUS).
 
  \section description Description du projet
@@ -25,12 +25,14 @@
  
  Ce que vous devez remplir pour lancer une simulation:
  
- - \a parametres.hpp: remplir les param&egrave;tres du probl&egrave;me 
- - \a parametres.cpp: l'&eacute;tat initial du fluide: densit&eacute;, pression, vitesse
- - cr&eacute;ation du fichier <b> "maillage.dat" </b>d&eacute;finissant le maillage pour le solide.\note Attention, respecter la syntaxe expliqu&eacute;e dans le fichier \b README
+ - \a parametres.hpp: d&eacute;finir les param&egrave;tres du probl&egrave;me; 
+ - \a parametres.cpp: d&eacute;finir l'&eacute;tat initial du fluide: densit&eacute;, pression, vitesse;
+ - cr&eacute;ation du fichier <b> "maillage.dat" </b>d&eacute;finissant le maillage pour le solide.\note Attention, respectez la syntaxe expliqu&eacute;e dans le fichier \b README. \n
  
- \remark 
- Les proc&eacute;dures concernant le fluide se trouvent dans les fichiers fluide.hpp et fluide.cpp. Celles concernant le solide dans solide.hpp et solide.cpp. Les proc&eacute;dures r&eacute;alisant le couplage sont regroupes dans les fichiers couplage.cpp, intersections.hpp et intersections.cpp. Les fichiers parametres.hpp et parametres.cpp sont d&eacute;di&eacute;es aux d&eacute;finitions des param&eacute;tr&eacute;s du probl&egrave;me (param&eacute;tr&eacute;s physique, li&eacute;es aux maillages fluide et solide, au couplage, etc.). La r&eacute;solution du probl&egrave;me se fait dans le fichier principal main.cpp. 
+ 
+ 
+ \remark Les proc&eacute;dures concernant le fluide se trouvent dans les fichiers fluide.hpp et fluide.cpp. Celles concernant le solide dans solide.hpp et solide.cpp. Les proc&eacute;dures r&eacute;alisant le couplage sont regroup&eacute;es dans les fichiers couplage.cpp, intersections.hpp et intersections.cpp. Les fichiers parametres.hpp et parametres.cpp sont d&eacute;dies aux d&eacute;finitions des param&eacute;tr&eacute;s du probl&egrave;me (param&eacute;tr&eacute;s physique, li&eacute;s aux maillages fluide et solide, au couplage, etc.). La r&eacute;solution du probl&egrave;me est r&eacute;alis&eacute;e  dans le fichier principal main.cpp. 
+ 
  
  \authors Maria Adela PUSCAS et Laurent MONASSE
  */
@@ -122,10 +124,10 @@ int main(){
 	  t = temps[numrep];
 	}
 	Solide S;
-	S.init("maillage.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
+	S.Init("maillage.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	Grille Fluide;
-	Fluide.init();
-	Fluide.parois(S, dt);
+	Fluide.Init();
+	Fluide.Parois(S, dt);
 	Fluide.BC();
 
 	int iter=0;	
@@ -138,8 +140,8 @@ int main(){
 	  kimp = numrep;
 	  next_timp = t+dtimp;
 	} else {
-	  Fluide.impression(kimp);
-	  S.impression(kimp);
+	  Fluide.Impression(kimp);
+	  S.Impression(kimp);
 	  sorties_reprise << t << endl;
 	}
 	kimp++;
@@ -162,8 +164,8 @@ int main(){
 	for (int n=0; (t<T) && n<Nmax; n++){
 		
 		if(t>next_timp){
-			Fluide.impression(kimp);
-			S.impression(kimp);
+			Fluide.Impression(kimp);
+			S.Impression(kimp);
 			sorties_reprise << t << endl;
 			kimp++;
 			next_timp += dtimp;
@@ -189,11 +191,11 @@ int main(){
 		user_time3.reset();
 		if(explicite){ //algo de couplage explicit
 		Fluide.Forces_fluide(S,dt);
-		S.solve_position(dt);
+		S.Solve_position(dt);
 		user_time3.start();
-		S.solve_vitesse(dt);
+		S.Solve_vitesse(dt);
 		user_time4.start();
-		Fluide.parois(S,dt);
+		Fluide.Parois(S,dt);
 		temps_intersections += CGAL::to_double(user_time4.time());
 		user_time4.reset();
 		//S.Affiche();
@@ -209,13 +211,13 @@ int main(){
 			int k;
 			for(k=0;(erreur>1.e-19) && (k<kmax) ;k++){
 				Fluide.Forces_fluide(Sk,dt);
-				copy_f_m(S,Sk); //attention c'est tres important d'appeller cette fonction car sinon on va ecraser les valeurs Sk.F_f et Sk.M_f!!!!!
+				Copy_f_m(S,Sk); //attention c'est tres important d'appeller cette fonction car sinon on va ecraser les valeurs Sk.F_f et Sk.M_f!!!!!
 				Sk_prev = Sk; 
 				Sk = S ; 
-				Sk.solve_position(dt);
-				Sk.solve_vitesse(dt);
-				Fluide.parois(Sk,dt);
-				erreur = error(Sk, Sk_prev);
+				Sk.Solve_position(dt);
+				Sk.Solve_vitesse(dt);
+				Fluide.Parois(Sk,dt);
+				erreur = Error(Sk, Sk_prev);
 				//cout<<" erreur := "<<erreur<<endl;
 			}//fin boucle 
 			S=Sk;
@@ -226,16 +228,16 @@ int main(){
 			//semi-implicit	
 		}
 		user_time.start();
-		Fluide.swap_2d(dt,S);
+		Fluide.Swap_2d(dt,S);
 		//cout << "Temps swap: " << user_time.time() << " seconds." << endl;
 		temps_swap += CGAL::to_double(user_time.time());
 		user_time.reset();
 		//cout<<"Triangles en n "<<n0<<" Triangles en n+1 "<<n1<<" Triangles sous maillage "<<m<<endl;
-		Fluide.modif_fnum(dt);
+		Fluide.Modif_fnum(dt);
 		//Fluide.affiche("modif_fnum");
-		Fluide.mixage();
+		Fluide.Mixage();
 		//Fluide.affiche("mixage");
-		Fluide.fill_cel(S);
+		Fluide.Fill_cel(S);
 		//Fluide.affiche("fill_cell");
 		Fluide.BC();
 		//Fluide.affiche("BC");
@@ -246,20 +248,20 @@ int main(){
 	}
 	end=clock();
 	
-	Fluide.impression(kimp);
-	S.impression(kimp);
+	Fluide.Impression(kimp);
+	S.Impression(kimp);
 	
 	temps_iter<< "Temps final  "<< t<<endl;
-	temps_iter<<"nb iter= "<< iter<<endl;    
-	temps_iter<<"Temps de calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl; 
-	temps_iter<<"temps calcul flux " <<temps_flux<< endl; 
-	temps_iter<<"temps calcul solide forces internes " <<temps_solide_f_int<< endl; 
-	temps_iter<<"temps quantite swap " <<temps_swap << endl; 
-	temps_iter<<"temps intersections " << temps_intersections<< endl; 
-	temps_iter<<"temps semi-implicit" << temps_semi_implicit<< endl; 
-	temps_iter<<"temps couplage " << temps_swap + temps_intersections + temps_semi_implicit<< endl; 
-	cout<<"nb iter= "<< iter<<endl;    
-	cout <<"Temps de calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl;  
+	temps_iter<<"Nb iter= "<< iter<<endl;    
+	temps_iter<<"Temps calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl; 
+	temps_iter<<"Temps calcul flux " <<temps_flux<< endl; 
+	temps_iter<<"Temps calcul forces internes " <<temps_solide_f_int<< endl; 
+	temps_iter<<"Temps calcul swap " <<temps_swap << endl; 
+	temps_iter<<"Temps calcul intersections " << temps_intersections<< endl; 
+	temps_iter<<"Temps semi-implicit" << temps_semi_implicit<< endl; 
+	temps_iter<<"Temps couplage " << temps_swap + temps_intersections + temps_semi_implicit<< endl; 
+	cout<<"Nb iter= "<< iter<<endl;    
+	cout <<"Temps calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl;  
 
 	return 0;
 }

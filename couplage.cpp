@@ -1,7 +1,7 @@
 /*!
    \file couplage.cpp
-   \brief D&eacute;finitions des fonctions specifiqu&eacute;es au couplage.
-   \details Calcul des Forces et Moments fluides exerces sur le solide, modifications flux fluide, remplissage des cellule fant&ocirc;mes, calcul de la quantit&eacute; balay&eacute;e.
+   \brief D&eacute;finitions des fonctions sp&eacute;cifiques au couplage.
+   \details Calcul des Forces et Moments fluides exerc&eacute;s sur le solide, modifications flux fluide, remplissage de cellules fant&ocirc;mes, calcul de la quantit&eacute; balay&eacute;e.
    \warning  <b> Proc&eacute;dures sp&eacute;cifique au couplage! </b>
  */
 
@@ -11,27 +11,27 @@
 
 /*!
 * \fn void Grille::Forces_fluide(Solide& S, const double dt)
-* \brief Calcul des Forces et Moments fluides exerces sur le Solide.
-* \details Soit \a f un morceau d'interface, la force de pression exercée par le fluide sur l'interface \a f est donne par :
+* \brief Calcul des Forces (\a Particule.Ff) et Moments fluides (\a Particule.Mf) exerc&eacute;s sur le Solide.
+* \details Soit \a f un morceau d'interface, la force de pression exerc&eacute;e par le fluide sur l'interface \a f est donn&eacute;e par :
 \f{eqnarray*}{
 	F_f  =  (- p^x \, A_f n^{x}_f, \,- p^y \,A_f n^{y}_f, \,- p^z \,A_f n^{z}_f )^t
 \f} \n
-où  \f$ A_f \f$ est l'aire de l'interface f,  \f$ n_f \f$ est la normale exterieure &agrave; l'interface f et \f$ p^x, p^y, p^z \f$ sont les  \a pdtx, 
-\a  pdty et \a  pdtz (expliqu&eacute; dans la class Cellule) les pressions efficaces selon les direction x, y et z pendant le pas de temps dt.
-Le moment fluide exerce sur f est donne par :
+o&ugrave;  \f$ A_f \f$ l'aire de l'interface f,  \f$ n_f \f$ la normale sortante &agrave; l'interface f, et \f$ p^x, p^y, p^z \f$ les pressions efficaces selon les directions x, y et z pendant le pas de temps (\a Cellule.pdtx, 
+\a  Cellule.pdty et \a Cellule.pdtz).
+Le moment fluide exerc&eacute; sur f est donn&eacute; par :
 \f{eqnarray*}{
 	M_f = F_f  \wedge (X_f - X_I),
 \f}
-où \f$ X_f \f$ est le centre de l'interface f et \f$  X_I \f$ est le centre de la particule qui contient f.
+o&ugrave; \f$ X_f \f$ centre de l'interface f et \f$  X_I \f$ centre de la particule qui contient f.
 Ces forces vont &ecirc;tre transmises au Solide comme des forces exerc&eacute;es par le fluide sur le solide pendant le pas de temps.
 * \param S Solide
 * \param dt pas de temps
-* \warning <b> proc&eacute;dure sp&eacute;cifique au couplage! </b>
+* \warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 * \return void
 */
 void Grille::Forces_fluide(Solide& S, const double dt){
 	
-	//Mise à jour des Forces fluides et Moments fluides exerces sur le solide 
+	//Mise &agrave; jour des Forces fluides et Moments fluides exerces sur le solide 
 	for(int iter_s=0; iter_s<S.size(); iter_s++){ 
 		
 		S.solide[iter_s].Ffprev = S.solide[iter_s].Ff;
@@ -71,24 +71,25 @@ void Grille::Forces_fluide(Solide& S, const double dt){
 }	
 
 /*!
-* \fn void Grille::modif_fnum(const double dt)
+* \fn void Grille::Modif_fnum(const double dt)
 *  \brief Modification des flux fluide et bilan discret sur la cellule (m&eacute;thode de fronti&egrave;res immerg&eacute;es).
-*  \details C'est &agrave; cette &eacute;tape que le fluide "voie" la pr&eacute;sence du solide, on calcule la valeur finale de l'&eacute;tat \f$ U^{n+1}_{i, j, k}\f$  dans la cellule en utilisant:
+*  \details C'est &agrave; cette &eacute;tape que le fluide "voie" la pr&eacute;sence du solide. On calcule la valeur finale de l'&eacute;tat \f$ U^{n+1}_{i, j, k}\f$  dans la cellule en utilisant:
 \f{eqnarray*}{
 	\left( 1-  \Lambda_{i,j,k}^{n+1} \right) U^{n+1}_{i,j,k}   = \left( 1-  \Lambda_{i,j,k} ^{n+1}\right) U^n_{i,j,k}  + \Delta t \, \left(   \frac{(1-\lambda_{i-1/2,j,k}^{n+1} )}{\Delta x_{ i,j,k}} F_{i-1/2, j, k}^{n+1/2} -\frac{(1-\lambda_{i+1/2,j,k}^{n+1} )}{\Delta x_{ i,j,k}} F_{i+1/2, j, k}^{n+1/2}  + ...\right)	\f}
 	\f{eqnarray*}{+  \frac{\Delta t}{V_{i,j,k}} \sum_{f \in C_{i,j,k}}{A_{f}} {\phi}_{f_{ i,j,k}}  +   \sum_{f \in C_{i,j,k}} \Delta U^{n, n+1}_{f_{ i,j,k}}  .
 	\f}
-	où	\f$ \Lambda_{i,j,k}^{n+1} \f$ est l'atribut \a alpha de la class Cellule (fraction occup&eacute; par du solide dans la cellule(i,j,k)),\n
-	\f$ \lambda_{i+1/2,j,k}^{n+1} \f$  l'atribut \a kappai de la class Cellule (fraction occup&eacute; par du solide sur le faces de la cellule(i,j,k)),\n
-	\f$ F_{i+1/2, j, k}^{n+1/2} \f$  l'atribut \a  fluxi de la classe Cellule (flux &agrave; droite dans la cellule(i,j,k)), \n
-	\f$ V_{i,j,k} \f$ le volume de la cellule(i,j,k), \n
-	\f$ {\phi}_{f_{ i,j,k}} = (0, phi\_x, phi\_y,phi\_z, phi\_v)^t 	\f$: \f$ phi\_x, phi\_y, phi\_z, phi\_v \f$ sont les flux &agrave; la parois (des atributs de la classe Cellule),\n
-	\f$ \Delta U^{n, n+1}_{f_{ i,j,k}} 	\f$ l'attribut \a delta_w de la classe Cellule (quantit&eacute;e balay&eacute;e).
+	o&ugrave;	\f$ \Lambda_{i,j,k}^{n+1} \f$: \a Cellule.alpha (fraction occup&eacute;e par du solide dans la cellule(i,j,k)),\n
+	\f$ \lambda_{i+1/2,j,k}^{n+1} \f$: \a Cellule.kappai (fraction occup&eacute;e par du solide sur le faces de la cellule(i,j,k)),\n
+	\f$ F_{i+1/2, j, k}^{n+1/2} \f$:   \a  Cellule.fluxi (flux &agrave; droite dans la cellule(i,j,k)), \n
+	\f$ V_{i,j,k} \f$: volume de la cellule(i,j,k), \n
+	\f{eqnarray*}{ \phi_{f_{ i,j,k}} = (0, \Pi_x, \Pi_y,\Pi_z, \Pi_v)^t. 	\f}
+	\f$ \Pi_x, \Pi_y,\Pi_z, \Pi_v\f$: \a Cellule.phi_x, \a Cellule.phi_y, Cellule.phi_z, \a Cellule.phi_v (les flux &agrave; la parois),\n
+	\f$ \Delta U^{n, n+1}_{f_{ i,j,k}} 	\f$:  \a Cellule.delta_w (quantit&eacute;e balay&eacute;e).
 *	\param dt pas de temps
-*	\warning <b> proc&eacute;dure sp&eacute;cifique au couplage! </b>
+*	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 *	\return void
 */
-void Grille::modif_fnum(const double dt){
+void Grille::Modif_fnum(const double dt){
 	
 	Cellule c,ci,cj,ck; 
 	for(int i=marge;i<Nx+marge;i++){
@@ -140,9 +141,9 @@ void Grille::modif_fnum(const double dt){
 }
 
 /*!
-* \fn void Grille:: mixage()
-*  \brief M&eacute;lange conservatif des petites cellules coup&eacute;es.
-*  \details On d&eacute;finit une petite cellule tel que \f$ alpha > epsa \f$ (\a alpha: fraction occupé par du solide dans la cellule, atribut de la class Cellule et \a epsa: fraction de cellule coup&eacute;e d&eacute;finite dans parametres.hpp ), afin ne pas modifier le pas de temps tout en garantissant la condition de CFL, les petites cellules sont fusionn&eacute;es avec leurs voisines. On note \a p une petite cellule et \a g une cellule voisine avec \a p compl&egrave;tement fluide~(\f$ alpha_g = 0 \f$ ). On d&eacute;finit les termes d'&eacute;change suivants :
+* \fn void Grille:: Mixage()
+*  \brief M&eacute;lange conservatif de petites cellules coup&eacute;es.
+*  \details On d&eacute;finit une petite cellule tel que \f$ alpha > epsa \f$ (\a Cellule.alpha fraction occup&eacute;e par du solide dans la cellule, et \a epsa: fraction de cellule coup&eacute;e d&eacute;finit dans parametres.hpp ). Afin ne pas modifier le pas de temps tout en garantissant la condition de CFL, les petites cellules sont fusionn&eacute;es avec leurs voisines. On note \a p une petite cellule et \a g une cellule voisine avec \a p compl&egrave;tement fluide~(\f$ alpha_g = 0 \f$ ). On d&eacute;finit les termes d'&eacute;change suivants :
 \f{eqnarray*}{ E_{pg} = \frac{alpha_p+ alpha_g}{alpha_g} (U_g - U_{p}), \quad  E_{gp} = \frac{alpha_p+ alpha_g}{alpha_p} (U_p - U_{g}) \f}
 et on pose:
 \f{eqnarray*}{
@@ -150,7 +151,7 @@ U_p = U_{p} + E_{pg}, \quad  \quad U_g = U_{g} + E_{gg} \f}
 *	\warning <b> proc&eacute;dure sp&eacute;cifique au couplage! </b>
 *	\return void
 */
-void Grille:: mixage(){
+void Grille:: Mixage(){
 	
 	Cellule cp, cg;
 	
@@ -482,16 +483,16 @@ void Grille:: mixage(){
 
 
 /*!
-* \fn void Grille::fill_cel(Solide& S)
-*  \brief Remplissage des cellules fictives (\a alpha = 1)
-*  \details Afin de calculer les flux pr&egrave;s de l'interface solide-fluide, on definit dans les Cellule compl&egrave;tement occup&eacute;es par le Solide (\a alpha = 1) un &eacute;tat fictif qui sera &eacute;gale &agrave; la valeur de l'&eacute;tat de la maille miroir par rapport &agrave; l'interface. \n
-Algo: on cherche l'interface la plus proche du centre de la cellule (boucle sur toute les faces du Solide) et on calcul la projection du centre de la cellule par rapport a cette interface via la fonction <b> CGAL projection(Point_3) </b> .
+* \fn void Grille::Fill_cel(Solide& S)
+*  \brief Remplissage de cellules fictives (\a alpha = 1)
+*  \details Afin de calculer les flux pr&egrave;s de l'interface solide-fluide, on d&eacute;finit dans les Cellule compl&egrave;tement occup&eacute;es par le Solide (\a alpha = 1) un &eacute;tat fictif qui sera &eacute;gal &agrave; la valeur de l'&eacute;tat de la maille miroir par rapport &agrave; l'interface. \n
+Algo: on cherche l'interface la plus proche du centre de la cellule (boucle sur toutes les faces du Solide) et on calcule la projection du centre de la cellule par rapport &agrave; cette interface via la fonction <b> CGAL::projection(Point_3) </b>.
 *	\param S  Solide 
 *	\warning <b> proc&eacute;dure sp&eacute;cifique au couplage! </b>
 *	\return void
 */
 
-void Grille::fill_cel(Solide& S){
+void Grille::Fill_cel(Solide& S){
 	
 	Cellule c, cm;
 	int nb_part = S.size();
@@ -608,16 +609,247 @@ void Grille::fill_cel(Solide& S){
 	}
 }
 
+/*!
+* \fn double volume_prisme(const Triangle_3& T1,const Triangle_3& T2)
+*  \brief Calcul de volume sign&eacute; d'une prisme.
+* \details Le volume sign&eacute; de la prisme ayant comme basses les triangles \f$ T1(A_1,B_1,C_1)  \f$ et \f$ T2(A_2,B_2,C_2) \f$ est donn&eacute; par: \n
+\f{eqnarray*}{
+	{\Vert A_1 B_1 C_1 A_2 B_2 C_2 \Vert}_P  = \frac{1}{36}  \left( 2 \vec{A_1 B_1} \wedge \vec{A_1 C_1} + 2 \vec{A_2 B_2} \wedge \vec{A_2 C_2} +  \vec{A_1 B_1}\wedge \vec{A_2 C_2}  +  \vec{A_2 B_2}\wedge \vec{A_1 C_1} \right) \cdot
+	\f} 
+	\f{eqnarray*}{  \left( \vec{A_1 A_2}  + \vec{B_1 B_2} + \vec{C_1 C_2}\right)\f}
+	*	\param T1 Triangle_3  base de la prisme
+	*	\param T2 Triangle_3  base de la prisme
+	*	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
+	*	\return double
+	*/
+double volume_prisme(const Triangle_3& T1,const Triangle_3& T2){
+	
+	double volume=0.;
+	
+	Vector_3 V = 2.*cross_product( Vector_3(T1.operator[](0),T1.operator[](1)), Vector_3(T1.operator[](0),T1.operator[](2)) )
+	+ 2*cross_product( Vector_3(T2.operator[](0),T2.operator[](1)), Vector_3(T2.operator[](0),T2.operator[](2)) )
+	+ cross_product( Vector_3(T1.operator[](0),T1.operator[](1)), Vector_3(T2.operator[](0),T2.operator[](2)) )
+	+ cross_product( Vector_3(T2.operator[](0),T2.operator[](1)), Vector_3(T1.operator[](0),T1.operator[](2)) );
+	
+	volume = CGAL::to_double((Vector_3(T1.operator[](0),T2.operator[](0)) + Vector_3(T1.operator[](1),T2.operator[](1)) + 
+	Vector_3(T1.operator[](2),T2.operator[](2)))*V);
+	
+	volume /=36;
+	return volume;
+}
 
+/*!
+* \fn double volume_tetra(const Tetrahedron& Tet)
+*  \brief Calcul de volume sign&eacute; d'un t&eacute;tra&egrave;dre.
+* \details Le volume sign&eacute; du t&eacute;tra&egrave;dre \f$ T(A,B,C,D)  \f$ est donn&eacute; par: \n
+\f{eqnarray*}{
+	{\Vert A B C D \Vert}_{sign} = \frac{1}{6} \vec{A D} \cdot \left(  \vec{A B} \wedge \vec{A C}  \right) 
+	\f}
+	*	\param Tet Tetrahedron
+	*	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
+	*	\return double
+	*/
+double volume_tetra(const Tetrahedron& Tet){
+	
+	double volume=0.;
+	
+	Vector_3 V = cross_product( Vector_3(Tet.operator[](0),Tet.operator[](1)), Vector_3(Tet.operator[](0),Tet.operator[](2)) );
+	
+	
+	volume = CGAL::to_double( (Vector_3(Tet.operator[](0),Tet.operator[](3)) *V) );
+	volume /= 6.;
+	
+	return volume;
+}
+
+/*!
+* \fn Point_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn)
+*  \brief Transformation barycentrique du point Xn.
+* \details Soit Xn un point appartenant au triangle Tn(A_1,B_1,C_1). Le transforme barycentrique du Xn est le point Xn1(appartenant au triangle Tn1(A_2,B_2,C_2) ) donne par: 
+\f{eqnarray*}{
+	\lambda = \frac{\Vert  \vec{C_1 Xn} \wedge \vec{C_1 B_1}  \Vert }{\Vert  \vec{C_1 A_1} \wedge \vec{C_1 B_1}  \Vert} 
+	\f}
+	\f{eqnarray*}{
+		\mu = \frac{\Vert  \vec{C_1 Xn} \wedge \vec{C_1 A_1}  \Vert }{\Vert  \vec{C_1 B_1} \wedge \vec{C_1 A_1}  \Vert} 
+		\f}
+		\f{eqnarray*}{
+			Xn1 = \lambda A_2 + \mu B_2 + (1-\lambda -\mu)C_2 
+			\f}
+	*	\param Tn Triangle_3
+	*\param Tn1 Triangle_3 
+	*\param Xn  Point_3
+	*	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
+	*	\return Point_3
+	*/
+Point_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn){
+	
+	
+	  double lambda = 0., mu = 0.;
+	
+		double dom = std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
+											Vector_3(Tn.operator[](2),Tn.operator[](1))).squared_length() ));
+		double num1 = std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Xn),
+											 Vector_3(Tn.operator[](2),Tn.operator[](1))).squared_length() ));
+		double num2 = std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
+											 Vector_3(Tn.operator[](2),Xn)).squared_length() )); 
+
+	 lambda =  num1/dom;
+	 mu = num2/dom;
+	
+	double x = CGAL::to_double(lambda * Tn1.operator[](0).operator[](0) + mu*Tn1.operator[](1).operator[](0) 
+	                           + (1- lambda- mu)*Tn1.operator[](2).operator[](0));
+	
+	double y = CGAL::to_double(lambda * Tn1.operator[](0).operator[](1) + mu*Tn1.operator[](1).operator[](1) 
+	                           + (1- lambda- mu)*Tn1.operator[](2).operator[](1));
+		 
+	double z = CGAL::to_double(lambda * Tn1.operator[](0).operator[](2) + mu*Tn1.operator[](1).operator[](2) 
+	                           + (1- lambda- mu)*Tn1.operator[](2).operator[](2));
+
+	return Point_3(x, y, z);
+}
+
+/*!
+*\fn Triangle_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Triangle_3 T)
+*\brief Transormation barycentrique du Triangle T.
+*\details Appel &agrave; la fonction tr(Triangle_3, Triangle_3, Point_3) pour chaque somment du triangle.
+*\param Tn Triangle_3
+*\param Tn1 Triangle_3 
+*\param T  Triangle_3 
+*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
+*\return Triangle_3 
+*/
+Triangle_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Triangle_3 T){
+	
+	Point_3 s = tr( Tn,Tn1, T.operator[](0) );
+	Point_3 r = tr( Tn,Tn1, T.operator[](1) );
+	Point_3 v = tr( Tn,Tn1, T.operator[](2) );
+	
+	return Triangle_3(s, r, v);
+}
+//transformation inverse tr(Tn1,Tn, tr(Tn,Tn1,T))
+
+
+/*!
+* \fn Point_2 tr(Triangle_3 Tn1, Point_3 Xn)
+*  \brief Transformation d'un Point_3 en Point_2.
+* \details  Soit le triangle Tn1(A,B,C), la transformation du Point 3d Xn (appartenant &agrave; Tn1) en un point 2d est donne par: 
+
+\f{eqnarray*}{
+	\lambda = \frac{\Vert  \vec{C Xn} \wedge \vec{C B}  \Vert }{\Vert  \vec{C A} \wedge \vec{C B}  \Vert} 
+	\f}
+	\f{eqnarray*}{
+		\mu = \frac{\Vert  \vec{C A} \wedge \vec{C Xn}  \Vert }{\Vert  \vec{C A} \wedge \vec{C B}  \Vert} 
+		\f}
+		\f{eqnarray*}{
+			X2d = (\mu, (1-\lambda-\mu))
+			\f}
+*\param Tn1 Triangle_3 
+*\param Xn  Point_3
+*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
+*\return Point_2
+*/
+Point_2 tr(Triangle_3 Tn1, Point_3 Xn){
+		
+  double lambda = 0., mu = 0.;
+
+ 	double dom =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Tn1.operator[](0)),
+										    Vector_3(Tn1.operator[](2),Tn1.operator[](1))).squared_length() ));
+	double num1 =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Xn),
+										     Vector_3(Tn1.operator[](2),Tn1.operator[](1))).squared_length() ));
+	double num2 =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Tn1.operator[](0)),
+												 Vector_3(Tn1.operator[](2),Xn)).squared_length() )); 
+												 
  
- //Transformation barycentrique du point Xn
- Point_3 tr2(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn){
- 	
- 	
- 	double lambda = 0., mu = 0.;
- 	
+	 lambda =  num1/dom;
+	 mu = num2/dom;
+
+	Point_2 M(mu, (1-lambda-mu));
+	
+	return M;
+}	
+
+/*!
+*\fn Triangle_2 tr(Triangle_3 Tn1, Triangle_3 T)
+*\brief Transormation d'un Triangle_3 en Triangle_2 
+	*\details Appel &agrave; la fonction tr(Triangle_3, Point_3) pour chaque somment du triangle.
+	*\param Tn1 Triangle_3 
+	*\param T  Triangle_3 
+	*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
+	*\return Triangle_2 
+	*/
+Triangle_2 tr(Triangle_3 Tn1, Triangle_3 T){
+	
+	Point_2 s = tr( Tn1, T.operator[](0) );
+	Point_2 r = tr( Tn1, T.operator[](1) );
+	Point_2 v = tr( Tn1, T.operator[](2) );
+	
+	return Triangle_2(s, r, v);
+}
+
+
+/*!
+* \fn Point_3 tr(Triangle_3 Tn1, Point_2 Xn)
+*  \brief Transformation d'un Point_2 en Point_3.
+* \details  Soit le triangle Tn1(A,B,C), la transformation du Point 2d Xn(X,Y) en un point 3d(appartenant &agrave; Tn1) est donne par: 
+
+\f{eqnarray*}{
+\lambda = 1- X - Y
+\f}
+\f{eqnarray*}{
+\mu = X
+\f}
+\f{eqnarray*}{
+	X3d = \lambda A + \mu B + (1-\lambda -\mu)C 
+	\f}
+*\param Tn1 Triangle_3 
+*\param Xn  Point_2
+*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
+*\return Point_3
+*/
+Point_3 tr(Triangle_3 Tn1, Point_2 Xn){
+
+  double lambda = CGAL::to_double(1.- Xn.operator[](0) -  Xn.operator[](1));
+  double mu = CGAL::to_double(Xn.operator[](0));
+	
+	double x = CGAL::to_double(lambda * Tn1.operator[](0).operator[](0) + mu*Tn1.operator[](1).operator[](0) 
+	+ (1- lambda- mu)*Tn1.operator[](2).operator[](0));
+	
+	double y = CGAL::to_double(lambda * Tn1.operator[](0).operator[](1) + mu*Tn1.operator[](1).operator[](1) 
+	+ (1- lambda- mu)*Tn1.operator[](2).operator[](1));
+	double z = CGAL::to_double(lambda * Tn1.operator[](0).operator[](2) + mu*Tn1.operator[](1).operator[](2) 
+	+ (1- lambda- mu)*Tn1.operator[](2).operator[](2));		
+	
+	
+	return Point_3(x,y,z);
+}	
+/*!
+*\fn Triangle_3 tr(Triangle_3 Tn1, Triangle_2 T)
+*\brief  Transormation d'un Triangle_2 en Triangle_3
+*\details Appel &agrave; la fonction tr(Triangle_3, Point_2) pour chaque somment du triangle.
+*\param Tn1 Triangle_3 
+*\param T  Triangle_2 
+*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
+*\return Triangle_3 
+*/
+Triangle_3 tr(Triangle_3 Tn1, Triangle_2 T){
+	
+	Point_3 s = tr( Tn1, T.operator[](0) );
+	Point_3 r = tr( Tn1, T.operator[](1) );
+	Point_3 v = tr( Tn1, T.operator[](2) );
+	
+	return Triangle_3(s, r, v);
+}
+
+
+/* 
+//Transformation barycentrique du point Xn
+Point_3 tr2(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn){
+	
+	
+	double lambda = 0., mu = 0.;
+	
 	double dom =CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),Vector_3(Tn.operator[](2),
-	                           Tn.operator[](1))).operator[](0));
+	Tn.operator[](1))).operator[](0));
 	double num1 =CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Xn),Vector_3(Tn.operator[](2),
 	Tn.operator[](1))).operator[](0));
 	double num2 =CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
@@ -638,181 +870,57 @@ void Grille::fill_cel(Solide& S){
 			num2 =CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
 			Vector_3(Tn.operator[](2),Xn)).operator[](2));
 			}
-		}
+			}
+			
+			lambda =  num1/dom;
+			mu = num2/dom;
+			
+			
+			double x =CGAL::to_double( lambda * Tn1.operator[](0).operator[](0) + mu*Tn1.operator[](1).operator[](0) 
+			+ (1- lambda- mu)*Tn1.operator[](2).operator[](0));
+			
+			double y = CGAL::to_double(lambda * Tn1.operator[](0).operator[](1) + mu*Tn1.operator[](1).operator[](1) 
+			+ (1- lambda- mu)*Tn1.operator[](2).operator[](1));
+			double z = CGAL::to_double(lambda * Tn1.operator[](0).operator[](2) + mu*Tn1.operator[](1).operator[](2) 
+			+ (1- lambda- mu)*Tn1.operator[](2).operator[](2));		
+			
+			
+			return Point_3(x, y, z);
+			}
+			
+			// Transormation barycentrique du Triangle T 
+			Triangle_3 tr2(Triangle_3 Tn, Triangle_3 Tn1, Triangle_3 T){
+				
+				Point_3 s = tr2( Tn,Tn1, T.operator[](0) );
+				Point_3 r = tr2( Tn,Tn1, T.operator[](1) );
+				Point_3 v = tr2( Tn,Tn1, T.operator[](2) );
+				
+				return Triangle_3(s, r, v);
+			}*/
 
- 	lambda =  num1/dom;
- 	 mu = num2/dom;
+/*!
+*\fn void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,int& kn1, std::vector<Bbox>& box_cells, std::vector<Cellule>& Cells)
+*\brief Liste de cellules fluides intersect&eacute;es par un triangle d'interface entre t et t+dt
+*\details Soit
+\f$ C_1= grille[in][jn][kn]\f$ la cellule o&ugrave; se trouve le triangle d'interface au temps t et \f$ C_2= grille[in1][jn1][kn1]\f$ la cellule o&ugrave; se trouve le triangle d'interface au temps t+dt. \n
+Par CFL, \f$ max(|in-in1 |, |jn-jn1 |, |kn-kn1 |)<=1 \f$ . 
+On aura au plus 8 cellules intersect&eacute;es pas &quot;le prisme r&eacute;gl&eacute;&quot;(prisme ayant comme bases le triangle d'interface aux temps t (\a Particule.triangles_prev)  et t+dt (\a Particule.triangles) ):\n
+-\f$ grille[in][jn][kn]\f$ \n
+-\f$ grille[in1][jn][kn]\f$ \n
+-\f$ grille[in][jn1][kn]\f$ \n
+-\f$ grille[in][jn1][kn1]\f$ \n
+-\f$ grille[in1][jn1][kn]\f$ \n
+-\f$ grille[in1][jn][kn1]\f$ \n
+-\f$ grille[in][jn1][kn1]\f$ \n
+-\f$ grille[in1][jn1][kn1]\f$ \n
 
-
- 	double x =CGAL::to_double( lambda * Tn1.operator[](0).operator[](0) + mu*Tn1.operator[](1).operator[](0) 
- 	                           + (1- lambda- mu)*Tn1.operator[](2).operator[](0));
- 														 
- 	double y = CGAL::to_double(lambda * Tn1.operator[](0).operator[](1) + mu*Tn1.operator[](1).operator[](1) 
- 	                           + (1- lambda- mu)*Tn1.operator[](2).operator[](1));
- 	double z = CGAL::to_double(lambda * Tn1.operator[](0).operator[](2) + mu*Tn1.operator[](1).operator[](2) 
- 														 + (1- lambda- mu)*Tn1.operator[](2).operator[](2));		
- 														 
- 	
- 	return Point_3(x, y, z);
- }
-
-// Transormation barycentrique du Triangle T 
-Triangle_3 tr2(Triangle_3 Tn, Triangle_3 Tn1, Triangle_3 T){
-	
-	Point_3 s = tr2( Tn,Tn1, T.operator[](0) );
-	Point_3 r = tr2( Tn,Tn1, T.operator[](1) );
-	Point_3 v = tr2( Tn,Tn1, T.operator[](2) );
-	
-	return Triangle_3(s, r, v);
-}
-
-//Transformation barycentrique du point Xn
-Point_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn){
-	
-	
-	  double lambda = 0., mu = 0.;
-	
-		double dom = std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
-											Vector_3(Tn.operator[](2),Tn.operator[](1))).squared_length() ));
-		double num1 = std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Xn),
-											 Vector_3(Tn.operator[](2),Tn.operator[](1))).squared_length() ));
-		double num2 = std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
-											 Vector_3(Tn.operator[](2),Xn)).squared_length() )); 
-
-	lambda =  num1/dom;
-	mu = num2/dom;
-	
-	double x = CGAL::to_double(lambda * Tn1.operator[](0).operator[](0) + mu*Tn1.operator[](1).operator[](0) 
-	                           + (1- lambda- mu)*Tn1.operator[](2).operator[](0));
-	
-	double y = CGAL::to_double(lambda * Tn1.operator[](0).operator[](1) + mu*Tn1.operator[](1).operator[](1) 
-	                           + (1- lambda- mu)*Tn1.operator[](2).operator[](1));
-		 
-	double z = CGAL::to_double(lambda * Tn1.operator[](0).operator[](2) + mu*Tn1.operator[](1).operator[](2) 
-	                           + (1- lambda- mu)*Tn1.operator[](2).operator[](2));
-
-	return Point_3(x, y, z);
-}
-
-
-// Transormation barycentrique du Triangle T 
-Triangle_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Triangle_3 T){
-	
-	Point_3 s = tr( Tn,Tn1, T.operator[](0) );
-	Point_3 r = tr( Tn,Tn1, T.operator[](1) );
-	Point_3 v = tr( Tn,Tn1, T.operator[](2) );
-	
-	return Triangle_3(s, r, v);
-}
-//transformation inverse tr(Tn1,Tn, tr(Tn,Tn1,T))
-
-//Transformation d'un Point_3 en Point_2
-Point_2 tr(Triangle_3 Tn1, Point_3 Xn){
-		
- double lambda = 0., mu = 0.;
-  
-//  double dom = CGAL::to_double((Tn1.operator[](0).operator[](0) - Tn1.operator[](2).operator[](0)) * 
-//  (Tn1.operator[](1).operator[](1) - Tn1.operator[](2).operator[](1))-
-//  (Tn1.operator[](0).operator[](1) - Tn1.operator[](2).operator[](1)) * 
-//  (Tn1.operator[](1).operator[](0) - Tn1.operator[](2).operator[](0)));
-//  
-//  double num1 = CGAL::to_double((Xn.operator[](0) - Tn1.operator[](2).operator[](0)) * 
-//  (Tn1.operator[](1).operator[](1) - Tn1.operator[](2).operator[](1)) -
-//  (Xn.operator[](1) - Tn1.operator[](2).operator[](1)) * 
-//  (Tn1.operator[](1).operator[](0) - Tn1.operator[](2).operator[](0)));
-//  
-//  double num2 = -1*(CGAL::to_double((Xn.operator[](0) - Tn1.operator[](2).operator[](0)) * 
-//  (Tn1.operator[](0).operator[](1) - Tn1.operator[](2).operator[](1)) -
-//  (Xn.operator[](1) - Tn1.operator[](2).operator[](1)) * 
-//  (Tn1.operator[](0).operator[](0) - Tn1.operator[](2).operator[](0))));
- 
- 	double dom =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Tn1.operator[](0)),
-										    Vector_3(Tn1.operator[](2),Tn1.operator[](1))).squared_length() ));
-	double num1 =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Xn),
-										     Vector_3(Tn1.operator[](2),Tn1.operator[](1))).squared_length() ));
-	double num2 =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Tn1.operator[](0)),
-												 Vector_3(Tn1.operator[](2),Xn)).squared_length() )); 
-												 
- 
-	 lambda =  num1/dom;
-	 mu = num2/dom;
-
-	Point_2 M(mu, (1-lambda-mu));
-	
-	return M;
-}	
-
-// Transormation d'un Triangle_3 en Triangle_2 
-Triangle_2 tr(Triangle_3 Tn1, Triangle_3 T){
-	
-	Point_2 s = tr( Tn1, T.operator[](0) );
-	Point_2 r = tr( Tn1, T.operator[](1) );
-	Point_2 v = tr( Tn1, T.operator[](2) );
-	
-	return Triangle_2(s, r, v);
-}
-
-
-
-//Transformation d'un Point_2 en Point_3
-Point_3 tr(Triangle_3 Tn1, Point_2 Xn){
-
-  double lambda = CGAL::to_double(1.- Xn.operator[](0) -  Xn.operator[](1));
-  double mu = CGAL::to_double(Xn.operator[](0));
-	
-	double x = CGAL::to_double(lambda * Tn1.operator[](0).operator[](0) + mu*Tn1.operator[](1).operator[](0) 
-	+ (1- lambda- mu)*Tn1.operator[](2).operator[](0));
-	
-	double y = CGAL::to_double(lambda * Tn1.operator[](0).operator[](1) + mu*Tn1.operator[](1).operator[](1) 
-	+ (1- lambda- mu)*Tn1.operator[](2).operator[](1));
-	double z = CGAL::to_double(lambda * Tn1.operator[](0).operator[](2) + mu*Tn1.operator[](1).operator[](2) 
-	+ (1- lambda- mu)*Tn1.operator[](2).operator[](2));		
-	
-	
-	return Point_3(x,y,z);
-}	
-
-// Transormation d'un Triangle_2 en Triangle_3
-Triangle_3 tr(Triangle_3 Tn1, Triangle_2 T){
-	
-	Point_3 s = tr( Tn1, T.operator[](0) );
-	Point_3 r = tr( Tn1, T.operator[](1) );
-	Point_3 v = tr( Tn1, T.operator[](2) );
-	
-	return Triangle_3(s, r, v);
-}
-
-
-double volume_prisme(const Triangle_3& T1,const Triangle_3& T2){
-	
-	double volume=0.;
-	
-	Vector_3 V = 2.*cross_product( Vector_3(T1.operator[](0),T1.operator[](1)), Vector_3(T1.operator[](0),T1.operator[](2)) )
-	             +2*cross_product( Vector_3(T2.operator[](0),T2.operator[](1)), Vector_3(T2.operator[](0),T2.operator[](2)) )
-	             +cross_product( Vector_3(T1.operator[](0),T1.operator[](1)), Vector_3(T2.operator[](0),T2.operator[](2)) )
-	             +cross_product( Vector_3(T2.operator[](0),T2.operator[](1)), Vector_3(T1.operator[](0),T1.operator[](2)) );
-	
-	volume = CGAL::to_double((Vector_3(T1.operator[](0),T2.operator[](0)) + Vector_3(T1.operator[](1),T2.operator[](1)) + 
-	                          Vector_3(T1.operator[](2),T2.operator[](2)))*V);
-	
-	volume /=36;
-	return volume;
-}
-
-double volume_tetra(const Tetrahedron& Tet){
-	
-	double volume=0.;
-	
-	Vector_3 V = cross_product( Vector_3(Tet.operator[](0),Tet.operator[](1)), Vector_3(Tet.operator[](0),Tet.operator[](2)) );
-	
-	
-	volume = CGAL::to_double( (Vector_3(Tet.operator[](0),Tet.operator[](3)) *V) );
-	volume /= 6.;
-	
-	return volume;
-}
-
-
+*\param (in,jn,kn) index d'une Cellule (cellule o&ugrave; se trouve le triangle d'interface au temps t (\a Particule.triangles_prev))
+*\param (in1,jn1,kn1) index d'une Cellule (cellule o&ugrave; se trouve le triangle d'interface au temps t+dt (\a Particule.triangles))
+*\param box_cells vecteur de Box 3d
+*\param Cells vecteur de Cellule
+*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
+*\return void
+*/
 void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,int& kn1, std::vector<Bbox>& box_cells, std::vector<Cellule>& Cells){
 	
 	if((in!=in1 && jn==jn1 && kn==kn1)|| (in==in1 && jn!=jn1 && kn==kn1) || (in==in1 && jn==jn1 && kn!=kn1))
@@ -913,20 +1021,43 @@ void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,i
 	}
 
 }
+/*!
+*\fn void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  Particule & P)
+*\brief Calcul de la quantit&eacute; balay&eacute;e par un morceau de parois entre t et t+dt. Calcul du flux &agrave; la parois.
+*\details Etapes:\n
+- Construction du vecteur des Box contenant les prismes ayant comme bases T3d_prev et T3d_n. Boucle sur les prismes ainsi obtenus:
+- On cherche l'index de la cellule qui contient T3d_prev(le triangle est enti&egrave;rement contenu dans une cellule) et celui de la cellule qui contient T3d_n(le triangle est enti&egrave;rement contenu dans une cellule).
+- Si le prisme est contenu dans une seule cellule on calcule le volume du prisme via la fonction volume_prisme(const Triangle_3&,const Triangle_3&) et la quantit&eacute; balay&eacute;e par la face (\a Particule.triangles) est donn&eacute;e par : \f$  volume\_prisme*U^n/volume\_cellule \f$. Sinon,
+ - On liste les cellules fluides intersect&eacute;es par le prisme via la fonction cells_intersection_face(int& ,int& ,int& ,int& ,int& ,int& , std::vector<Bbox>& s, std::vector<Cellule>& s).
+ - On d&eacute;coupe le prisme en  t&eacute;tra&egrave;dres: soit  \f$ T1(A_1,B_1,C_1)\f$  et \f$ T2(A_2,B_2,C_2)\f$  les bases du prisme, on d&eacute;finit les points: \f$ A = \frac{1}{4}(B_1 + B_2 + C_1 +C_2) \f$ , \f$ B = \frac{1}{4}(A_1 + A_2 + C_1 +C_2) \f$ et \f$ C = \frac{1}{4}(A_1 + A_2 + B_1 + B_2 ) \f$. Les t&eacute;tra&egrave;dres d&eacute;coupant \f$ A_1,B_1,C_1 A_2,B_2,C_2 \f$ sont: \f$ A_1 A_2 C B, \, B_1 B_2 A C, \, C_1 C_2 B A,\, A_1 C C_1 B,\, B_1 A C_1 C \f$,etc. 
+ - Intersections de ces  t&eacute;tra&egrave;dres avec les cellules fluides intersect&eacute;es par le prisme via la fonction intersect_cube_tetrahedron(Bbox&, Tetrahedron&). La quantité balayée par la face est donnée par la somme des: \f$  volume\_{intersection\_cellule\_tetrahedre}*U^n/volume\_cellule. \f$ \n
 
+Calcul du flux &agrave; la parois: Soit \a f un morceau d'interface, le flux &agrave; la parois est donné par :
+\f{eqnarray*}{
+	\Phi_f  =  \left(0,  p^x \, A_f n^{x}_f, \, p^y \,A_f n^{y}_f, \, p^z \,A_f n^{z}_f, V_f \cdot \left( p^x \, A_f n^{x}_f,p^y \,A_f n^{y}_f,p^z \,A_f n^{z}_f \right)^t \right)^t
+	\f} \n
+	o&ugrave; \f$ A_f \f$ l'aire de l'interface f,  \f$ n_f \f$ la normale sortante &agrave; l'interface f, \f$ V_f \f$ la vitesse au centre de la parois calculée via la fonction \a vitesse_parois(Point_3& ) et \f$ p^x, p^y, p^z \f$ les pressions efficaces selon les directions x, y et z pendant le pas de temps (\a Cellule.pdtx, \a  Cellule.pdty et \a Cellule.pdtz).
+
+*\param T3d_prev Triangles_3 (triangles d'interface au temp t: \a Particule.Triangles_interface)
+*\param T3d_n    Triangles_3 (triangles d'interface au tempt+dt: \a Particule.Triangles_interface_prev)
+*\param dt pas de temps
+*\param P Particule 
+*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
+*\return void
+*/
 void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  Particule & P){
 	
-	CGAL::Timer user_time, user_time2;
-	double time=0.;
+	//CGAL::Timer user_time, user_time2;
+	//double time=0.;
 	std::vector<Bbox> box_prismes(T3d_prev.size());
 	for (int i=0; i< T3d_prev.size(); i++){
 		Bbox box_triangles_prev = T3d_prev[i].bbox();
 		Bbox box_triangles_n = T3d_n[i].bbox();
 		box_prismes[i]= box_triangles_prev.operator+(box_triangles_n);
 	} 
-	int nb=0, nb2=0;  double diff=0.;
+	
 	for (int i=0; i< box_prismes.size(); i++){
-		double vol_test=0.; 
+		//double vol_test=0.; 
 		int in=0, jn=0, kn=0, in1=0, jn1=0, kn1=0;
 		bool interieur = true;
 		Point_3 center_prev= centroid(T3d_prev[i].operator[](0),T3d_prev[i].operator[](1),T3d_prev[i].operator[](2));
@@ -1079,10 +1210,10 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 						}
 						else {
 							//calcul volume intersection
-							user_time.start();
+							//user_time.start();
 							volume += (intersect_cube_tetrahedron(box_cells[iter], vect_Tet[it]) * sign(volume_tetra(vect_Tet[it])) );
-							time+=user_time.time();
-							user_time.reset();
+							//time+=user_time.time();
+							//user_time.reset();
 						}
 					} //if intersect Box_Tetra avec Box_Cell
 				} // boucle sur tetra			
@@ -1147,12 +1278,19 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 
 /**
 \fn void Sous_Maillage_2d(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2& tri2)
-\brief Construction sous-maillage d'une face du Solide.
-\details Un decoupage en triangles de la face au temps n et n+1 de tel que chaque triangles soit entierement contenu dans une cellule au temps n et n+1 (pas neccesairement la même cellule).
+\brief Construction sous-maillage 2d d'une face 2d du Solide.
+\details Un d&eacute;coupage en triangles de la face aux temps t et t+dt tel que chaque triangles soit enti&egrave;rement contenu dans une cellule aux temps t et t+dt (pas n&eacute;cessairement la m&ecirc;me cellule).\n
+Etapes:\n
+- On associe &agrave; chaque triangle un Box 2d (une bo&icirc;te contenant le triangle).  \n
+- Boucle sur les Box 2d.
+- Test d'intersection des Box via la fonction <b> CGAL::do_overlap(Bbox_2, Bbox_2)</b>. Si oui: \n
+ - Test d'intersection des triangles contenues dans les Box via la fonction <b> CGAL::do_intersect(Triangle_2,Triangle_2)</b>. Si oui:  \n
+  - Calcul d'intersections entre les deux triangles via la fonction <b>CGAL::intersection(Triangle_2,Triangle_2)</b>. \n
+  - Si le r&eacute;sultat de l'intersection est un triangle on le rajoute dans le sous-maillage. Si le r&eacute;sultat de l'intersection est un  polygone (une liste de points) on le triangularise en utilisant la classe <b>CGAL::Triangulation</b>  et la fonction <b> CGAL::insert </b> de cette classe. (Si le r&eacute;sultat de l'intersection est un point ou un segment on ne fait rien car le volume balayé est nul.)
 \warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-\param Tn
-\param Tn1
-\param tri2
+\param Tn Triangles_2 
+\param Tn1 Triangles_2
+\param tri2 Triangles_2
 \return void
 */
 void Sous_Maillage_2d(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2& tri2){
@@ -1196,41 +1334,47 @@ void Sous_Maillage_2d(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2
 }	
 /**
 \fn void sous_maillage_faceTn_faceTn1_2d(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1)
-\brief Decoupage en triangles de la face au temps n et n+1.
-\details 
+\brief D&eacute;coupage en triangles de la face aux temps t et t+dt
+\details A partir de la position de l'interface au temps t (\a Tn) et au temps t+dt (\a Tn1) on va d&eacute;couper cette face en triangles enti&egrave;rement contenues dans une cellule aux temps t et t+dt (pas n&eacute;cessairement la m&ecirc;me cellule). \n
+Etapes:\n
+- Transformation barycentrique de \a tn via la fonction tr(Triangle_3, Triangle_3, Triangle_3) et transformation des triangles resultants en triangles 2d via la fonction tr(Triangle_3, Triangle_3)
+- Transformation de tn1 en triangles 2d via la fonction tr(Triangle_3, Triangle_3)
+- Construction du sous-maillage 2d de la face via la fonction Sous_Maillage_2d(Triangles_2, Triangles_2, Triangles_2)
+- Transformation du sous-maillage 2d dans un sous-maillage 3d de la face via la fonction tr(Triangle_3, Triangle_3, Triangle_2)
+
 \warning <b> Proc&eacute;dure sp&eacute;cifique au couplage!</b> 
-\param Tn
-\param tn
-\param Tn1
-\param tn1
-\param N
-\param T3d_n
-\param T3d_n1
+\param Tn Triangle_3 : interface au temps t (\a triangles_prev)
+\param tn vecteur de Triangle_3 : triangulation de la face Tn
+\param Tn1 Triangle_3 interface au temps t+dt (\a triangles)
+\param tn1 vecteur de Triangle_3 : triangulation de la face Tn1
+\param N   Vector_3 normale sortante au Tn1
+\param T3d_n vecteur de Triangle_3 (Sous-maillage triangulaire de la face Tn)
+\param T3d_n1 vecteur de Triangle_3 (Sous-maillage triangulaire de la face Tn1)
 \return void
 */
 void sous_maillage_faceTn_faceTn1_2d(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1){
 	
-	CGAL::Timer user_time, user_time2, user_time3, user_time4 ;
-	double time=0.;	
-	user_time.start();
-	// transf barycentrique de tn 
+	//CGAL::Timer user_time;
+	//double time=0.;	
+	//user_time.start();
+	
 	Triangles tn_n1(tn.size());
-	for(int i=0; i<tn.size(); i++){		
-		tn_n1[i] = tr(Tn, Tn1, tn[i]);
+	for(int i=0; i<tn.size(); i++){
+		tn_n1[i] = tr(Tn, Tn1, tn[i]); // transf barycentrique de tn 
 	}
-	user_time.reset();
+	//user_time.reset();
 	
-	Triangles_2 Tn_n1_2_test(tn_n1.size());
+	Triangles_2 Tn_n1_2(tn_n1.size());
 	for(int i=0; i<tn_n1.size(); i++){
-		Tn_n1_2_test[i] = tr(Tn1, tn_n1[i]);
+		Tn_n1_2[i] = tr(Tn1, tn_n1[i]);
 	}
 	
-	Triangles_2 Tn1_2_test(tn1.size());
+	Triangles_2 Tn1_2(tn1.size());
 	for(int i=0; i<tn1.size(); i++){
-		Tn1_2_test[i] =tr(Tn1, tn1[i]);
+		Tn1_2[i] =tr(Tn1, tn1[i]);
 	}
 	Triangles_2 tri2;
-	Sous_Maillage_2d(Tn1_2_test, Tn_n1_2_test, tri2);
+	Sous_Maillage_2d(Tn1_2, Tn_n1_2, tri2);
 	T3d_n1.resize(tri2.size());
 	for(int i=0; i<T3d_n1.size(); i++){
 		Triangle_3 Tri = tr(Tn1,tri2[i]);
@@ -1247,14 +1391,18 @@ void sous_maillage_faceTn_faceTn1_2d(Triangle_3& Tn, Triangles& tn, Triangle_3& 
 }
 
 /**
-\fn void Grille::swap_2d(const double dt, Solide& S)
-\brief Calcul de la quantit&eacute; balay&eacute;e
+\fn void Grille::Swap_2d(const double dt, Solide& S)
+\brief Calcul de la quantit&eacute; balay&eacute;e par le Solide entre t et t+dt.
+\details Etapes:\n
+- Sous-découpage des faces du Solide (\a Particule.triangles) en triangles contenues enti&egrave;rement dans une cellule au temps t et t+dt (pas nécessairement la m&ecirc;me cellule) via la fonction sous_maillage_faceTn_faceTn1_2d(Triangle_3&, Triangles&, Triangle_3&, Triangles&, Vector_3& ,Triangles& ,Triangles&).\n
+- Calcul de la quantité balayée par les faces et le flux &agrave; la parois via la fonction swap_face(Triangles&, Triangles&, const double ,  Particule &).
 \warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b> 
 \param S Solide
 \param dt pas de temps
 \return void
 */
-void Grille::swap_2d(const double dt, Solide& S){
+
+void Grille::Swap_2d(const double dt, Solide& S){
 	
 	//CGAL::Timer user_time, user_time2;
 	//double time_1=0., time_2=0.;
@@ -1282,7 +1430,7 @@ void Grille::swap_2d(const double dt, Solide& S){
 /**
 \fn CDT Sous_Maillage_3d(Triangles_2& Tn1, Triangles_2& Tn_n1, CDT &cdt)
 \brief Construction sous-maillage sous contrainte pour une face du Solide.
-\details Un decoupage en triangles de la face au temps n et n+1 de tel que chaque triangles soit entierement contenu dans une cellule au temps n et n+1 (pas neccesairement la même cellule).
+\details Un d&eacute;coupage en triangles de la face aux temps t et t+dt tel que chaque triangle soit enti&egrave;rement contenu dans une cellule aux temps t et t+dt (pas n&eacute;cessairement la m&ecirc;me cellule).
 \warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! Il  n'est pas n&eacute;cessaire de la re-coder car c'est une ancienne m&eacute;thode(plus co&ucirc;teuse que la nouvelle version)!!! </b> 
 \return CDT
 */
@@ -1360,7 +1508,7 @@ CDT Sous_Maillage_3d(Triangles_2& Tn1, Triangles_2& Tn_n1, CDT &cdt){
 }	
 /**
 \fn void sous_maillage_faceTn_faceTn1_3d(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1)
-\brief Decoupage en triangles de la face au temps n et n+1.
+\brief D&eacute;coupage en triangles de la face aux temps t et t+dt.
 \warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! Il  n'est pas n&eacute;cessaire de la re-coder car c'est une ancienne m&eacute;thode(plus co&ucirc;teuse que la nouvelle version)!!! </b> 
 \return void
 */
@@ -1445,12 +1593,12 @@ void sous_maillage_faceTn_faceTn1_3d(Triangle_3& Tn, Triangles& tn, Triangle_3& 
 	
 }
 /**
-\fn void Grille::swap_3d(const double dt, Solide& S)
+\fn void Grille::Swap_3d(const double dt, Solide& S)
 \brief Calcul de la quantit&eacute; balay&eacute;e
 \warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! Il  n'est pas n&eacute;cessaire de la re-coder car c'est une ancienne m&eacute;thode(plus co&ucirc;teuse que la nouvelle version)!!! </b> 
 \return void
 */
-void Grille::swap_3d(const double dt, Solide& S){
+void Grille::Swap_3d(const double dt, Solide& S){
 	//CGAL::Timer user_time, user_time2;
 	//double time_1=0., time_2=0.;
 	for(int i=0;i<S.solide.size();i++){

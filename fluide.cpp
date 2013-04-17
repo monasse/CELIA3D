@@ -1,7 +1,7 @@
 /*!
  *  \file fluide.cpp
- *  \brief D&eacute;finition des m&eacute;thodes des classes Cellule et Grille . 
- * Les procédures sp&eacute;cifiques au couplage sont pr&eacute;c&egrave;des d'un "warning"
+ *  \brief D&eacute;finition des m&eacute;thodes de la classe Cellule et de la classe Grille. 
+ * Les procédures sp&eacute;cifiques au couplage sont pr&eacute;c&egrave;des d'un "warning".
  */
 #include <iostream> 
 #include <stdio.h> 
@@ -25,7 +25,7 @@ inline double sign(const double x)
 
 /**
  \fn Cellule::Cellule()
- \brief Constructeur par defaut 
+ \brief Constructeur par d&eacute;faut. 
 */
 
 Cellule::Cellule()
@@ -113,8 +113,8 @@ Cellule::Cellule()
 
 /**
  \fn Cellule::Cellule(double x0, double y0, double z0)
- \brief Surcharge du constructeur
- \param (x0,y0,z0) Coordonnees du centre de la cellule
+ \brief Surcharge du constructeur.
+ \param (x0,y0,z0) Coordonn&eacute;es du centre de la cellule.
  */
 Cellule::Cellule(double x0, double y0, double z0)
 {
@@ -201,9 +201,9 @@ Cellule::Cellule(double x0, double y0, double z0)
 
 /**
 \fn Cellule::Cellule(double x0, double y0, double z0, double dx0, double dy0, double dz0)
- \brief Surcharge du constructeur
- \param (x0,y0,z0) Coordonnees du centre de la cellule
- \param (dx0,dy0,dz0) Taille de la cellule
+ \brief Surcharge du constructeur.
+ \param (x0,y0,z0) Coordonn&eacute;es du centre de la cellule.
+ \param (dx0,dy0,dz0) Taille de la cellule.
  */
 
 Cellule::Cellule(double x0, double y0, double z0, double dx0, double dy0, double dz0)
@@ -292,7 +292,7 @@ Cellule::Cellule(double x0, double y0, double z0, double dx0, double dy0, double
 
 /**
  \fn Cellule & Cellule:: operator=(const Cellule &c)
- \brief operateur = Surcharge pour l'affectation
+ \brief op&eacute;rateur = Surcharge pour l'affectation.
  \param c Cellule
  \return Cellule
  */
@@ -399,9 +399,9 @@ Cellule::~Cellule(){
 
 /**
  \fn bool Cellule :: is_in_cell(double x0,double y0, double z0)
- \brief Fonction testant si le point (x0,y0,z0) est dans la cellule
+ \brief Fonction testant si le point (x0,y0,z0) est dans la cellule.
  \param (x0,y0,z0) un point
- \return true si (x0,y0,z0) appartient a la cellule, false sinon
+ \return bool (true si (x0,y0,z0) appartient &agrave; la cellule, false sinon)
  */
 bool Cellule :: is_in_cell(double x0,double y0, double z0)
 {
@@ -414,12 +414,12 @@ bool Cellule :: is_in_cell(double x0,double y0, double z0)
 
 /**
  \fn void Cellule :: Affiche ()
- \brief Fonction auxilaire utile pour les tests
+ \brief Fonction auxiliaire utile pour les tests.
  */
 void Cellule :: Affiche (){
     
 	  
-    cout<<"max "<< " x = "<< x+dx/2<< " y = "<<y+dy/2<< " z = "<<z+dz/2<<endl;
+  cout<<"max "<< " x = "<< x+dx/2<< " y = "<<y+dy/2<< " z = "<<z+dz/2<<endl;
 	cout<<"min "<< " x = "<< x-dx/2<< " y = "<<y-dy/2<< " z = "<<z-dz/2<<endl;
 
 		//if(std::abs(alpha-1.)<eps){
@@ -472,8 +472,8 @@ void Cellule :: Affiche (){
 //Constructeur
 /**
  \fn Grille::Grille()
- \brief Constructeur par defaut
- \details La variable grille represente le maillage fluide, c'est un tableau 3d des \a Cellule
+ \brief Constructeur par d&eacute;faut.
+ \details La variable grille repr&eacute;sente le maillage fluide, c'est un tableau 3d des \a Cellule.
  */
 Grille::Grille(): grille(Nx+2*marge, vector< vector<Cellule> >(Ny+2*marge, vector<Cellule>(Nz+2*marge)) ){
     
@@ -490,10 +490,10 @@ Grille::Grille(): grille(Nx+2*marge, vector< vector<Cellule> >(Ny+2*marge, vecto
 } 
 /**
  \fn Grille::Grille(int Nx0, int Ny0, int Nz0, double dx0, double x0, double dy0,double y0, double dz0, double z0)
-  \brief Surcharge du constructeur
+ \brief Surcharge du constructeur.
  \param (x0, y0, z0) Position de l'origine (du domaine fluide)
  \param (dx0,dy0,dz0) Pas d'espace
- \param (Nx0, Ny0, Nz0) Nombre de cellules fluide en x, y et z
+ \param (Nx0, Ny0, Nz0) Nombre de cellules fluides en x, y et z
  */
 Grille::Grille(int Nx0, int Ny0, int Nz0, double dx0, double x0, double dy0,double y0, double dz0, double z0):grille
                (Nx0+2*marge, vector< vector<Cellule> > (Ny0+2*marge, vector<Cellule>(Nz0+2*marge))){ 
@@ -522,7 +522,7 @@ Grille::~Grille(){
 
 /**
  \fn void Grille:: affiche()
- \brief Fonction auxilaire utile pour les tests
+ \brief Fonction auxiliaire utile pour les tests.
  */
 void Grille:: affiche()
 {
@@ -544,7 +544,7 @@ void Grille:: affiche()
 }
 /**
  \fn void Grille:: affiche(string r)
- \brief Fonction auxilaire utile pour les tests
+ \brief Fonction auxiliaire utile pour les tests.
  */
 void Grille:: affiche(string r)
 {
@@ -567,18 +567,18 @@ void Grille:: affiche(string r)
 
 /**
  \fn Cellule Grille::cellule(int i,int j, int k)
- \brief Acces a la cellule (i,j, k)
- \param (i,j,k) index de la cellule
- \return cellule
+ \brief Acces &agrave; la cellule (i,j, k).
+ \param (i,j,k) index de la Cellule
+ \return Cellule
  */
 Cellule Grille::cellule(int i,int j, int k){ 
     return grille[i][j][k]; 
 }
 /**
  \fn Cellule Grille::in_cell(Point_3 p)
- \brief Acces a la cellule contenant le point \a p
+ \brief Acces &agrave; la cellule contenant le point \a p.
  \param p un point
- \return Cellule  cellule qui contient \a p
+ \return Cellule (cellule qui contient \a p)
  */
 Cellule Grille::in_cell(Point_3 p){
   int i,j,k;
@@ -607,10 +607,10 @@ Cellule Grille::in_cell(Point_3 p){
 }
 /**
  \fn void Grille::in_cell(Point_3 p, int &i, int& j, int& k, bool& interieur)
- \brief Acces a la cellule contenant le point \a p
+ \brief Acces &agrave; la cellule contenant le point \a p.
  \param p un point
- \param (i,j,k) index de la cellule qui contient le point \a p
- \param interieur = true si le point \a p se trouve a l'interieur du domaine, false sinon 
+ \param (i,j,k) index de la Cellule qui contient le point \a p
+ \param interieur = true si le point \a p se trouve &agrave; l'interieur du domaine, false sinon 
  \return void
  */
 void Grille::in_cell(Point_3 p, int &i, int& j, int& k, bool& interieur){
@@ -626,11 +626,11 @@ void Grille::in_cell(Point_3 p, int &i, int& j, int& k, bool& interieur){
 
 }
 /**
- \fn void Grille::init()
- \brief Definition des conditions initiales 
+ \fn void Grille::Init()
+ \brief D&eacute;finition des conditions initiales. 
  \return void
  */
-void Grille::init(){
+void Grille::Init(){
     
     Cellule c; 
     for(int i=0;i<Nx+2*marge;i++){
@@ -658,10 +658,10 @@ void Grille::init(){
 
 /**
  \fn double Grille::pas_temps(double t, double T)
- \brief Calcul du pas de temps fluide
+ \brief Calcul du pas de temps fluide.
  \param T temps total de simulation
  \param t temps curent de simulation
- \return le pas de temps 
+ \return double
  */
 double Grille::pas_temps(double t, double T){ 
     
@@ -683,8 +683,8 @@ double Grille::pas_temps(double t, double T){
 }
 /**
  \fn double Grille::Masse()
- \brief Calcul de la masse totale du fluide
- \return  masse du fluide
+ \brief Calcul de la masse totale du fluide.
+ \return  double
  */
 double Grille::Masse(){ 
     double m = 0.; 
@@ -700,8 +700,8 @@ double Grille::Masse(){
 } 
 /**
  \fn double Grille::Impulsionx()
- \brief Calcul de l'impulsion du fluide selon x
- \return impulsion du fluide selon x
+ \brief Calcul de l'impulsion du fluide selon x.
+ \return double
  */
 double Grille::Impulsionx(){ 
     double impx = 0.; 
@@ -718,8 +718,8 @@ double Grille::Impulsionx(){
 }
 /**
  \fn double Grille::Impulsiony()
- \brief Calcul de l'impulsion du fluide selon y
- \return impulsion du fluide selon y
+ \brief Calcul de l'impulsion du fluide selon y.
+ \return double
  */
 double Grille::Impulsiony(){ 
     double impy = 0.; 
@@ -735,8 +735,8 @@ double Grille::Impulsiony(){
 }
 /**
  \fn double Grille::Impulsionz()
- \brief Calcul de l'impulsion du fluide selon z
- \return impulsion du fluide selon z
+ \brief Calcul de l'impulsion du fluide selon z.
+ \return double
  */
 double Grille::Impulsionz(){ 
     double impz = 0.; 
@@ -752,8 +752,8 @@ double Grille::Impulsionz(){
 }
 /**
  \fn double Grille::Energie()
- \brief Calcul de l'energie totale du fluide 
- \return energie du fluide
+ \brief Calcul de l'&eacute;nergie totale du fluide. 
+ \return double 
  */
 double Grille::Energie(){ 
     double E = 0.; 
@@ -769,7 +769,7 @@ double Grille::Energie(){
 } 
 /**
  \fn void Grille::melange(const double dt)
- \brief Fonction qui melange les cellules a densite ou pression negative 
+ \brief Fonction qui m&eacute;lange les cellules &agrave; densit&eacute; ou pression n&eacute;gative. 
  \param dt pas de temps
  \return void
  */
@@ -812,8 +812,8 @@ void Grille::melange(const double dt){
 
 /**
  \fn void Grille::solve_fluidx(const double dt)
- \brief Resolution des equations pour le fluide dans la direction x
- \warning Stockage de la pression utilise pendant le pas de temps \a pdtx . Parametre specifique au  couplage!
+ \brief R&eacute;solution des &eacute;quations pour le fluide dans la direction x.
+ \warning Stockage de la pression utilis&eacute; pendant le pas de temps \a pdtx . Param&egrave;tre sp&eacute;cifique  au  couplage!
  \param dt pas de temps
  \return void
  */
@@ -858,8 +858,8 @@ void Grille::solve_fluidx(const double dt){
 
 /**
  \fn void Grille::solve_fluidy(const double dt)
- \brief Resolution des equations pour le fluide dans la direction y
- \warning Stockage de la pression utilise pendant le pas de temps \a pdty . Parametre specifique au  couplage!
+ \brief R&eacute;solution des &eacute;quations pour le fluide dans la direction y.
+ \warning Stockage de la pression utilis&eacute; pendant le pas de temps \a pdty . Param&egrave;tre sp&eacute;cifique  au  couplage!
  \param dt pas de temps
  \return void
  */
@@ -904,8 +904,8 @@ void Grille::solve_fluidy(const double dt){
 
 /**
  \fn void Grille::solve_fluidz(const double dt)
- \brief Resolution des equations pour le fluide dans la direction z
- \warning Stockage de la pression utilise pendant le pas de temps \a pdtz . Parametre specifique au  couplage!
+ \brief R&eacute;solution des &eacute;quations pour le fluide dans la direction z.
+ \warning Stockage de la pression utilis&eacute; pendant le pas de temps \a pdtz . Param&egrave;tre sp&eacute;cifique au  couplage!
  \param dt pas de temps
  \return void
  */
@@ -951,7 +951,7 @@ void Grille::solve_fluidz(const double dt){
 
 /**
  \fn void Grille::corentx(double sigma)
- \brief Correction d'entropie selon x 
+ \brief Correction d'entropie selon x.
  \param sigma = \a dt/dx : pas de temps/ pas d'espace pour le fluide selon x
  \return void
  */
@@ -1055,7 +1055,7 @@ void Grille::corentx(double sigma){
 }//Fin de la correction d'entropie selon x
 /**
  \fn void Grille::corenty(double sigma)
- \brief Correction d'entropie selon y 
+ \brief Correction d'entropie selon y. 
  \param sigma = \a dt/dy : pas de temps/ pas d'espace pour le fluide selon y
  \return void
  */
@@ -1156,7 +1156,7 @@ void Grille::corenty(double sigma){
 
 /**
  \fn void Grille::corentz(double sigma)
- \brief Correction d'entropie selon z 
+ \brief Correction d'entropie selon z. 
  \param sigma = \a dt/dz : pas de temps/ pas d'espace pour le fluide selon z
  \return void
  */
@@ -1257,7 +1257,7 @@ void Grille::corentz(double sigma){
 
 /**
  \fn void Grille::fnumx(const double sigma, double t)
- \brief Calcul du flux en x entre les cellules F
+ \brief Calcul du flux en x entre les cellules (F).
  \param sigma = \a dt/dx : pas de temps/ pas d'espace pour le fluide selon x
  \param t temps curent de simulation
  \return void
@@ -1681,7 +1681,7 @@ void Grille::fnumx(const double sigma, double t){
 
 /**
  \fn void Grille::fnumy(const double sigma, double t)
- \brief Calcul du flux en y entre les cellules G
+ \brief Calcul du flux en y entre les cellules (G).
  \param sigma = \a dt/dy : pas de temps/ pas d'espace pour le fluide selon y
  \param t temps curent de simulation
  \return void
@@ -2107,7 +2107,7 @@ void Grille::fnumy(const double sigma, double t){
 
 /**
  \fn void Grille::fnumz(const double sigma, double t)
- \brief Calcul du flux en z entre les cellules H
+ \brief Calcul du flux en z entre les cellules (H).
  \param sigma = \a dt/dz : pas de temps/ pas d'espace pour le fluide selon z
  \param t temps curent de simulation
  \return void
@@ -2532,11 +2532,11 @@ void Grille::fnumz(const double sigma, double t){
 
 /**
  \fn void Grille::Solve(const double dt, double t, int n)
- \brief Resolution equations fluide
- \details Alternance directionnelle a chaque pas de temps
+ \brief R&eacute;solution des &eacute;quations fluide.
+ \details Alternance directionnelle &agrave; chaque pas de temps.
  \param t temps curent de simulation
  \param dt pas de temps 
- \param n  numero de l'iteration en temps
+ \param n  num&eacute;ro des iterations en temps
  \return void
  */
 void Grille::Solve(const double dt, double t, int n){
@@ -2658,8 +2658,8 @@ void Grille::Solve(const double dt, double t, int n){
 
 /**
  \fn void Grille::BC()
- \brief Conditions aux limites 
- \details Type de CL :  1 = reflecting ("miroir"); 2 = periodic("periodique"); 3= outflow("transmisibles").
+ \brief Conditions aux limites. 
+ \details Type de CL :  1 = reflecting ("miroir"); 2 = periodic(&quot;p&eacute;riodique"); 3= outflow("transmissibles").
  \return void
  */
 void Grille::BC(){ 
@@ -2984,12 +2984,12 @@ void Grille::BC(){
 
 
 /**
- \fn void Grille::impression(int n)
- \brief Impression des resultats 
- \param n numero de l'iteration en temps
+ \fn void Grille::Impression(int n)
+ \brief Impression des r&eacute;sultats. 
+ \param n num&eacute;ro des iterations en temps
  \return void
  */
-void Grille::impression(int n){
+void Grille::Impression(int n){
     
 /*	
 	//Impression du fichier .dat

@@ -1,7 +1,7 @@
 /*!
  *  \file solide.cpp
  *  \brief D&eacute;finition des m&eacute;thodes des classes d&eacute;crivant le Solide. 
- * Les procédures sp&eacute;cifiques au couplage sont pr&eacute;c&egrave;des d'un "warning"
+ * Les procédures sp&eacute;cifiques au couplage sont pr&eacute;c&egrave;des d'un "warning".
  */
 #include "solide.hpp"
 #include "intersections.hpp"
@@ -13,7 +13,7 @@
 const double eps_relat =0.000001;
 /*!
 * \fn Vertex::Vertex()
-* \brief Constructeur par defaut 
+* \brief Constructeur par d&eacute;faut. 
 */
 Vertex::Vertex()
 {
@@ -23,9 +23,9 @@ Vertex::Vertex()
 
 /*!
  *\fn Vertex::Vertex(const Point_3 p, std::vector<int> & parts)
- *\brief Surcharge du constructeur
- *\param p Coordonnees du sommet
- *\param parts Liste de particules auxquelles \a p appartient 
+ *\brief Surcharge du constructeur.
+ *\param p Coordonn&eacute;es du sommet
+ *\param parts Vecteur de particules auxquelles \a p appartient 
  */
 Vertex::Vertex(const Point_3 p, std::vector<int> & parts)
 {
@@ -36,7 +36,7 @@ Vertex::Vertex(const Point_3 p, std::vector<int> & parts)
 }
 /*!
 * \fn Vertex & Vertex:: operator=(const Vertex &V)
-* \brief operateur = Surcharge pour l'affectation
+* \brief op&eacute;rateur = Surcharge pour l'affectation.
 * \param V Vertex
 * \return Vertex
 */
@@ -52,7 +52,7 @@ Vertex & Vertex:: operator=(const Vertex &V){
 }
 /*!
 * \fn Face::Face()
-* \brief Constructeur par defaut 
+* \brief Constructeur par d&eacute;faut. 
  */
 Face::Face()
 {
@@ -65,8 +65,8 @@ Face::Face()
 /*!
  *\fn Face::Face(std::vector<Vertex> & v, int part)
  *\brief Surcharge du constructeur
- *\param v sommets de la face
- *\param part le numero de la particule voisine. -1 si le voisin est le fluide 
+ *\param v vecteur de sommets 
+ *\param part num&eacute;ro de la particule voisine. -1 si le voisin est le fluide 
  */
 Face::Face(std::vector<Vertex> & v, int part)
 {
@@ -84,10 +84,10 @@ Face::Face(std::vector<Vertex> & v, int part)
 }
 /*!
 * \fn Face::Face(std::vector<Vertex> & v, int part, double dist)
-* \brief Surcharge du constructeur
-* \param v sommets de la face
-* \param part le numero de la particule voisine. -1 si le voisin est le fluide 
-* \param dist distance a l'equilibre avec la particule voisine
+* \brief Surcharge du constructeur.
+* \param v vecteur de sommets
+* \param part num&eacute;ro de la particule voisine. -1 si le voisin est le fluide 
+* \param dist distance &agrave; l'&eacute;quilibre avec la particule voisine
  */
 Face::Face(std::vector<Vertex> & v, int part, double dist)
 {
@@ -105,7 +105,7 @@ Face::Face(std::vector<Vertex> & v, int part, double dist)
 }
 /*!
 * \fn Face & Face:: operator=(const Face &F)
-* \brief operateur =
+* \brief op&eacute;rateur =
 * \param F Face
 * \return Face
  */
@@ -128,7 +128,7 @@ Face & Face:: operator=(const Face &F){
 /*!
 * \fn void Face::Inertie()
 * \brief Calcul d'inertie de la face. 
-* \details Calcul d'inertie de la face : \n
+* \details 
  * Premier moment d'inertie de la face \n
  * Second moment d'inertie de la face \n
  * Vecteur selon le premier axe principal d'inertie de la face \n
@@ -203,7 +203,7 @@ void Face::Inertie(){
 
 /*!
  * \fn Particule::Particule()
- * \brief Constructeur par defaut 
+ * \brief Constructeur par d&eacute;faut. 
  */
 
 Particule::Particule()
@@ -424,13 +424,12 @@ Particule::Particule()
 	Mf = Vector_3(0.,0.,0.); Mfprev = Vector_3(0.,0.,0.);
 }
 
-/*!
-* \fn Particule::Particule(const double x_min, const double y_min, const double z_min, 
- const double x_max, const double y_max,const double z_max)
-* \brief Surcharge du constructeur
-* \param (x_min, y_min, z_min): coordonnees du sommet le plus a gauche de la particule
-* \param (x_max, y_max, z_max): coordonnees du sommet le plus a droite de la particule
- */
+/**
+*\fn Particule::Particule(const double x_min, const double y_min, const double z_min,  const double x_max, const double y_max,const double z_max)
+*\brief Surcharge du constructeur.
+* \param (x_min, y_min, z_min) : coordonn&eacute;es du sommet le plus &agrave; gauche de la particule
+* \param (x_max, y_max, z_max) : coordonn&eacute;es du sommet le plus &agrave; droite de la particule
+*/
 Particule::Particule(const double x_min, const double y_min, const double z_min, 
 		     const double x_max, const double y_max,const double z_max)
 {   
@@ -651,13 +650,12 @@ Particule::Particule(const double x_min, const double y_min, const double z_min,
 }
 
 /*!
-* \fn Particule::Particule(Point_3 c, const double x_min, const double y_min, const double z_min, 
-const double x_max, const double y_max,const double z_max, std::vector<Face> & F)
-* \brief Surcharge du constructeur
-* \param (x_min, y_min, z_min): coordonnees du sommet le plus a gauche de la particule
-* \param (x_max, y_max, z_max): coordonnees du sommet le plus a droite de la particule
+* \fn Particule::Particule(Point_3 c, const double x_min, const double y_min, const double z_min, const double x_max, const double y_max,const double z_max, std::vector<Face> & F)
+* \brief Surcharge du constructeur.
+* \param (x_min, y_min, z_min) : coordonn&eacute;es du sommet le plus &agrave; gauche de la particule
+* \param (x_max, y_max, z_max) : coordonn&eacute;es du sommet le plus &agrave; droite de la particule
 * \param c Point
-* \param F : les faces de la particule
+* \param F : Face de la Particule
  */
 Particule::Particule(Point_3 c, const double x_min, const double y_min, const double z_min, 
 		     const double x_max, const double y_max,const double z_max, 
@@ -719,7 +717,7 @@ Particule::~Particule(){
 
 /*!
 * \fn Particule & Particule:: operator=(const Particule &P)
-* \brief operateur =
+* \brief op&eacute;rateur =
 * \param P Particule
 * \return Particule
  */
@@ -849,13 +847,13 @@ Particule & Particule:: operator=(const Particule &P){
 }
 /*!
 * \fn void Particule::Affiche()
-* \brief Fonction auxilaire utile pour les tests
+* \brief Fonction auxiliaire utile pour les tests.
  */
 void Particule::Affiche(){
 	
 //	std::cout<<" volume of solide := "<<volume()<<std::endl;
  	std::cout<<" Point min x:= "<< min_x<<std::endl;
-    std::cout<<" Point max x:= "<< max_x<<std::endl;
+  std::cout<<" Point max x:= "<< max_x<<std::endl;
 	std::cout<<" Point min y:= "<< min_y<<std::endl;
 	std::cout<<" Point max y:= "<< max_y<<std::endl;
 	std::cout<<" Point min z:= "<< min_z<<std::endl;
@@ -880,10 +878,10 @@ inline double signe(const double x)
 }
 /*!
 * \fn void Particule::solve_position(double dt)
-* \brief Calcul de la position de la particule
+* \brief Calcul de la position de la particule.
 * \param dt pas de temps
-* \details \warning utilisation de F_f et M_f (Forces et moments fluides exercees sur le solide entre t et t+dt/2) \n
- <b> F_f et M_f parametres specifiques au  couplage! </b>
+* \details  \warning Utilisation de \a Particule.Ff et \a Particule.Mf (forces et moments fluides exerc&eacute;s sur le solide entre t et t+dt/2) \n
+  <b>\a Particule.Ff et \a Particule.Mf param&egrave;tres sp&eacute;cifiques au  couplage! </b>
 * \return void
  */
 void Particule::solve_position(double dt){
@@ -1122,10 +1120,10 @@ void Particule::solve_position(double dt){
 
 /*!
 * \fn void Particule::solve_vitesse(double dt)
-* \brief Calcul de la vitesse de la particule
+* \brief Calcul de la vitesse de la particule.
 * \param dt pas de temps
-* \details \warning utilisation de F_f et M_f (Forces et moments fluides exercees sur le solide entre t et t+dt/2) \n
- <b> F_f et M_f parametres specifiques au  couplage! </b>
+\details  \warning Utilisation de \a Particule.Ff et \a Particule.Mf (forces et moments fluides exerc&eacute;s sur le solide entre t et t+dt/2) \n
+<b>\a Particule.Ff et \a Particule.Mf param&egrave;tres sp&eacute;cifiques au  couplage! </b>
 * \return void
  */
 void Particule::solve_vitesse(double dt){
@@ -1252,7 +1250,7 @@ void Particule::solve_vitesse(double dt){
 }
 /*!
 * \fn double Particule::volume()
-* \brief Fonction auxilaire utile pour les tests. Calcul du volume de la particule
+* \brief Fonction auxilaire utile pour les tests. Calcul du volume de la particule.
 * \return double
  */
 double Particule::volume(){
@@ -1278,9 +1276,9 @@ double Particule::volume(){
 
 /*!
 * \fn Particule::vitesse_parois(Point_3& X_f)
-* \brief Vitesse au centre de la parois au temps n
+* \brief Vitesse au centre de la parois au temps t.
 * \param X_f le centre de la parois
-* \warning <b> proc&eacute;dure sp&eacute;cifique au couplage! </b>
+* \warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 * \return Vector_3
  */
 Vector_3 Particule::vitesse_parois(Point_3& X_f){
@@ -1291,9 +1289,9 @@ Vector_3 Particule::vitesse_parois(Point_3& X_f){
 }	
 /*!
 * \fn Particule::vitesse_parois_prev(Point_3& X_f)
-* \brief Vitesse au centre de la parois au temps n-dt
+* \brief Vitesse au centre de la parois au temps t-dt
 * \param X_f le centre de la parois
-* \warning <b> proc&eacute;dure sp&eacute;cifique au couplage! </b>
+* \warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 * \return Vector_3
  */
 Vector_3 Particule::vitesse_parois_prev(Point_3& X_f){
@@ -1305,8 +1303,9 @@ Vector_3 Particule::vitesse_parois_prev(Point_3& X_f){
 
 /*!
 * \fn void Face::compProjectionIntegrals(double &P1, double &Pa, double &Pb, double &Paa, double &Pab, double &Pbb, double &Paaa, double &Paab, double &Pabb, double &Pbbb, int a, int b, int c)
-* \brief Utilisation de la fonction decrite par Brian Mirtich 1996 (cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar)
-* \warning  <b> proc&eacute;dure sp&eacute;cifique au solide! </b> 
+*\brief Calcul des projections.
+* \details Utilisation de la fonction d&eacute;crite par Brian Mirtich 1996(cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar).
+* \warning  <b> Proc&eacute;dure sp&eacute;cifique au solide! </b> 
 * \return void
 */
 void Face::compProjectionIntegrals(double &P1, double &Pa, double &Pb, double &Paa, double &Pab, double &Pbb, double &Paaa, double &Paab, double &Pabb, double &Pbbb, int a, int b, int c){
@@ -1359,8 +1358,9 @@ void Face::compProjectionIntegrals(double &P1, double &Pa, double &Pb, double &P
 }
 /*!
 * \fn void Face::compFaceIntegrals(double &Fa, double &Fb, double &Fc, double &Faa, double &Fbb, double &Fcc, double &Faaa, double &Fbbb, double &Fccc, double &Faab, double &Fbbc, double &Fcca, double na, double nb, double nc, int a, int b, int c)
-* \brief Calcul d'integrales sur les faces. Utilisation de la fonction decrite par Brian Mirtich 1996 (cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar)
-* \warning  <b> proc&eacute;dure sp&eacute;cifique au solide! </b> 
+* \brief Calcul d'int&eacute;grales sur les faces. 
+* \details Utilisation de la fonction d&eacute;crite par Brian Mirtich 1996(cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar).
+* \warning  <b> Proc&eacute;dure sp&eacute;cifique au solide! </b> 
 * \return void
 */
 void Face::compFaceIntegrals(double &Fa, double &Fb, double &Fc, double &Faa, double &Fbb, double &Fcc, double &Faaa, double &Fbbb, double &Fccc, double &Faab, double &Fbbc, double &Fcca, double na, double nb, double nc, int a, int b, int c){
@@ -1389,8 +1389,9 @@ void Face::compFaceIntegrals(double &Fa, double &Fb, double &Fc, double &Faa, do
 
 /*!
 * \fn void Particule::CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &Tz, double &Txx, double &Tyy, double &Tzz, double &Txy, double &Tyz, double &Tzx)
-* \brief Calcul d'integrales de volume. Utilisation de la fonction decrite par Brian Mirtich 1996 (cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar)
-* \warning  <b> proc&eacute;dure sp&eacute;cifique au solide! </b> 
+* \brief Calcul d'int&eacute;grales de volume.
+*\details Utilisation de la fonction d&eacute;crite par Brian Mirtich 1996(cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar).
+* \warning  <b> Proc&eacute;dure sp&eacute;cifique au solide! </b> 
 * \return void
 */
 void Particule::CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &Tz, double &Txx, double &Tyy, double &Tzz, double &Txy, double &Tyz, double &Tzx){
@@ -1451,8 +1452,8 @@ void Particule::CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &
 }
 /*!
 * \fn void solve_eq3(double a, double b, double c, double d, double &x1, double &x2, double &x3)
-* \brief Resolution de l'equation de degre 3 ax3+bx2+cx+d=0, de solutions x1, x2 et x3
-* \warning  <b> proc&eacute;dure sp&eacute;cifique au solide! </b> 
+* \brief Resolution de l'equation de degre 3 ax3+bx2+cx+d=0, de solutions x1, x2 et x3.
+* \warning  <b> Proc&eacute;dure sp&eacute;cifique au solide! </b> 
 * \return void
 */
 //Resolution de l'equation de degre 3 ax3+bx2+cx+d=0, de solutions x1, x2 et x3
@@ -1521,7 +1522,7 @@ void solve_eq3(double a, double b, double c, double d, double &x1, double &x2, d
 /*!
 * \fn void Particule::Inertie()
 * \brief Calcul d'inertie de la particule. 
-* \warning  <b> proc&eacute;dure sp&eacute;cifique au solide! </b> 
+* \warning  <b> Proc&eacute;dure sp&eacute;cifique au solide! </b> 
 * \return void
 */
 void Particule::Inertie(){
@@ -1748,7 +1749,7 @@ void Particule::Inertie(){
 /*!
 * \fn void Particule::Volume_libre()
 * \brief Calcul du volume libre. 
-* \warning  <b> proc&eacute;dure sp&eacute;cifique au solide! </b> 
+* \warning  <b> Proc&eacute;dure sp&eacute;cifique au solide! </b> 
 * \return void
 */
 void Particule::Volume_libre(){
@@ -1765,15 +1766,15 @@ void Particule::Volume_libre(){
 
 /*!
 *\fn Solide::Solide()
-*\brief Constructeur par defaut 
+*\brief Constructeur par d&eacute;faut. 
 */
 Solide::Solide(){
 	
 }
 /*!
 *\fn Solide::Solide(std::vector<Particule> & Part)
-*\brief Surcharge du constructeur
-*\param Part liste des particules 
+*\brief Surcharge du constructeur.
+*\param Part vecteur de particules. 
 */
 Solide::Solide(std::vector<Particule> & Part){
   for(int i=0; i<Part.size(); i++){
@@ -1789,7 +1790,7 @@ Solide::~Solide(){
 
 /*!
 *\fn Solide & Solide:: operator=(const Solide &S)
-*\brief operateur = Surcharge pour l'affectation
+*\brief op&eacute;rateur = Surcharge pour l'affectation.
 *\param S Solide
 *\return Solide
 */
@@ -1803,7 +1804,7 @@ Solide & Solide:: operator=(const Solide &S){
 }
 /*!
 *\fn void Solide::Affiche()
-*\brief Fonction auxilaire utile pour les tests
+*\brief Fonction auxiliaire utile pour les tests.
 */
 void Solide::Affiche(){
 	
@@ -1813,12 +1814,12 @@ void Solide::Affiche(){
 
 }
 /*!
-*\fn void Solide::init(const char* s)
-*\brief Initialisation du solide a partir d'un fichier 
+*\fn void Solide::Init(const char* s)
+*\brief Initialisation du solide &agrave; partir d'un fichier. 
 *\param s maillage solide
 *\return void
 */
-void Solide::init(const char* s){
+void Solide::Init(const char* s){
   std::ifstream maillage(s,ios::in);
   if(maillage){
     // cout <<"ouverture de xt.vtk reussie" << endl;
@@ -2034,13 +2035,13 @@ void Solide::init(const char* s){
 }
 
 /*!
-*\fn void Solide::solve_position(double dt)
-*\brief Mise a jour de la position du solide
+*\fn void Solide::Solve_position(double dt)
+*\brief Mise &agrave; jour de la position du solide.
 *\param dt pas de temps
-*\warning <b> proc&eacute;dure sp&eacute;cifique au solide! </b>
+*\warning <b> Proc&eacute;dure sp&eacute;cifique au solide! </b>
 *\return void
 */
-void Solide::solve_position(double dt){
+void Solide::Solve_position(double dt){
   for(int i=0;i<size();i++){
     solide[i].solve_position(dt);
   }
@@ -2070,13 +2071,13 @@ void Solide::solve_position(double dt){
 }
 
 /*!
-*\fn void Solide::solve_vitesse(double dt)
-*\brief Calcul de la vitesse du solide
+*\fn void Solide::Solve_vitesse(double dt)
+*\brief Calcul de la vitesse du solide.
 *\param dt pas de temps
-*\warning <b> proc&eacute;dure sp&eacute;cifique au solide! </b>
+*\warning <b> Proc&eacute;dure sp&eacute;cifique au solide! </b>
 *\return void
 */
-void Solide::solve_vitesse(double dt){
+void Solide::Solve_vitesse(double dt){
   for(int i=0;i<size();i++){
     solide[i].solve_vitesse(dt);
   }
@@ -2085,7 +2086,7 @@ void Solide::solve_vitesse(double dt){
 /*!
 *\fn void Solide::Forces_internes()
 *\brief Calcul des forces internes. 
-*\warning  <b> proc&eacute;dure sp&eacute;cifique au solide! </b> 
+*\warning  <b> Proc&eacute;dure sp&eacute;cifique au solide! </b> 
 *\return void
 */
 void Solide::Forces_internes(){
@@ -2144,8 +2145,8 @@ void Solide::Forces_internes(){
 
 /*!
 *\fn double Solide::Energie()
-*\brief Calcul d'energie. 
-*\warning  <b> proc&eacute;dure sp&eacute;cifique au solide! </b> 
+*\brief Calcul d'&eacute;nergie. 
+*\warning  <b> Proc&eacute;dure sp&eacute;cifique au solide! </b> 
 *\return void
 */
 double Solide::Energie(){
@@ -2153,8 +2154,8 @@ double Solide::Energie(){
 }
 /*!
 *\fn double Solide::Energie_cinetique()
-*\brief Calcul d'energie cinetique. 
-*\warning  <b> proc&eacute;dure sp&eacute;cifique au solide! </b> 
+*\brief Calcul d'&eacute;nergie cin&eacute;tique. 
+*\warning  <b> Proc&eacute;dure sp&eacute;cifique au solide! </b> 
 *\return void
 */
 double Solide::Energie_cinetique(){
@@ -2197,8 +2198,8 @@ double Solide::Energie_cinetique(){
 
 /*!
 * \fn double Solide::Energie_potentielle()
-* \brief Calcul d'energie potentielle. 
-* \warning  <b> proc&eacute;dure sp&eacute;cifique au solide! </b> 
+* \brief Calcul d'&eacute;nergie potentielle. 
+* \warning  <b> Proc&eacute;dure sp&eacute;cifique au solide! </b> 
 * \return void
 */
 double Solide::Energie_potentielle(){
@@ -2271,9 +2272,9 @@ double Solide::pas_temps(double t, double T){
 
 /*!
 *\fn void Solide::update_triangles()
-*\brief Mise a jour de l'interface fluide - solide
-*\details Mise a jour des membres \a triangles_prev, \a triangles, \a normales_prev, \a normales, \a fluide_prev, \a fluide, \a Points_interface_prev, \a Points_interface, \a Triangles_interface_prev, \a Triangles_interface, \a Position_Triangles_interface_prev et \a Position_Triangles_interface
-*\warning <b> proc&eacute;dure sp&eacute;cifique au couplage! </b>
+*\brief Mise &agrave; jour de l'interface fluide - solide.
+*\details Mise &agrave; jour des \a Particule.triangles_prev, \a Particule.triangles, \a Particule.normales_prev, \a Particule.normales, \a Particule.fluide_prev, \a Particule.fluide, \a Particule.Points_interface_prev, \a Particule.Points_interface, \a Particule.Triangles_interface_prev, \a Particule.Triangles_interface, \a Particule.Position_Triangles_interface_prev et \a Particule.Position_Triangles_interface.
+*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 *\return void
 */
 void Solide::update_triangles(){
@@ -2334,7 +2335,7 @@ void Solide::update_triangles(){
 
 
 /*!
-*\fn double error(Solide& S1, Solide& S2)
+*\fn double Error(Solide& S1, Solide& S2)
 *\brief Calcul d'erreur.
 *\details Fonction appell&eacute;e dans le cas d'un sch&eacute;ma semi-implicite.  Crit&egrave;re d'arr&ecirc;t:  \n
 \f{eqnarray*}{ error = max( \, \Vert S1.solide[i].Dx -  S2.solide[i].Dx \, \Vert_{\infty} + h_{max} \Vert \, S1.solide[i].e -  S2.solide[i].e \, \Vert_{\infty})_i  \f}.\n
@@ -2344,13 +2345,13 @@ void Solide::update_triangles(){
 	& abs(S2.max\_y - S2.min\_y),abs(S2.max\_z - S2.min\_z)).
 				 \f}
 				 
-*\param S1 \a Solide au temps n+k
-*\param S2 \a Solide au temps n+k-1
-*\warning <b> proc&eacute;dure sp&eacute;cifique au couplage! </b>
+*\param S1 \a Solide au temps t+k
+*\param S2 \a Solide au temps t+k-1
+*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 *\return double
 */
 
-double error(Solide& S1, Solide& S2){
+double Error(Solide& S1, Solide& S2){
 	
 	double erreur = -1.;
 	
@@ -2369,15 +2370,15 @@ double error(Solide& S1, Solide& S2){
 }	
 
 /*!
-* \fn void copy_f_m(Solide& S1, Solide& S2)
+* \fn void Copy_f_m(Solide& S1, Solide& S2)
 *  \brief On copie les valeurs \a Ff et \a Mf du S2 dans S1.
 *  \details Fonction appell&eacute;e dans le cas d'un sch&eacute;ma semi-implicite. 
-*	\param S1 \a Solide au temps n
-*	\param S2 \a Solide au temps n+k
-*	\warning <b> proc&eacute;dure sp&eacute;cifique au couplage! </b>
+*	\param S1 \a Solide au temps t
+*	\param S2 \a Solide au temps t+k
+*	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 *	\return void
 	*/
-void copy_f_m(Solide& S1, Solide& S2){
+void Copy_f_m(Solide& S1, Solide& S2){
 	
 	for(int it=0; it<S1.size(); it++){
 		S1.solide[it].Ff =  S2.solide[it].Ff ;
@@ -2387,10 +2388,10 @@ void copy_f_m(Solide& S1, Solide& S2){
 }	
 /*!
 * \fn bool inside_box(const Bbox& cell, const Point_3& P)
-*\brief Fonction qui renvoie true si P est dans Box et false sinon
+*\brief Fonction qui renvoie true si P est dans Box et false sinon.
 *\param cell \a Box 
 *\param P \a un point
-*\warning <b> proc&eacute;dure sp&eacute;cifique au couplage! </b>
+*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 *\return bool
 */
 bool inside_box(const Bbox& cell, const Point_3& P){
@@ -2440,7 +2441,7 @@ bool inside_convex_polygon(const Particule& S, const Point_3& P){
 *\brief Fonction qui renvoie true si cell(Box) est dans S(polygon convex) et false sinon.
 *\param S \a Particule
 *\param cell \a un Box
-*\warning <b> proc&eacute;dure sp&eacute;cifique au couplage! </b>
+*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 *\return bool
 */
 bool box_inside_convex_polygon(const Particule& S, const Bbox& cell){
@@ -2497,12 +2498,12 @@ bool box_inside_convex_polygon(const Particule& S, const Bbox& cell){
 
 
 /*!
-*\fn void Solide::impression(int n)
-*\brief Impression des resultats 
-*\param n numero de l'iteration en temps
+*\fn void Solide::Impression(int n)
+*\brief Impression des r&eacute;sultats. 
+*\param n num&eacute;ro de l'iteration en temps
 *\return void
 */
-void Solide::impression(int n){ //Sortie au format vtk
+void Solide::Impression(int n){ //Sortie au format vtk
 int nb_part = solide.size();
 
 int nb_triangles = 0.;

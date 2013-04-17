@@ -1,7 +1,7 @@
 /*!
  *  \file intersections.cpp
  *  \brief Intersection de la grille fluide avec le solide.
-   \details Implementation de la fonctions double intersect_cube_tetrahedron(Bbox& cube, Tetrahedron& Tet) et void Grille::parois(Solide& S,double dt). 
+ \details Impl&eacute;mentation de la fonctions intersect_cube_tetrahedron(Bbox& cube, Tetrahedron& Tet) et Grille::Parois(Solide& S,double dt). 
    \warning  <b> Proc&eacute;dures sp&eacute;cifiques au couplage! </b>
  */
 
@@ -14,38 +14,51 @@ using std:: cout;
 using std:: endl;
 
 /*!
- * \fn void Grille::parois(Solide& S,double dt) 
- *\brief Intersection de la grille fluide avec le solide
- \details Intersection de la Grille fluide avec le Solide et calcul des diffrents quantit&eacute;s d'interes: occupation du Solide dans la Cellule : \a alpha, ocupation des faces de la cellule par le solide: \a kappai, \a kappaj et \a kappak.\n
- Remplissage des vecteurs : \a Points_interface: points d'intersection de la cellule avec les faces triangulaires du solide, \n
-\a Triangles_interface: decoupage des faces des Particules en morceaux triangulaires d'interface contenu dans une seule cellule de la grille fluide et \a Position_Triangles_interface: index de la Cellule fluide contenant le \a Triangles_interface. \n
+ * \fn void Grille::Parois(Solide& S,double dt) 
+ *\brief Intersection de la grille fluide avec le solide.
+ \details Intersection de la Grille fluide avec le Solide et calcul des diff&eacute;rents quantit&eacute;s d'int&eacute;r&ecirc;t: occupation du Solide dans la Cellule : \a Cellule.alpha, occupation des faces de la cellule par le solide: \a Cellule.kappai, \a Cellule.kappaj et \a Cellule.kappak. Remplissage des vecteurs : \n
+- \a Particule.Points_interface: points d'intersections de la cellule avec les faces triangulaires du solide; \n
+- \a Particule.Triangles_interface: d&eacute;coupage des faces des particules en morceaux triangulaires d'interface contenus dans une seule cellule de la grille fluide; \n
+- \a Particule.Position_Triangles_interface: index de la Cellule fluide contenant \a Particule.Triangles_interface. \n
+ 
  Etapes dans l'algorithme de recherche des intersections: \n
- - Constuction du vecteur box_grille contenat les cellule cubique de la grille fluide sous la forme des Box 3d (\a Bbox). Une Box represente une bo&icirc;te rectangulaire. Cette facon de voir les cellule fluide permet de faire appel aux fonctions membre de la class <b> CGAL::Bbox_3  </b>. 
- - Construction du vecteur \a solide des Bbox associes aux particules decrivant le Solide. 
- - Boucle sur les \a box_grille
- - Boucle sur les particules
- - Test d'intersection entre \a box_grille et \a solide  via la fonction \b CGAL::do_intersect(Bbox,Bbox). Si non, il n'y a pas d'intersection est on passe directement a la cellule suivante. Si oui,
- - Test si \a box_grille est contenu dans \a solide via la fonction box_inside_convex_polygon(const Particule&, const Bbox&). Si oui,  l'intersection est la box_grille, sinon
- - Boucle sur les faces triangulaire du Solide
- - Recherche des sommets des faces triangulaire du Solide contenues dans \a box_grille via la fonction inside_box(const Bbox&, const Point_3&). 
- - Test d'intersections entre \a box_grille est les faces triangulaire du Solide via la fonction \b CGAL::do_intersect(Bbox,Triangle_3). Si non, il n'y a rien a faire, si oui,
- - Triangulation des faces du \a box_grille via la fonction triang_cellule(const Bbox&, Triangles&) 
- - Boucle sur les faces triangulaire du \a box_grille
- - Recherche des sommets des faces triangulaire du \a box_grille contenues dans Solide via la fonction inside_convex_polygon(const Particule&, const Point_3&) 
- - Test d'intersection entre les faces triangulaire de \a box_grille et les faces triangulaire du Solide  via la fonction \b CGAL::do_intersect(Triangle_3,Triangle_3). Si non, il n'y a rien a faire, si oui,
- - Intersection entre les faces triangulaire de \a box_grille et les faces triangulaire du Solide via la fonction \b CGAL::intersection(Triangle_3,Triangle_3).\n
- A ce stade nous avons fini les intersections de la Cellule fluide avec le Solide. Remarque: le vecteur \b Points_interface, contenant les points d'intersections entre les cellules fluide et les faces triangulaires des particules est remplir fur et à mesure dans l'algorithme de recherche des intersections. \n
- On exploite le resultat des intersections afin de calculer les diffrents quantit&eacute;s d'interes: \a alpha, \a kappai, \a kappaj et \a kappak. Les fonctions utilisées dans ce calcul sont: \b CGAL::Triangulation(vector<Point_3>) et \b CGAL::convex_hull_3(vector<Point_3>, Polyhedron_3), \b tetrahedron.volume() et \b Triangle_3.squared_area(). 
-La derniere etape consiste dans le remplisage du vecteur Triangles_interface qui contient le decoupage des faces des Particules en morceaux triangulaires d'interface contenu dans une seule cellule de la grille fluide et, \n 
- \a Position_Triangles_interface contenant l'index de la Cellule fluide contenant le \a Triangles_interface. \n
- Le decoupage des faces des Particules en morceaux triangulaires d'interface se fait à partir du vecteur \b Points_interface qui contient pour chaque faces triangulaire des Particules la liste de points d'intersections de celles-ci avec la Cellule fluide. On fait simplement une triangulation contenant ce points via la fonction \b CGAL::Triangulation(vector<Point_3>).
+ - Construction du vecteur \a box_grille contenant les cellules cubiques de la grille fluide sous la forme de Box 3d (\a Bbox). Une Box repr&eacute;sente une bo&icirc;te rectangulaire. Cette fa&ccedil;on de voir les cellules fluide permet de faire appel aux fonctions membres de la classe <b> CGAL::Bbox_3  </b>. 
+ - Construction du vecteur \a solide des Bbox associes aux \a Particule. 
+ - Boucle sur \a box_grille.
+ - Boucle sur \a solide.
+ - Test d'intersection entre \a box_grille et \a solide  via la fonction \b CGAL::do_intersect(Bbox, Bbox). Sinon, il n'y a pas d'intersection et on passe directement &agrave; la cellule suivante. Si oui:
+  - On test si \a box_grille est contenu dans \a solide via la fonction box_inside_convex_polygon(const Particule&, const Bbox&). Si oui,  l'intersection est \a box_grille, sinon:
+   - Boucle sur les faces triangulaires du Solide.
+   - Recherche des sommets de faces triangulaires du Solide contenues dans \a box_grille via la fonction inside_box(const Bbox&, const Point_3&). 
+   - Test d'intersections entre \a box_grille est les faces triangulaires du Solide via la fonction \b CGAL::do_intersect(Bbox,Triangle_3). Si non, il n'y a rien a faire, si oui:
+     - Triangulation des faces du \a box_grille via la fonction triang_cellule(const Bbox&, Triangles&) .
+     - Boucle sur les faces triangulaires du \a box_grille.
+     - Recherche des sommets de faces du \a box_grille contenues dans Solide via la fonction inside_convex_polygon(const Particule&, const Point_3&). 
+     - Test d'intersection entre les faces du \a box_grille et les faces triangulaires du solide (\a Particule.triangle) via la fonction \b CGAL::do_intersect(Triangle_3, Triangle_3). Si non, il n'y a rien a faire, si oui:
+     - Intersection entre les faces triangulaires du \a box_grille et les faces triangulaires du Solide via la fonction
+     \b  CGAL::intersection(Triangle_3, Triangle_3).\n
+      
+      
+      
+      
+\remark Le vecteur \a Particule.Points_interface, contenant les points d'intersections entre les cellules fluides et les faces triangulaires des particules (\a Particule.triangles) est rempli fur et &agrave; mesure dans l'algorithme de recherche des intersections. \n
+On exploite les r&eacute;sultats des intersections afin de calculer les diff&eacute;rents quantit&eacute;s d'int&eacute;r&ecirc;t: \a Cellule.alpha, \a Cellule.kappai, \a Cellule.kappaj et \a Cellule.kappak. \n
+Les fonctions utilis&eacute;es dans ce calcul sont: 
+<b> CGAL::Triangulation(vector<Point_3>) </b> et <b> CGAL::convex_hull_3(vector<Point_3>, Polyhedron_3) </b>, <b> CGAL::tetrahedron.volume() </b> et <b> CGAL::Triangle_3.squared_area()</b>. \n
+La derni&egrave;re &eacute;tape consiste dans le remplissage du vecteur \a Particule.Triangles_interface qui contient
+le d&eacute;coupage des faces des particules en morceaux triangulaires d'interface contenus dans une seule
+cellule de la grille fluide et, \a Particule.Position_Triangles_interface contenant l'index de la Cellule fluide contenant \a Particule.Triangles_interface. 
+Le d&eacute;coupage des faces des particules en morceaux triangulaires d'interface se fait &agrave; partir du vecteur
+\a Particule.Points_interface qui contient pour chaque face triangulaire des particules la liste de points d'intersections
+de celles-ci avec la grille fluide. On fait simplement une triangulation contenant ces points via la fonction
+<b> CGAL::Triangulation(vector<Point_3>)</b>.
  *\param S Solide
  *\param dt pas de temps
  *\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
  *\return void 
  */
 
-void Grille::parois(Solide& S,double dt) {
+void Grille::Parois(Solide& S,double dt) {
 	
 	const double eps_relat = numeric_limits<double>::epsilon( );
 	
@@ -403,18 +416,22 @@ void Grille::parois(Solide& S,double dt) {
 
 /*!
  * \fn double intersect_cube_tetrahedron(Bbox& cube, Tetrahedron& Tet) 
- *\brief Intersection d'une Bbox avec un Tetrahedron. 
+ *\brief Intersection d'une box avec un t&eacute;tra&egrave;dre. 
  \details Intersection de la bo&icirc;te rectangulaire (Bbox) \b cube avec le t&eacute;tra&egrave;dre \b Tet. Renvoie le volume de 
- l'intersection. Function appelle lors du calcul de la quantit&eacute; balay&eacute;e. \n
+ l'intersection. Fonction appelle lors du calcul de la quantit&eacute; balay&eacute;e. \n
  Etapes: \n
- - Triangulation des faces du \a cube via la fonction  void triang_cellule(const Bbox&, Triangles& ) \n
- - Recherche des sommets du t&eacute;tra&egrave;dre contenu dans \a cube via la fonction inside_box(const Bbox&, const Point_3& ). \n
- - Intersections des faces du \a t&eacute;tra&egrave;dre(triangles) avec les faces(triangles) du \a cube via la fonction CGAL 
- \b do_intersect(Triangle_3, Triangle_3).\n 
+ - Triangulation des faces du \a cube via la fonction  void triang_cellule(const Bbox&, Triangles& ). \n
+ - Recherche des sommets du t&eacute;tra&egrave;dre contenus dans \a cube via la fonction inside_box(const Bbox&, const Point_3& ). \n
+ - Boucle sur les faces du t&eacute;tra&egrave;dre.
+ - Test d'intersection entre \a cube et les faces du t&eacute;tra&egrave;dre via la fonction \b  CGAL::do_intersect(Bbox, Triangle_3). Si oui:
+	- Boucle sur les faces triangulaires du \a cube.
+	- Test d'intersection entre les faces du \a cube et les faces du t&eacute;tra&egrave;dre via la fonction  \b CGAL::do_intersect(Triangle_3, Triangle_3). Si oui: 
+	 - Intersections des faces du \a t&eacute;tra&egrave;dre avec les faces du \a cube via la fonction  
+ \b CGAL::do_intersect(Triangle_3, Triangle_3).
  - Calcul du volume du poly&egrave;dre r&eacute;sultant de l'intersection du \a cube et \a Tet. Pour le cacul du 
- volume on construit avec les points d'intersection une Triangulation 3d(t&eacute;tra&egrave;dres) via la 
- fonction CGAL \b Triangulation(vector<Point_3>) et le volume de l'intersection est la somme des volumes des ces t&eacute;tra&egrave;dres. 
- Le volume d'un t&eacute;tra&egrave;dre est calcule via la fonction CGAL \b tetrahedron.volume().
+ volume on construit avec les points d'intersections une triangulation(t&eacute;tra&egrave;dres) via la 
+ fonction \b  CGAL::Triangulation(vector<Point_3>) et le volume de l'intersection est la somme de volumes de ces t&eacute;tra&egrave;dres. 
+ Le volume d'un t&eacute;tra&egrave;dre est calcul&eacute; via la fonction \b CGAL::tetrahedron.volume().
  
  *\param cube Box 3d 
  *\param Tet T&eacute;tra&egrave;dre

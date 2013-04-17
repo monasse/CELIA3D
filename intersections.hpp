@@ -1,7 +1,7 @@
 /*!
  *  \file intersections.hpp
- *  \brief Inclusion des fichiers et la d&eacute;finition des types de la libraire \b CGAL.
-    \details Les inclusions des fichier et la d&eacute;finition des types de la libraire CGAL se fait uniquement dans ce fichier. Dans ce fichier on d&eacute;finit &eacute;galement une fonction de triangulation des faces d'une cellule cubique fluide.
+ *  \brief Inclusion des fichiers et d&eacute;finitions des types de la libraire \b CGAL.
+    \details Les inclusions des fichier et les d&eacute;finitions des types de la libraire CGAL se font uniquement dans ce fichier. Dans ce fichier on d&eacute;finit &eacute;galement une fonction de triangulation des faces d'une cellule cubique fluide.
     \warning  <b> Fichier sp&eacute;cifique au couplage! </b>
  */
 
@@ -83,9 +83,10 @@ typedef Triangles::iterator              Triangle3_iterator;
 
 /**
  \fn void triang_cellule(const Bbox& cel, Triangles& trianglesB)
- \brief Triangulation des faces d'une cellule cubique fluide
- \param cel Box (cellule cubique fluide)
- \param trianglesB liste des triangles decrivant les faces de Box
+ \brief Triangulation des faces d'une cellule cubique fluide.
+ \details Bbox est une Box 3d; une Box repr&eacute;sente une bo&icirc;te rectangulaire. Cette fa&ccedil;on de voir les cellules fluide permet de faire appel aux fonctions membres de la classe <b> CGAL::Bbox_3  </b>. 
+ \param cel Box_3d (cellule cubique fluide)
+ \param trianglesB liste des triangles d&eacute;crivant les faces de Box
  \warning Proc&eacute;dure sp&eacute;cifique au couplage!
  \return void
  */

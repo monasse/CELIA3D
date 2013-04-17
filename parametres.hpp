@@ -8,71 +8,71 @@
 
 /*!
  \file parametres.hpp
-\brief Param&egrave;tres du probl&egrave;me. Les param&egrave;tres sp&eacute;cifiquemes au couplage sont pr&eacute;c&egrave;des d'un "warning"
+\brief Param&egrave;tres du probl&egrave;me. Les param&egrave;tres sp&eacute;cifiques au couplage sont pr&eacute;c&egrave;des d'un "warning"
  */
 
 using std::string;
 
-//! \brief Flag pour une reprise &eacute;ventuelle : false si on ne reprend pas, true si on reprend. \a rep indique si on part des conditions 
+//! \brief Flag pour une reprise &eacute;ventuelle : false si on ne reprend pas, true si on reprend. \a rep indique si on part de conditions 
 //! initiales (false) ou si on reprend &agrave; partir d'un temps donn&eacute; (true). Dans ce dernier cas, le num&eacute;ro des fichiers de reprise est donn&eacute; par  numrep. 
 int rep = false;
 int numrep = 0;  //!<  Num&eacute;ro de la reprise 
 
 
 /*! 
- * \warning  <b> Param&egrave;tre sp&eacute;cifiqueme au  couplage! </b>
+ * \warning  <b> Param&egrave;tre sp&eacute;cifique au  couplage! </b>
  */
-//! \brief Param&egrave;tre sp&eacute;cifiqueme au couplage: flag pour le type de schema : true pour un couplage explicit et false pour un couplage semi-implicit
+//! \brief  Flag pour le type de sch&egrave;ma : true pour un couplage explicite et false pour un couplage semi-implicite. 
 
 bool explicite = true;
 /*! 
- * \warning  <b> Param&egrave;tre sp&eacute;cifiqueme au  couplage! </b>
+ * \warning  <b> Param&egrave;tre sp&eacute;cifique au  couplage! </b>
  */
-const double epsa = 0.5;     //!< Param&egrave;tre sp&eacute;cifiqueme au couplage: fraction de cellule coup&eacute;e. \remark Attention:  ne pas modifier ce param&egrave;tre!
+const double epsa = 0.5;     //!<Fraction de cellule coup&eacute;e. \remark Attention: ne modifiez pas ce param&egrave;tre!
 
 
-const double gam = 1.4;      //!< Param&egrave;tre sp&eacute;cifiqueme au fluide: constante des gaz parfaits 
-const int ordremax = 11;     //!< Param&egrave;tre sp&eacute;cifiqueme &agrave; la methode OSMP: ordre maximal pour le calcul des flux aux interfaces
-const int marge = 6;         //!< Param&egrave;tre sp&eacute;cifiqueme &agrave; la methode OSMP: marge de cellules &agrave; appliquer au debut et &agrave; la fin du tableau des cellules. N&eacute;cessaire pour le calcul des flux aux interfaces.  \remark Il depend de \a ordremax.
+const double gam = 1.4;      //!< Param&egrave;tre sp&eacute;cifique au fluide: constante des gaz parfaits 
+const int ordremax = 11;     //!< Param&egrave;tre sp&eacute;cifique &agrave; la m&eacute;thode OSMP: ordre maximal pour le calcul des flux aux interfaces
+const int marge = 6;         //!< Param&egrave;tre sp&eacute;cifique &agrave; la m&eacute;thode OSMP: marge de cellules &agrave; appliquer au d&eacute;but et &agrave; la fin du tableau des cellules. N&eacute;cessaire pour le calcul des flux aux interfaces.  \remark Il depend de \a ordremax.
 
 
-const double rhos = 100.;  //!< Param&egrave;tre sp&eacute;cifiqueme au solide: densit&eacute; du solide 
-const double nu = 0.;      //!< Param&egrave;tre sp&eacute;cifiqueme au solide: coefficient de Poisson du materiau
-const double E = 7000;     //!< Param&egrave;tre sp&eacute;cifiqueme au solide: module d'Young du materiau
+const double rhos = 100.;  //!< Param&egrave;tre sp&eacute;cifique au solide: densit&eacute; du solide 
+const double nu = 0.;      //!< Param&egrave;tre sp&eacute;cifique au solide: coefficient de Poisson du materiau
+const double E = 7000;     //!< Param&egrave;tre sp&eacute;cifique au solide: module d'Young du materiau
 
 
-const double eps = 0.00000000001;  //!< Constante proche de 0 pour le controle 
+const double eps = 0.00000000001;  //!< Constante proche de 0 pour le contr&ocirc;le 
 
-const int N_dim=3;  //!< Param&egrave;tre sp&eacute;cifiqueme &agrave; la dimension du probl&egrave;me. \remark Attention: ne pas modifier ce param&egrave;tre car ce code traite uniquement la dimension 3 de l'espace. 
+const int N_dim=3;  //!<Dimension du probl&egrave;me. \remark Attention:  ne modifiez pas ce param&egrave;tre car ce code traite uniquement la dimension 3 de l'espace. 
 
-const double X0 = 0;    //!< Param&egrave;tre sp&eacute;cifiqueme au domaine fluide: abscisse de l'origine. 
-const double Y0 = 0;    //!< Param&egrave;tre sp&eacute;cifiqueme au domaine fluide: ordonne de l'origine. 
-const double Z0 = 0;    //!< Param&egrave;tre sp&eacute;cifiqueme au domaine fluide: cote de l'origine. 
+const double X0 = 0;    //!< Param&egrave;tre sp&eacute;cifique au domaine fluide: abscisse de l'origine. 
+const double Y0 = 0;    //!< Param&egrave;tre sp&eacute;cifique au domaine fluide: ordonne de l'origine. 
+const double Z0 = 0;    //!< Param&egrave;tre sp&eacute;cifique au domaine fluide: c&ocirc;te de l'origine. 
 
-const int Nx =53;                 //!< Param&egrave;tre sp&eacute;cifiqueme au maillage fluide: nombre de cellules fluide selon x
-const int Ny =53;                 //!< Param&egrave;tre sp&eacute;cifiqueme au maillage fluide: nombre de cellules fluide selon y
-const int Nz =53;                 //!< Param&egrave;tre sp&eacute;cifiqueme au maillage fluide: nombre de cellules  fluide selon z
+const int Nx =53;                 //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: nombre de cellules fluide selon x
+const int Ny =53;                 //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: nombre de cellules fluide selon y
+const int Nz =53;                 //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: nombre de cellules  fluide selon z
 
-const double domainex = 2.;          //!< Param&egrave;tre sp&eacute;cifiqueme au maillage fluide: largeur du domaine fluide selon x
-const double domainey = 2.;          //!< Param&egrave;tre sp&eacute;cifiqueme au maillage fluide: largeur du domaine fluide selon y
-const double domainez = 2.;          //!< Param&egrave;tre sp&eacute;cifiqueme au maillage fluide: largeur du domaine fluide selon z
+const double domainex = 2.;          //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: largeur du domaine fluide selon x
+const double domainey = 2.;          //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: largeur du domaine fluide selon y
+const double domainez = 2.;          //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: largeur du domaine fluide selon z
 
-const double deltax = domainex/Nx;      //!<  Pas d'&eacute;space pour le fluide selon x: \f$ \Delta x \f$
-const double deltay = domainey/Ny;       //!< Pas d'&eacute;space pour le fluide selon y: \f$ \Delta y \f$
-const double deltaz = domainez/Nz;       //!< Pas d'&eacute;space pour le fluide selon z: \f$ \Delta z \f$
+const double deltax = domainex/Nx;      //!<  Pas d'espace pour le fluide selon x: \f$ \Delta x \f$
+const double deltay = domainey/Ny;       //!< Pas d'espace pour le fluide selon y: \f$ \Delta y \f$
+const double deltaz = domainez/Nz;       //!< Pas d'espace pour le fluide selon z: \f$ \Delta z \f$
 
 
 
 const double T = 0.5;         //!< Temps total de simulation
-const double cfl = 0.5;       //!< Param&egrave;tre sp&eacute;cifiqueme au fluide: valeur de la cfl fluide. Attention: &agrave; priori il ne faut pas modifier ce param&egrave;tre
-const double cfls = 0.5;      //!< Param&egrave;tre sp&eacute;cifiqueme au solide: Valeur de la cfl solide. Attention: &agrave; priori il ne faut pas modifier ce param&egrave;tre
+const double cfl = 0.5;       //!< Param&egrave;tre sp&eacute;cifique au fluide: valeur de la cfl fluide. Attention: &agrave; priori il ne faut pas modifier ce param&egrave;tre
+const double cfls = 0.5;      //!< Param&egrave;tre sp&eacute;cifique au solide: Valeur de la cfl solide. Attention: &agrave; priori il ne faut pas modifier ce param&egrave;tre
 const int Nmax = 10000000;         //!< Nombre maximal d'iterations en temps
-const int nimp = 10000000;               //!< Nombre d'impressions. \note Les fichiers sauvegard&eacute;s peuvent &ecirc;tre tr&egrave;s volumineux, ne pas choisir \a nimp tregrave;s grand!
+const int nimp = 20;               //!< Nombre d'impressions. \note Les fichiers sauvegard&eacute;s peuvent &ecirc;tre tr&egrave;s volumineux, ne choisissez pas \a nimp tr&egrave;s grand!
 const double dtimp = T/nimp;       //!< Pas de temps entre deux impressions
 
 
 //! Conditions aux limites.
-//! Type de CL :  1 = reflecting ("miroir"); 2 = periodic("periodique"); 3= outflow("transmisibles").
+//! Type de CL :  1 = reflecting ("miroir"); 2 = periodic(&quot;p&eacute;riodiques"); 3= outflow("transmissibles").
 //!
 const int BC_x_in =  2;                 //!< Inner Boundary Condition for x
 const int BC_x_out = 2;                 //!< Outer Boundary Condition for x

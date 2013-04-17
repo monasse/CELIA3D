@@ -1,6 +1,6 @@
 /*!
  *  \file fluide.hpp
- *  \brief D&eacute;finition des classes Cellule et Grille n&eacute;ecessaires pour la r&eacute;solution du fluide.
+ *  \brief D&eacute;finition de classes Cellule et Grille n&eacute;cessaires pour la r&eacute;solution du fluide.
  * Les membres sp&eacute;cifiques au couplage sont pr&eacute;c&egrave;des d'un "warning".
  */
 
@@ -21,7 +21,7 @@
 using namespace std;
 
 
-//! Definition de la classe Cellule 
+//! D&eacute;finition de la classe Cellule 
 class Cellule {
 
 public :
@@ -45,179 +45,179 @@ public :
 // 	double getpdty()const {return pdty;} // return pdty dans la cellule
 // 	double getpdtz()const {return pdtz;} // return pdtz dans la cellule
   
-  //! (x,y,z) Position du centre de la cellule   
+  //! (x,y,z) Position du centre de la cellule.   
   double x;       
   double y;
   double z; 
 
-  //! (dx, dy,dz) Taille de la cellule
+  //! (dx, dy,dz) Taille de la cellule.
   double dx;       
   double dy;
   double dz;
 
-  double rho;       //!< Densite dans la cellule
-  double rho1;      //!< Densite dans la cellule en t-dt
+	double rho;       //!< Densit&eacute; dans la cellule.
+	double rho1;      //!< Densit&eacute; dans la cellule en t-dt.
 
-  double u;        //!< Vitesse dans la cellule selon x
-  double v;        //!< Vitesse dans la cellule selon y
-  double w;        //!< Vitesse dans la cellule selon z
+  double u;        //!< Vitesse dans la cellule selon x.
+  double v;        //!< Vitesse dans la cellule selon y.
+  double w;        //!< Vitesse dans la cellule selon z.
 
-  double p;         //!< Pression dans la cellule
-  double p1;        //!< Pression dans la cellule en t-dt
+double p;         //!< Pression dans la cellule.
+double p1;        //!< Pression dans la cellule en t-dt.
     
 
-  double impx;      //!< Impulsion selon x
-  double impy;      //!< Impulsion selon y 
-  double impz;      //!< Impulsion selon z
+double impx;      //!< Impulsion selon x.
+double impy;      //!< Impulsion selon y.
+double impz;      //!< Impulsion selon z.
 
-  double impx0;      //!< Impulsion selon x avant calcul des flux
-  double impy0;      //!< Impulsion selon y avant calcul des flux
-  double impz0;      //!< Impulsion selon y avant calcul des flux
+double impx0;      //!< Impulsion selon x avant calcul des flux.
+double impy0;      //!< Impulsion selon y avant calcul des flux.
+double impz0;      //!< Impulsion selon z avant calcul des flux.
 
-  double rhoE;      //!< Densite d'energie dans la cellule
-  double rhoE0;     //!< Densite d'energie dans la cellule avant calcul des flux
-  double rho0;      //!< Densite dans la cellule avant calcul des flux
+double rhoE;      //!< Densit&eacute; d'&eacute;nergie dans la cellule.
+double rhoE0;     //!< Densit&eacute; d'&eacute;nergie dans la cellule avant calcul des flux.
+double rho0;      //!< Densit&eacute; dans la cellule avant calcul des flux.
 
 
 
-  double lambda[5];     //!< Valeurs propres du systeme
-  double rp[5];         //!< Variables pour le limiteur de flux TVD decentre a gauche 
-  double rm[5];        //!< Variables pour le limiteur de flux TVD decentre a droite 
+double lambda[5];     //!< Valeurs propres du syst&egrave;me.
+double rp[5];         //!< Variables pour le limiteur de flux TVD d&eacute;centre &agrave; gauche. 
+double rm[5];        //!< Variables pour le limiteur de flux TVD d&eacute;centre &agrave; droite. 
    
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-    double pdtx;     //!< Pression efficace selon la direction x pendant le pas de temps dt. 
+    double pdtx;     //!< Pression efficace selon x pendant le pas de temps dt. 
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-    double pdty;     //!< Pression efficace selon la direction y pendant le pas de temps dt. 
+    double pdty;     //!< Pression efficace selon y pendant le pas de temps dt. 
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-    double pdtz;     //!< Pression efficace selon la direction z pendant le pas de temps dt. 
+    double pdtz;     //!< Pression efficace selon z pendant le pas de temps dt. 
     
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
 
-  double Mrho;      //!< Terme de mixage de densite pour les petites cellules.  
+		double Mrho;      //!< Terme de mixage de densit&eacute; pour les petites cellules.  
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double Mimpx;     //!< Terme de mixage d'impulsion pour les petites cellules
+		double Mimpx;     //!< Terme de mixage d'impulsion pour les petites cellules.
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double Mimpy;     //!< Terme de mixage d'impulsion pour les petites cellules
+		double Mimpy;     //!< Terme de mixage d'impulsion pour les petites cellules.
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double Mimpz;     //!< Terme de mixage d'impulsion pour les petites cellules
+		double Mimpz;     //!< Terme de mixage d'impulsion pour les petites cellules.
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double MrhoE;     //!< Terme de mixage d'energie pour les petites cellules
+		double MrhoE;     //!< Terme de mixage d'&eacute;nergie pour les petites cellules.
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double cells;      //!< Volume des cellules melangees avec la cellule si elle est cible
+		double cells;      //!< Volume de cellules m&eacute;lang&eacute;es avec la cellule si elle est cible.
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double alpha;      //!< Proportion de la cellule occupee par du solide a l'instant t
+		double alpha;      //!< Proportion de la cellule occup&eacute;e par du solide &agrave; l'instant t.
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double alpha0;    //!< Proportion de la cellule occupee par du solide a l'instant t-dt
+		double alpha0;    //!< Proportion de la cellule occup&eacute;e par du solide &agrave; l'instant t-dt.
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double kappai;    //!< Taux d'occupation des faces par du solide selon x
+		double kappai;    //!< Taux d'occupation de faces par du solide selon x.
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-    double kappaj; //!< Taux d'occupation des faces par du solide selon y
+		double kappaj; //!< Taux d'occupation de faces par du solide selon y.
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-    double kappak; //!< Taux d'occupation des faces par du solide selon z
+		double kappak; //!< Taux d'occupation de faces par du solide selon z.
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double kappai0;    //!< Taux d'occupation des faces par du solide au temps t-dt selon x
+		double kappai0;    //!< Taux d'occupation de faces par du solide selon x au temps t-dt.
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double kappaj0; //!< Taux d'occupation des faces par du solide au temps t-dt selon y
+		double kappaj0; //!< Taux d'occupation de faces par du solide selon y au temps t-dt.
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double kappak0; //!< Taux d'occupation des faces par du solide au temps t-dt selon z
+		double kappak0; //!< Taux d'occupation de faces par du solide selon z au temps t-dt.
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  int proche;         //!< Indicateur qui vaut 0 loin de la paroi, 1 pres de la paroi
+		int proche;         //!< Indicateur qui vaut 0 loin de la paroi, 1 pr&egrave;s de la paroi.
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  int proche1;       //!< Indicateur de proche au temps t-dt
+		int proche1;       //!< Indicateur qui vaut 0 loin de la paroi, 1 pr&egrave;s de la paroi au temps t-dt.
 
   
   
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double flux_modif[5]; //!< Modification flux pour les cellules coupees
+		double flux_modif[5]; //!< Modification flux pour les cellules coup&eacute;es.
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double delta_w[5];    //!< Quantitee balayee
+		double delta_w[5];    //!< Quantit&eacute; balay&eacute;e.
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double phi_x;        //!< Flux à la parois 
+		double phi_x;        //!< Flux &agrave; la parois. 
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double phi_y; //!< Flux à la parois 
+		double phi_y; //!< Flux &agrave; la parois .
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double phi_z; //!< Flux à la parois 
+		double phi_z; //!< Flux &agrave; la parois. 
     /*! 
-     * \warning  <b> Parametre specifique au  couplage! </b>
+     * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-  double phi_v;  //!< Flux à la parois 
+		double phi_v;  //!< Flux &agrave; la parois. 
 	
-  double xi;      //!< Position du centre de la face effective 
+	double xi;      //!< Position du centre de la face effective. 
   double yj;
   double zk;
 
-  double fluxi[5];     //!< Flux a droite de la cellule
-  double fluxj[5];     //!< Flux en haut de la cellule
-  double fluxk[5];     //!< Flux en bas de la cellule
+	double fluxi[5];     //!< Flux &agrave; droite de la cellule.
+	double fluxj[5];     //!< Flux en haut de la cellule.
+	double fluxk[5];     //!< Flux en bas de la cellule.
    
-  double S;                  //!< Entropie physique
-  double ve[5];             //!< Vecteur des variables entropiques
+   double S;                  //!< Entropie physique.
+   double ve[5];             //!< Vecteur de variables entropiques.
 
-  double fex;               //!< Flux d'entropie suivant x
-  double fey;               //!< Flux d'entropie suivant y
-  double fez;               //!< Flux d'entropie suivant z
+double fex;               //!< Flux d'entropie suivant x.
+double fey;               //!< Flux d'entropie suivant y.
+double fez;               //!< Flux d'entropie suivant z.
     
 
-  double Qci[5];            //!< Correction d'entropie en i
-  double Qcj[5];            //!< Correction d'entropie en j
-  double Qck[5];            //!< Correction d'entropie en k
+double Qci[5];            //!< Correction d'entropie en i.
+double Qcj[5];            //!< Correction d'entropie en j.
+double Qck[5];            //!< Correction d'entropie en k.
 
-  double dtfxi[5];          //!< Flux suivant x en i fois le pas de temps dt
-  double dtfyj[5];          //!< Flux suivant y en j fois le pas de temps dt
-  double dtfzk[5];          //!< Flux suivant z en k fois le pas de temps dt
+double dtfxi[5];          //!< Flux suivant x en i fois le pas de temps dt.
+double dtfyj[5];          //!< Flux suivant y en j fois le pas de temps dt.
+double dtfzk[5];          //!< Flux suivant z en k fois le pas de temps dt.
 
-  double delw[5];           //!< Delta V en i+1/2
-  double delwnu[5];         //!< facteur devant le limitateur en i+1/2
+double delw[5];           //!< Delta V en i+1/2.
+double delwnu[5];         //!< Facteur devant le limitateur en i+1/2.
 
-  double cf2[5];            //!< Corrections pour l'ordre superieur 
+double cf2[5];            //!< Corrections pour l'ordre sup&eacute;rieur. 
   double cf3[5]; 
   double cf4[5]; 
   double cf5[5]; 
@@ -229,45 +229,45 @@ public :
   double cf11[5]; 
 
 
-  double psic0[5];           //!< Corrections centrees pour l'ordre superieur
+	double psic0[5];           //!< Corrections centre&eacute;s pour l'ordre superieur.
   double psic1[5]; 
   double psic2[5]; 
   double psic3[5]; 
   double psic4[5]; 
 
-  double psid0[5];            //!< Corrections decentrees pour l'ordre superieur
+	double psid0[5];            //!< Corrections decentre&eacute;s pour l'ordre superieur.
   double psid1[5]; 
   double psid2[5]; 
   double psid3[5]; 
   double psid4[5]; 
 
-  double vpr[5][5];            //!< Matrice des vecteurs propres du systeme
+	double vpr[5][5];            //!< Matrice de vecteurs propres du syst&egrave;me.
 
 
-  double psic0r[5];           //!< Corrections centrees pour l'ordre superieur mises dans la base des vecteurs propres 
+double psic0r[5];           //!< Corrections centre&eacute;s pour l'ordre sup&eacute;rieur mises dans la base de vecteurs propres. 
   double psic1r[5]; 
   double psic2r[5]; 
   double psic3r[5]; 
   double psic4r[5]; 
 
-  double psid0r[5];            //!< Corrections decentrees pour l'ordre superieur mises dans la base des vecteurs propres 
+	double psid0r[5];            //!< Corrections decentre&eacute;s pour l'ordre sup&eacute;rieur mises dans la base de vecteurs propres. 
   double psid1r[5]; 
   double psid2r[5]; 
   double psid3r[5]; 
   double psid4r[5]; 
 
   double psid[5]; 
-  double am[5];                 //!< Variables de mesure de la monotonicite
+	double am[5];                 //!< Variables de mesure de la monotonicit&eacute;.
   double am1[5];  
  
-  int ordre;                    //!< Ordre du schema pour la cellule 
-  double co[11];               //!< Stockage des coefficients d'ordre 
+	int ordre;                    //!< Ordre du sch&eacute;ma pour la cellule.
+	double co[11];               //!< Stockage des coefficients d'ordre. 
   
-  friend class Grille;         //!< La class Cellule est visible uniquement a travers la class Grille
+  friend class Grille;         //!< La classe Cellule est visible uniquement &agrave; travers la classe Grille.
 
 };
 
-//! Definition de la classe Grille
+//! D&eacute;finition de la classe Grille
 class Grille
 {
 
@@ -292,7 +292,7 @@ class Grille
 	// Acces a la cellule contenant le point p
    void in_cell(Point_3 p, int &i, int& j, int& k, bool& interieur);
   // Sous-programme de definition des conditions initiales 
-  void init();
+  void Init();
 
   // Sous-programme de calcul du pas de temps 
   double pas_temps(double t, double T);
@@ -308,7 +308,7 @@ class Grille
    double Energie();
  
   // Sous-programme d'impression des resultats 
-  void impression(int n);
+  void Impression(int n);
 	   
   // Resolution des equations pour le fluide dans la direction x
   void solve_fluidx(const double dt);
@@ -335,23 +335,23 @@ class Grille
   void Solve(const double dt, double t, int n); 
     
   void Forces_fluide(Solide& S, const double dt); // Calcul des Forces fluides et Moments fluides exerces sur le solide	
-  void parois(Solide& S,double dt);  // Mise a jour de kappai,kappaj,kappak et alpha   
-  void modif_fnum(const double dt);  // Modification du flux
-  void mixage(); // Procedure de mixage pour le cellules avec c.alpha>0.5
-  void fill_cel(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.)
+  void Parois(Solide& S,double dt);  // Mise a jour de kappai,kappaj,kappak et alpha   
+  void Modif_fnum(const double dt);  // Modification du flux
+  void Mixage(); // Procedure de mixage pour le cellules avec c.alpha>0.5
+  void Fill_cel(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.)
   void swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  Particule & P); // Sous-programme de calcul des quantitees balayees
   void cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,int& kn1, std::vector<Bbox>& box_cells, std::vector<Cellule>& Cells); 
-  void swap_2d(const double dt, Solide& S); // Sous-programme de calcul des quantitees balayees
-  void swap_3d(const double dt, Solide& S); // Sous-programme de calcul des quantitees balayees
+  void Swap_2d(const double dt, Solide& S); // Sous-programme de calcul des quantitees balayees
+  void Swap_3d(const double dt, Solide& S); // Sous-programme de calcul des quantitees balayees
 private :
 
-  double x;          //!< position de l'origine
+	double x;          //!< Position de l'origine.
   double y;
   double z;
-  double dx;          //!< pas d'espace
+	double dx;          //!< Pas d'espace.
   double dy;
   double dz;
-	vector< vector< vector<Cellule > > > grille; //!< Maillage fluide
+	vector< vector< vector<Cellule > > > grille; //!< Maillage fluide.
 	//Cellule grille[Nx+2*marge][Ny+2*marge][Nz+2*marge];   //tableau des cellules 
     
 };

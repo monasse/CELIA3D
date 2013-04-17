@@ -6,15 +6,15 @@
  */
 
 // En cas de reprise definition des conditions initiales pour le fluide
-double rhoi[Nx][Ny][Nz]; //!< En cas de reprise (\a rep=true) definition des conditions initiales pour le fluide: densite
-double ui[Nx][Ny][Nz]; //!< En cas de reprise (\a rep=true) definition des conditions initiales pour le fluide:vitesse selon x
-double vi[Nx][Ny][Nz]; //!< En cas de reprise (\a rep=true) definition des conditions initiales pour le fluide: vitesse selon y
-double wi[Nx][Ny][Nz]; //!< En cas de reprise (\a rep=true) definition des conditions initiales pour le fluide: vitesse selon z
-double pi[Nx][Ny][Nz]; //!< En cas de reprise (\a rep=true) definition des conditions initiales pour le fluide: pression
+double rhoi[Nx][Ny][Nz]; //!< En cas de reprise (\a rep=true) d&eacute;finition des conditions initiales pour le fluide: densite
+double ui[Nx][Ny][Nz]; //!< En cas de reprise (\a rep=true) d&eacute;finition des conditions initiales pour le fluide:vitesse selon x
+double vi[Nx][Ny][Nz]; //!< En cas de reprise (\a rep=true) d&eacute;finition des conditions initiales pour le fluide: vitesse selon y
+double wi[Nx][Ny][Nz]; //!< En cas de reprise (\a rep=true) d&eacute;finition des conditions initiales pour le fluide: vitesse selon z
+double pi[Nx][Ny][Nz]; //!< En cas de reprise (\a rep=true) d&eacute;finition des conditions initiales pour le fluide: pression
 
 /**
  \fn void reprise()
- \brief Reprise d'une simulation (param&egrave;tre \a rep=true): initialisation des variables du probl&egrave;me &egrave; partir des fichier "resultats/fluide" << \a numrep << ".vtk" et "resultats/solide" << \a numrep << ".vtk". 
+ \brief Reprise d'une simulation (param&egrave;tre \a rep=true): initialisation des variables du probl&egrave;me &agrave; partir des fichier "resultats/fluide" << \a numrep << ".vtk" et "resultats/solide" << \a numrep << ".vtk". 
  \note Fonction utilis&eacute;e principalement pour le debugage. <b> Il  n'est pas n&eacute;cessaire de la re-coder! </b>
  \return void
  */
@@ -253,7 +253,7 @@ void reprise(){
  \fn double Rho(double x,double y, double z)
  \brief Initialisation du probl&egrave;me: valeur initiale de la densit&eacute; du fluide:
  * -rho
-\param (x,y,z) la position du centre de la cellule
+\param (x,y,z) position du centre de la cellule
  \return double
  */
 
@@ -278,7 +278,7 @@ double Rho(double x,double y, double z){
  \fn double U(double x,double y, double z)
  \brief Initialisation du probl&egrave;me: valeur de la vitesse du fluide suivant x :
  * -u
- \param (x,y,z) la position du centre de la cellule
+ \param (x,y,z) position du centre de la cellule
  \return double
  */
 double U(double x,double y, double z){ 
@@ -297,9 +297,9 @@ double U(double x,double y, double z){
  }
 /**
  \fn double V(double x,double y, double z)
- \brief Initialisation du probl&egrave;me: valeur de la vitesse du fluide: suivant y 
+ \brief Initialisation du probl&egrave;me: valeur de la vitesse du fluide suivant y: 
  * -v
- \param (x,y,z) la position du centre de la cellule
+ \param (x,y,z)  position du centre de la cellule
  \return double
  */
  double V(double x,double y, double z){ 
@@ -320,7 +320,7 @@ double U(double x,double y, double z){
  \fn double W(double x,double y, double z)
  \brief Initialisation du probl&egrave;me: valeur de la vitesse du fluide suivant z :
  * -w
- \param (x,y,z) la position du centre de la cellule
+ \param (x,y,z)  position du centre de la cellule
  \return double
  */
 double W(double x,double y, double z){ 
@@ -341,8 +341,8 @@ double W(double x,double y, double z){
  \fn double P(double x,double y, double z,double dx, double dy, double dz)
  \brief Initialisation du probl&egrave;me: valeur de la pression du fluide:
  * -p
- \param (x,y,z) la position du centre de la cellule 
- \param (dx, dy,dz) la taille de la cellule
+ \param (x,y,z) position du centre de la cellule 
+ \param (dx, dy,dz) taille de la cellule
  \return double
  */
  double P(double x,double y, double z, double dx, double dy, double dz){ 
