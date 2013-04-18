@@ -21,7 +21,7 @@ using std:: endl;
 - \a Particule.Triangles_interface: d&eacute;coupage des faces des particules en morceaux triangulaires d'interface contenus dans une seule cellule de la grille fluide; \n
 - \a Particule.Position_Triangles_interface: index de la Cellule fluide contenant \a Particule.Triangles_interface. \n
  
- Etapes dans l'algorithme de recherche des intersections: \n
+ Algorithme: \n
  - Construction du vecteur \a box_grille contenant les cellules cubiques de la grille fluide sous la forme de Box 3d (\a Bbox). Une Box repr&eacute;sente une bo&icirc;te rectangulaire. Cette fa&ccedil;on de voir les cellules fluide permet de faire appel aux fonctions membres de la classe <b> CGAL::Bbox_3  </b>. 
  - Construction du vecteur \a solide des Bbox associes aux \a Particule. 
  - Boucle sur \a box_grille.
@@ -419,7 +419,7 @@ void Grille::Parois(Solide& S,double dt) {
  *\brief Intersection d'une box avec un t&eacute;tra&egrave;dre. 
  \details Intersection de la bo&icirc;te rectangulaire (Bbox) \b cube avec le t&eacute;tra&egrave;dre \b Tet. Renvoie le volume de 
  l'intersection. Fonction appelle lors du calcul de la quantit&eacute; balay&eacute;e. \n
- Etapes: \n
+ Algorithme: \n
  - Triangulation des faces du \a cube via la fonction  void triang_cellule(const Bbox&, Triangles& ). \n
  - Recherche des sommets du t&eacute;tra&egrave;dre contenus dans \a cube via la fonction inside_box(const Bbox&, const Point_3& ). \n
  - Boucle sur les faces du t&eacute;tra&egrave;dre.

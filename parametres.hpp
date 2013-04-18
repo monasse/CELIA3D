@@ -24,7 +24,7 @@ int numrep = 0;  //!<  Num&eacute;ro de la reprise
  */
 //! \brief  Flag pour le type de sch&egrave;ma : true pour un couplage explicite et false pour un couplage semi-implicite. 
 
-bool explicite = true;
+bool explicite = false;
 /*! 
  * \warning  <b> Param&egrave;tre sp&eacute;cifique au  couplage! </b>
  */
@@ -36,9 +36,9 @@ const int ordremax = 11;     //!< Param&egrave;tre sp&eacute;cifique &agrave; la
 const int marge = 6;         //!< Param&egrave;tre sp&eacute;cifique &agrave; la m&eacute;thode OSMP: marge de cellules &agrave; appliquer au d&eacute;but et &agrave; la fin du tableau des cellules. N&eacute;cessaire pour le calcul des flux aux interfaces.  \remark Il depend de \a ordremax.
 
 
-const double rhos = 100.;  //!< Param&egrave;tre sp&eacute;cifique au solide: densit&eacute; du solide 
+const double rhos = 10.;  //!< Param&egrave;tre sp&eacute;cifique au solide: densit&eacute; du solide 
 const double nu = 0.;      //!< Param&egrave;tre sp&eacute;cifique au solide: coefficient de Poisson du materiau
-const double E = 7000;     //!< Param&egrave;tre sp&eacute;cifique au solide: module d'Young du materiau
+const double E = 6.e5;     //!< Param&egrave;tre sp&eacute;cifique au solide: module d'Young du materiau
 
 
 const double eps = 0.00000000001;  //!< Constante proche de 0 pour le contr&ocirc;le 
@@ -49,13 +49,13 @@ const double X0 = 0;    //!< Param&egrave;tre sp&eacute;cifique au domaine fluid
 const double Y0 = 0;    //!< Param&egrave;tre sp&eacute;cifique au domaine fluide: ordonne de l'origine. 
 const double Z0 = 0;    //!< Param&egrave;tre sp&eacute;cifique au domaine fluide: c&ocirc;te de l'origine. 
 
-const int Nx =53;                 //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: nombre de cellules fluide selon x
-const int Ny =53;                 //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: nombre de cellules fluide selon y
-const int Nz =53;                 //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: nombre de cellules  fluide selon z
+const int Nx =73;                 //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: nombre de cellules fluide selon x
+const int Ny =37;                 //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: nombre de cellules fluide selon y
+const int Nz =37;                 //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: nombre de cellules  fluide selon z
 
 const double domainex = 2.;          //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: largeur du domaine fluide selon x
-const double domainey = 2.;          //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: largeur du domaine fluide selon y
-const double domainez = 2.;          //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: largeur du domaine fluide selon z
+const double domainey = 1.;          //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: largeur du domaine fluide selon y
+const double domainez = 1.;          //!< Param&egrave;tre sp&eacute;cifique au maillage fluide: largeur du domaine fluide selon z
 
 const double deltax = domainex/Nx;      //!<  Pas d'espace pour le fluide selon x: \f$ \Delta x \f$
 const double deltay = domainey/Ny;       //!< Pas d'espace pour le fluide selon y: \f$ \Delta y \f$

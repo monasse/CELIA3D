@@ -2338,7 +2338,7 @@ void Solide::update_triangles(){
 *\fn double Error(Solide& S1, Solide& S2)
 *\brief Calcul d'erreur.
 *\details Fonction appell&eacute;e dans le cas d'un sch&eacute;ma semi-implicite.  Crit&egrave;re d'arr&ecirc;t:  \n
-\f{eqnarray*}{ error = max( \, \Vert S1.solide[i].Dx -  S2.solide[i].Dx \, \Vert_{\infty} + h_{max} \Vert \, S1.solide[i].e -  S2.solide[i].e \, \Vert_{\infty})_i  \f}.\n
+\f{eqnarray*}{ error = max( \, \Vert S1.solide[i].Dx -  S2.solide[i].Dx \, \Vert_{\infty} + h_{max} \Vert \, S1.solide[i].e -  S2.solide[i].e \, \Vert_{\infty})_i  \f}\n
 \f{eqnarray*}{
 	h_{max}=& max(abs(S1.max\_x - S1.min\_x),abs(S1.max\_y - S1.min\_y), \\ 
 	& abs(S1.max\_z - S1.min\_z), abs(S2.max\_x - S2.min\_x),\\ 

@@ -1,11 +1,3 @@
-#include <iostream>
-#include <ctime>
-#include "fluide.cpp"
-#include "solide.cpp"
-#include "couplage.cpp"
-#include "parametres.cpp"
-
-
 /*!
  \mainpage 
  \section intro Introduction
@@ -27,8 +19,71 @@
  
  - \a parametres.hpp: d&eacute;finir les param&egrave;tres du probl&egrave;me; 
  - \a parametres.cpp: d&eacute;finir l'&eacute;tat initial du fluide: densit&eacute;, pression, vitesse;
- - cr&eacute;ation du fichier <b> "maillage.dat" </b>d&eacute;finissant le maillage pour le solide.\note Attention, respectez la syntaxe expliqu&eacute;e dans le fichier \b README. \n
+ - cr&eacute;ation du fichier <b> "maillage.dat" </b>d&eacute;finissant le maillage pour le solide.\n
  
+ 
+ 
+ 
+Cr&eacute;ation du fichier "maillage.dat": \n
+- Premi&egrave;re ligne le mot cl&eacute; \b "POINTS" et le nombre de sommets du solide. \n
+- Lignes suivantes : l'ensemble des coordonn&eacute;es de sommets. Chaque sommet sur une ligne.\n
+- Le mot cl&eacute; \b "SOLIDE" et le nombre de particules solides du syst&egrave;me .\n
+- Les caract&eacute;ristiques de chaque particule: \n
+ - le mot cl&eacute; \b "PARTICULE" suivi du nombre de faces et la condition sur le mouvement de la particule: 0 ou 1. Si 0, la particule peut bouger librement si 1, la particule est fix&eacute;e &agrave; sa position initiale.\n
+ - le mot cl&eacute; \b "POSITION" et les coordonn&eacute;es du centre de la particule. \n
+ - le mot cl&eacute; \b "VITESSE" et les composantes de la vitesse initiale de la particule. \n
+ - le mot cl&eacute; \b "VITROT"  et les composantes de la vitesse de rotation initiale de la particule. \n
+- Description g&eacute;om&eacute;trique de chacune de particules face par face: 
+ - nombre des sommets de la face, les num&eacute;ros de sommets (dans le m&ecirc;me ordre que dans le listing 
+ des coordonn&eacute;es des sommets) d&eacute;crivant la face et un dernier nombre, part, indiquent le num&eacute;ro 
+ de la particule (dans le m&ecirc;me ordre que dans le listing des particules) &eacute;ventuellement 
+ pr&eacute;sente de l'autre côt&eacute; de la face. Si aucune particule n'est pr&eacute;sente de l'autre côt&eacute; 
+ de la face (donc si la particule est en contact avec le fluide), on a part =-1. \n
+ 
+\remark L'ordre de ces sommets donne l'orientation de la normale sortante &agrave; la particule,  
+ les sommets sont num&eacute;rot&eacute;s de 0 &agrave; nombre de sommets-1 et les particules sont 
+ num&eacute;rot&eacute;s de 0 &agrave; nombre de particules-1 comme dans un tableau C++. \n
+ 
+ 
+Exemple: \n
+ 
+			POINTS 8 \n
+			0.4 0.4 0.4 \n
+			0.9 0.4 0.4 \n
+			0.9 0.6 0.4 \n
+			0.4 0.6 0.4 \n
+			0.4 0.4 0.6 \n
+			0.9 0.4 0.6 \n
+			0.9 0.6 0.6 \n
+			0.4 0.6 0.6 \n
+			
+			SOLIDE 1 \n
+			
+			PARTICULE 6 0 \n
+			POSITION  1 1 1 \n
+			VITESSE 1. 0. 0.\n
+			VITROT 0. 0. 0.\n
+			4 0 3 2 1 -1 \n
+			4 7 4 5 6 -1 \n
+			4 0 4 7 3 -1 \n
+			4 1 2 6 5 -1 \n
+			4 4 0 1 5 -1 \n
+			4 3 7 6 2 -1 \n
+ 
+ 
+ Les r&eacute;sultats sont &eacute;crits dans le dossier \b resultats. Certains fichiers sont remplis &agrave; 
+ chaque pas de temps :
+ les fichiers energie.dat, solide_center.dat et temps_reprise.dat donnent respectivement l'&eacute;volution
+ de l'&eacute;nergie, la position du centre du solide au cours du temps et le temps de la simulation. 
+ Les fichiers fluide*.vtk et solide*.vtk sont &eacute;crits un nombre limit&eacute;
+ de fois au cours du calcul; fluide*.vtk et solide*.vtk donnent l'&eacute;tat du fluide et la position du solide,
+ peuvent &ecirc;tre lus avec Paraview. Le fichier temps.dat est &eacute;crit &agrave; la fin de la simulation 
+ donnent le temps de calcul (temps machine) des differents sous-proc&eacute;dures  du code. \n
+ Il est possible d'effectuer une reprise sur un calcul interrompu &agrave; partir des sorties fluide*.vtk
+ et solide*.vtk: il suffit de changer le flag de reprise bool rep=false en bool rep=true dans le fichier parametres.h
+ et d'indiquer &agrave; partir de quel point de reprise on souhaite reprendre &agrave; l'aide de la variable int numrep.
+ Par exemple, pour reprendre avec fluide1.vtk et solide1.vtk (c'est-a-dire &agrave; partir de la premi&egrave;re 
+ sortie), on utilisera int numrep=1.
  
  
  \remark Les proc&eacute;dures concernant le fluide se trouvent dans les fichiers fluide.hpp et fluide.cpp. Celles concernant le solide dans solide.hpp et solide.cpp. Les proc&eacute;dures r&eacute;alisant le couplage sont regroup&eacute;es dans les fichiers couplage.cpp, intersections.hpp et intersections.cpp. Les fichiers parametres.hpp et parametres.cpp sont d&eacute;dies aux d&eacute;finitions des param&eacute;tr&eacute;s du probl&egrave;me (param&eacute;tr&eacute;s physique, li&eacute;s aux maillages fluide et solide, au couplage, etc.). La r&eacute;solution du probl&egrave;me est r&eacute;alis&eacute;e  dans le fichier principal main.cpp. 
@@ -36,18 +91,42 @@
  
  \authors Maria Adela PUSCAS et Laurent MONASSE
  */
+
+
 /*!
 *  \file main.cpp
 *  \brief Fonction principale. Initialisation du probl&egrave;me et r&eacute;solution.
-*  \author M. A. PUSCAS et L. MONASSE
-*  \version 1.0
-*  \date 06/04/2013
-*
 */
 
+#include <iostream>
+#include <ctime>
+#include "fluide.cpp"
+#include "solide.cpp"
+#include "couplage.cpp"
+#include "parametres.cpp"
 
 using namespace std;          // espace de nom standard
 
+/*!
+* \fn int main()
+*\brief Initialisation du probl&egrave;me et r&eacute;solution:
+
+- Initialisation du solide via la fonction \a Solide.Init(const char*) et du fluide via la fonction  Grille.Init().
+- R&eacute;solution du probl&egrave;me:
+ - R&eacute;solution des &eacute;quations fluides via la fonction \a Grille.Solve(const double, double, int).
+ - Calcul des forces internes via la fonction \a Solide.Forces_internes().
+ -  Calcul des forces (\a Particule.Ff) et foments fluides (\a Particule.Mf) exerc&eacute;s sur le solide via la fonction \a Grille.Forces_fluide(Solide&, const double).
+ - Mise &agrave; jour de la position du solide via la fonction \a Solide.Solve_position(double).
+ - Calcul de la vitesse du solide via la fonction \a Solide.Solve_vitesse(double).
+ - Intersection de la grille fluide avec le solide via la fonction \a Grille.Parois(Solide&, double).
+ - Calcul de la quantit&eacute; balay&eacute;e par le solide via la fonction \a Grille.Swap_2d(double, Solide&).
+ - Modification des flux fluide via la fonction \a Grille.Modif_fnum(double).
+ - M&eacute;lange conservatif de petites cellules coup&eacute;es via la fonction \a Grille.Mixage().
+ - Remplissage des cellules fictives via la fonction \a Grille.Fill_cel(Solide&).
+ - Imposition des conditions aux limites via la fonction \a Grille.BC().
+ 
+*\return int
+*/
 int main(){
   char temps_it[]="resultats/temps.dat";
   char temps_reprise[]="resultats/temps_reprise.dat";

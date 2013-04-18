@@ -144,10 +144,10 @@ void Grille::Modif_fnum(const double dt){
 * \fn void Grille:: Mixage()
 *  \brief M&eacute;lange conservatif de petites cellules coup&eacute;es.
 *  \details On d&eacute;finit une petite cellule tel que \f$ alpha > epsa \f$ (\a Cellule.alpha fraction occup&eacute;e par du solide dans la cellule, et \a epsa: fraction de cellule coup&eacute;e d&eacute;finit dans parametres.hpp ). Afin ne pas modifier le pas de temps tout en garantissant la condition de CFL, les petites cellules sont fusionn&eacute;es avec leurs voisines. On note \a p une petite cellule et \a g une cellule voisine avec \a p compl&egrave;tement fluide~(\f$ alpha_g = 0 \f$ ). On d&eacute;finit les termes d'&eacute;change suivants :
-\f{eqnarray*}{ E_{pg} = \frac{alpha_p+ alpha_g}{alpha_g} (U_g - U_{p}), \quad  E_{gp} = \frac{alpha_p+ alpha_g}{alpha_p} (U_p - U_{g}) \f}
+\f{eqnarray*}{ E_{pg} = \frac{1}{2 - alpha_p} (U_g - U_{p}), \quad  E_{gp} = \frac{1-  alpha_p}{2 - alpha_p} (U_p - U_{g}) \f}
 et on pose:
 \f{eqnarray*}{
-U_p = U_{p} + E_{pg}, \quad  \quad U_g = U_{g} + E_{gg} \f}
+U_p = U_{p} + E_{pg}, \quad  \quad U_g = U_{g} + E_{gp} \f}
 *	\warning <b> proc&eacute;dure sp&eacute;cifique au couplage! </b>
 *	\return void
 */
@@ -170,7 +170,7 @@ void Grille:: Mixage(){
 									test=false;
 									cg = grille[i+ii][j+jj][k+kk];
 									
-									cp.Mrho = (cg.rho - cp.rho)/(2. - cp.alpha) ;
+									cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
 									cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
 									cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
 									cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
@@ -484,7 +484,7 @@ void Grille:: Mixage(){
 
 /*!
 * \fn void Grille::Fill_cel(Solide& S)
-*  \brief Remplissage de cellules fictives (\a alpha = 1)
+*  \brief Remplissage des cellules fictives (\a alpha = 1)
 *  \details Afin de calculer les flux pr&egrave;s de l'interface solide-fluide, on d&eacute;finit dans les Cellule compl&egrave;tement occup&eacute;es par le Solide (\a alpha = 1) un &eacute;tat fictif qui sera &eacute;gal &agrave; la valeur de l'&eacute;tat de la maille miroir par rapport &agrave; l'interface. \n
 Algo: on cherche l'interface la plus proche du centre de la cellule (boucle sur toutes les faces du Solide) et on calcule la projection du centre de la cellule par rapport &agrave; cette interface via la fonction <b> CGAL::projection(Point_3) </b>.
 *	\param S  Solide 
@@ -611,14 +611,14 @@ void Grille::Fill_cel(Solide& S){
 
 /*!
 * \fn double volume_prisme(const Triangle_3& T1,const Triangle_3& T2)
-*  \brief Calcul de volume sign&eacute; d'une prisme.
-* \details Le volume sign&eacute; de la prisme ayant comme basses les triangles \f$ T1(A_1,B_1,C_1)  \f$ et \f$ T2(A_2,B_2,C_2) \f$ est donn&eacute; par: \n
+*  \brief Calcul de volume sign&eacute; d'un prisme.
+* \details Le volume sign&eacute; du prisme ayant comme basses les triangles \f$ T1(A_1,B_1,C_1)  \f$ et \f$ T2(A_2,B_2,C_2) \f$ est donn&eacute; par: \n
 \f{eqnarray*}{
 	{\Vert A_1 B_1 C_1 A_2 B_2 C_2 \Vert}_P  = \frac{1}{36}  \left( 2 \vec{A_1 B_1} \wedge \vec{A_1 C_1} + 2 \vec{A_2 B_2} \wedge \vec{A_2 C_2} +  \vec{A_1 B_1}\wedge \vec{A_2 C_2}  +  \vec{A_2 B_2}\wedge \vec{A_1 C_1} \right) \cdot
 	\f} 
 	\f{eqnarray*}{  \left( \vec{A_1 A_2}  + \vec{B_1 B_2} + \vec{C_1 C_2}\right)\f}
-	*	\param T1 Triangle_3  base de la prisme
-	*	\param T2 Triangle_3  base de la prisme
+	*	\param T1 Triangle_3  base du prisme
+	*	\param T2 Triangle_3  base du prisme
 	*	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 	*	\return double
 	*/
@@ -665,7 +665,7 @@ double volume_tetra(const Tetrahedron& Tet){
 /*!
 * \fn Point_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn)
 *  \brief Transformation barycentrique du point Xn.
-* \details Soit Xn un point appartenant au triangle Tn(A_1,B_1,C_1). Le transforme barycentrique du Xn est le point Xn1(appartenant au triangle Tn1(A_2,B_2,C_2) ) donne par: 
+* \details Soit Xn un point appartenant au triangle Tn(A_1,B_1,C_1). Le transform&eacute; barycentrique du Xn est le point Xn1(appartenant au triangle Tn1(A_2,B_2,C_2) ) donn&eacute; par: 
 \f{eqnarray*}{
 	\lambda = \frac{\Vert  \vec{C_1 Xn} \wedge \vec{C_1 B_1}  \Vert }{\Vert  \vec{C_1 A_1} \wedge \vec{C_1 B_1}  \Vert} 
 	\f}
@@ -710,7 +710,7 @@ Point_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn){
 
 /*!
 *\fn Triangle_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Triangle_3 T)
-*\brief Transormation barycentrique du Triangle T.
+*\brief Transformation barycentrique du Triangle T.
 *\details Appel &agrave; la fonction tr(Triangle_3, Triangle_3, Point_3) pour chaque somment du triangle.
 *\param Tn Triangle_3
 *\param Tn1 Triangle_3 
@@ -732,7 +732,7 @@ Triangle_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Triangle_3 T){
 /*!
 * \fn Point_2 tr(Triangle_3 Tn1, Point_3 Xn)
 *  \brief Transformation d'un Point_3 en Point_2.
-* \details  Soit le triangle Tn1(A,B,C), la transformation du Point 3d Xn (appartenant &agrave; Tn1) en un point 2d est donne par: 
+* \details  Soit le triangle Tn1(A,B,C), le transform&eacute; du Point 3d Xn (appartenant &agrave; Tn1) en un point 2d est donn&eacute; par: 
 
 \f{eqnarray*}{
 	\lambda = \frac{\Vert  \vec{C Xn} \wedge \vec{C B}  \Vert }{\Vert  \vec{C A} \wedge \vec{C B}  \Vert} 
@@ -741,7 +741,7 @@ Triangle_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Triangle_3 T){
 		\mu = \frac{\Vert  \vec{C A} \wedge \vec{C Xn}  \Vert }{\Vert  \vec{C A} \wedge \vec{C B}  \Vert} 
 		\f}
 		\f{eqnarray*}{
-			X2d = (\mu, (1-\lambda-\mu))
+			X_{2d} = (\mu, (1-\lambda-\mu))
 			\f}
 *\param Tn1 Triangle_3 
 *\param Xn  Point_3
@@ -770,7 +770,7 @@ Point_2 tr(Triangle_3 Tn1, Point_3 Xn){
 
 /*!
 *\fn Triangle_2 tr(Triangle_3 Tn1, Triangle_3 T)
-*\brief Transormation d'un Triangle_3 en Triangle_2 
+*\brief Transformation d'un Triangle_3 en Triangle_2 
 	*\details Appel &agrave; la fonction tr(Triangle_3, Point_3) pour chaque somment du triangle.
 	*\param Tn1 Triangle_3 
 	*\param T  Triangle_3 
@@ -790,7 +790,7 @@ Triangle_2 tr(Triangle_3 Tn1, Triangle_3 T){
 /*!
 * \fn Point_3 tr(Triangle_3 Tn1, Point_2 Xn)
 *  \brief Transformation d'un Point_2 en Point_3.
-* \details  Soit le triangle Tn1(A,B,C), la transformation du Point 2d Xn(X,Y) en un point 3d(appartenant &agrave; Tn1) est donne par: 
+* \details  Soit le triangle Tn1(A,B,C), le transform&eacute; du Point 2d Xn(X,Y) en un point 3d (appartenant &agrave; Tn1) est donn&eacute; par: 
 
 \f{eqnarray*}{
 \lambda = 1- X - Y
@@ -799,7 +799,7 @@ Triangle_2 tr(Triangle_3 Tn1, Triangle_3 T){
 \mu = X
 \f}
 \f{eqnarray*}{
-	X3d = \lambda A + \mu B + (1-\lambda -\mu)C 
+	X_{3d} = \lambda A + \mu B + (1-\lambda -\mu)C 
 	\f}
 *\param Tn1 Triangle_3 
 *\param Xn  Point_2
@@ -824,7 +824,7 @@ Point_3 tr(Triangle_3 Tn1, Point_2 Xn){
 }	
 /*!
 *\fn Triangle_3 tr(Triangle_3 Tn1, Triangle_2 T)
-*\brief  Transormation d'un Triangle_2 en Triangle_3
+*\brief  Transformation d'un Triangle_2 en Triangle_3
 *\details Appel &agrave; la fonction tr(Triangle_3, Point_2) pour chaque somment du triangle.
 *\param Tn1 Triangle_3 
 *\param T  Triangle_2 
@@ -888,7 +888,7 @@ Point_3 tr2(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn){
 			return Point_3(x, y, z);
 			}
 			
-			// Transormation barycentrique du Triangle T 
+			// Transformation barycentrique du Triangle T 
 			Triangle_3 tr2(Triangle_3 Tn, Triangle_3 Tn1, Triangle_3 T){
 				
 				Point_3 s = tr2( Tn,Tn1, T.operator[](0) );
@@ -1024,12 +1024,12 @@ void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,i
 /*!
 *\fn void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  Particule & P)
 *\brief Calcul de la quantit&eacute; balay&eacute;e par un morceau de parois entre t et t+dt. Calcul du flux &agrave; la parois.
-*\details Etapes:\n
+*\details Algorithme:\n
 - Construction du vecteur des Box contenant les prismes ayant comme bases T3d_prev et T3d_n. Boucle sur les prismes ainsi obtenus:
 - On cherche l'index de la cellule qui contient T3d_prev(le triangle est enti&egrave;rement contenu dans une cellule) et celui de la cellule qui contient T3d_n(le triangle est enti&egrave;rement contenu dans une cellule).
 - Si le prisme est contenu dans une seule cellule on calcule le volume du prisme via la fonction volume_prisme(const Triangle_3&,const Triangle_3&) et la quantit&eacute; balay&eacute;e par la face (\a Particule.triangles) est donn&eacute;e par : \f$  volume\_prisme*U^n/volume\_cellule \f$. Sinon,
  - On liste les cellules fluides intersect&eacute;es par le prisme via la fonction cells_intersection_face(int& ,int& ,int& ,int& ,int& ,int& , std::vector<Bbox>& s, std::vector<Cellule>& s).
- - On d&eacute;coupe le prisme en  t&eacute;tra&egrave;dres: soit  \f$ T1(A_1,B_1,C_1)\f$  et \f$ T2(A_2,B_2,C_2)\f$  les bases du prisme, on d&eacute;finit les points: \f$ A = \frac{1}{4}(B_1 + B_2 + C_1 +C_2) \f$ , \f$ B = \frac{1}{4}(A_1 + A_2 + C_1 +C_2) \f$ et \f$ C = \frac{1}{4}(A_1 + A_2 + B_1 + B_2 ) \f$. Les t&eacute;tra&egrave;dres d&eacute;coupant \f$ A_1,B_1,C_1 A_2,B_2,C_2 \f$ sont: \f$ A_1 A_2 C B, \, B_1 B_2 A C, \, C_1 C_2 B A,\, A_1 C C_1 B,\, B_1 A C_1 C \f$,etc. 
+ - On d&eacute;coupe le prisme en  t&eacute;tra&egrave;dres: soit  \f$ T1(A_1,B_1,C_1)\f$  et \f$ T2(A_2,B_2,C_2)\f$  les bases du prisme, on d&eacute;finit les points: \f$ A = \frac{1}{4}(B_1 + B_2 + C_1 +C_2) \f$ , \f$ B = \frac{1}{4}(A_1 + A_2 + C_1 +C_2) \f$ et \f$ C = \frac{1}{4}(A_1 + A_2 + B_1 + B_2 ) \f$. Les t&eacute;tra&egrave;dres d&eacute;coupant \f$ A_1,B_1,C_1 A_2,B_2,C_2 \f$ sont: \f$ A_1 A_2 C B, \, B_1 B_2 A C, \, C_1 C_2 B A,\, A_1 C C_1 B,\, B_1 A C_1 C, \, A C B C_1, \, A B C C_2, \, A B_2 C_2 C, \, A_1 B_1 C_1 C, \,A_2 C_2 C B,\, A_2 B_2 C C_2. \f$
  - Intersections de ces  t&eacute;tra&egrave;dres avec les cellules fluides intersect&eacute;es par le prisme via la fonction intersect_cube_tetrahedron(Bbox&, Tetrahedron&). La quantité balayée par la face est donnée par la somme des: \f$  volume\_{intersection\_cellule\_tetrahedre}*U^n/volume\_cellule. \f$ \n
 
 Calcul du flux &agrave; la parois: Soit \a f un morceau d'interface, le flux &agrave; la parois est donné par :
@@ -1279,8 +1279,8 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 /**
 \fn void Sous_Maillage_2d(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2& tri2)
 \brief Construction sous-maillage 2d d'une face 2d du Solide.
-\details Un d&eacute;coupage en triangles de la face aux temps t et t+dt tel que chaque triangles soit enti&egrave;rement contenu dans une cellule aux temps t et t+dt (pas n&eacute;cessairement la m&ecirc;me cellule).\n
-Etapes:\n
+\details Un d&eacute;coupage en triangles de la face aux temps t et t+dt tel que chaque triangle soit enti&egrave;rement contenu dans une cellule aux temps t et t+dt (pas n&eacute;cessairement la m&ecirc;me cellule).\n
+Algorithme:\n
 - On associe &agrave; chaque triangle un Box 2d (une bo&icirc;te contenant le triangle).  \n
 - Boucle sur les Box 2d.
 - Test d'intersection des Box via la fonction <b> CGAL::do_overlap(Bbox_2, Bbox_2)</b>. Si oui: \n
@@ -1336,20 +1336,20 @@ void Sous_Maillage_2d(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2
 \fn void sous_maillage_faceTn_faceTn1_2d(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1)
 \brief D&eacute;coupage en triangles de la face aux temps t et t+dt
 \details A partir de la position de l'interface au temps t (\a Tn) et au temps t+dt (\a Tn1) on va d&eacute;couper cette face en triangles enti&egrave;rement contenues dans une cellule aux temps t et t+dt (pas n&eacute;cessairement la m&ecirc;me cellule). \n
-Etapes:\n
-- Transformation barycentrique de \a tn via la fonction tr(Triangle_3, Triangle_3, Triangle_3) et transformation des triangles resultants en triangles 2d via la fonction tr(Triangle_3, Triangle_3)
-- Transformation de tn1 en triangles 2d via la fonction tr(Triangle_3, Triangle_3)
-- Construction du sous-maillage 2d de la face via la fonction Sous_Maillage_2d(Triangles_2, Triangles_2, Triangles_2)
-- Transformation du sous-maillage 2d dans un sous-maillage 3d de la face via la fonction tr(Triangle_3, Triangle_3, Triangle_2)
+Algorithme:\n
+- Transformation barycentrique de \a tn via la fonction \a tr(Triangle_3, Triangle_3, Triangle_3) et transformation des triangles r&eacute;sultants en triangles 2d via la fonction \a tr(Triangle_3, Triangle_3).
+- Transformation de tn1 en triangles 2d via la fonction \a tr(Triangle_3, Triangle_3).
+- Construction du sous-maillage 2d de la face via la fonction \a Sous_Maillage_2d(const Triangles_2&, const Triangles_2&, Triangles_2&).
+- Transformation du sous-maillage 2d dans un sous-maillage 3d de la face via la fonction \a tr(Triangle_3, Triangle_2).
 
 \warning <b> Proc&eacute;dure sp&eacute;cifique au couplage!</b> 
-\param Tn Triangle_3 : interface au temps t (\a triangles_prev)
-\param tn vecteur de Triangle_3 : triangulation de la face Tn
-\param Tn1 Triangle_3 interface au temps t+dt (\a triangles)
-\param tn1 vecteur de Triangle_3 : triangulation de la face Tn1
-\param N   Vector_3 normale sortante au Tn1
-\param T3d_n vecteur de Triangle_3 (Sous-maillage triangulaire de la face Tn)
-\param T3d_n1 vecteur de Triangle_3 (Sous-maillage triangulaire de la face Tn1)
+\param Tn Triangle_3 : interface au temps t (\a Particule.triangles_prev)
+\param tn vecteur de Triangle_3 : triangulation de la face Tn (\a Particule.Triangles_interface_prev)
+\param Tn1 Triangle_3 interface au temps t+dt (\a Particule.triangles)
+\param tn1 vecteur de Triangle_3 : triangulation de la face Tn1 (\a Particule.Triangles_interface)
+\param N   Vector_3 : normale sortante au Tn1 (\a Particule.normales)
+\param T3d_n vecteur de Triangle_3 : Sous-maillage triangulaire de la face \a Particule.Triangles_interface_prev au temps t 
+\param T3d_n1 vecteur de Triangle_3 : Sous-maillage triangulaire de la face \a Particule.Triangles_interface au temps t+dt 
 \return void
 */
 void sous_maillage_faceTn_faceTn1_2d(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1){
@@ -1393,7 +1393,7 @@ void sous_maillage_faceTn_faceTn1_2d(Triangle_3& Tn, Triangles& tn, Triangle_3& 
 /**
 \fn void Grille::Swap_2d(const double dt, Solide& S)
 \brief Calcul de la quantit&eacute; balay&eacute;e par le Solide entre t et t+dt.
-\details Etapes:\n
+\details Algorithme:\n
 - Sous-découpage des faces du Solide (\a Particule.triangles) en triangles contenues enti&egrave;rement dans une cellule au temps t et t+dt (pas nécessairement la m&ecirc;me cellule) via la fonction sous_maillage_faceTn_faceTn1_2d(Triangle_3&, Triangles&, Triangle_3&, Triangles&, Vector_3& ,Triangles& ,Triangles&).\n
 - Calcul de la quantité balayée par les faces et le flux &agrave; la parois via la fonction swap_face(Triangles&, Triangles&, const double ,  Particule &).
 \warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b> 
