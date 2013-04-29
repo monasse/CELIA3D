@@ -430,7 +430,7 @@ void Grille::Parois(Solide& S,double dt) {
  \b CGAL::do_intersect(Triangle_3, Triangle_3).
  - Calcul du volume du poly&egrave;dre r&eacute;sultant de l'intersection du \a cube et \a Tet. Pour le cacul du 
  volume on construit avec les points d'intersections une triangulation(t&eacute;tra&egrave;dres) via la 
- fonction \b  CGAL::Triangulation(vector<Point_3>) et le volume de l'intersection est la somme de volumes de ces t&eacute;tra&egrave;dres. 
+ fonction \b  CGAL::Triangulation(vector<Point_3>) et le volume de l'intersection est la somme des volumes de ces t&eacute;tra&egrave;dres. 
  Le volume d'un t&eacute;tra&egrave;dre est calcul&eacute; via la fonction \b CGAL::tetrahedron.volume().
  
  *\param cube Box 3d 

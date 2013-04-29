@@ -33,10 +33,10 @@ Cr&eacute;ation du fichier "maillage.dat": \n
  - le mot cl&eacute; \b "POSITION" et les coordonn&eacute;es du centre de la particule. \n
  - le mot cl&eacute; \b "VITESSE" et les composantes de la vitesse initiale de la particule. \n
  - le mot cl&eacute; \b "VITROT"  et les composantes de la vitesse de rotation initiale de la particule. \n
-- Description g&eacute;om&eacute;trique de chacune de particules face par face: 
- - nombre des sommets de la face, les num&eacute;ros de sommets (dans le m&ecirc;me ordre que dans le listing 
- des coordonn&eacute;es des sommets) d&eacute;crivant la face et un dernier nombre, part, indiquent le num&eacute;ro 
- de la particule (dans le m&ecirc;me ordre que dans le listing des particules) &eacute;ventuellement 
+- Description g&eacute;om&eacute;trique de chacune des particules face par face: 
+ - nombre de sommets de la face, les num&eacute;ros de sommets (dans le m&ecirc;me ordre que dans le listing 
+ des coordonn&eacute;es de sommets) d&eacute;crivant la face et un dernier nombre, part, indiquent le num&eacute;ro 
+ de la particule (dans le m&ecirc;me ordre que dans le listing de particules) &eacute;ventuellement 
  pr&eacute;sente de l'autre côt&eacute; de la face. Si aucune particule n'est pr&eacute;sente de l'autre côt&eacute; 
  de la face (donc si la particule est en contact avec le fluide), on a part =-1. \n
  
@@ -115,7 +115,7 @@ using namespace std;          // espace de nom standard
 - R&eacute;solution du probl&egrave;me:
  - R&eacute;solution des &eacute;quations fluides via la fonction \a Grille.Solve(const double, double, int).
  - Calcul des forces internes via la fonction \a Solide.Forces_internes().
- -  Calcul des forces (\a Particule.Ff) et foments fluides (\a Particule.Mf) exerc&eacute;s sur le solide via la fonction \a Grille.Forces_fluide(Solide&, const double).
+ -  Calcul des forces (\a Particule.Ff) et moments fluides (\a Particule.Mf) exerc&eacute;s sur le solide via la fonction \a Grille.Forces_fluide(Solide&, const double).
  - Mise &agrave; jour de la position du solide via la fonction \a Solide.Solve_position(double).
  - Calcul de la vitesse du solide via la fonction \a Solide.Solve_vitesse(double).
  - Intersection de la grille fluide avec le solide via la fonction \a Grille.Parois(Solide&, double).

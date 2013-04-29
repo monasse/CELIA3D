@@ -1276,11 +1276,13 @@ double Particule::volume(){
 
 /*!
 * \fn Particule::vitesse_parois(Point_3& X_f)
-* \brief Vitesse au centre de la parois au temps t.
-* \param X_f le centre de la parois
+* \brief Vitesse au centre de la parois au temps t. \n
+* \f$ V_f = V_I + \Omega_{rot} \wedge \left( X_f - X_I \right). \f$ 
+* \f$ V_I \f$ -vitesse de la particule(\a Particule.u_half),  \f$ X_I \f$ -centre de la particule(\a Particule.x0 + \a Particule.Dx),  \f$ \Omega_{rot} \f$ -rotation de la particule(\a Particule.omega_half).
+* \param X_f centre de la parois
 * \warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 * \return Vector_3
- */
+*/
 Vector_3 Particule::vitesse_parois(Point_3& X_f){
 		
   Vector_3 V_f = u_half + cross_product(omega_half, Vector_3(Point_3(x0.operator[](0) + Dx.operator[](0), x0.operator[](1) + Dx.operator[](1),x0.operator[](2) + Dx.operator[](2)),X_f));
@@ -1289,8 +1291,10 @@ Vector_3 Particule::vitesse_parois(Point_3& X_f){
 }	
 /*!
 * \fn Particule::vitesse_parois_prev(Point_3& X_f)
-* \brief Vitesse au centre de la parois au temps t-dt
-* \param X_f le centre de la parois
+* \brief Vitesse au centre de la parois au temps t-dt.
+ * \f$ V_f = V_I + \Omega_{rot} \wedge \left( X_f - X_I \right). \f$ \n
+ * \f$ V_I \f$ -vitesse de la particule(\a Particule.u_half),  \f$ X_I \f$ -centre de la particule(\a Particule.x0 + \a Particule.Dxprev),  \f$ \Omega_{rot} \f$ -rotation de la particule(\a Particule.omega_half).
+* \param X_f centre de la parois
 * \warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 * \return Vector_3
  */
@@ -1358,7 +1362,7 @@ void Face::compProjectionIntegrals(double &P1, double &Pa, double &Pb, double &P
 }
 /*!
 * \fn void Face::compFaceIntegrals(double &Fa, double &Fb, double &Fc, double &Faa, double &Fbb, double &Fcc, double &Faaa, double &Fbbb, double &Fccc, double &Faab, double &Fbbc, double &Fcca, double na, double nb, double nc, int a, int b, int c)
-* \brief Calcul d'int&eacute;grales sur les faces. 
+* \brief Calcul des int&eacute;grales sur les faces. 
 * \details Utilisation de la fonction d&eacute;crite par Brian Mirtich 1996(cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar).
 * \warning  <b> Proc&eacute;dure sp&eacute;cifique au solide! </b> 
 * \return void
@@ -1389,7 +1393,7 @@ void Face::compFaceIntegrals(double &Fa, double &Fb, double &Fc, double &Faa, do
 
 /*!
 * \fn void Particule::CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &Tz, double &Txx, double &Tyy, double &Tzz, double &Txy, double &Tyz, double &Tzx)
-* \brief Calcul d'int&eacute;grales de volume.
+* \brief Calcul des int&eacute;grales de volume.
 *\details Utilisation de la fonction d&eacute;crite par Brian Mirtich 1996(cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar).
 * \warning  <b> Proc&eacute;dure sp&eacute;cifique au solide! </b> 
 * \return void
@@ -1452,7 +1456,7 @@ void Particule::CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &
 }
 /*!
 * \fn void solve_eq3(double a, double b, double c, double d, double &x1, double &x2, double &x3)
-* \brief Resolution de l'equation de degre 3 ax3+bx2+cx+d=0, de solutions x1, x2 et x3.
+* \brief R&eacute;solution de l'&eacute;quation de degr&eacute; 3 ax3+bx2+cx+d=0, de solutions x1, x2 et x3.
 * \warning  <b> Proc&eacute;dure sp&eacute;cifique au solide! </b> 
 * \return void
 */

@@ -1,6 +1,6 @@
 /*!
  *  \file fluide.hpp
- *  \brief D&eacute;finition de classes Cellule et Grille n&eacute;cessaires pour la r&eacute;solution du fluide.
+ *  \brief D&eacute;finition des classes Cellule et Grille n&eacute;cessaires pour la r&eacute;solution du fluide.
  * Les membres sp&eacute;cifiques au couplage sont pr&eacute;c&egrave;des d'un "warning".
  */
 
@@ -121,7 +121,7 @@ double rm[5];        //!< Variables pour le limiteur de flux TVD d&eacute;centre
     /*! 
      * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-		double cells;      //!< Volume de cellules m&eacute;lang&eacute;es avec la cellule si elle est cible.
+		double cells;      //!< Volume des cellules m&eacute;lang&eacute;es avec la cellule si elle est cible.
     /*! 
      * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
@@ -133,27 +133,27 @@ double rm[5];        //!< Variables pour le limiteur de flux TVD d&eacute;centre
     /*! 
      * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-		double kappai;    //!< Taux d'occupation de faces par du solide selon x.
+		double kappai;    //!< Taux d'occupation des faces par du solide selon x.
     /*! 
      * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-		double kappaj; //!< Taux d'occupation de faces par du solide selon y.
+		double kappaj; //!< Taux d'occupation des faces par du solide selon y.
     /*! 
      * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-		double kappak; //!< Taux d'occupation de faces par du solide selon z.
+		double kappak; //!< Taux d'occupation des faces par du solide selon z.
     /*! 
      * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-		double kappai0;    //!< Taux d'occupation de faces par du solide selon x au temps t-dt.
+		double kappai0;    //!< Taux d'occupation des faces par du solide selon x au temps t-dt.
     /*! 
      * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-		double kappaj0; //!< Taux d'occupation de faces par du solide selon y au temps t-dt.
+		double kappaj0; //!< Taux d'occupation des faces par du solide selon y au temps t-dt.
     /*! 
      * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
-		double kappak0; //!< Taux d'occupation de faces par du solide selon z au temps t-dt.
+		double kappak0; //!< Taux d'occupation des faces par du solide selon z au temps t-dt.
     /*! 
      * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
@@ -199,7 +199,7 @@ double rm[5];        //!< Variables pour le limiteur de flux TVD d&eacute;centre
 	double fluxk[5];     //!< Flux en bas de la cellule.
    
    double S;                  //!< Entropie physique.
-   double ve[5];             //!< Vecteur de variables entropiques.
+   double ve[5];             //!< Vecteur des variables entropiques.
 
 double fex;               //!< Flux d'entropie suivant x.
 double fey;               //!< Flux d'entropie suivant y.
@@ -229,28 +229,28 @@ double cf2[5];            //!< Corrections pour l'ordre sup&eacute;rieur.
   double cf11[5]; 
 
 
-	double psic0[5];           //!< Corrections centre&eacute;s pour l'ordre superieur.
+	double psic0[5];           //!< Corrections centr&eacute;es pour l'ordre superieur.
   double psic1[5]; 
   double psic2[5]; 
   double psic3[5]; 
   double psic4[5]; 
 
-	double psid0[5];            //!< Corrections decentre&eacute;s pour l'ordre superieur.
+	double psid0[5];            //!< Corrections decentr&eacute;es pour l'ordre superieur.
   double psid1[5]; 
   double psid2[5]; 
   double psid3[5]; 
   double psid4[5]; 
 
-	double vpr[5][5];            //!< Matrice de vecteurs propres du syst&egrave;me.
+	double vpr[5][5];            //!< Matrice des vecteurs propres du syst&egrave;me.
 
 
-double psic0r[5];           //!< Corrections centre&eacute;s pour l'ordre sup&eacute;rieur mises dans la base de vecteurs propres. 
+double psic0r[5];           //!< Corrections centr&eacute;es pour l'ordre sup&eacute;rieur mises dans la base de vecteurs propres. 
   double psic1r[5]; 
   double psic2r[5]; 
   double psic3r[5]; 
   double psic4r[5]; 
 
-	double psid0r[5];            //!< Corrections decentre&eacute;s pour l'ordre sup&eacute;rieur mises dans la base de vecteurs propres. 
+	double psid0r[5];            //!< Corrections decentr&eacute;es pour l'ordre sup&eacute;rieur mises dans la base de vecteurs propres. 
   double psid1r[5]; 
   double psid2r[5]; 
   double psid3r[5]; 

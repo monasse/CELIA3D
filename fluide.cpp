@@ -812,8 +812,8 @@ void Grille::melange(const double dt){
 
 /**
  \fn void Grille::solve_fluidx(const double dt)
- \brief R&eacute;solution des &eacute;quations fluides dans la direction x.
- \warning Stockage de la pression utilis&eacute; pendant le pas de temps \a pdtx . Param&egrave;tre sp&eacute;cifique  au  couplage!
+ \brief R&eacute;solution des &eacute;quations fluide dans la direction x.
+ \warning Stockage de la pression utilis&eacute;e pendant le pas de temps \a pdtx . Param&egrave;tre sp&eacute;cifique  au  couplage!
  \param dt pas de temps
  \return void
  */
@@ -858,8 +858,8 @@ void Grille::solve_fluidx(const double dt){
 
 /**
  \fn void Grille::solve_fluidy(const double dt)
- \brief R&eacute;solution des &eacute;quations fluides dans la direction y.
- \warning Stockage de la pression utilis&eacute; pendant le pas de temps \a pdty . Param&egrave;tre sp&eacute;cifique  au  couplage!
+ \brief R&eacute;solution des &eacute;quations fluide dans la direction y.
+ \warning Stockage de la pression utilis&eacute;e pendant le pas de temps \a pdty . Param&egrave;tre sp&eacute;cifique  au  couplage!
  \param dt pas de temps
  \return void
  */
@@ -904,8 +904,8 @@ void Grille::solve_fluidy(const double dt){
 
 /**
  \fn void Grille::solve_fluidz(const double dt)
- \brief R&eacute;solution des &eacute;quations fluides dans la direction z.
- \warning Stockage de la pression utilis&eacute; pendant le pas de temps \a pdtz . Param&egrave;tre sp&eacute;cifique au  couplage!
+ \brief R&eacute;solution des &eacute;quations fluide dans la direction z.
+ \warning Stockage de la pression utilis&eacute;e pendant le pas de temps \a pdtz . Param&egrave;tre sp&eacute;cifique au  couplage!
  \param dt pas de temps
  \return void
  */
@@ -2532,7 +2532,7 @@ void Grille::fnumz(const double sigma, double t){
 
 /**
  \fn void Grille::Solve(const double dt, double t, int n)
- \brief R&eacute;solution des &eacute;quations fluides.
+ \brief R&eacute;solution des &eacute;quations fluide.
  \details Alternance directionnelle &agrave; chaque pas de temps.
  \param t temps curent de simulation
  \param dt pas de temps 
