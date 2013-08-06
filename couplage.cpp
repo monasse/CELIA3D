@@ -151,7 +151,7 @@ U_p = U_{p} + E_{pg}, \quad  \quad U_g = U_{g} + E_{gp} \f}
 *	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 *	\return void
 */
-void Grille:: mixage(){
+void Grille::Mixage(){
 	
 	Cellule cp, cg;
 	
@@ -494,7 +494,7 @@ void Grille:: mixage(){
 	
 	if(!test_fini){
 		cout<<" non test_fini "<<endl;
-		mixage();
+		Mixage();
 	}
 }
 
