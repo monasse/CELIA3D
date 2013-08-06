@@ -335,7 +335,7 @@ class Grille
   void Solve(const double dt, double t, int n); 
     
   void Forces_fluide(Solide& S, const double dt); // Calcul des Forces fluides et Moments fluides exerces sur le solide	
-  void Parois(Solide& S,double dt);  // Mise a jour de kappai,kappaj,kappak et alpha   
+  void Parois(Solide& S,double dt);  // Mise a jour de kappai,kappaj,kappak et alpha  
   void Modif_fnum(const double dt);  // Modification du flux
   void Mixage(); // Procedure de mixage pour le cellules avec c.alpha>0.5
   void Fill_cel(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.)
@@ -343,6 +343,13 @@ class Grille
   void cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,int& kn1, std::vector<Bbox>& box_cells, std::vector<Cellule>& Cells); 
   void Swap_2d(const double dt, Solide& S); // Sous-programme de calcul des quantitees balayees
   void Swap_3d(const double dt, Solide& S); // Sous-programme de calcul des quantitees balayees
+	
+	Cellule voisin_fluide(const Cellule &c, const int &i,  const int &j,  const int &k, bool &target, int & ii, int &jj, int &kk);
+	Cellule voisin_mixt(const Cellule &c, const int &i, const int &j,  const int &k, bool &target, int & ii, int &jj, int &kk);
+	Cellule voisin(const Cellule &c, const int &i, const int &j, const int &k, int & ii, int &jj, int &kk);
+	Cellule cible(const Cellule &c, const int &i, const int &j, const int &k, int & ii, int &jj, int &kk);
+	void Mixage_cible();
+	void Parois_particles(Solide& S,double dt);
 private :
 
 	double x;          //!< Position de l'origine.

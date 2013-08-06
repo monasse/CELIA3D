@@ -203,12 +203,14 @@ int main(){
 	  t = temps[numrep];
 	}
 	Solide S;
-	S.Init("maillage.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
+	S.Init("poutre.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	Grille Fluide;
 	Fluide.Init();
-	Fluide.Parois(S, dt);
+	//Fluide.Parois(S, dt);
+	Fluide.Parois_particles(S,dt);
 	Fluide.BC();
-
+	
+	
 	int iter=0;	
 	clock_t start,end;
 	start =clock();
@@ -240,6 +242,7 @@ int main(){
 	int nb_iter_implicit=0;
 	CGAL::Timer user_time, user_time2, user_time3,user_time4,user_time5;
 	double temps_flux=0., temps_solide_f_int=0., temps_couplage=0., temps_swap=0., temps_intersections=0., temps_semi_implicit=0.;
+	//for (int n=0; (t<T) && n<4; n++){
 	for (int n=0; (t<T) && n<Nmax; n++){
 		
 		if(t>next_timp){
@@ -274,7 +277,8 @@ int main(){
 		user_time3.start();
 		S.Solve_vitesse(dt);
 		user_time4.start();
-		Fluide.Parois(S,dt);
+		//Fluide.Parois(S,dt);
+		Fluide.Parois_particles(S,dt);
 		temps_intersections += CGAL::to_double(user_time4.time());
 		user_time4.reset();
 		//S.Affiche();
@@ -295,7 +299,8 @@ int main(){
 				Sk = S ; 
 				Sk.Solve_position(dt);
 				Sk.Solve_vitesse(dt);
-				Fluide.Parois(Sk,dt);
+				//Fluide.Parois(Sk,dt);
+				Fluide.Parois_particles(S,dt);
 				erreur = Error(Sk, Sk_prev);
 				//cout<<" erreur := "<<erreur<<endl;
 			}//fin boucle 
@@ -314,7 +319,10 @@ int main(){
 		//cout<<"Triangles en n "<<n0<<" Triangles en n+1 "<<n1<<" Triangles sous maillage "<<m<<endl;
 		Fluide.Modif_fnum(dt);
 		//Fluide.affiche("modif_fnum");
-		Fluide.Mixage();
+		//Fluide.Mixage();
+		cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
+		Fluide.Mixage_cible(); //test 27/07
+		cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
 		//Fluide.affiche("mixage");
 		Fluide.Fill_cel(S);
 		//Fluide.affiche("fill_cell");
@@ -323,7 +331,6 @@ int main(){
 		//temps_iter<< n << " "<<t<<" "<<dt<<endl;
 		t+= dt;
 		iter++;
-
 	}
 	end=clock();
 	

@@ -419,28 +419,36 @@ bool Cellule :: is_in_cell(double x0,double y0, double z0)
 void Cellule :: Affiche (){
     
 	  
-  cout<<"max "<< " x = "<< x+dx/2<< " y = "<<y+dy/2<< " z = "<<z+dz/2<<endl;
-	cout<<"min "<< " x = "<< x-dx/2<< " y = "<<y-dy/2<< " z = "<<z-dz/2<<endl;
+   //cout<<"max "<< " x = "<< x+dx/2<< " y = "<<y+dy/2<< " z = "<<z+dz/2<<endl;
+	 //cout<<"min "<< " x = "<< x-dx/2<< " y = "<<y-dy/2<< " z = "<<z-dz/2<<endl;
 
 		//if(std::abs(alpha-1.)<eps){
-    //cout<< " ki = "<< kappai<< " kj = "<< kappaj<< " kk = "<< kappak<<endl;
-//     cout<<"alpha ="<<alpha<<endl;
-// 		cout<<"alpha0 ="<<alpha0<<endl;
-// 		cout<<"delta_w =  "<<delta_w <<endl;
-// 		cout<<"phi_x =  "<<phi_x <<endl;
-// 		cout<<"phi_y =  "<<phi_y <<endl;
-// 		cout<<"phi_z =  "<<phi_z <<endl;
+ 	  cout<<"centre"<< " x = "<< x<< " y = "<<y<< " z = "<<z<<endl;
+    cout<< " ki = "<< kappai<< " kj = "<< kappaj<< " kk = "<< kappak<<endl;
+    cout<<"alpha ="<<alpha<<endl;
+//  		cout<<"alpha0 ="<<alpha0<<endl;
+//  		cout<<"phi_x =  "<<phi_x <<endl;
+//  		cout<<"phi_y =  "<<phi_y <<endl;
+//  		cout<<"phi_z =  "<<phi_z <<endl;
+// 		cout<<"phi_z =  "<<phi_v <<endl;
+// 		cout<<"flux modif = "<<endl;
+// 		for(int i=0; i<5; i++) {cout<<flux_modif[i]<<endl;}
+// 		cout<<"delta w = "<<endl;
+// 		for(int i=0; i<5; i++) {cout<<delta_w[i]<<endl;}
 // 		cout<<"pression ="<<p<<endl;
+//		cout<<"densite ="<<rho<<endl;
 // 	  cout<<"pression parois x= "<<phi_x<<endl;
 // 		cout<<"pression parois y= "<<phi_y<<endl;
 // 		cout<<"pression parois z= "<<phi_z<<endl;
 // 		cout<<"pression en x= "<<pdtx<<endl;
 // 		cout<<"pression en y= "<<pdty<<endl;
 // 		cout<<"pression en z= "<<pdtz<<endl;
-// 		cout<<"u= "<<u<<endl;
-// 		cout<<"v= "<<v<<endl;
-// 		cout<<"w= "<<w<<endl;
+// 		cout<<"p= "<<p<<endl;
+// 		cout<<"rho= "<<rho<<endl;
 // 		cout<<"E= "<<rhoE<<endl;
+// 		cout<<"p0= "<<p1<<endl;
+// 		cout<<"rho0= "<<rho0<<endl;
+// 		cout<<"E0= "<<rhoE0<<endl;
 // 		
 // 		
 // 		cout<<"flux en i "<<endl;
@@ -531,9 +539,10 @@ void Grille:: affiche()
         for(int j=marge;j<Ny+marge;j++){ 
             for(int k=marge;k<Nz+marge;k++){ 
 								vol +=(dx*dy*dz)*grille[i][j][k].alpha;
-								if(( std::abs(grille[i][j][k].alpha-1.) > 0.000001 ) && (std::abs(grille[i][j][k].rho -1.4)>0.000001)){
-									cout<<"cellule i="<<i-marge<<"j= "<<j-marge<< "k= "<<k-marge<< " rho "<<grille[i][j][k].rho  << " p "<<grille[i][j][k].p<< endl;
-									//grille[i][j][k].Affiche();
+								if(std::abs(grille[i][j][k].p -1.) > eps){
+									cout<<"probleme!!!="<< endl;
+									grille[i][j][k].Affiche();
+									getchar();
 								}
             }
         }
@@ -3177,4 +3186,219 @@ void Grille::Impression(int n){
     }
     
 }
+
+Cellule Grille::voisin_fluide(const Cellule &c, const int &i, const int &j, const int &k, bool &target, int & ii, int &jj, int &kk){
+	
+	double dir = 0.; 
+	
+	dir = std::min(std::min(std::min(std::min(std::min(c.kappai, c.kappaj), c.kappak), grille[i-1][j][k].kappai), grille[i][j-1][k].kappaj), grille[i][j][k-1].kappak);
+	
+	
+	if ( (std::abs(dir - c.kappai)<eps) && (grille[i+1][j][k].alpha  <eps) && (grille[i+1][j][k].p > 0.) && 
+		(grille[i+1][j][k].rho > 0.) )
+	{
+		ii=i+1;
+		return grille[i+1][j][k];
+	}
+	else if ( (std::abs(dir - c.kappaj)<eps) && (grille[i][j+1][k].alpha  <eps) && (grille[i][j+1][k].p > 0.) && 
+		(grille[i][j+1][k].rho > 0.) )
+	{
+		jj=j+1;
+		return grille[i][j+1][k];
+	}
+	else if( (std::abs(dir - c.kappak)<eps) && (grille[i][j][k+1].alpha  <eps) && (grille[i][j][k+1].p > 0.) && 
+		(grille[i][j][k+1].rho > 0.) )
+	{
+		kk=k+1;
+		return grille[i][j][k+1];
+	}
+	else if ( (std::abs(dir - grille[i-1][j][k].kappai)<eps) && (grille[i-1][j][k].alpha< eps) && (grille[i-1][j][k].p > 0.) && (grille[i-1][j][k].rho > 0.) )
+	{
+		ii=i-1;
+		return grille[i-1][j][k];
+	}
+	else if ( (std::abs(dir - grille[i][j-1][k].kappaj)<eps) && (grille[i][j-1][k].alpha <eps) && (grille[i][j-1][k].p > 0.) && (grille[i][j-1][k].rho > 0.) )
+	{
+		jj=j-1;
+		return grille[i][j-1][k];
+	}
+	else if ( (std::abs(dir - grille[i][j][k-1].kappak)<eps) && (grille[i][j][k-1].alpha  <eps) && (grille[i][j][k-1].p > 0.) && (grille[i][j][k-1].rho > 0.) )
+	{
+		kk=k-1;
+		return grille[i][j][k-1];
+	}
+	else{
+		
+		target=false;
+		return c;
+	}
+}
+
+Cellule Grille::voisin_mixt(const Cellule &c, const int &i, const int &j, const int &k,  bool &target, int &ii, int &jj, int &kk){
+	
+	double dir = 0.; 
+	dir = std::min(std::min(std::min(std::min(std::min(c.kappai, c.kappaj), c.kappak), grille[i-1][j][k].kappai), grille[i][j-1][k].kappaj), grille[i][j][k-1].kappak);
+
+	
+	if ( (std::abs(dir - c.kappai)<eps) && ( (c.alpha >= grille[i+1][j][k].alpha) || (std::abs(c.alpha - grille[i+1][j][k].alpha)<eps) ) 
+		 && (grille[i+1][j][k].p > 0.) && (grille[i+1][j][k].rho > 0.) )
+	{
+		ii= i+1;
+		return grille[i+1][j][k];
+	}
+	else if ((std::abs(dir - c.kappaj)<eps) && ((c.alpha >= grille[i][j+1][k].alpha) || (std::abs(c.alpha - grille[i][j+1][k].alpha)<eps))                     && (grille[i][j+1][k].p > 0.) && (grille[i][j+1][k].rho > 0.) )
+	{
+		jj= j+1;
+		return grille[i][j+1][k];
+	}
+	else if( (std::abs(dir - c.kappak)<eps) && ((c.alpha >= grille[i][j][k+1].alpha) || (std::abs(c.alpha - grille[i][j][k+1].alpha)<eps))
+		     && (grille[i][j][k+1].p > 0.) && (grille[i][j][k+1].rho > 0.) )
+	{
+		kk=k+1;
+		return grille[i][j][k+1];
+	}
+	else if ((std::abs(dir - grille[i-1][j][k].kappai)<eps) && ((c.alpha >= grille[i-1][j][k].alpha) || (std::abs(c.alpha - grille[i-1][j][k].alpha)<eps)) && (grille[i-1][j][k].p > 0.) && (grille[i-1][j][k].rho > 0.) )
+	{
+		ii= i-1;
+		return grille[i-1][j][k];
+	}
+	else if ( (std::abs(dir - grille[i][j-1][k].kappaj)<eps) && ((c.alpha >= grille[i][j-1][k].alpha) || (std::abs(c.alpha - grille[i][j-1][k].alpha)<eps)) && (grille[i][j-1][k].p > 0.) && (grille[i][j-1][k].rho > 0.) )
+	{
+		jj= j-1;
+		return grille[i][j-1][k];
+	}
+	else if ((std::abs(dir - grille[i][j][k-1].kappak)<eps) && ((c.alpha >= grille[i][j][k-1].alpha) || (std::abs(c.alpha - grille[i][j][k-1].alpha)<eps)) && (grille[i][j][k-1].p > 0.) && (grille[i][j][k-1].rho > 0.) )
+	{
+		kk= k-1;
+		return grille[i][j][k-1];
+	}
+	else if ( (std::abs(dir - c.kappai)<eps) || ( (c.alpha >= grille[i+1][j][k].alpha) || (std::abs(c.alpha - grille[i+1][j][k].alpha)<eps) ) 
+		&& (grille[i+1][j][k].p > 0.) && (grille[i+1][j][k].rho > 0.) )
+	{
+		ii= i+1;
+		return grille[i+1][j][k];
+	}
+	else if ((std::abs(dir - c.kappaj)<eps) || ((c.alpha >= grille[i][j+1][k].alpha) || (std::abs(c.alpha - grille[i][j+1][k].alpha)<eps))                     && (grille[i][j+1][k].p > 0.) && (grille[i][j+1][k].rho > 0.) )
+	{
+		jj= j+1;
+		return grille[i][j+1][k];
+	}
+	else if( (std::abs(dir - c.kappak)<eps) || ((c.alpha >= grille[i][j][k+1].alpha) || (std::abs(c.alpha - grille[i][j][k+1].alpha)<eps))
+		&& (grille[i][j][k+1].p > 0.) && (grille[i][j][k+1].rho > 0.) )
+	{
+		kk=k+1;
+		return grille[i][j][k+1];
+	}
+	else if ((std::abs(dir - grille[i-1][j][k].kappai)<eps) || ((c.alpha >= grille[i-1][j][k].alpha) || (std::abs(c.alpha - grille[i-1][j][k].alpha)<eps)) && (grille[i-1][j][k].p > 0.) && (grille[i-1][j][k].rho > 0.) )
+	{
+		ii= i-1;
+		return grille[i-1][j][k];
+	}
+	else if ( (std::abs(dir - grille[i][j-1][k].kappaj)<eps) || ((c.alpha >= grille[i][j-1][k].alpha) || (std::abs(c.alpha - grille[i][j-1][k].alpha)<eps)) && (grille[i][j-1][k].p > 0.) && (grille[i][j-1][k].rho > 0.) )
+	{
+		jj= j-1;
+		return grille[i][j-1][k];
+	}
+	else if ((std::abs(dir - grille[i][j][k-1].kappak)<eps) || ((c.alpha >= grille[i][j][k-1].alpha) || (std::abs(c.alpha - grille[i][j][k-1].alpha)<eps)) && (grille[i][j][k-1].p > 0.) && (grille[i][j][k-1].rho > 0.) )
+	{
+		kk= k-1;
+		return grille[i][j][k-1];
+	}
+	else{
+		
+		target=false;
+		return c;
+	}
+}
+
+Cellule Grille::voisin(const Cellule &c, const int &i, const int &j,  const int &k ,int & ii, int &jj, int &kk) {
+	
+	double dir = i; 
+	
+	dir = std::min(std::min(std::min(std::min(std::min(c.kappai, c.kappaj), c.kappak), grille[i-1][j][k].kappai), grille[i][j-1][k].kappaj), grille[i][j][k-1].kappak);
+	
+	if ( (std::abs(dir - c.kappai)<eps)  && (grille[i+1][j][k].p > 0.) && (grille[i+1][j][k].rho > 0.) )
+	{
+		ii=i+1;
+		return grille[i+1][j][k];
+	}
+	else if ( (std::abs(dir - c.kappaj)<eps) && (grille[i][j+1][k].p > 0.) && (grille[i][j+1][k].rho > 0.) )
+	{
+		jj=j+1;
+		return grille[i][j+1][k];
+	}
+	else if ( (std::abs(dir - c.kappak)<eps) && (grille[i][j][k+1].p > 0.) && (grille[i][j][k+1].rho > 0.) )
+	{
+		kk=k+1;
+		return grille[i][j][k+1];
+	}
+	else if ( (std::abs(dir - grille[i-1][j][k].kappai)) && (grille[i-1][j][k].p > 0.) && (grille[i-1][j][k].rho > 0.) )
+	{
+		ii=i-1;
+		return grille[i-1][j][k];
+	}
+	else if ( (std::abs(dir - grille[i][j-1][k].kappaj)) && (grille[i][j-1][k].p > 0.) && (grille[i][j-1][k].rho > 0.) )
+	{
+		jj=j-1;
+		return grille[i][j-1][k];
+	}
+	else if( (std::abs(dir - grille[i][j][k-1].kappak)) && (grille[i][j][k-1].p > 0.) && (grille[i][j][k-1].rho > 0.) )
+	{
+		kk=k-1;
+		return grille[i][j][k-1];
+	}
+	else if(std::abs(dir - c.kappai)<eps)
+	{
+		ii=i+1;
+		return grille[i+1][j][k];
+	}
+	else if (std::abs(dir - c.kappaj)<eps)
+	{
+		jj=j+1;
+		return grille[i][j+1][k];
+	}
+	else if (std::abs(dir - c.kappak)<eps)
+	{
+		kk=k+1;
+		return grille[i][j][k+1];
+	}
+	else if (std::abs(dir - grille[i-1][j][k].kappai))
+	{
+		ii=i-1;
+		return grille[i-1][j][k];
+	}
+	else if(std::abs(dir - grille[i][j-1][k].kappaj))
+	{
+		jj=j-1;
+		return grille[i][j-1][k];
+	}
+	else 
+	{
+		kk=k-1;
+		return grille[i][j][k-1];
+	}
+	
+}
+Cellule Grille::cible(const Cellule &c, const int &i, const int &j, const int &k, int & ii, int &jj, int &kk){
+	
+	bool target = true;
+	Cellule cell_cible;
+	cell_cible = voisin_fluide(c, i,j,k, target, ii, jj, kk);
+	if(target){ 
+		return cell_cible;
+	}
+	else{
+		target = true;
+		int l=i, m=j, n=k;
+		cell_cible= voisin_mixt(c, i,j,k, target, l, m, n);
+		ii=l; jj=m; kk=n;
+		if (target && ii>=marge && ii<= Nx+marge && jj>=marge && jj<= Ny+marge && kk>=marge && kk<= Nz+marge) 
+		{			
+			return cible(cell_cible, l,m,n, ii, jj, kk); 
+		}
+		else{ cout<<" voisin "<<endl; return voisin(c, i,j,k, ii, jj, kk); }
+	}
+	
+}
+
 #endif

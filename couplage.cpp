@@ -154,7 +154,6 @@ U_p = U_{p} + E_{pg}, \quad  \quad U_g = U_{g} + E_{gp} \f}
 void Grille:: Mixage(){
 	
 	Cellule cp, cg;
-	
 	for(int i=marge;i<Nx+marge;i++){
 		for(int j=marge;j<Ny+marge;j++){ 
 			for(int k=marge;k<Nz+marge;k++){
@@ -1028,7 +1027,7 @@ void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,i
 - Construction du vecteur des Box contenant les prismes ayant comme bases T3d_prev et T3d_n. Boucle sur les prismes ainsi obtenus:
 - On cherche l'index de la cellule qui contient T3d_prev(le triangle est enti&egrave;rement contenu dans une cellule) et celui de la cellule qui contient T3d_n(le triangle est enti&egrave;rement contenu dans une cellule).
 - Si le prisme est contenu dans une seule cellule on calcule le volume du prisme via la fonction volume_prisme(const Triangle_3&,const Triangle_3&) et la quantit&eacute; balay&eacute;e par la face (\a Particule.triangles) est donn&eacute;e par : \f$  volume\_prisme*U^n/volume\_cellule \f$. Sinon,
- - On liste les cellules fluide intersect&eacute;es par le prisme via la fonction cells_intersection_face(int& ,int& ,int& ,int& ,int& ,int& , std::vector<Bbox>& s, std::vector<Cellule>& s).
+ - On liste les cellules fluide intersect&eacute;es par le prisme via la fonction \a cells_intersection_face(int& ,int& ,int& ,int& ,int& ,int& , std::vector<Bbox>& s, std::vector<Cellule>& s).
  - On d&eacute;coupe le prisme en  t&eacute;tra&egrave;dres: soit  \f$ T1(A_1,B_1,C_1)\f$  et \f$ T2(A_2,B_2,C_2)\f$  les bases du prisme, on d&eacute;finit les points: \f$ A = \frac{1}{4}(B_1 + B_2 + C_1 +C_2) \f$ , \f$ B = \frac{1}{4}(A_1 + A_2 + C_1 +C_2) \f$ et \f$ C = \frac{1}{4}(A_1 + A_2 + B_1 + B_2 ) \f$. Les t&eacute;tra&egrave;dres d&eacute;coupant \f$ A_1,B_1,C_1 A_2,B_2,C_2 \f$ sont: \f$ A_1 A_2 C B \f$, \f$ B_1 B_2 A C \f$, \f$ C_1 C_2 B A \f$, \f$ A_1 C C_1 B \f$, \f$ B_1 A C_1 C \f$, \f$ A C B C_1 \f$, \f$ A B C C_2 \f$, \f$ A B_2 C_2 C \f$, \f$ A_1 B_1 C_1 C \f$, \f$ A_2 C_2 C B \f$, \f$ A_2 B_2 C C_2. \f$
  - Intersections de ces  t&eacute;tra&egrave;dres avec les cellules fluide intersect&eacute;es par le prisme via la fonction intersect_cube_tetrahedron(Bbox&, Tetrahedron&). La quantité balayée par la face est donnée par la somme des: \f$  volume\_{intersection\_cellule\_tetrahedre}*U^n/volume\_cellule. \f$ \n
 
@@ -1226,6 +1225,7 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 				c.delta_w[3] += volume*Cells[iter].impz0/volume_cel; 
 				c.delta_w[4] += volume*Cells[iter].rhoE0/volume_cel;
 				grille[in1][jn1][kn1] = c;
+				
 			}
 			//vol_test += volume;
 		 } // boucle sur les box_cells
@@ -1620,3 +1620,62 @@ void Grille::Swap_3d(const double dt, Solide& S){
 	}
 }
 
+
+void Grille::Mixage_cible(){
+	
+	bool test_fini = true;
+	for(int i=marge;i<Nx+marge;i++){
+		for(int j=marge;j<Ny+marge;j++){ 
+			for(int k=marge;k<Nz+marge;k++){
+				Cellule cp = grille[i][j][k];
+				int ii=i, jj=j, kk=k;
+				if((cp.alpha>epsa || cp.p<0. || cp.rho<0.) && abs(cp.alpha-1.)>eps){
+					Cellule cg = cible(grille[i][j][k], i, j,k, ii,jj,kk);
+
+					cp.Mrho =  (cg.rho - cp.rho)*(1-cg.alpha)/(2. - cp.alpha -cg.alpha);
+					cp.Mimpx = (cg.impx - cp.impx)*(1-cg.alpha)/(2. - cp.alpha -cg.alpha);
+					cp.Mimpy = (cg.impy - cp.impy)*(1-cg.alpha)/(2. - cp.alpha -cg.alpha);
+					cp.Mimpz = (cg.impz - cp.impz)*(1-cg.alpha)/(2. - cp.alpha -cg.alpha);
+					cp.MrhoE = (cg.rhoE - cp.rhoE)*(1-cg.alpha)/(2. - cp.alpha -cg.alpha);
+					
+					cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha -cg.alpha);
+					cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha -cg.alpha);
+					cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha -cg.alpha);
+					cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha -cg.alpha);
+					cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha -cg.alpha);
+					
+					cp.rho += cp.Mrho;
+					cp.impx += cp.Mimpx;
+					cp.impy += cp.Mimpy;
+					cp.impz += cp.Mimpz;
+					cp.rhoE += cp.MrhoE;
+					cp.u = cp.impx/cp.rho;
+					cp.v = cp.impy/cp.rho;
+					cp.w = cp.impz/cp.rho;
+					cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
+					
+					cg.rho += cg.Mrho;
+					cg.impx += cg.Mimpx;
+					cg.impy += cg.Mimpy;
+					cg.impz += cg.Mimpz;
+					cg.rhoE += cg.MrhoE;
+					cg.u = cg.impx/cg.rho;
+					cg.v = cg.impy/cg.rho;
+					cg.w = cg.impz/cg.rho;
+					cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
+
+					grille[i][j][k] = cp;
+					grille[ii][jj][kk] = cg;
+					
+					if(grille[i][j][k].p<0. || grille[i][j][k].rho<0.){
+						test_fini = false;
+					}
+				}
+			}
+		}
+	}
+	if(!test_fini){
+		cout<<" non test_fini "<<endl;
+		Mixage_cible();
+	}
+}
