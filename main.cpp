@@ -206,8 +206,8 @@ int main(){
 	S.Init("poutre.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	Grille Fluide;
 	Fluide.Init();
-	//Fluide.Parois(S, dt);
-	Fluide.Parois_particles(S,dt);
+	Fluide.Parois(S, dt);
+	//Fluide.Parois_particles(S,dt);
 	Fluide.BC();
 	
 	
@@ -277,8 +277,8 @@ int main(){
 		user_time3.start();
 		S.Solve_vitesse(dt);
 		user_time4.start();
-		//Fluide.Parois(S,dt);
-		Fluide.Parois_particles(S,dt);
+		Fluide.Parois(S,dt);
+		//Fluide.Parois_particles(S,dt);
 		temps_intersections += CGAL::to_double(user_time4.time());
 		user_time4.reset();
 		//S.Affiche();
@@ -299,8 +299,8 @@ int main(){
 				Sk = S ; 
 				Sk.Solve_position(dt);
 				Sk.Solve_vitesse(dt);
-				//Fluide.Parois(Sk,dt);
-				Fluide.Parois_particles(S,dt);
+				Fluide.Parois(Sk,dt);
+				//Fluide.Parois_particles(S,dt);
 				erreur = Error(Sk, Sk_prev);
 				//cout<<" erreur := "<<erreur<<endl;
 			}//fin boucle 
@@ -319,10 +319,10 @@ int main(){
 		//cout<<"Triangles en n "<<n0<<" Triangles en n+1 "<<n1<<" Triangles sous maillage "<<m<<endl;
 		Fluide.Modif_fnum(dt);
 		//Fluide.affiche("modif_fnum");
-		//Fluide.Mixage();
-		cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
-		Fluide.Mixage_cible(); //test 27/07
-		cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
+		Fluide.Mixage();
+		//cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
+		//Fluide.Mixage_cible(); //test 27/07
+		//cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
 		//Fluide.affiche("mixage");
 		Fluide.Fill_cel(S);
 		//Fluide.affiche("fill_cell");
