@@ -123,17 +123,6 @@ void Grille::Modif_fnum(const double dt){
 					c.w = c.impz/c.rho;
 					c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2. - c.rho*c.w*c.w/2.);
 				}
-// 				else {
-// 					c.rho = 0.;
-// 					c.impx = 0.;
-// 					c.impy = 0.;
-// 					c.impz = 0.;
-// 					c.rhoE = 0.;
-// 					c.u = 0.;
-// 					c.v = 0.;
-// 					c.w = 0.;
-// 					c.p = 0.;;
-// 				}
 				grille[i][j][k] = c;      
 			}
 		}
@@ -528,6 +517,9 @@ void Grille::Fill_cel(Solide& S){
 				Triangle_3 Tri;
 				c = grille[i][j][k];
 				if((std::abs(c.alpha-1.)<eps)){
+					//test 18 septembre 2013
+					if((std::abs(c.rho)>eps)){cout<<"cellule solide non vide "<< c.rho<<endl;}
+					//fin test 18 septembre 2013
 				  Point_3 center_cell(c.x, c.y, c.z);
 				  int nbx=0, nby=0,nbz=0;
 				  Point_3 projete(0.,0.,0.); //Projete sur la face la plus proche
@@ -1639,11 +1631,29 @@ void Grille::Swap_3d(const double dt, Solide& S){
 		}
 	}
 }
-
-
+/*!
+* \fn void Grille:: Mixage_cible()
+*  \brief M&eacute;lange conservatif de petites cellules coup&eacute;es.
+*  \details On d&eacute;finit une petite cellule tel que \f$ alpha > epsa \f$ (\a Cellule.alpha fraction occup&eacute;e par du solide dans la cellule, et \a epsa: fraction de cellule coup&eacute;e d&eacute;finit dans parametres.hpp ). Afin ne pas modifier le pas de temps tout en garantissant la condition de CFL, les petites cellules sont fusionn&eacute;es avec leurs voisines.
+	*	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
+	*	\return void
+	*/
 void Grille::Mixage_cible(){
 	
-	bool test_fini = true;
+	for(int i=marge;i<Nx+marge;i++){
+		for(int j=marge;j<Ny+marge;j++){ 
+			for(int k=marge;k<Nz+marge;k++){
+				
+					grille[i][j][k].cible_alpha = 0.;
+					grille[i][j][k].cible_rho = 0.;
+					grille[i][j][k].cible_impx = 0.;
+					grille[i][j][k].cible_impy = 0.;
+					grille[i][j][k].cible_impz = 0.;
+					grille[i][j][k].cible_rhoE = 0.;
+			}
+		}
+	}
+	
 	for(int i=marge;i<Nx+marge;i++){
 		for(int j=marge;j<Ny+marge;j++){ 
 			for(int k=marge;k<Nz+marge;k++){
@@ -1651,49 +1661,75 @@ void Grille::Mixage_cible(){
 				int ii=i, jj=j, kk=k;
 				if((cp.alpha>epsa || cp.p<0. || cp.rho<0.) && abs(cp.alpha-1.)>eps){
 					Cellule cg = cible(grille[i][j][k], i, j,k, ii,jj,kk);
-
-					cp.Mrho =  (cg.rho - cp.rho)*(1-cg.alpha)/(2. - cp.alpha -cg.alpha);
-					cp.Mimpx = (cg.impx - cp.impx)*(1-cg.alpha)/(2. - cp.alpha -cg.alpha);
-					cp.Mimpy = (cg.impy - cp.impy)*(1-cg.alpha)/(2. - cp.alpha -cg.alpha);
-					cp.Mimpz = (cg.impz - cp.impz)*(1-cg.alpha)/(2. - cp.alpha -cg.alpha);
-					cp.MrhoE = (cg.rhoE - cp.rhoE)*(1-cg.alpha)/(2. - cp.alpha -cg.alpha);
 					
-					cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha -cg.alpha);
-					cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha -cg.alpha);
-					cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha -cg.alpha);
-					cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha -cg.alpha);
-					cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha -cg.alpha);
+					cg.cible_alpha += (1.-cp.alpha);
+					cg.cible_rho  += (1.-cp.alpha)*cp.rho;
+					cg.cible_impx += (1.-cp.alpha)*cp.impx;
+					cg.cible_impy += (1.-cp.alpha)*cp.impy;
+					cg.cible_impz += (1.-cp.alpha)*cp.impz;
+					cg.cible_rhoE += (1.-cp.alpha)*cp.rhoE;
 					
-					cp.rho += cp.Mrho;
-					cp.impx += cp.Mimpx;
-					cp.impy += cp.Mimpy;
-					cp.impz += cp.Mimpz;
-					cp.rhoE += cp.MrhoE;
-					cp.u = cp.impx/cp.rho;
-					cp.v = cp.impy/cp.rho;
-					cp.w = cp.impz/cp.rho;
-					cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
+					cp.cible_i= ii;
+					cp.cible_j = jj;
+					cp.cible_k = kk;
 					
-					cg.rho += cg.Mrho;
-					cg.impx += cg.Mimpx;
-					cg.impy += cg.Mimpy;
-					cg.impz += cg.Mimpz;
-					cg.rhoE += cg.MrhoE;
-					cg.u = cg.impx/cg.rho;
-					cg.v = cg.impy/cg.rho;
-					cg.w = cg.impz/cg.rho;
-					cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-
 					grille[i][j][k] = cp;
 					grille[ii][jj][kk] = cg;
-					
-					if(grille[i][j][k].p<0. || grille[i][j][k].rho<0.){
-						test_fini = false;
-					}
+
+				}
+				else{
+					grille[i][j][k].cible_i = i;
+					grille[i][j][k].cible_j = j;
+					grille[i][j][k].cible_k = k;
 				}
 			}
 		}
 	}
+	
+	for(int i=marge;i<Nx+marge;i++){
+		for(int j=marge;j<Ny+marge;j++){ 
+			for(int k=marge;k<Nz+marge;k++){
+				Cellule cp = grille[i][j][k];
+
+				if(std::abs(cp.cible_alpha)>0.){
+					cp.rho = ((1.-cp.alpha)*cp.rho + cp.cible_rho)/((1.-cp.alpha) + cp.cible_alpha);
+					cp.impx = ((1.-cp.alpha)*cp.impx + cp.cible_impx)/((1.-cp.alpha) + cp.cible_alpha);
+					cp.impy = ((1.-cp.alpha)*cp.impy + cp.cible_impy)/((1.-cp.alpha) + cp.cible_alpha);
+					cp.impz = ((1.-cp.alpha)*cp.impz + cp.cible_impz)/((1.-cp.alpha) + cp.cible_alpha);
+					cp.rhoE = ((1.-cp.alpha)*cp.rhoE + cp.cible_rhoE)/((1.-cp.alpha) + cp.cible_alpha);
+					cp.u = cp.impx/cp.rho;
+					cp.v = cp.impy/cp.rho;
+					cp.w = cp.impz/cp.rho;
+					cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
+					grille[i][j][k] = cp;
+				}
+			}
+		}
+	}
+	bool test_fini = true;
+	for(int i=marge;i<Nx+marge;i++){
+		for(int j=marge;j<Ny+marge;j++){ 
+			for(int k=marge;k<Nz+marge;k++){
+				Cellule cp = grille[i][j][k];
+				Cellule cible=grille[cp.cible_i][cp.cible_j][cp.cible_k];
+					cp.rho = cible.rho;
+					cp.impx = cible.impx;
+					cp.impy = cible.impy;
+					cp.impz = cible.impz;
+					cp.rhoE = cible.rhoE;
+					cp.u = cp.impx/cp.rho;
+					cp.v = cp.impy/cp.rho;
+					cp.w = cp.impz/cp.rho;
+					cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
+					grille[i][j][k] = cp;
+					
+					if(grille[i][j][k].p<0. || grille[i][j][k].rho<0.){
+						test_fini = false;
+					}
+			}
+		}
+	}
+	
 	if(!test_fini){
 		cout<<" non test_fini "<<endl;
 		Mixage_cible();

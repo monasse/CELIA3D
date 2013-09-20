@@ -189,6 +189,32 @@ double rm[5];        //!< Variables pour le limiteur de flux TVD d&eacute;centre
      * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
 		double phi_v;  //!< Flux &agrave; la parois. 
+		
+		double cible_alpha;      //!< Terme de mixage de densit&eacute; pour les petites cellules.  
+		/*! 
+		* \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
+		*/
+		double cible_rho;      //!< Terme de mixage de densit&eacute; pour les petites cellules.  
+		/*! 
+		* \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
+		*/
+		double cible_impx;     //!< Terme de mixage d'impulsion pour les petites cellules.
+		/*! 
+		* \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
+		*/
+		double cible_impy;     //!< Terme de mixage d'impulsion pour les petites cellules.
+		/*! 
+		* \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
+		*/
+		double cible_impz;     //!< Terme de mixage d'impulsion pour les petites cellules.
+		/*! 
+		* \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
+		*/
+		double cible_rhoE;     //!< Terme de mixage d'&eacute;nergie pour les petites cellules.
+		
+		double cible_i;      //!< Index de la cellule cible 
+		double cible_j;
+		double cible_k;
 	
 	double xi;      //!< Position du centre de la face effective. 
   double yj;

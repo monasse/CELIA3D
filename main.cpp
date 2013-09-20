@@ -209,7 +209,11 @@ int main(){
 	Fluide.Parois(S, dt);
 	//Fluide.Parois_particles(S,dt);
 	Fluide.BC();
+	double volume_initial= 0.;
 	
+	for (int count=0; count<S.size(); count++){
+		volume_initial +=S.solide[count].volume();
+	}
 	
 	int iter=0;	
 	clock_t start,end;
@@ -242,7 +246,11 @@ int main(){
 	int nb_iter_implicit=0;
 	CGAL::Timer user_time, user_time2, user_time3,user_time4,user_time5;
 	double temps_flux=0., temps_solide_f_int=0., temps_couplage=0., temps_swap=0., temps_intersections=0., temps_semi_implicit=0.;
-	//for (int n=0; (t<T) && n<4; n++){
+	double variation_masse= 0.;
+	double variation_energy= 0.;
+	double variation_volume = 0.;
+	double volume_solide = 0.;
+	
 	for (int n=0; (t<T) && n<Nmax; n++){
 		
 		if(t>next_timp){
@@ -254,9 +262,8 @@ int main(){
 		}
 		cout<<"iteration="<<n<< " dt="<<dt<<" t="<<t<<endl;
 		
-	  //cout<<"Energie: "<< Fluide.Energie()+S.Energie() << " Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 		cout<<"Energie Fluide: "<< Fluide.Energie() << " Energie Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
-		ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S <<" "<<Fluide.Masse() - masse <<endl;
+		ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S <<" "<<Fluide.Masse() - masse <<"  "<< volume_solide - volume_initial<<endl;
 		center<< t << " "<<S.solide[nb_part-1].x0.operator[](0) + S.solide[nb_part-1].Dx.operator[](0) << " "<<S.solide[nb_part-1].x0.operator[](1) + S.solide[nb_part-1].Dx.operator[](1) << " "<<S.solide[nb_part-1].x0.operator[](2) + S.solide[nb_part-1].Dx.operator[](2) <<endl;
 
 		
@@ -268,14 +275,10 @@ int main(){
 		temps_flux += CGAL::to_double(user_time2.time());
 		user_time2.reset();
 		//Fluide.affiche("Solve");
-		S.Forces_internes();
-		temps_solide_f_int += CGAL::to_double(user_time3.time());
-		user_time3.reset();
 		if(explicite){ //algo de couplage explicit
 		Fluide.Forces_fluide(S,dt);
 		S.Solve_position(dt);
-		user_time3.start();
-		S.Solve_vitesse(dt);
+		//S.Solve_vitesse(dt);
 		user_time4.start();
 		Fluide.Parois(S,dt);
 		//Fluide.Parois_particles(S,dt);
@@ -298,7 +301,6 @@ int main(){
 				Sk_prev = Sk; 
 				Sk = S ; 
 				Sk.Solve_position(dt);
-				Sk.Solve_vitesse(dt);
 				Fluide.Parois(Sk,dt);
 				//Fluide.Parois_particles(S,dt);
 				erreur = Error(Sk, Sk_prev);
@@ -311,18 +313,21 @@ int main(){
 			nb_iter_implicit += k;
 			//semi-implicit	
 		}
+		user_time3.start();
+		S.Forces_internes();
+		temps_solide_f_int += CGAL::to_double(user_time3.time());
+		user_time3.reset();
+		S.Solve_vitesse(dt);
 		user_time.start();
 		Fluide.Swap_2d(dt,S);
-		//cout << "Temps swap: " << user_time.time() << " seconds." << endl;
 		temps_swap += CGAL::to_double(user_time.time());
 		user_time.reset();
-		//cout<<"Triangles en n "<<n0<<" Triangles en n+1 "<<n1<<" Triangles sous maillage "<<m<<endl;
 		Fluide.Modif_fnum(dt);
 		//Fluide.affiche("modif_fnum");
+		cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
 		Fluide.Mixage();
-		//cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
-		//Fluide.Mixage_cible(); //test 27/07
-		//cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
+		//Fluide.Mixage_cible(); //test 2 sept. 2013
+		cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
 		//Fluide.affiche("mixage");
 		Fluide.Fill_cel(S);
 		//Fluide.affiche("fill_cell");
@@ -331,9 +336,17 @@ int main(){
 		//temps_iter<< n << " "<<t<<" "<<dt<<endl;
 		t+= dt;
 		iter++;
+		variation_masse += Fluide.Masse() - masse;
+		variation_energy += Fluide.Energie()+S.Energie()-E0;
+	  volume_solide = 0.;
+		for (int count=0; count<S.size(); count++){
+			volume_solide +=S.solide[count].volume();
+		}
+		Fluide.affiche();
+		cout<<"volume solide particules"<<volume_solide<<endl;
+		variation_volume += volume_solide - volume_initial;
 	}
 	end=clock();
-	
 	Fluide.Impression(kimp);
 	S.Impression(kimp);
 	
@@ -346,8 +359,14 @@ int main(){
 	temps_iter<<"Temps calcul intersections " << temps_intersections<< endl; 
 	temps_iter<<"Temps semi-implicit" << temps_semi_implicit<< endl; 
 	temps_iter<<"Temps couplage " << temps_swap + temps_intersections + temps_semi_implicit<< endl; 
+	temps_iter<<" variation masse "<< variation_masse<<endl;
+	temps_iter<<" variation energy "<<variation_energy<<endl;
+	temps_iter<<" variation volume "<<variation_volume<<endl;
 	cout<<"Nb iter= "<< iter<<endl;    
 	cout <<"Temps calcul " <<(double) (end-start)/CLOCKS_PER_SEC << endl;  
+	cout<<" variation masse "<< variation_masse<<endl;
+	cout<<" variation energy "<<variation_energy<<endl;
+	cout<<" variation volume "<<variation_volume<<endl;
 
 	return 0;
 }
