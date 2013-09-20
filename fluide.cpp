@@ -549,7 +549,7 @@ void Grille:: affiche()
 				for(int k=0;k<Nz+2*marge;k++){ 
 								vol +=(dx*dy*dz)*grille[i][j][k].alpha;
 								variation_delta_w_rho +=grille[i][j][k].delta_w[0];
-								variation_volume += (grille[i][j][k].alpha - grille[i][j][k].alpha1)*grille[i][j][k].rho1;
+								variation_volume += (grille[i][j][k].alpha - grille[i][j][k].alpha0)*grille[i][j][k].rho1;
 								}
             }
         }
