@@ -302,8 +302,8 @@ int main(){
 				Sk_prev = Sk; 
 				Sk = S ; 
 				Sk.Solve_position(dt);
-				Fluide.Parois(Sk,dt);
-				//Fluide.Parois_particles(S,dt);
+				//Fluide.Parois(Sk,dt);
+				Fluide.Parois_particles(S,dt);
 				erreur = Error(Sk, Sk_prev);
 				//cout<<" erreur := "<<erreur<<endl;
 			}//fin boucle 

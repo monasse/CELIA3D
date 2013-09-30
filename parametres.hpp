@@ -41,9 +41,9 @@ const double X0 = 0;              //pozition de l'origine
 const double Y0 = 0;
 const double Z0 = 0;
 
-const int Nx =50;                 //nombre de cellules de fluide selon x
-const int Ny =25;                 //nombre de cellules de fluide selon y
-const int Nz =25;                 //nombre de cellules de fluide selon z
+const int Nx =100;                 //nombre de cellules de fluide selon x
+const int Ny =50;                 //nombre de cellules de fluide selon y
+const int Nz =50;                 //nombre de cellules de fluide selon z
 
 const double domainex = 4.;            //Largeur du domaine fluide selon x
 const double domainey = 2.;          //Largeur du domaine fluide selon y
