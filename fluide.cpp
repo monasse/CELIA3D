@@ -554,7 +554,7 @@ void Grille:: affiche()
             }
         }
     
-    cout<<"variation rho:= "<<variation_delta_w_rho - variation_volume <<endl;
+    cout<<"variation rho:= "<< variation_delta_w_rho - variation_volume <<endl;
 
     cout<<"volume solide grille:= "<<vol<<endl;
 
@@ -797,7 +797,7 @@ void Grille::melange(const double dt){
 			for(int k=marge;k<Nz+marge;k++){
 				Cellule c = grille[i][j][k];
 				if(c.rho<0.){
-					cout << "densite negative en : " << c.x << " " << c.y << " " << c.z <<" rho " << c.rho << endl;
+					//cout << "densite negative en : " << c.x << " " << c.y << " " << c.z <<" rho " << c.rho << endl;
 					c.rho = c.rho0;
 					c.u = c.impx0/c.rho;
 					c.v = c.impy0/c.rho;
@@ -809,7 +809,7 @@ void Grille::melange(const double dt){
 					c.rhoE = c.rhoE0;
 				}
 				if(c.p<0.){
-					cout << "pression negative en : " << c.x << " " << c.y << " " << c.z << " p " << c.p << endl;
+					//cout << "pression negative en : " << c.x << " " << c.y << " " << c.z << " p " << c.p << endl;
 					c.rho = c.rho0;
 					c.u = c.impx0/c.rho;
 					c.v = c.impy0/c.rho;

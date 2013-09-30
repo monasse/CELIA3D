@@ -413,7 +413,7 @@ void Grille::Parois(Solide& S,double dt) {
 	}	
 	//cout << "temps Parois : " << user_time.time() - time << " seconds." << endl;
 	user_time.reset();
-	cout<<"volume solide := "<<volume_s<<endl;
+	//cout<<"volume solide := "<<volume_s<<endl;
 }
 
 
@@ -460,6 +460,32 @@ double intersect_cube_tetrahedron(Bbox& cube, Tetrahedron& Tet){
 				Points_intersect.push_back(Tet.operator[](i));
 			}
 		}
+		
+/*
+		Point_3 p1(cube.xmin(),cube.ymin(),cube.zmin());
+		if(inside_tetra(Tet,p1)) {Points_intersect.push_back(p1);}
+		
+		Point_3 p2(cube.xmax(),cube.ymax(),cube.zmax());
+		if(inside_tetra(Tet,p2)) {Points_intersect.push_back(p2);}
+		
+		Point_3 p3(cube.xmax(),cube.ymin(),cube.zmin());
+		if(inside_tetra(Tet,p3)) {Points_intersect.push_back(p3);}
+		
+		Point_3 p4(cube.xmax(),cube.ymin(),cube.zmax());
+		if(inside_tetra(Tet,p4)) {Points_intersect.push_back(p4);}
+		
+		Point_3 p5(cube.xmax(),cube.ymax(),cube.zmin());
+		if(inside_tetra(Tet,p5)) {Points_intersect.push_back(p5);}
+		
+		Point_3 p6(cube.xmin(),cube.ymax(),cube.zmin());
+		if(inside_tetra(Tet,p6)) {Points_intersect.push_back(p6);}
+		
+		Point_3 p7(cube.xmin(),cube.ymax(),cube.zmax());
+		if(inside_tetra(Tet,p7)) {Points_intersect.push_back(p7);}
+		
+		Point_3 p8(cube.xmin(),cube.ymin(),cube.zmax());
+		if(inside_tetra(Tet,p8)) {Points_intersect.push_back(p8);}*/
+
 		
 		triangTet[0]= Triangle_3(Tet.operator[](0), Tet.operator[](1), Tet.operator[](2));
 		triangTet[1]= Triangle_3(Tet.operator[](0), Tet.operator[](2), Tet.operator[](3));
@@ -518,7 +544,7 @@ double intersect_cube_tetrahedron(Bbox& cube, Tetrahedron& Tet){
 
 
 /*!
- * \fn void Grille::Parois(Solide& S,double dt) 
+* \fn void Grille::Parois_particles(Solide& S,double dt) 
  *\brief Intersection de la grille fluide avec le solide.
  \details Intersection de la Grille fluide avec le Solide et calcul des diff&eacute;rents quantit&eacute;s d'int&eacute;r&ecirc;t: occupation du Solide dans la Cellule : \a Cellule.alpha, occupation des faces de la cellule par le solide: \a Cellule.kappai, \a Cellule.kappaj et \a Cellule.kappak. Remplissage des vecteurs : \n
 - \a Particule.Points_interface: points d'intersections de la cellule avec les faces triangulaires du solide; \n
@@ -612,7 +638,11 @@ void Grille::Parois_particles(Solide& S,double dt) {
 	int taille = box_grille.size();
 	cout<<"the grille size is : "<<taille<<endl;
 	cout<<"nombres de particules : "<<nb_particules<<endl;
-	
+	int nb_triangles=0.;
+	for(int iter=0; iter<nb_particules; iter++){
+		nb_triangles += S.solide[iter].triangles.size();
+	}
+	cout<<"nombres de traiangles : "<<nb_triangles<<endl;
 	
 	const double eps_box = 0.1;
 	std::vector<Bbox> solide(nb_particules);
@@ -918,6 +948,125 @@ void Grille::Parois_particles(Solide& S,double dt) {
 	}	
 	//cout << "temps Parois : " << user_time.time() - time << " seconds." << endl;
 	user_time.reset();
-	cout<<"volume solide := "<<volume_s<<endl;
+	cout<<"volume solide parois := "<<volume_s<<endl;
 }
+
+//test septembre 2013
+//cout<<"volume intersection solide decomposition en tetra avec la grille fluide "<<endl;
+//Fluide.Parois_tetra(S,dt);
+// void Grille::Parois_tetra(Solide& S,double dt) {
+// 	
+// 	const double eps_relat = numeric_limits<double>::epsilon( );
+// 	
+// 	std::vector<Bbox> box_grille;
+// 	const int nx_m=Nx+2*marge;
+// 	const int ny_m=Ny+2*marge;
+// 	const int nz_m=Nz+2*marge;
+// 	const int Ns = (nx_m+1)*(ny_m+1)*(nz_m+1);
+// 	const double volume_cel = deltax*deltay*deltaz;
+// 	
+// 	vector<vector<double> > Sommets(Ns, vector<double>(3,0.));
+// 	int l=0;
+// 	for(int i=0;i<nx_m+1;i++){
+// 		for(int j=0;j<ny_m+1;j++){
+// 			for(int k=0;k<nz_m+1;k++){
+// 				Sommets[l][0] = (i-marge)*deltax;
+// 				Sommets[l][1] = (j-marge)*deltay;
+// 				Sommets[l][2] = (k-marge)*deltaz;
+// 				l++;        
+// 			}
+// 		}
+// 	}
+// 	
+// 	
+// 	double x_min=0.,y_min=0.,z_min=0.,x_max=0.,y_max=0.,z_max=0.;
+// 	
+// 	for(int i=0; i<nx_m; i++){
+// 		for(int j=0; j<ny_m; j++){ 
+// 			for(int k=0; k<nz_m; k++){ 
+// 				x_min = Sommets[k+j*(nz_m+1)+i*(nz_m+1)*(ny_m+1)][0];
+// 				y_min = Sommets[k+j*(nz_m+1)+i*(nz_m+1)*(ny_m+1)][1];
+// 				z_min = Sommets[k+j*(nz_m+1)+i*(nz_m+1)*(ny_m+1)][2];
+// 				
+// 				x_max = Sommets[(k+1)+(j+1)*(nz_m+1)+(i+1)*(nz_m+1)*(ny_m+1)][0];
+// 				y_max = Sommets[(k+1)+(j+1)*(nz_m+1)+(i+1)*(nz_m+1)*(ny_m+1)][1];
+// 				z_max = Sommets[(k+1)+(j+1)*(nz_m+1)+(i+1)*(nz_m+1)*(ny_m+1)][2];
+// 				
+// 				box_grille.push_back(Bbox(x_min,y_min,z_min,x_max,y_max,z_max));
+// 				
+// 			}
+// 		}
+// 	}
+// 	
+// 	
+// 	
+// 	int nb_particules = S.size();
+// 	int taille = box_grille.size();
+// 	
+// 	
+// 	const double eps_box = 0.1;
+// 	std::vector<Bbox> solide(nb_particules);
+// 	for(int it=0; it<nb_particules; it++){
+// 		solide[it] = Bbox(S.solide[it].min_x-eps_box,S.solide[it].min_y-eps_box, S.solide[it].min_z-eps_box, S.solide[it].max_x+eps_box, S.solide[it].max_y+eps_box, S.solide[it].max_z+eps_box);
+// 	}
+// 	
+// 	
+// 	double volume_s=0.;
+// 	Cellule cel;
+// 	int i=0;
+// 
+// 	for (int a=0; a< nx_m; a++){
+// 		for (int b=0; b< ny_m; b++){
+// 			for (int c=0; c< nz_m; c++){
+// 
+// 				cel = grille[a][b][c]; 
+// 				for(int iter_s=0; iter_s<nb_particules; iter_s++){
+// 					
+// 					if (CGAL::do_intersect(box_grille[i],solide[iter_s]) ) {
+// 					
+// 								std::vector<Point_3> Points_particule; 
+// 								Point_3 center;
+// 								for(int l= 0; l< S.solide[iter_s].triangles.size(); l++)
+// 								{
+// 									Points_particule.push_back(S.solide[iter_s].triangles[l].operator[](0));
+// 									Points_particule.push_back(S.solide[iter_s].triangles[l].operator[](1));
+// 									Points_particule.push_back(S.solide[iter_s].triangles[l].operator[](2));
+// 								}	
+// 								center = centroid(Points_particule.begin(),Points_particule.end());
+// 								
+// 								for(int l= 0; l<S.solide[iter_s].triangles.size(); l++)
+// 								{
+// 									Tetrahedron tetra(S.solide[iter_s].triangles[l].operator[](0), S.solide[iter_s].triangles[l].operator[](1), S.solide[iter_s].triangles[l].operator[](2),center);
+// 									
+// 									
+// 									Bbox box_tetra= tetra.bbox();
+// 									if (CGAL::do_intersect(box_grille[i],box_tetra)) {
+// 										
+// 										if(box_inside_tetra(tetra,box_grille[i])){
+// 											volume_s += std::abs(CGAL::to_double(tetra.volume()));
+// 										}
+// 										else 
+// 										{
+// 										if (inside_box(box_grille[i],tetra.operator[](0)) &&  inside_box(box_grille[i], tetra.operator[](1))
+// 											&& inside_box(box_grille[i],tetra.operator[](2)) && inside_box(box_grille[i], tetra.operator[](3))){
+// 											volume_s += std::abs(CGAL::to_double(tetra.volume())); 
+// 										}
+// 										else {
+// 											volume_s += intersect_cube_tetrahedron(box_grille[i], tetra);
+// 										}
+// 									}
+// 								}
+// 								
+// 						}//boucle sur les tetra
+// 					} // if inter grille[i] et solide[iter_s] 
+// 				} //fin boucle sur les particules			
+// 				i++;
+//      }
+// 		}
+// 	}
+// 	cout<<"volume solide := "<<volume_s<<endl;
+// }
+// 
+//fin test septembre 2013
+
 

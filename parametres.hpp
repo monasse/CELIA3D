@@ -62,7 +62,7 @@ const double E = 7000; //Module d'Young du materiau
 const double T = 1.;             //temps total de simulation
 const double cfl = 0.5;            //valeur de la cfl fluide
 const double cfls = 0.5;           //Valeur de la cfl solide
-const int nimp = 50;                //Nombre d'impressions
+const int nimp = 100;                //Nombre d'impressions
 const double dtimp = T/nimp;        //Pas de temps entre deux impressions
 const int Nmax = 1000000;           //nombre maximal d'iterations en temps
 

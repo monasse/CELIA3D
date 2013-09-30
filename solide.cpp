@@ -675,30 +675,68 @@ Particule::Particule(Point_3 c, const double x_min, const double y_min, const do
   faces = F;
 
   for(int i=0;i<faces.size();i++){
-    Point_3 s,r,v;
-    s = faces[i].centre;
-    for(int k=0;k<faces[i].size();k++){
-      int kp = (k+1)%(faces[i].size());
-      r = faces[i].vertex[k].pos;
-      v = faces[i].vertex[kp].pos;
-      Vector_3 vect0(s,r);
-      Vector_3 vect1(s,v);
-      /*Verification que les faces ne sont pas alignees
-      for(int j=kp+1;(j<faces[i].size()) && (CGAL::to_double(vect0*vect1) == 0.);j++){
-	v = faces[i].vertex[j].pos;
-	vect1 = Vector_3(s,v);
-	k++;
-	}*/
-      Triangle_3 Tri(s,r,v);
-      triangles.push_back(Tri);
-      normales.push_back(faces[i].normale);
-      if(faces[i].voisin == -1){
-	fluide.push_back(true);
-      } else {
-	fluide.push_back(false);
-      }
-    }
-  }
+		
+ 		if(faces[i].size() == 3){
+			Point_3 s,r,v;
+			s = faces[i].vertex[0].pos;
+			r = faces[i].vertex[1].pos;
+			v = faces[i].vertex[2].pos;
+			
+			Vector_3 vect0(s,r);
+			Vector_3 vect1(s,v);
+			Vector_3 normale = CGAL::cross_product(vect0,vect1);
+			normale = normale*(1./sqrt(CGAL::to_double(normale.squared_length())));
+			if (normale*faces[i].normale > 0.){
+			Triangle_3 Tri(s,r,v);
+			triangles.push_back(Tri);
+			normales.push_back(faces[i].normale);
+			if(faces[i].voisin == -1){
+				fluide.push_back(true);
+			} else {
+				fluide.push_back(false);
+			}
+			}
+			else{
+				Triangle_3 Tri(s,v,r);
+				triangles.push_back(Tri);
+				normales.push_back(faces[i].normale);
+				if(faces[i].voisin == -1){
+					fluide.push_back(true);
+				} else {
+					fluide.push_back(false);
+				}
+			}
+
+		}
+		
+	else{
+				Point_3 s,r,v;
+				s = faces[i].centre;
+				for(int k=0;k<faces[i].size();k++){
+					int kp = (k+1)%(faces[i].size());
+					r = faces[i].vertex[k].pos;
+					v = faces[i].vertex[kp].pos;
+					Vector_3 vect0(s,r);
+					Vector_3 vect1(s,v);
+					/*Verification que les faces ne sont pas alignees
+					for(int j=kp+1;(j<faces[i].size()) && (CGAL::to_double(vect0*vect1) == 0.);j++){
+			v = faces[i].vertex[j].pos;
+			vect1 = Vector_3(s,v);
+			k++;
+			}*/
+					Triangle_3 Tri(s,r,v);
+					triangles.push_back(Tri);
+					normales.push_back(faces[i].normale);
+					if(faces[i].voisin == -1){
+			fluide.push_back(true);
+					} else {
+			fluide.push_back(false);
+					}
+				}
+		}
+		
+  }// end boucle sur les faces
+  
   Points_interface.resize(triangles.size(), std::vector<Point_3>(0));
   Triangles_interface.resize(triangles.size(), std::vector<Triangle_3>(0));
 	Position_Triangles_interface.resize(triangles.size(), std::vector< std::vector<int> >(0));
@@ -1253,25 +1291,49 @@ void Particule::solve_vitesse(double dt){
 * \brief Fonction auxilaire utile pour les tests. Calcul du volume de la particule.
 * \return double
  */
+// double Particule::volume(){
+// 	
+//   double vol = 0.;
+//   std::vector<Point_3> Points_poly; 
+// 	
+//   for(int l= 0; l<triangles.size(); l++)
+//   {
+//     Points_poly.push_back(triangles[l].operator[](0));
+//     Points_poly.push_back(triangles[l].operator[](1));
+//     Points_poly.push_back(triangles[l].operator[](2));
+//   }	
+//   Finite_cells_iterator cit;
+//   Triangulation T(Points_poly.begin(), Points_poly.end());
+// 	
+//   for (cit = T.finite_cells_begin(); cit!= T.finite_cells_end(); cit++){
+//     vol+= CGAL::to_double(T.tetrahedron( cit).volume());
+//   }
+// 	
+//   return vol;
+// }
 double Particule::volume(){
 	
-  double vol = 0.;
-  std::vector<Point_3> Points_poly; 
+	double vol = 0.;
 	
-  for(int l= 0; l<triangles.size(); l++)
-  {
-    Points_poly.push_back(triangles[l].operator[](0));
-    Points_poly.push_back(triangles[l].operator[](1));
-    Points_poly.push_back(triangles[l].operator[](2));
-  }	
-  Finite_cells_iterator cit;
-  Triangulation T(Points_poly.begin(), Points_poly.end());
+	Point_3 center;
 	
-  for (cit = T.finite_cells_begin(); cit!= T.finite_cells_end(); cit++){
-    vol+= CGAL::to_double(T.tetrahedron( cit).volume());
-  }
+	std::vector<Point_3> Points_poly; 
 	
-  return vol;
+	for(int l= 0; l<triangles.size(); l++)
+	{
+		Points_poly.push_back(triangles[l].operator[](0));
+		Points_poly.push_back(triangles[l].operator[](1));
+		Points_poly.push_back(triangles[l].operator[](2));
+	}	
+	center = centroid(Points_poly.begin(),Points_poly.end());
+	
+	for(int l= 0; l<triangles.size(); l++)
+	{
+		Tetrahedron tetra(center, triangles[l].operator[](0), triangles[l].operator[](1), triangles[l].operator[](2));
+		vol += std::abs(CGAL::to_double(tetra.volume()));
+	}
+	
+	return vol;
 }
 
 /*!
@@ -2292,37 +2354,40 @@ void Solide::update_triangles(){
 			solide[i].Position_Triangles_interface_prev[it] = solide[i].Position_Triangles_interface[it];
 			solide[i].Points_interface[it].erase(solide[i].Points_interface[it].begin(),solide[i].Points_interface[it].end());
 			solide[i].Triangles_interface[it].erase(solide[i].Triangles_interface[it].begin(),solide[i].Triangles_interface[it].end());	solide[i].Position_Triangles_interface[it].erase(solide[i].Position_Triangles_interface[it].begin(),
-																																																																																									 solide[i].Position_Triangles_interface[it].end());
+                                                       solide[i].Position_Triangles_interface[it].end());
 		}
 		solide[i].triangles.erase(solide[i].triangles.begin(),solide[i].triangles.end());
 		solide[i].normales.erase(solide[i].normales.begin(),solide[i].normales.end());
 		solide[i].fluide.erase(solide[i].fluide.begin(),solide[i].fluide.end());
+		
 		//Calcul de la nouvelle position des triangles
 		for(int f=0;f<solide[i].faces.size();f++){
 			Point_3 s,r,v;
-			vector<Point_3> si;
-			si.push_back(solide[i].mvt_t.transform(solide[i].faces[f].centre));
-			int j = solide[i].faces[f].voisin;
-			if(j>=0){
-				si.push_back(solide[j].mvt_t.transform(solide[i].faces[f].centre));
-			}
-			s = centroid(si.begin(),si.end());
-			for(int k=0;k<solide[i].faces[f].size();k++){
-				int kp = (k+1)%(solide[i].faces[f].size());
-				vector<Point_3> ri,vi;
-				for(int part=0;part<solide[i].faces[f].vertex[k].size();part++){
-					int p = solide[i].faces[f].vertex[k].particules[part];
-					ri.push_back(solide[p].mvt_t.transform(solide[i].faces[f].vertex[k].pos));
+			
+			if(solide[i].faces[f].size() == 3){
+				vector<Point_3> ri,vi,si ;
+				for(int part=0; part<solide[i].faces[f].vertex[0].size();part++){
+					int p = solide[i].faces[f].vertex[0].particules[part];
+					ri.push_back(solide[p].mvt_t.transform(solide[i].faces[f].vertex[0].pos));
 				}
 				r = centroid(ri.begin(),ri.end());
-				for(int part=0;part<solide[i].faces[f].vertex[kp].size();part++){
-					int p = solide[i].faces[f].vertex[kp].particules[part];
-					vi.push_back(solide[p].mvt_t.transform(solide[i].faces[f].vertex[kp].pos));
+				
+				
+				for(int part=0;part<solide[i].faces[f].vertex[1].size();part++){
+					int p = solide[i].faces[f].vertex[1].particules[part];
+					vi.push_back(solide[p].mvt_t.transform(solide[i].faces[f].vertex[1].pos));
 				}
 				v = centroid(vi.begin(),vi.end());
-				Vector_3 vect0(s,r);
-				Vector_3 vect1(s,v);
-				Triangle_3 Tri(s,r,v);
+
+				for(int part=0;part<solide[i].faces[f].vertex[2].size();part++){
+					int p = solide[i].faces[f].vertex[2].particules[part];
+					si.push_back(solide[p].mvt_t.transform(solide[i].faces[f].vertex[2].pos));
+				}
+				s = centroid(si.begin(),si.end());
+				
+				Vector_3 vect0(r,v);
+				Vector_3 vect1(r,s);
+				Triangle_3 Tri(r,v,s);
 				solide[i].triangles.push_back(Tri);
 				Vector_3 normale = CGAL::cross_product(vect0,vect1);
 				normale = normale*(1./sqrt(CGAL::to_double(normale.squared_length())));
@@ -2333,7 +2398,48 @@ void Solide::update_triangles(){
 					solide[i].fluide.push_back(false);
 				}
 			}
-		}
+	
+		else{
+			
+			vector<Point_3> si;
+			si.push_back(solide[i].mvt_t.transform(solide[i].faces[f].centre));
+			int j = solide[i].faces[f].voisin;
+			if(j>=0){
+				si.push_back(solide[j].mvt_t.transform(solide[i].faces[f].centre));
+			}
+			s = centroid(si.begin(),si.end());
+			
+			for(int k=0;k<solide[i].faces[f].size();k++){
+			int kp = (k+1)%(solide[i].faces[f].size());
+			vector<Point_3> ri,vi;
+			for(int part=0;part<solide[i].faces[f].vertex[k].size();part++){
+				int p = solide[i].faces[f].vertex[k].particules[part];
+				ri.push_back(solide[p].mvt_t.transform(solide[i].faces[f].vertex[k].pos));
+			}
+			r = centroid(ri.begin(),ri.end());
+			for(int part=0;part<solide[i].faces[f].vertex[kp].size();part++){
+				int p = solide[i].faces[f].vertex[kp].particules[part];
+				vi.push_back(solide[p].mvt_t.transform(solide[i].faces[f].vertex[kp].pos));
+			}
+			v = centroid(vi.begin(),vi.end());
+			Vector_3 vect0(s,r);
+			Vector_3 vect1(s,v);
+			Triangle_3 Tri(s,r,v);
+			solide[i].triangles.push_back(Tri);
+			Vector_3 normale = CGAL::cross_product(vect0,vect1);
+			normale = normale*(1./sqrt(CGAL::to_double(normale.squared_length())));
+			solide[i].normales.push_back(normale);
+			if(solide[i].faces[f].voisin == -1){
+				solide[i].fluide.push_back(true);
+			} 
+			else {
+				solide[i].fluide.push_back(false);
+		  }
+	  }
+  }
+			
+	 }//Calcul de la nouvelle position des triangles
+		
 	}
 }
 
@@ -2440,6 +2546,14 @@ bool inside_convex_polygon(const Particule& S, const Point_3& P){
 	return in;
 }	
 
+bool inside_tetra(const Tetrahedron &tetra, const Point_3& P){
+	
+	bool in = false;
+	in=tetra.has_on_negative_side(P);
+	
+	return in;
+}
+
 /*!
 *\fn bool box_inside_convex_polygon(const Particule& S, const Bbox& cell)
 *\brief Fonction qui renvoie true si cell(Box) est dans S(polygon convex) et false sinon.
@@ -2499,6 +2613,57 @@ bool box_inside_convex_polygon(const Particule& S, const Bbox& cell){
 	
 	return in;
 }
+
+
+bool box_inside_tetra(const Tetrahedron &tetra, const Bbox& cell){
+	
+	bool in = false;
+	
+	Bbox box_tetra= tetra.bbox();
+	
+	if ((box_tetra.xmin() - cell.xmin()) <= eps_relat && (box_tetra.ymin() - cell.ymin() <= eps_relat) && 
+		 (box_tetra.zmin() - cell.zmin()) <= eps_relat && (box_tetra.xmax() - cell.xmax() >=-eps_relat) && 
+		 (box_tetra.ymax() - cell.ymax()) >=-eps_relat && (box_tetra.zmax() - cell.zmax()>=-eps_relat) ) 
+	{
+			in = true;
+			
+			Point_3 p1(cell.xmin(),cell.ymin(),cell.zmin());
+			in = inside_tetra(tetra,p1);
+			if(!in) {return in;}
+			
+			Point_3 p2(cell.xmax(),cell.ymax(),cell.zmax());
+			in = inside_tetra(tetra,p2);
+			if(!in) {return in;}
+			
+			Point_3 p3(cell.xmax(),cell.ymin(),cell.zmin());
+			in = inside_tetra(tetra,p3);
+			if(!in) {return in;}
+			
+			Point_3 p4(cell.xmax(),cell.ymin(),cell.zmax());
+			in = inside_tetra(tetra,p4);
+			if(!in) {return in;}
+			
+			Point_3 p5(cell.xmax(),cell.ymax(),cell.zmin());
+			in = inside_tetra(tetra,p5);
+			if(!in) {return in;}
+			
+			Point_3 p6(cell.xmin(),cell.ymax(),cell.zmin());
+			in = inside_tetra(tetra,p6);
+			if(!in) {return in;}
+			
+			Point_3 p7(cell.xmin(),cell.ymax(),cell.zmax());
+			in = inside_tetra(tetra,p7);
+			if(!in) {return in;}
+			
+			Point_3 p8(cell.xmin(),cell.ymin(),cell.zmax());
+			in = inside_tetra(tetra,p8);
+			if(!in) {return in;}
+
+	}
+	
+	return in;
+}
+
 
 
 /*!

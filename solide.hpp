@@ -214,4 +214,6 @@ bool box_inside_convex_polygon(const Particule& S, const Bbox& cell);
 bool inside_convex_polygon(const Particule& S, const Point_3& P);  
 double Error(Solide& S1, Solide& S2);
 void Copy_f_m(Solide& S1, Solide& S2);
+bool box_inside_tetra(const Tetrahedron &tetra, const Bbox& cell);
+bool inside_tetra(const Tetrahedron &tetra, const Point_3& P);
 #endif

@@ -203,11 +203,12 @@ int main(){
 	  t = temps[numrep];
 	}
 	Solide S;
-	S.Init("poutre.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
+	S.Init("maillage_tetra.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	Grille Fluide;
 	Fluide.Init();
-	Fluide.Parois(S, dt);
-	//Fluide.Parois_particles(S,dt);
+	//Fluide.Parois(S, dt);
+	Fluide.Parois_particles(S,dt);
+	
 	Fluide.BC();
 	double volume_initial= 0.;
 	
@@ -250,7 +251,6 @@ int main(){
 	double variation_energy= 0.;
 	double variation_volume = 0.;
 	double volume_solide = 0.;
-	
 	for (int n=0; (t<T) && n<Nmax; n++){
 		
 		if(t>next_timp){
@@ -275,13 +275,14 @@ int main(){
 		temps_flux += CGAL::to_double(user_time2.time());
 		user_time2.reset();
 		//Fluide.affiche("Solve");
+		//S.Forces_internes();
 		if(explicite){ //algo de couplage explicit
 		Fluide.Forces_fluide(S,dt);
 		S.Solve_position(dt);
 		//S.Solve_vitesse(dt);
 		user_time4.start();
-		Fluide.Parois(S,dt);
-		//Fluide.Parois_particles(S,dt);
+		//Fluide.Parois(S,dt);
+		Fluide.Parois_particles(S,dt);
 		temps_intersections += CGAL::to_double(user_time4.time());
 		user_time4.reset();
 		//S.Affiche();
@@ -343,7 +344,7 @@ int main(){
 			volume_solide +=S.solide[count].volume();
 		}
 		Fluide.affiche();
-		cout<<"volume solide particules"<<volume_solide<<endl;
+		cout<<"volume solide particules "<<volume_solide<<endl;
 		variation_volume += volume_solide - volume_initial;
 	}
 	end=clock();

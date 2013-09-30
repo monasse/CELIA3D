@@ -198,13 +198,13 @@ void Grille::Mixage(){
 									grille[i][j][k] = cp;
 									grille[i+ii][j+jj][k+kk] = cg;
 									
-									if( std::abs((1.-cp.alpha)*cp.Mrho + (1.-cg.alpha)*cg.Mrho)>eps){
-										cout<<" rho p initial "<<temp_rhop<<" rho g initial "<<temp_rhog<<endl;
-										cout<<" Mrho p "<<cp.Mrho<<" Mrho g  "<<cg.Mrho<<endl;
-										std::cout<<"Probleme mixage"<< ((1-cp.alpha)*cp.Mrho + (1-cg.alpha)*cg.Mrho)<<std::endl; 
-										std::cout<< "position du centre de la cellule : "<<cp.x << " "<<cp.y << " "<<cp.z << " "<< " rho "<<cp.rho  << " p "<<cp.p <<" alpha " << cp.alpha<<std::endl;
-										std::cout<< "position du centre de la cellule de mixage: "<<cg.x << " "<<cg.y << " "<<cg.z << " "<< " rho "<<cg.rho  << " p "<<cg.p <<" alpha " << cg.alpha<<std::endl;
-									}
+// 									if( std::abs((1.-cp.alpha)*cp.Mrho + (1.-cg.alpha)*cg.Mrho)>eps){
+// 										cout<<" rho p initial "<<temp_rhop<<" rho g initial "<<temp_rhog<<endl;
+// 										cout<<" Mrho p "<<cp.Mrho<<" Mrho g  "<<cg.Mrho<<endl;
+// 										std::cout<<"Probleme mixage"<< ((1-cp.alpha)*cp.Mrho + (1-cg.alpha)*cg.Mrho)<<std::endl; 
+// 										std::cout<< "position du centre de la cellule : "<<cp.x << " "<<cp.y << " "<<cp.z << " "<< " rho "<<cp.rho  << " p "<<cp.p <<" alpha " << cp.alpha<<std::endl;
+// 										std::cout<< "position du centre de la cellule de mixage: "<<cg.x << " "<<cg.y << " "<<cg.z << " "<< " rho "<<cg.rho  << " p "<<cg.p <<" alpha " << cg.alpha<<std::endl;
+// 									}
 								} //if cg.alpha==0
 								
 							}
@@ -518,7 +518,7 @@ void Grille::Fill_cel(Solide& S){
 				c = grille[i][j][k];
 				if((std::abs(c.alpha-1.)<eps)){
 					//test 18 septembre 2013
-					if((std::abs(c.rho)>eps)){cout<<"cellule solide non vide "<< c.rho<<endl;}
+					//if((std::abs(c.rho)>eps)){cout<<"cellule solide non vide "<< c.rho<<endl;}
 					//fin test 18 septembre 2013
 				  Point_3 center_cell(c.x, c.y, c.z);
 				  int nbx=0, nby=0,nbz=0;
@@ -1056,7 +1056,7 @@ Calcul du flux &agrave; la parois: soit \a f un morceau d'interface, le flux &ag
 *\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 *\return void
 */
-void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  Particule & P){
+void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  Particule & P, double & volume_test){
 	
 	//CGAL::Timer user_time, user_time2;
 	//double time=0.;
@@ -1119,7 +1119,7 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 				c.delta_w[4] += volume_p*c.rhoE0/volume_cel;
 			grille[in1][jn1][kn1] = c;
 			}
-			//vol_test += volume_p;
+			volume_test += volume_p;
 		}	
 		else if((std::abs(volume_prisme(T3d_prev[i],T3d_n[i])) >eps)  && (interieur==true) && (std::abs(1.-c.alpha)>eps)) {
 		std::vector<Bbox> box_cells;
@@ -1229,7 +1229,6 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 					} //if intersect Box_Tetra avec Box_Cell
 				} // boucle sur tetra			
 			}//if inter box_cell inter box_prisme
-			
 			if(std::abs(volume)>eps){
 				c.delta_w[0] += volume*Cells[iter].rho0/volume_cel; 
 				c.delta_w[1] += volume*Cells[iter].impx0/volume_cel;
@@ -1239,7 +1238,7 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 				grille[in1][jn1][kn1] = c;
 				
 			}
-			//vol_test += volume;
+			volume_test += volume;
 		 } // boucle sur les box_cells
 		}//end else 
 		if (explicite){//explicit algo
@@ -1418,7 +1417,7 @@ void Grille::Swap_2d(const double dt, Solide& S){
 	
 	//CGAL::Timer user_time, user_time2;
 	//double time_1=0., time_2=0.;
-	
+	double volume_test=0.;
 	for(int i=0;i<S.solide.size();i++){
 		for (int j=0; j<S.solide[i].triangles.size(); j++){
 			if (S.solide[i].fluide[j]){
@@ -1431,12 +1430,13 @@ void Grille::Swap_2d(const double dt, Solide& S){
 			//time_1+=CGAL::to_double(user_time.time());
 		  //user_time.reset();
 		  //user_time2.start();
-      swap_face(T3d_n,T3d_n1,dt, S.solide[i]);
+			swap_face(T3d_n,T3d_n1,dt, S.solide[i],volume_test );
 			//time_2+=CGAL::to_double(user_time2.time());
 		  //user_time2.reset();
 			}
 		}
 	}
+	cout<<"volume balayee = "<< volume_test<<endl;
 }
 
 /**
@@ -1613,6 +1613,7 @@ void sous_maillage_faceTn_faceTn1_3d(Triangle_3& Tn, Triangles& tn, Triangle_3& 
 void Grille::Swap_3d(const double dt, Solide& S){
 	//CGAL::Timer user_time, user_time2;
 	//double time_1=0., time_2=0.;
+	double volume_test=0.;
 	for(int i=0;i<S.solide.size();i++){
 		for (int j=0; j<S.solide[i].triangles.size(); j++){
 			if (S.solide[i].fluide[j]){
@@ -1624,7 +1625,7 @@ void Grille::Swap_3d(const double dt, Solide& S){
 				 //time_1+=CGAL::to_double(user_time.time());
 				//user_time.reset();
 				// user_time2.start();
-				swap_face(T3d_n,T3d_n1,dt,S.solide[i] );
+				swap_face(T3d_n,T3d_n1,dt,S.solide[i], volume_test );
 				//time_2+=CGAL::to_double(user_time2.time());
 				// user_time2.reset();
 			}
