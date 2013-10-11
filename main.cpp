@@ -203,7 +203,7 @@ int main(){
 	  t = temps[numrep];
 	}
 	Solide S;
-	S.Init("maillage_tetra.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
+	S.Init("tetra.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	Grille Fluide;
 	Fluide.Init();
 	//Fluide.Parois(S, dt);
@@ -302,8 +302,9 @@ int main(){
 				Sk_prev = Sk; 
 				Sk = S ; 
 				Sk.Solve_position(dt);
+				//S.Solve_vitesse(dt);
 				//Fluide.Parois(Sk,dt);
-				Fluide.Parois_particles(S,dt);
+				Fluide.Parois_particles(Sk,dt);
 				erreur = Error(Sk, Sk_prev);
 				//cout<<" erreur := "<<erreur<<endl;
 			}//fin boucle 
@@ -326,8 +327,8 @@ int main(){
 		Fluide.Modif_fnum(dt);
 		//Fluide.affiche("modif_fnum");
 		cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
-		Fluide.Mixage();
-		//Fluide.Mixage_cible(); //test 2 sept. 2013
+		//Fluide.Mixage();
+		Fluide.Mixage_cible(); //test 2 sept. 2013
 		cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
 		//Fluide.affiche("mixage");
 		Fluide.Fill_cel(S);

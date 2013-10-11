@@ -31,6 +31,7 @@ Ces forces vont &ecirc;tre transmises au Solide comme des forces exerc&eacute;es
 */
 void Grille::Forces_fluide(Solide& S, const double dt){
 	
+	Vector_3 Ffluide(0.,0.,0.);
 	//Mise &agrave; jour des Forces fluides et Moments fluides exerces sur le solide 
 	for(int iter_s=0; iter_s<S.size(); iter_s++){ 
 		
@@ -41,33 +42,33 @@ void Grille::Forces_fluide(Solide& S, const double dt){
     Kernel::FT mx = 0.,my = 0. ,mz = 0.;
 		
 		for(int it=0; it<S.solide[iter_s].triangles.size(); it++){
-			for(int iter=0; iter<S.solide[iter_s].Position_Triangles_interface[it].size(); iter++)
-			{
-				double aire= std::sqrt(CGAL::to_double(S.solide[iter_s].Triangles_interface[it][iter].squared_area()));
-				if(dt>eps){	
-					int i= S.solide[iter_s].Position_Triangles_interface[it][iter][0]; 
-					int j= S.solide[iter_s].Position_Triangles_interface[it][iter][1]; 
-					int k= S.solide[iter_s].Position_Triangles_interface[it][iter][2]; 
-					
-					double tempx = (grille[i][j][k].pdtx/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].x()));
-					double tempy = (grille[i][j][k].pdty/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].y()));
-					double tempz = (grille[i][j][k].pdtz/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].z()));
-					
-					Vector_3 temp_Mf = cross_product(Vector_3(Xn,Point_3(centroid(S.solide[iter_s].Triangles_interface[it][iter].operator[](0),
-										                       S.solide[iter_s].Triangles_interface[it][iter].operator[](1),
-										                       S.solide[iter_s].Triangles_interface[it][iter].operator[](2)))), 
-																					 Vector_3(-tempx,-tempy,-tempz));
-
-				fx-= tempx; fy-= tempy; fz-= tempz;
-				mx+= temp_Mf.x(); my+= temp_Mf.y(); mz+= temp_Mf.z();
-				}
-			}
+				for(int iter=0; iter<S.solide[iter_s].Position_Triangles_interface[it].size(); iter++)
+				{
+					double aire= std::sqrt(CGAL::to_double(S.solide[iter_s].Triangles_interface[it][iter].squared_area()));
+					if(dt>eps){	
+						int i= S.solide[iter_s].Position_Triangles_interface[it][iter][0]; 
+						int j= S.solide[iter_s].Position_Triangles_interface[it][iter][1]; 
+						int k= S.solide[iter_s].Position_Triangles_interface[it][iter][2]; 
+						
+						double tempx = (grille[i][j][k].pdtx/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].x()));
+						double tempy = (grille[i][j][k].pdty/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].y()));
+						double tempz = (grille[i][j][k].pdtz/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].z()));
+						
+						Vector_3 temp_Mf = cross_product(Vector_3(Xn,Point_3(centroid(S.solide[iter_s].Triangles_interface[it][iter].operator[](0),
+																						S.solide[iter_s].Triangles_interface[it][iter].operator[](1),
+																						S.solide[iter_s].Triangles_interface[it][iter].operator[](2)))), 
+																						Vector_3(-tempx,-tempy,-tempz));
+					fx-= tempx; fy-= tempy; fz-= tempz;
+					mx+= temp_Mf.x(); my+= temp_Mf.y(); mz+= temp_Mf.z();
+					}
+			   }
 		}
 		
 		S.solide[iter_s].Ff = Vector_3(fx,fy,fz);
 		S.solide[iter_s].Mf = Vector_3(CGAL::to_double(mx),CGAL::to_double(my),CGAL::to_double(mz)); 
+		Ffluide = Ffluide + S.solide[iter_s].Ff;
 	} //fin boucle sur les particules
-	
+	cout<<"forces fluide "<<Ffluide<<endl;	
 }	
 
 /*!
@@ -92,6 +93,8 @@ void Grille::Forces_fluide(Solide& S, const double dt){
 void Grille::Modif_fnum(const double dt){
 	
 	Cellule c,ci,cj,ck; 
+	double phi_x=0., phi_y=0., phi_z=0.;
+	double vol=deltax*deltay*deltaz;
 	for(int i=marge;i<Nx+marge;i++){
 		for(int j=marge;j<Ny+marge;j++){ 
 			for(int k=marge;k<Nz+marge;k++){
@@ -122,11 +125,14 @@ void Grille::Modif_fnum(const double dt){
 					c.v = c.impy/c.rho;
 					c.w = c.impz/c.rho;
 					c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2. - c.rho*c.w*c.w/2.);
+					phi_x+=c.phi_x*vol/dt; phi_y+=c.phi_y*vol/dt; phi_z+=c.phi_z*vol/dt;
+					
 				}
 				grille[i][j][k] = c;      
 			}
 		}
 	}
+	Vector_3 Phi(phi_x, phi_y, phi_z); cout<<" Flux a la parois "<<Phi<<endl;
 }
 
 /*!
@@ -1229,7 +1235,8 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 					} //if intersect Box_Tetra avec Box_Cell
 				} // boucle sur tetra			
 			}//if inter box_cell inter box_prisme
-			if(std::abs(volume)>eps){
+			
+			//if(std::abs(volume)>eps){ //11 cotobre 2013
 				c.delta_w[0] += volume*Cells[iter].rho0/volume_cel; 
 				c.delta_w[1] += volume*Cells[iter].impx0/volume_cel;
 				c.delta_w[2] += volume*Cells[iter].impy0/volume_cel; 
@@ -1237,7 +1244,7 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 				c.delta_w[4] += volume*Cells[iter].rhoE0/volume_cel;
 				grille[in1][jn1][kn1] = c;
 				
-			}
+			//}
 			volume_test += volume;
 		 } // boucle sur les box_cells
 		}//end else 
@@ -1255,12 +1262,12 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 				Vector_3 V_f = P.vitesse_parois_prev(center_prev);
 				c.phi_v += aire_prev * (CGAL::to_double(c.pdtx*n_prev.x()*V_f.x()  + c.pdty*n_prev.y()*V_f.y()+
 				c.pdtz*n_prev.z()*V_f.z()))/volume_cel;
-			
-				if (abs(c.phi_x)<=eps) {c.phi_x = 0.;} 
-				if (abs(c.phi_y)<=eps) {c.phi_y = 0.;} 
-				if (abs(c.phi_z)<=eps) {c.phi_z = 0.;} 
-				if (abs(c.phi_v)<=eps) {c.phi_v = 0.;} 
-			
+//test 11 octobre 2013			
+// 				if (abs(c.phi_x)<=eps) {c.phi_x = 0.;} 
+// 				if (abs(c.phi_y)<=eps) {c.phi_y = 0.;} 
+// 				if (abs(c.phi_z)<=eps) {c.phi_z = 0.;} 
+// 				if (abs(c.phi_v)<=eps) {c.phi_v = 0.;} 
+//fin test 11 octobre 2013			
 				grille[in1][jn1][kn1] = c;
 			}
 		}//explicit algo
@@ -1275,11 +1282,12 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 				c.phi_z += c.pdtz * aire *( CGAL::to_double(n.z()))/(c.dx*c.dy*c.dz);
 				Vector_3 V_f = P.vitesse_parois(center_n);
 				c.phi_v += aire * (CGAL::to_double(c.pdtx*n.x()*V_f.x()  + c.pdty*n.y()*V_f.y() + c.pdtz*n.z()*V_f.z()))/(c.dx*c.dy*c.dz);
-				
-				if (abs(c.phi_x)<=eps) {c.phi_x = 0.;} 
-				if (abs(c.phi_y)<=eps) {c.phi_y = 0.;} 
-				if (abs(c.phi_z)<=eps) {c.phi_z = 0.;} 
-				if (abs(c.phi_v)<=eps) {c.phi_v = 0.;} 
+//test 11 octobre 2013				
+// 				if (abs(c.phi_x)<=eps) {c.phi_x = 0.;} 
+// 				if (abs(c.phi_y)<=eps) {c.phi_y = 0.;} 
+// 				if (abs(c.phi_z)<=eps) {c.phi_z = 0.;} 
+// 				if (abs(c.phi_v)<=eps) {c.phi_v = 0.;} 
+// test 11 octobre 2013
 				grille[in1][jn1][kn1] = c;
 			}
 		} //semi_implicit algo
