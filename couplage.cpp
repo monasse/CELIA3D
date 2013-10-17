@@ -42,6 +42,7 @@ void Grille::Forces_fluide(Solide& S, const double dt){
     Kernel::FT mx = 0.,my = 0. ,mz = 0.;
 		
 		for(int it=0; it<S.solide[iter_s].triangles.size(); it++){
+			if(S.solide[iter_s].fluide[it]){
 				for(int iter=0; iter<S.solide[iter_s].Position_Triangles_interface[it].size(); iter++)
 				{
 					double aire= std::sqrt(CGAL::to_double(S.solide[iter_s].Triangles_interface[it][iter].squared_area()));
@@ -62,6 +63,7 @@ void Grille::Forces_fluide(Solide& S, const double dt){
 					mx+= temp_Mf.x(); my+= temp_Mf.y(); mz+= temp_Mf.z();
 					}
 			   }
+		}
 		}
 		
 		S.solide[iter_s].Ff = Vector_3(fx,fy,fz);

@@ -1030,6 +1030,15 @@ void Particule::solve_position(double dt){
     double epsilon = 1.e-15;
     int k=0;
     for(k=0; k<1000 && (err1>epsilon || err2>epsilon || err3>epsilon); k++){
+      if(d2+d3<eps){
+	cout << "d2+d3=" << d2+d3 << " I[0]=" << I[0] << endl;
+      }
+      if(d3+d1<eps){
+	cout << "d3+d1=" << d3+d1 << " I[1]=" << I[1] << endl;
+      }
+      if(d1+d2<eps){
+	cout << "d1+d2=" << d1+d2 << " I[2]=" << I[2] << endl;
+      }
       double x1 = (dt*a[0]-2.*(d2-d3)*etemp2*etemp3)/(2.*(d2+d3)*etemp0);
       double x2 = (dt*a[1]-2.*(d3-d1)*etemp1*etemp3)/(2.*(d1+d3)*etemp0);
       double x3 = (dt*a[2]-2.*(d1-d2)*etemp1*etemp2)/(2.*(d1+d2)*etemp0);
@@ -1050,6 +1059,10 @@ void Particule::solve_position(double dt){
       err1 = fabs((dt*a[0]-2.*(d2-d3)*etemp2*etemp3)/(2.*(d2+d3)*etemp0)-etemp1);
       err2 = fabs((dt*a[1]-2.*(d3-d1)*etemp1*etemp3)/(2.*(d1+d3)*etemp0)-etemp2);
       err3 = fabs((dt*a[2]-2.*(d1-d2)*etemp1*etemp2)/(2.*(d1+d2)*etemp0)-etemp3);
+    }
+    if(err1>epsilon || err2>epsilon || err3>epsilon){
+      cout << "Problème de résolution de la rotation, e1=" << etemp1 << " e2=" << etemp2 << " e3=" << etemp3 << endl;
+      cout << "erreur=" << err1 << " " << err2 << " " << err3 << endl;
     }
     //cout << k << endl;
     eglob[0] = etemp1;
@@ -1140,16 +1153,14 @@ void Particule::solve_position(double dt){
     omega = Vector_3(omega1,omega2,omega3);
     omega_half = omega;
   }//Fin du calcul dans le cas d'une particule libre
-  
-//   //Test pour fixer la rotation
-//   rot[0][0]= rot[1][1] = rot[2][2] =1.;
-// 	rot[0][1] = rot[0][2] =rot[1][0] = rot[1][2] = rot[2][0] = rot[2][1] = 0.;
-// 	//rotprev[0][0]= rotprev[1][1] = rotprev[2][2] =1.;
-// 	//rotprev[0][1] = rotprev[0][2] =rotprev[1][0] = rotprev[1][2] = rotprev[2][0] = rotprev[2][1] = 0.;
-// 	omega = Vector_3(0.,0.,0.);
-// 	omega_half = omega;
-// 	//Fin test pour fixer la rotation
-	
+  /*//Test de fixer la rotation
+  rot[0][0]= rot[1][1] = rot[2][2] =1.;
+	rot[0][1] = rot[0][2] =rot[1][0] = rot[1][2] = rot[2][0] = rot[2][1] = 0.;
+	rotprev[0][0]= rotprev[1][1] = rotprev[2][2] =1.;
+	rotprev[0][1] = rotprev[0][2] =rotprev[1][0] = rotprev[1][2] = rotprev[2][0] = rotprev[2][1] = 0.;
+	omega = Vector_3(0.,0.,0.);
+	omega_half = omega;
+	//fin test */
   //Mise a jour de la transformation donnant le mouvement de la particule
   mvt_tprev = mvt_t;
   Aff_transformation_3 rotation(rot[0][0],rot[0][1],rot[0][2],rot[1][0],rot[1][1],rot[1][2],rot[2][0],rot[2][1],rot[2][2]);
@@ -1278,16 +1289,14 @@ void Particule::solve_vitesse(double dt){
 // 		omega2 = 0.;
 // 		//fin test 
     omega = Vector_3(omega1,omega2,omega3);
-		
-// 		//Test pour fixer la rotation
-// 		rot[0][0]= rot[1][1] = rot[2][2] =1.;
-// 		rot[0][1] = rot[0][2] =rot[1][0] = rot[1][2] = rot[2][0] = rot[2][1] = 0.;
-// 		//rotprev[0][0]= rotprev[1][1] = rotprev[2][2] =1.;
-// 		//rotprev[0][1] = rotprev[0][2] =rotprev[1][0] = rotprev[1][2] = rotprev[2][0] = rotprev[2][1] = 0.;
-// 		omega = Vector_3(0.,0.,0.);
-// 		omega_half = omega;
-// 		//Fin test pour fixer la rotation
-		
+		/*//Test de fixer la rotation
+		rot[0][0]= rot[1][1] = rot[2][2] =1.;
+		rot[0][1] = rot[0][2] =rot[1][0] = rot[1][2] = rot[2][0] = rot[2][1] = 0.;
+		rotprev[0][0]= rotprev[1][1] = rotprev[2][2] =1.;
+		rotprev[0][1] = rotprev[0][2] =rotprev[1][0] = rotprev[1][2] = rotprev[2][0] = rotprev[2][1] = 0.;
+		omega = Vector_3(0.,0.,0.);
+		omega_half = omega;
+		//fin test */
   }//Fin du calcul dans le cas d'une particule libre
 }
 /*!
@@ -1406,12 +1415,12 @@ void Face::compProjectionIntegrals(double &P1, double &Pa, double &Pb, double &P
     double Cb = b12+b1*b0+b02;
     double Cbb = b1*Cb+b03;
     double Cbbb = b1*Cbb+b04;
-    double Cab = 3*a12+2*a1*a0+a02;
-    double Kab = a12+2*a1*a0+3*a02;
-    double Caab = a0*Cab+4*a13;
-    double Kaab = a1*Kab+4*a03;
-    double Cabb = 4*b13+3*b12*b0+2*b1*b02+b03;
-    double Kabb = b13+2*b12*b0+3*b1*b02+4*b03;
+    double Cab = 3.*a12+2.*a1*a0+a02;
+    double Kab = a12+2.*a1*a0+3.*a02;
+    double Caab = a0*Cab+4.*a13;
+    double Kaab = a1*Kab+4.*a03;
+    double Cabb = 4.*b13+3.*b12*b0+2.*b1*b02+b03;
+    double Kabb = b13+2.*b12*b0+3.*b1*b02+4.*b03;
     P1 += Db*C1;
     Pa += Db*Ca; Paa += Db*Caa; Paaa += Db*Caaa;
     Pb += Da*Cb; Pbb += Da*Cbb; Pbbb += Da*Cbbb;
@@ -1424,7 +1433,7 @@ void Face::compProjectionIntegrals(double &P1, double &Pa, double &Pb, double &P
   Pb /=-6.; Pbb /=-12.; Pbbb /=-20.;
   Pab /= 24.;
   Paab /= 60.;
-  Pabb /= 60.;
+  Pabb /= -60.;
 }
 /*!
 * \fn void Face::compFaceIntegrals(double &Fa, double &Fb, double &Fc, double &Faa, double &Fbb, double &Fcc, double &Faaa, double &Fbbb, double &Fccc, double &Faab, double &Fbbc, double &Fcca, double na, double nb, double nc, int a, int b, int c)
@@ -1448,13 +1457,13 @@ void Face::compFaceIntegrals(double &Fa, double &Fb, double &Fc, double &Faa, do
   Fc = -k2*(na*Pa+nb*Pb+w*P1);
   Faa = k1*Paa;
   Fbb = k1*Pbb;
-  Fcc = k3*(na*na*Paa+2*na*nb*Pab+nb*nb*Pbb+2*na*w*Pa+2*nb*w*Pb+w*w*P1);
+  Fcc = k3*(na*na*Paa+2.*na*nb*Pab+nb*nb*Pbb+2.*na*w*Pa+2.*nb*w*Pb+w*w*P1);
   Faaa = k1*Paaa;
   Fbbb = k1*Pbbb;
-  Fccc = -k4*(na*na*na*Paaa+3*na*na*nb*Paab+3*na*nb*nb*Pabb+nb*nb*nb*Pbbb+3*na*na*w*Paa+6*na*nb*w*Pab+3*nb*nb*w*Pbb+3*na*w*w*Pa+3*nb*w*w*Pb+w*w*w*P1);
+  Fccc = -k4*(na*na*na*Paaa+3.*na*na*nb*Paab+3.*na*nb*nb*Pabb+nb*nb*nb*Pbbb+3.*na*na*w*Paa+6.*na*nb*w*Pab+3.*nb*nb*w*Pbb+3.*na*w*w*Pa+3.*nb*w*w*Pb+w*w*w*P1);
   Faab = k1*Paab;
   Fbbc = -k2*(na*Pabb+nb*Pbbb+w*Pbb);
-  Fcca = k3*(na*na*Paaa+2*na*nb*Paab+nb*nb*Pabb+2*na*w*Paa+2*nb*w*Pab+w*w*Pa);
+  Fcca = k3*(na*na*Paaa+2.*na*nb*Paab+nb*nb*Pabb+2.*na*w*Paa+2.*nb*w*Pab+w*w*Pa);
 }
 
 /*!
@@ -1467,7 +1476,7 @@ void Face::compFaceIntegrals(double &Fa, double &Fb, double &Fc, double &Faa, do
 void Particule::CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &Tz, double &Txx, double &Tyy, double &Tzz, double &Txy, double &Tyz, double &Tzx){
   //Utilisation de la fonction decrite par Brian Mirtich 1996 (cf www.cs.berkeley.edu/~jfc/mirtich/code/volumeIntegration.tar)
   T1 = Tx=Ty=Tz=Txx=Tyy=Tzz=Txy=Tyz=Tzx=0.;
-	for(int i=0;i<faces.size();i++){
+  for(int i=0;i<faces.size();i++){
     double Fx,Fy,Fz,Fxx,Fyy,Fzz,Fxxx,Fyyy,Fzzz,Fxxy,Fyyz,Fzzx;
     double nx,ny,nz,na,nb,nc;
     nx=CGAL::to_double(faces[i].normale.operator[](0));
@@ -1520,75 +1529,125 @@ void Particule::CompVolumeIntegrals(double &T1, double &Tx, double &Ty, double &
   Tyz /=2.;
   Tzx /=2.;
 }
-/*!
-* \fn void solve_eq3(double a, double b, double c, double d, double &x1, double &x2, double &x3)
-* \brief R&eacute;solution de l'&eacute;quation de degr&eacute; 3 ax3+bx2+cx+d=0, de solutions x1, x2 et x3.
-* \warning  <b> Proc&eacute;dure sp&eacute;cifique au solide! </b> 
-* \return void
-*/
-//Resolution de l'equation de degre 3 ax3+bx2+cx+d=0, de solutions x1, x2 et x3
-void solve_eq3(double a, double b, double c, double d, double &x1, double &x2, double &x3){
-  //On trouve x1 par une methode de Newton
-  x1 = 0.;
-  double res = a*x1*x1*x1+b*x1*x1+c*x1+d;
-  int i;
-  for(i=0;i<10000 && res!=0.;i++){
-    double p = 3.*a*x1*x1+2.*b*x1+c;
-    if(abs(p)>1.e-5*abs(a)){
-      x1 -= res/p;
-    }
-    else {
-      if(abs(res)>1.e-4*abs(a)){
-	x1 += pow(2.,-i);
-      }
-      else {
-	double Delta = max(4.*b*b-12.*a*c,0.);
-	double xm = -(2.*b+sqrt(Delta))/(6.*a);
-	double xM = -(2.*b-sqrt(Delta))/(6.*a);
-	if(abs(x1-xm)<abs(x1-xM)){
-	  x1 = xm;
-	}
-	else {
-	  x1 = xM;
-	}
-      }
-    }
-    res = a*x1*x1*x1+b*x1*x1+c*x1+d;
-  }
-  double a1 = a;
-  double b1 = b+a*x1;
-  double c1 = c+b*x1+a*x1*x1;
-  //On resout a1*x2+b1*x+c1=0
-  double Delta = max(b1*b1-4.*a1*c1,0.);
-  if(Delta<eps*a*a){
-    Delta = 0.;
-  }
-  x2 = (-b1+sqrt(Delta))/(2.*a1);
-  x3 = (-b1-sqrt(Delta))/(2.*a1);
-  if(abs(x1-x2)<2.e-3*x1){
-    if(Delta < eps*a*a){
-      //On vÃ©rifie si les trois solutions ne seraient pas identiques
-      double b2 = a*3.*x2;
-      double c2 = a*3.*x2*x2;
-      double d2 = a*pow(x2,3);
-      if(abs(b2-b)<eps*a && abs(c2-c)<eps*a && abs(d2-d)<eps*a){
-	x1 = x3 = x2;
-      }
-    }
-    else{
-      if(abs(a*x1*x1*x1+b*x1*x1+c*x1+d)>abs(a*x2*x2*x2+b*x2*x2+c*x2+d)){
-	x1 = x3;
-	x3 = x2;
-      }
-    }
-  }
-  else if(abs(x1-x3)<1.e-3*x1){
-    if(abs(a*x1*x1*x1+b*x1*x1+c*x1+d)>abs(a*x3*x3*x3+b*x3*x3+c*x3+d)){
-      x1 = x2;
-      x2 = x3;
-    }
-  }
+
+struct Mat3x3
+{
+  double tab[3][3];
+};
+
+struct Vect3
+{
+  double vec[3];
+};
+
+//Fonction rot pour la routine jacobi3x3
+inline void rot(Mat3x3 &a, const double s, const double tau, const int i, const int j, const int k, const int l)
+{
+  double g,h;
+  
+  g = a.tab[i][j];
+  h = a.tab[k][l];
+  a.tab[i][j] = g-s*(h+g*tau);
+  a.tab[k][l] = h+s*(g-h*tau);
 }
+
+//Diagonalisation de la matrice 3x3 a par la methode de Jacobi
+//cf Numerical Recipes C++
+//a est la matrice qu'on diagonalise, d la diagonale des valeurs propres, v la matrice des vecteurs propres, nrot le nombre d'iterations de Jacobi
+void jacobi3x3(Mat3x3 &a, Vect3 &d, Mat3x3 &v, int &nrot)
+{
+  int i,j,ip,iq;
+  double tresh,theta,tau,t,sm,s,h,g,c;
+  
+  const int n=3;
+  double b[n],z[n];
+  //Initialisation de v a l'identite
+  for(ip=0;ip<n;ip++){
+    for(iq=0;iq<n;iq++){
+      v.tab[ip][iq]=0.;
+    }
+    v.tab[ip][ip]=1.;
+  }
+  //Initialisation de b et d a la diagonale de a
+  for(ip=0;ip<n;ip++){
+    b[ip]=d.vec[ip]=a.tab[ip][ip];
+    z[ip]=0.;
+  }
+  nrot = 0;
+  for(i=1;i<=50;i++){
+    sm=0.;
+    //Somme des magnitudes des elements hors diagonale
+    for(ip=0;ip<n-1;ip++){
+      for(iq=ip+1;iq<n;iq++){
+	sm+=fabs(a.tab[ip][iq]);
+      }
+    }
+    //Si on a convergence exacte
+    if(sm==0.){
+      return;
+    }
+    //Sur les trois premiers sweeps
+    if(i<4){
+      tresh=0.2*sm/(n*n);
+    } 
+    //et ensuite...
+    else {
+      tresh=0.;
+    }
+    //Debut du sweep
+    for(ip=0;ip<n-1;ip++){
+      for(iq=ip+1;iq<n;iq++){
+	g = 100.*fabs(a.tab[ip][iq]);
+	//Apres 4 sweeps, sauter la rotation si l'element off-diagonal est petit
+	if(i>4 && (fabs(d.vec[ip])+g)==fabs(d.vec[ip]) && (fabs(d.vec[iq])+g)==fabs(d.vec[iq])){
+	  a.tab[ip][iq]=0.;
+	}
+	else if(fabs(a.tab[ip][iq])>tresh){
+	  h=d.vec[iq]-d.vec[ip];
+	  if((fabs(h)+g)==fabs(h)){
+	    t=(a.tab[ip][iq])/h;
+	  } else {
+	    theta=0.5*h/(a.tab[ip][iq]);
+	    t = 1./(fabs(theta)+sqrt(1.+theta*theta));
+	    if(theta<0.){
+	      t = -t;
+	    }
+	  }
+	  c = 1./sqrt(1+t*t);
+	  s = t*c;
+	  tau = s/(1.+c);
+	  h = t*a.tab[ip][iq];
+	  z[ip] -= h;
+	  z[iq] += h;
+	  d.vec[ip] -= h;
+	  d.vec[iq] += h;
+	  a.tab[ip][iq] = 0.;
+	  for(j=0;j<ip;j++){
+	    rot(a,s,tau,j,ip,j,iq);
+	  }
+	  for(j=ip+1;j<iq;j++){
+	    rot(a,s,tau,ip,j,j,iq);
+	  }
+	  for(j=iq+1;j<n;j++){
+	    rot(a,s,tau,ip,j,iq,j);
+	  }
+	  for(j=0;j<n;j++){
+	    rot(v,s,tau,j,ip,j,iq);
+	  }
+	  ++nrot;
+	}
+      }
+    }//Fin du sweep
+    for(ip=0;ip<n;ip++){
+      b[ip] += z[ip];
+      d.vec[ip] = b[ip];
+      z[ip] = 0.;
+    }
+  }
+  cout << "Trop grand nomre d'iterations de la routine jacobi3x3" << endl;
+}
+
+
 /*!
 * \fn void Particule::Inertie()
 * \brief Calcul d'inertie de la particule. 
@@ -1602,21 +1661,26 @@ void Particule::Inertie(){
   double xG = CGAL::to_double(x0.operator[](0));
   double yG = CGAL::to_double(x0.operator[](1));
   double zG = CGAL::to_double(x0.operator[](2));
+  
+//  cout << "T=" << endl;
+//  cout << Txx << " " << Txy << " " << Tzx << endl;
+//  cout << Txy << " " << Tyy << " " << Tyz << endl;
+//  cout << Tzx << " " << Tyz << " " << Tzz << endl;
+//  getchar();
+  
   R[0][0] = rhos*(Tyy-2.*yG*Ty+yG*yG*T1+Tzz-2.*zG*Tz+zG*zG*T1);
   R[1][0] = R[0][1] = rhos*(Txy-yG*Tx-xG*Ty+xG*yG*T1);
   R[2][0] = R[0][2] = rhos*(Tzx-zG*Tx-xG*Tz+xG*zG*T1);
   R[1][1] = rhos*(Txx-2.*xG*Tx+xG*xG*T1+Tzz-2.*zG*Tz+zG*zG*T1);
   R[1][2] = R[2][1] = rhos*(Tyz-zG*Ty-yG*Tz+yG*zG*T1);
   R[2][2] = rhos*(Tyy-2.*yG*Ty+yG*yG*T1+Txx-2.*xG*Tx+xG*xG*T1);
-  double A = R[0][0];
-  double B = R[1][1];
-  double C = R[2][2];
-  double D = -R[1][2];
-  double E = -R[0][2];
-  double F = -R[0][1];
-// 	cout << A << " " << -F << " " << -E << endl;
-// 	cout << -F << " " << B << " " << -D << endl;
-// 	cout << -E << " " << -D << " " << C << endl;
+  
+//  cout << "R=" << endl;
+//  cout << R[0][0] << " " << R[0][1] << " " << R[0][2] << endl;
+//  cout << R[1][0] << " " << R[1][1] << " " << R[1][2] << endl;
+//  cout << R[2][0] << " " << R[2][1] << " " << R[2][2] << endl;
+//  getchar();
+
   //Masse et volume
   V = T1;
   m = rhos*T1;
@@ -1625,172 +1689,38 @@ void Particule::Inertie(){
     getchar();
   }
   //Calcul des moments d'inertie
-  double a = -1.;
-  double b = R[0][0] + R[1][1] + R[2][2];
-  double c = R[0][1]*R[0][1] + R[0][2]*R[0][2] + R[1][2]*R[1][2] - R[0][0]*R[1][1] - R[0][0]*R[2][2] - R[1][1]*R[2][2];
-  double d = R[0][0]*R[1][1]*R[2][2]-R[0][0]*R[1][2]*R[1][2]-R[1][1]*R[0][2]*R[0][2]-R[2][2]*R[0][1]*R[0][1]-2.*R[0][1]*R[0][2]*R[1][2];
-	//cout << a << " " << b << " " << c << " " << d << endl;
-  solve_eq3(a,b,c,d,I[0],I[1],I[2]);
-  //Calcul des vecteurs propres associes
-  if(abs(I[1]-I[2])>1.e-5*I[1]){
-    for(int i=0;i<3;i++){
-      double ux,uy,uz;
-      if(abs(A-I[i])>eps){
-	if(abs(B-I[i])>eps){
-	  uz = (A-I[i])*(B-I[i])-F*F;
-	  uy = D*(A-I[i])+E*F;
-	  ux = (F*uy+E*uz)/(A-I[i]);
-	} else {
-	  uy = (A-I[i])*(C-I[i])-E*E;
-	  uz = D*(A-I[i])+E*F;
-	  ux = (F*uy+E*uz)/(A-I[i]);
-	}
-      }
-      else if(abs(B-I[i])>eps){
-	ux = (B-I[i])*(C-I[i])-D*D;
-	uz = E*(B-I[i])+D*F;
-	uy = (D*uz+F*ux)/(B-I[i]);
-      }
-      else if(abs(C-I[i])>eps){
-	uy = (C-I[i])*(A-I[i])-E*E;
-	ux = F*(C-I[i])+D*E;
-	uz = (E*ux+D*uy)/(C-I[i]);
-      }
-      else{
-	if(abs(D)<eps){
-	  ux = 0.;
-	  uy = -E;
-	  uz = F;
-	}
-	else if(abs(E)<eps){
-	  uy = 0.;
-	  uz = -F;
-	  ux = D;
-	}
-	else {
-	  uz = 0.;
-	  ux = -D;
-	  uy = E;
-	}
-			}
-      double norm = std::sqrt(ux*ux+uy*uy+uz*uz);
-      ux /= norm;
-      uy /= norm;
-      uz /= norm;
-      rotref[0][i] = ux;
-      rotref[1][i] = uy;
-      rotref[2][i] = uz;
-      for(int j=0;j<3;j++){
-	if(rotref[j][i]!=rotref[j][i]){
-	  cout << "rotref "<< rotref[j][i] << " " << j << " " << i << " " << norm << endl;
-	  cout << A-I[i] << " " << -F << " " << -E << endl;
-	  cout << -F << " " << B-I[i] << " " << -D << endl;
-	  cout << -E << " " << -D << " " << C-I[i] << endl;
-	  getchar();
-	}
-      }
+  //Nouvelle version utilisant la methode de Jacobi (Numerical Recipes c++)
+  Mat3x3 A,V;
+  for(int i=0;i<3;i++){
+    for(int j=0;j<3;j++){
+      A.tab[i][j] = R[i][j];
     }
   }
-  else{
-		//cout << "I " << I[0] << " " << I[1] << " " << I[2] << endl;
-    if(abs(I[0]-I[1])>1.e-5*I[1]){
-      for(int i=0;i<2;i++){
-	double ux,uy,uz;
-	if(abs(A-I[i])>eps){
-	  if(abs(B-I[i])>eps){
-	    uz = (A-I[i])*(B-I[i])-F*F;
-	    uy = D*(A-I[i])+E*F;
-	    ux = (F*uy+E*uz)/(A-I[i]);
-	  } else {
-	    uz = 1.;
-	    uy = 0.;
-	    ux = (F*uy+E*uz)/(A-I[i]);
-	  }
-	}
-	else if(abs(B-I[i])>eps){
-	  ux = (B-I[i])*(C-I[i])-D*D;
-	  uz = E*(B-I[i])+D*F;
-	  uy = (D*uz+F*ux)/(B-I[i]);
-	}
-	else if(abs(C-I[i])>eps){
-	  uy = (C-I[i])*(A-I[i])-E*E;
-	  ux = F*(C-I[i])+D*E;
-	  uz = (E*ux+D*uy)/(C-I[i]);
-	}
-	else{
-	  if(abs(D)<eps){
-	    ux = 0.;
-	    uy = -E;
-	    uz = F;
-	  }
-	  else if(abs(E)<eps){
-	    uy = 0.;
-	    uz = -F;
-	    ux = D;
-	  }
-	  else {
-	    uz = 0.;
-	    ux = -D;
-	    uy = E;
-	  }
-	}
-	double norm = sqrt(ux*ux+uy*uy+uz*uz);
-	ux /= norm;
-	uy /= norm;
-	uz /= norm;
-	rotref[0][i] = ux;
-	rotref[1][i] = uy;
-	rotref[2][i] = uz;
-	for(int j=0;j<3;j++){
-	  if(rotref[j][i]!=rotref[j][i]){
-	    cout << "rotref "<< rotref[j][i] << " " << j << " " << i << " " << norm << endl;
-	    getchar();
-	  }
-	}
-      }
-      //Test : produit scalaire des deux premieres colonnes
-      double scal = rotref[0][0]*rotref[0][1]+rotref[1][0]*rotref[1][1]+rotref[2][0]*rotref[2][1];
+  Vect3 d;
+  int n=0;
+  jacobi3x3(A,d,V,n);
+  for(int i=0;i<3;i++){
+    I[i] = d.vec[i];
+    for(int j=0;j<3;j++){
+      rotref[i][j] = V.tab[j][i];
+    }
+  }
+  
+//  cout << "I=" << I[0] << " " << I[1] << " " << I[2] << endl;
+//  getchar();
+  
+  //Test : produit scalaire des deux premieres colonnes
+  double scal = rotref[0][0]*rotref[0][1]+rotref[1][0]*rotref[1][1]+rotref[2][0]*rotref[2][1];
 // 			cout << "produit scalaire " << scal << endl;
-			if(abs(scal)>eps){
-					//on prend un vecteur normal a rotref[][0]
-					rotref[0][1] = rotref[1][0];
-					rotref[1][1] = -rotref[0][0];
-					rotref[2][1] = 0.;
-					double norm = sqrt(rotref[0][1]*rotref[0][1]+rotref[1][1]*rotref[1][1]+rotref[2][1]*rotref[2][1]);
-					if(norm>eps){
-						rotref[0][1] /= norm;
-						rotref[1][1] /= norm;
-						rotref[2][1] /= norm;
-					}
-					else {
-						rotref[0][1] = -rotref[2][0];
-						rotref[1][1] = 0.;
-						rotref[2][1] = rotref[0][0];
-						norm = sqrt(rotref[0][1]*rotref[0][1]+rotref[1][1]*rotref[1][1]+rotref[2][1]*rotref[2][1]);
-						rotref[0][1] /= norm;
-						rotref[1][1] /= norm;
-						rotref[2][1] /= norm;
-					}
-			}
-      rotref[0][2] = rotref[1][0]*rotref[2][1]-rotref[2][0]*rotref[1][1];
-      rotref[1][2] = rotref[2][0]*rotref[0][1]-rotref[0][0]*rotref[2][1];
-      rotref[2][2] = rotref[0][0]*rotref[1][1]-rotref[1][0]*rotref[0][1];
-    }
-    else{
-      rotref[0][0] = rotref[1][1] = rotref[2][2] = 1.;
-      rotref[0][1] = rotref[1][0] = rotref[0][2] = rotref[2][0] = rotref[1][2] = rotref[2][1] = 0.;
-    }
+  if(abs(scal)>eps){
+    cout << "scal=" << scal << endl;
   }
-  //Test 26/11/12
-  rotref[0][0] = rotref[1][1] = rotref[2][2] = 1.;
-  rotref[0][1] = rotref[1][0] = rotref[0][2] = rotref[2][0] = rotref[1][2] = rotref[2][1] = 0.;
-  // Fin Test 26/11/12
-	
+  
   for(int i=0;i<3;i++){
     for(int j=0;j<3;j++){
       if(rotref[i][j]!=rotref[i][j]){
-				cout << "rotref "<< rotref[i][j] << " " << i << " " << j << endl;
-				getchar();
+	cout << "rotref "<< rotref[i][j] << " " << i << " " << j << endl;
+	getchar();
       }
     }
   }
@@ -1810,7 +1740,7 @@ void Particule::Inertie(){
       cout << "erreur dans le calcul des moments d'inertie" << endl;
     }
   }
-
+  
   //Calcul des moments d'inertie des faces (pour le calcul des torsions)
   for(int i=0;i<faces.size();i++){
     faces[i].Inertie();

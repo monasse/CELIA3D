@@ -203,7 +203,7 @@ int main(){
 	  t = temps[numrep];
 	}
 	Solide S;
-	S.Init("tetra.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
+	S.Init("poutre.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	Grille Fluide;
 	Fluide.Init();
 	//Fluide.Parois(S, dt);
