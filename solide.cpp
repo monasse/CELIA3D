@@ -159,6 +159,7 @@ void Face::Inertie(){
     Tt += 1./6.*CGAL::to_double(cross_product(v1,v2)*normale)*CGAL::to_double((v1+v2)*t);
   }
   centre = centre + (Ts/T1)*s + (Tt/T1)*t;
+  S = T1;
   //Calcul de la matrice d'inertie de la face dans les deux axes a l'origine centre
   double Tss = 0.;
   double Ttt = 0.;
@@ -986,10 +987,10 @@ void Particule::solve_position(double dt){
     }
     //cout << "debut " << Omega[0] << " " << Omega[1] << " " << Omega[2] << endl;
     //getchar();
-    double norm2 = dt*dt*(Omega[0]*Omega[0]+Omega[1]*Omega[1]+Omega[2]*Omega[2]);
-    if(norm2>1.){
+    double norm = dt*(abs(Omega[0])+abs(Omega[1])+abs(Omega[2]));
+    if(norm>0.25){
       cout << "pas de temps trop grand : dt=" << dt << " Omega=" << Omega[0] << " " << Omega[1] << " " << Omega[2] << endl;
-      getchar();
+      //getchar();
     }
     double eglob0 = 1.;//sqrt((1+sqrt(1-norm2))/2.);
     double eglob[3];
@@ -1016,6 +1017,11 @@ void Particule::solve_position(double dt){
     double Mx = CGAL::to_double(Q[0][0]*((Mi+Mf).operator[](0))+Q[1][0]*((Mi+Mf).operator[](1))+Q[2][0]*((Mi+Mf).operator[](2)));
     double My = CGAL::to_double(Q[0][1]*((Mi+Mf).operator[](0))+Q[1][1]*((Mi+Mf).operator[](1))+Q[2][1]*((Mi+Mf).operator[](2)));
     double Mz = CGAL::to_double(Q[0][2]*((Mi+Mf).operator[](0))+Q[1][2]*((Mi+Mf).operator[](1))+Q[2][2]*((Mi+Mf).operator[](2)));
+    norm = dt*dt/2.*(abs(Mx)/I[0]+abs(My)/I[1]+abs(Mz)/I[2]);
+    if(norm>0.25){
+      cout << "pas de temps trop grand : dt=" << dt << " M=" << Mx << " " << My << " " << Mz << " I=" << I[0] << " " << I[1] << " " << I[2] << endl;
+      //getchar();
+    }
     a[0] = -(I[0]*z[1][2]-dt/2.*Mx);
     a[1] = (I[1]*z[0][2]+dt/2.*My);
     a[2] = -(I[2]*z[0][1]-dt/2.*Mz);
@@ -1134,33 +1140,36 @@ void Particule::solve_position(double dt){
     //Calcul de Omega^n+1/2
     double omega1 = 0.;
     for(int i=0;i<3;i++){
-      for(int j=0;j<3;j++){
-	omega1 -= 1./2.*Qprev[1][i]*z[i][j]*(Qprev[2][j]+Q[2][j]);
-      }
+      //for(int j=0;j<3;j++){
+      //omega1 -= 1./2.*Qprev[1][i]*z[i][j]*(Qprev[2][j]+Q[2][j]);
+      omega1 += 1./2./dt*(Q[2][i]*Qprev[1][i]-Qprev[2][i]*Q[1][i]);
+      //}
     }
     double omega2 = 0.;
     for(int i=0;i<3;i++){
-      for(int j=0;j<3;j++){
-	omega2 += 1./2.*Qprev[0][i]*z[i][j]*(Qprev[2][j]+Q[2][j]);
-      }
+      //for(int j=0;j<3;j++){
+      //omega2 += 1./2.*Qprev[0][i]*z[i][j]*(Qprev[2][j]+Q[2][j]);
+      omega2 += 1./2./dt*(Q[0][i]*Qprev[2][i]-Qprev[0][i]*Q[2][i]);
+      //}
     }
     double omega3 = 0.;
     for(int i=0;i<3;i++){
-      for(int j=0;j<3;j++){
-	omega3 -= 1./2.*Qprev[0][i]*z[i][j]*(Qprev[1][j]+Q[1][j]);
-      }
+      //for(int j=0;j<3;j++){
+      //omega3 -= 1./2.*Qprev[0][i]*z[i][j]*(Qprev[1][j]+Q[1][j]);
+      omega3 += 1./2./dt*(Q[1][i]*Qprev[0][i]-Qprev[1][i]*Q[0][i]);
+      //}
     }
     omega = Vector_3(omega1,omega2,omega3);
     omega_half = omega;
   }//Fin du calcul dans le cas d'une particule libre
-  /*//Test de fixer la rotation
+  /*Test de fixer la rotation
   rot[0][0]= rot[1][1] = rot[2][2] =1.;
-	rot[0][1] = rot[0][2] =rot[1][0] = rot[1][2] = rot[2][0] = rot[2][1] = 0.;
-	rotprev[0][0]= rotprev[1][1] = rotprev[2][2] =1.;
-	rotprev[0][1] = rotprev[0][2] =rotprev[1][0] = rotprev[1][2] = rotprev[2][0] = rotprev[2][1] = 0.;
-	omega = Vector_3(0.,0.,0.);
-	omega_half = omega;
-	//fin test */
+  rot[0][1] = rot[0][2] =rot[1][0] = rot[1][2] = rot[2][0] = rot[2][1] = 0.;
+  //rotprev[0][0]= rotprev[1][1] = rotprev[2][2] =1.;
+  //rotprev[0][1] = rotprev[0][2] =rotprev[1][0] = rotprev[1][2] = rotprev[2][0] = rotprev[2][1] = 0.;
+  omega = Vector_3(0.,0.,0.);
+  omega_half = omega;
+  //fin test */
   //Mise a jour de la transformation donnant le mouvement de la particule
   mvt_tprev = mvt_t;
   Aff_transformation_3 rotation(rot[0][0],rot[0][1],rot[0][2],rot[1][0],rot[1][1],rot[1][2],rot[2][0],rot[2][1],rot[2][2]);
@@ -1289,11 +1298,11 @@ void Particule::solve_vitesse(double dt){
 // 		omega2 = 0.;
 // 		//fin test 
     omega = Vector_3(omega1,omega2,omega3);
-		/*//Test de fixer la rotation
+    /*Test de fixer la rotation
 		rot[0][0]= rot[1][1] = rot[2][2] =1.;
 		rot[0][1] = rot[0][2] =rot[1][0] = rot[1][2] = rot[2][0] = rot[2][1] = 0.;
-		rotprev[0][0]= rotprev[1][1] = rotprev[2][2] =1.;
-		rotprev[0][1] = rotprev[0][2] =rotprev[1][0] = rotprev[1][2] = rotprev[2][0] = rotprev[2][1] = 0.;
+		//rotprev[0][0]= rotprev[1][1] = rotprev[2][2] =1.;
+		//rotprev[0][1] = rotprev[0][2] =rotprev[1][0] = rotprev[1][2] = rotprev[2][0] = rotprev[2][1] = 0.;
 		omega = Vector_3(0.,0.,0.);
 		omega_half = omega;
 		//fin test */
@@ -2102,7 +2111,11 @@ void Solide::Forces_internes(){
 		for(int j=0;j<solide[i].faces.size();j++){
 			if(solide[i].faces[j].voisin>=0){
 				int part = solide[i].faces[j].voisin;
-				Vector_3 Sn = 1./2.*cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos));
+				Vector_3 Sn = Vector_3(0.,0.,0.);
+				//Vector_3 Sn = 1./2.*cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos));
+				for(int k=1;k<solide[i].faces[j].size()-1;k++){
+				  Sn = Sn + 1./2.*cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[k].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[k+1].pos));
+				}
 				Point_3 c1 = solide[i].mvt_t.transform(solide[i].faces[j].centre);
 				Point_3 c2 = solide[part].mvt_t.transform(solide[i].faces[j].centre);
 				Vector_3 Delta_u(c1,c2);
@@ -2115,7 +2128,7 @@ void Solide::Forces_internes(){
 		for(int j=0;j<solide[i].faces.size();j++){
 			if(solide[i].faces[j].voisin>=0){
 				int part = solide[i].faces[j].voisin;
-				double S = 1./2.*sqrt(CGAL::to_double(cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos)).squared_length()));
+				double S = solide[i].faces[j].S;//1./2.*sqrt(CGAL::to_double(cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos)).squared_length()));
 				Vector_3 X1X2(solide[i].mvt_t.transform(solide[i].x0),solide[part].mvt_t.transform(solide[part].x0));
 				double DIJ = sqrt(CGAL::to_double(X1X2.squared_length()));
 				Vector_3 nIJ = X1X2/DIJ;
@@ -2211,7 +2224,12 @@ double Solide::Energie_potentielle(){
     for(int j=0;j<solide[i].faces.size();j++){
       if(solide[i].faces[j].voisin>=0){
 	int part = solide[i].faces[j].voisin;
-	Vector_3 Sn = 1./2.*cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos));
+	Vector_3 Sn = Vector_3(0.,0.,0.);
+	//Vector_3 Sn = 1./2.*cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos));
+	for(int k=1;k<solide[i].faces[j].size()-1;k++){
+	  Sn = Sn + 1./2.*cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[k].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[k+1].pos));
+	}
+	//Vector_3 Sn = 1./2.*cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos));
 	Point_3 c1 = solide[i].mvt_t.transform(solide[i].faces[j].centre);
 	Point_3 c2 = solide[part].mvt_t.transform(solide[i].faces[j].centre);
 	Vector_3 Delta_u(c1,c2);
@@ -2226,7 +2244,7 @@ double Solide::Energie_potentielle(){
     for(int j=0;j<solide[i].faces.size();j++){
       if(solide[i].faces[j].voisin>=0){
 	int part = solide[i].faces[j].voisin;
-	double S = 1./2.*sqrt(CGAL::to_double(cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos)).squared_length()));
+	double S = solide[i].faces[j].S;//1./2.*sqrt(CGAL::to_double(cross_product(Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[1].pos),Vector_3(solide[i].faces[j].vertex[0].pos,solide[i].faces[j].vertex[2].pos)).squared_length()));
 	Vector_3 X1X2(solide[i].mvt_t.transform(solide[i].x0),solide[part].mvt_t.transform(solide[part].x0));
 	double DIJ = sqrt(CGAL::to_double(X1X2.squared_length()));
 	Vector_3 nIJ = X1X2/DIJ;
@@ -2254,15 +2272,23 @@ double Solide::pas_temps(double t, double T){
   double dt = 10000.;
   //Restriction CFL sur la vitesse de rotation
   for(int i=0;i<size();i++){
-    double dt1 = cfls/(sqrt(CGAL::to_double(solide[i].omega.squared_length()))+eps);
+    double dt1 = cfls*0.26/(abs(CGAL::to_double(solide[i].omega.operator[](0)))+abs(CGAL::to_double(solide[i].omega.operator[](1)))+abs(CGAL::to_double(solide[i].omega.operator[](2)))+eps);
     dt = min(dt,dt1); 
   }
   //Restriction CFL liee aux forces internes
   double cs = sqrt(E*(1.-nu)/rhos/(1.+nu)/(1.-2.*nu));
+  //Calcul du rayon de la sphère inscrite
+  double sigma = 100000.;
+  for(int i=0;i<size();i++){
+    for(int j=0;j<solide[i].faces.size();j++){
+      sigma = min(sigma,solide[i].faces[j].D0);
+    }
+  }
   for(int i=0;i<size();i++){
     for(int j=0;j<solide[i].faces.size();j++){
       if(solide[i].faces[j].voisin>=0){
-	        dt = min(dt,cfls*solide[i].faces[j].D0/cs);
+	dt = min(dt,cfls*solide[i].faces[j].D0/cs);
+	//dt = min(dt,cfls*0.26*sqrt(pow(sigma,5)/solide[i].faces[j].S/solide[i].faces[j].D0)/cs);
       }
     }
   }
