@@ -40,6 +40,7 @@ public:
   void Inertie();
   Point_3 centre; //!< Centre de la face
   Vector_3 normale; //!< Normale sortante &agrave; la face
+  double S; //Surface de la face
   double Is; //!< Premier moment d'inertie de la face
   double It; //!< Second moment d'inertie de la face
   Vector_3 s; //!< Vecteur selon le premier axe principal d'inertie de la face

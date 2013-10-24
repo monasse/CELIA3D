@@ -1067,7 +1067,7 @@ void Particule::solve_position(double dt){
       err3 = fabs((dt*a[2]-2.*(d1-d2)*etemp1*etemp2)/(2.*(d1+d2)*etemp0)-etemp3);
     }
     if(err1>epsilon || err2>epsilon || err3>epsilon){
-      cout << "Problème de résolution de la rotation, e1=" << etemp1 << " e2=" << etemp2 << " e3=" << etemp3 << endl;
+      cout << "Problï¿½me de rï¿½solution de la rotation, e1=" << etemp1 << " e2=" << etemp2 << " e3=" << etemp3 << endl;
       cout << "erreur=" << err1 << " " << err2 << " " << err3 << endl;
     }
     //cout << k << endl;
@@ -1880,32 +1880,37 @@ void Solide::Init(const char* s){
     zmin = Z;
     const int nb_faces = Nfaces;
     std::vector<Face> Faces(nb_faces);
+		std::vector<Point_3> points_c;
     for(int j=0;j<nb_faces;j++){
       int Nvertex;
       maillage >> Nvertex;
       const int nb_vertex = Nvertex;
       std::vector<Vertex> Vertex(nb_vertex);
       for(int k=0;k<nb_vertex;k++){
-	int p;
-	maillage >> p;
-	Vertex[k].pos = Points[p];
-	Vertex[k].num = p;
-	points_particules[p][i] = true;
-	double x = CGAL::to_double(Points[p].operator[](0));
-	double y = CGAL::to_double(Points[p].operator[](1));
-	double z = CGAL::to_double(Points[p].operator[](2));
-	xmin = min(x,xmin);
-	xmax = max(x,xmax);
-	ymin = min(y,ymin);
-	ymax = max(y,ymax);
-	zmin = min(z,zmin);
-	zmax = max(z,zmax);
+				int p;
+				maillage >> p;
+				Vertex[k].pos = Points[p];
+				points_c.push_back(Points[p]);
+				Vertex[k].num = p;
+				points_particules[p][i] = true;
+				double x = CGAL::to_double(Points[p].operator[](0));
+				double y = CGAL::to_double(Points[p].operator[](1));
+				double z = CGAL::to_double(Points[p].operator[](2));
+				xmin = min(x,xmin);
+				xmax = max(x,xmax);
+				ymin = min(y,ymin);
+				ymax = max(y,ymax);
+				zmin = min(z,zmin);
+				zmax = max(z,zmax);
       }
       int voisin;
       maillage >> voisin;
       Faces[j] = Face(Vertex, voisin);
     }
-    P[i] = Particule(centre, xmin, ymin, zmin, xmax, ymax, zmax, Faces);
+    
+		Point_3 center_part= centroid(points_c.begin(), points_c.end());
+	
+    P[i] = Particule(center_part, xmin, ymin, zmin, xmax, ymax, zmax, Faces);
     P[i].fixe = fixe;
     P[i].u = Vector_3(u,v,w);
     P[i].omega = Vector_3(theta,phi,psi);
@@ -2277,7 +2282,7 @@ double Solide::pas_temps(double t, double T){
   }
   //Restriction CFL liee aux forces internes
   double cs = sqrt(E*(1.-nu)/rhos/(1.+nu)/(1.-2.*nu));
-  //Calcul du rayon de la sphère inscrite
+  //Calcul du rayon de la sphï¿½re inscrite
   double sigma = 100000.;
   for(int i=0;i<size();i++){
     for(int j=0;j<solide[i].faces.size();j++){
