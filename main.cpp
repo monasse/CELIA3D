@@ -203,19 +203,21 @@ int main(){
 	  t = temps[numrep];
 	}
 	Solide S;
-	S.Init("maillage_tetra.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
+	S.Init("maillage_break_2.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
+	//S.Affiche();
 	Grille Fluide;
 	Fluide.Init();
-	//Fluide.Parois(S, dt);
 	Fluide.Parois_particles(S,dt);
-	
+	//Fluide.parois_cellule_vide(S); //test 25 octobre 2013
+	//Fluide.Fill_cel(S); //test 4 nov 2013
 	Fluide.BC();
 	double volume_initial= 0.;
 	
 	for (int count=0; count<S.size(); count++){
 		volume_initial +=S.solide[count].volume();
+		//cout<<"position du centre de la particule "<<S.solide[count].x0 + S.solide[count].Dx<<endl;
+		
 	}
-	
 	int iter=0;	
 	clock_t start,end;
 	start =clock();
@@ -269,23 +271,28 @@ int main(){
 		
 		dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
 		//Fluide.affiche("avant Solve");
+		cout<<"avant solve"<<endl;
+		Fluide.affiche();
 		user_time2.start();
 		Fluide.Solve(dt, t, n);
 		//cout << "Temps calcul flux: " << user_time2.time() << " seconds." << endl;
+		cout<<"apres solve"<<endl;
+		Fluide.affiche();
 		temps_flux += CGAL::to_double(user_time2.time());
 		user_time2.reset();
 		//Fluide.affiche("Solve");
+		
 		//S.Forces_internes();
 		if(explicite){ //algo de couplage explicit
 		Fluide.Forces_fluide(S,dt);
 		S.Solve_position(dt);
 		//S.Solve_vitesse(dt);
+// 		S.Affiche();
 		user_time4.start();
-		//Fluide.Parois(S,dt);
 		Fluide.Parois_particles(S,dt);
+		Fluide.parois_cellule_vide(S);
 		temps_intersections += CGAL::to_double(user_time4.time());
 		user_time4.reset();
-		//S.Affiche();
 		}
 		
 		else{ //algo de couplage semi-implicit
@@ -303,7 +310,6 @@ int main(){
 				Sk = S ; 
 				Sk.Solve_position(dt);
 				//S.Solve_vitesse(dt);
-				//Fluide.Parois(Sk,dt);
 				Fluide.Parois_particles(Sk,dt);
 				erreur = Error(Sk, Sk_prev);
 				//cout<<" erreur := "<<erreur<<endl;
@@ -322,18 +328,24 @@ int main(){
 		S.Solve_vitesse(dt);
 		user_time.start();
 		Fluide.Swap_2d(dt,S);
+		cout<<"apres swap"<<endl;
+		Fluide.affiche();
 		temps_swap += CGAL::to_double(user_time.time());
 		user_time.reset();
 		Fluide.Modif_fnum(dt);
 		//Fluide.affiche("modif_fnum");
 		cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
 		//Fluide.Mixage();
-		Fluide.Mixage_cible(); //test 2 sept. 2013
+		Fluide.Mixage_cible(); //test 8 nov. 2013
 		cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
 		//Fluide.affiche("mixage");
 		Fluide.Fill_cel(S);
 		//Fluide.affiche("fill_cell");
+		cout<<"apres fill"<<endl;
+		Fluide.affiche();
 		Fluide.BC();
+		cout<<"apres BC"<<endl;
+		Fluide.affiche();
 		//Fluide.affiche("BC");
 		//temps_iter<< n << " "<<t<<" "<<dt<<endl;
 		t+= dt;
@@ -344,7 +356,7 @@ int main(){
 		for (int count=0; count<S.size(); count++){
 			volume_solide +=S.solide[count].volume();
 		}
-		Fluide.affiche();
+		//Fluide.affiche();
 		cout<<"volume solide particules "<<volume_solide<<endl;
 		variation_volume += volume_solide - volume_initial;
 	}

@@ -1070,3 +1070,122 @@ void Grille::Parois_particles(Solide& S,double dt) {
 //fin test septembre 2013
 
 
+
+
+void Grille::parois_cellule_vide(Solide& S) {
+	
+// 	for(int i=0;i<Nx+2*marge;i++){
+// 		for(int j=0;j<Ny+2*marge;j++){
+// 			for(int k=0;k<Nz+2*marge;k++){
+// 				Cellule c = grille[i][j][k]; 
+// 				
+//  				if(c.x>0.2 && c.x<0.8 &&  c.y>0.38 && c.y<0.47 && c.z>0.41 && c.z<0.61){
+// 				 //if(c.z>0.5){
+// 				//if(c.z>0.5 ){
+// 					//cout<<"tag tag"<<endl;
+// 					//cout<<c.x<<c.y<<c.z<<endl;
+// 					//getchar();
+// 					c.vide=true;
+// 					c.rho=0.;
+// 					c.p=0.;
+// 					c.impx=0.; c.impy=0.; c.impz=0.; c.rhoE=0.; 
+// 					c.u=0.; c.v=0.; c.w=0.;
+// 					grille[i][j][k]=c;
+// 				}
+// 			}
+// 		}
+// 	}
+	
+	const double eps_relat = numeric_limits<double>::epsilon( );
+	
+	std::vector<Bbox> box_grille;
+	const int nx_m=Nx+2*marge;
+	const int ny_m=Ny+2*marge;
+	const int nz_m=Nz+2*marge;
+	const int Ns = (nx_m+1)*(ny_m+1)*(nz_m+1);
+	const double volume_cel = deltax*deltay*deltaz;
+	
+	vector<vector<double> > Sommets(Ns, vector<double>(3,0.));
+	int l=0;
+	for(int i=0;i<nx_m+1;i++){
+		for(int j=0;j<ny_m+1;j++){
+			for(int k=0;k<nz_m+1;k++){
+				Sommets[l][0] = (i-marge)*deltax;
+				Sommets[l][1] = (j-marge)*deltay;
+				Sommets[l][2] = (k-marge)*deltaz;
+				l++;        
+			}
+		}
+	}
+	
+	
+	double x_min=0.,y_min=0.,z_min=0.,x_max=0.,y_max=0.,z_max=0.;
+	
+	for(int i=0; i<nx_m; i++){
+		for(int j=0; j<ny_m; j++){ 
+			for(int k=0; k<nz_m; k++){ 
+				x_min = Sommets[k+j*(nz_m+1)+i*(nz_m+1)*(ny_m+1)][0];
+				y_min = Sommets[k+j*(nz_m+1)+i*(nz_m+1)*(ny_m+1)][1];
+				z_min = Sommets[k+j*(nz_m+1)+i*(nz_m+1)*(ny_m+1)][2];
+				
+				x_max = Sommets[(k+1)+(j+1)*(nz_m+1)+(i+1)*(nz_m+1)*(ny_m+1)][0];
+				y_max = Sommets[(k+1)+(j+1)*(nz_m+1)+(i+1)*(nz_m+1)*(ny_m+1)][1];
+				z_max = Sommets[(k+1)+(j+1)*(nz_m+1)+(i+1)*(nz_m+1)*(ny_m+1)][2];
+				
+				box_grille.push_back(Bbox(x_min,y_min,z_min,x_max,y_max,z_max));
+				
+			}
+		}
+	}
+	
+	int nb_particules = S.size();
+	int taille = box_grille.size();
+	int nb_triangles=0.;
+	for(int iter=0; iter<nb_particules; iter++){
+		nb_triangles += S.solide[iter].triangles.size();
+	}
+	
+	const double eps_box = 0.1;
+	std::vector<Bbox> solide(nb_particules);
+	for(int it=0; it<nb_particules; it++){
+		solide[it] = Bbox(S.solide[it].min_x-eps_box,S.solide[it].min_y-eps_box, S.solide[it].min_z-eps_box, S.solide[it].max_x+eps_box, S.solide[it].max_y+eps_box, S.solide[it].max_z+eps_box);
+	}
+	
+		
+	Cellule cel;
+	int i=0;
+	for (int a=0; a< nx_m; a++){
+		for (int b=0; b< ny_m; b++){
+			for (int c=0; c< nz_m; c++){
+				cel = grille[a][b][c]; 
+				Triangles trianglesB;
+				for(int iter_s=0; iter_s<nb_particules; iter_s++){ //boucle sur les particules 
+					if (CGAL::do_intersect(box_grille[i],solide[iter_s]) ) {
+							triang_cellule(box_grille[i] , trianglesB); 
+							for ( int j = 0; j < S.solide[iter_s].triangles.size(); j++){ 
+								if (CGAL::do_intersect(box_grille[i],S.solide[iter_s].triangles[j]) ) {
+									if(S.solide[iter_s].vide[j] && grille[a][b][c].alpha <1.){
+										//cout<<" vide "<< grille[a][b][c].y << endl;  getchar();
+										grille[a][b][c].vide = true;
+										grille[a][b][c].rho = 0.;
+										grille[a][b][c].p = 0.;
+										grille[a][b][c].u = grille[a][b][c].v = grille[a][b][c].w = 0.;
+										//grille[a][b][c].rhoE = 0.;
+										//grille[a][b][c].impx =  grille[a][b][c].impy = grille[a][b][c].impz = 0.;
+									}
+								} // if intersection cellule[i] avec triangle[j]	 
+							} // end boucle sur triangles
+					} // if inter grille[i] et solide[iter_s] 
+				} //fin boucle sur les particules
+				i++;
+			} //fin boucle sur grille
+		}
+	}
+	for(int iter_s=0; iter_s<nb_particules; iter_s++){
+		for ( int j = 0; j < S.solide[iter_s].faces.size(); j++){ 
+			if(S.solide[iter_s].faces[j].voisin == -2)  {S.solide[iter_s].faces[j].voisin = -1;}
+		}
+	}
+	
+}
+

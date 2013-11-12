@@ -162,8 +162,11 @@ double rm[5];        //!< Variables pour le limiteur de flux TVD d&eacute;centre
      * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
      */
 		int proche1;       //!< Indicateur qui vaut 0 loin de la paroi, 1 pr&egrave;s de la paroi au temps t-dt.
-
-  
+		
+		/*! 
+		* \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
+		*/
+    bool vide;
   
     /*! 
      * \warning  <b>  Param&egrave;tre sp&eacute;cifique  au  couplage! </b>
@@ -373,10 +376,11 @@ class Grille
 	Cellule voisin_fluide(const Cellule &c, const int &i,  const int &j,  const int &k, bool &target, int & ii, int &jj, int &kk);
 	Cellule voisin_mixt(const Cellule &c, const int &i, const int &j,  const int &k, bool &target, int & ii, int &jj, int &kk);
 	Cellule voisin(const Cellule &c, const int &i, const int &j, const int &k, int & ii, int &jj, int &kk);
-	Cellule cible(const Cellule &c, const int &i, const int &j, const int &k, int & ii, int &jj, int &kk);
+	Cellule cible(const Cellule &c, const int &i, const int &j, const int &k, int & ii, int &jj, int &kk, const int ref_i, const int ref_j, const int ref_k);
 	void Mixage_cible();
 	void Parois_particles(Solide& S,double dt);
 	//void Parois_tetra(Solide& S,double dt);
+	void parois_cellule_vide(Solide& S);
 private :
 
 	double x;          //!< Position de l'origine.

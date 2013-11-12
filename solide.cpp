@@ -691,7 +691,7 @@ Particule::Particule(Point_3 c, const double x_min, const double y_min, const do
 			Triangle_3 Tri(s,r,v);
 			triangles.push_back(Tri);
 			normales.push_back(faces[i].normale);
-			if(faces[i].voisin == -1){
+			if(faces[i].voisin < 0){
 				fluide.push_back(true);
 			} else {
 				fluide.push_back(false);
@@ -701,13 +701,17 @@ Particule::Particule(Point_3 c, const double x_min, const double y_min, const do
 				Triangle_3 Tri(s,v,r);
 				triangles.push_back(Tri);
 				normales.push_back(faces[i].normale);
-				if(faces[i].voisin == -1){
+				if(faces[i].voisin < 0){
 					fluide.push_back(true);
 				} else {
 					fluide.push_back(false);
 				}
 			}
-
+			if(faces[i].voisin == -2){
+				vide.push_back(true);
+			} else {
+				vide.push_back(false);
+			}
 		}
 		
 	else{
@@ -728,10 +732,16 @@ Particule::Particule(Point_3 c, const double x_min, const double y_min, const do
 					Triangle_3 Tri(s,r,v);
 					triangles.push_back(Tri);
 					normales.push_back(faces[i].normale);
-					if(faces[i].voisin == -1){
-			fluide.push_back(true);
+					if(faces[i].voisin < 0){
+			           fluide.push_back(true);
 					} else {
-			fluide.push_back(false);
+			           fluide.push_back(false);
+					}
+					if(faces[i].voisin == -2){
+						vide.push_back(true);
+						//cout<<" vide "<<faces[i].centre << endl;  getchar();
+					} else {
+						vide.push_back(false);
 					}
 				}
 		}
@@ -807,7 +817,10 @@ Particule & Particule:: operator=(const Particule &P){
 	for(int i = 0; i< P.triangles.size(); i++){
 		triangles[i] = P.triangles[i];
 	}
-	
+	vide.resize(P.vide.size()); 
+	for(int i = 0; i< P.vide.size(); i++){
+		vide[i] = P.vide[i];
+	}
 	triangles_prev.resize(P.triangles_prev.size()); 
 	for(int i = 0; i< P.triangles_prev.size(); i++){
 		triangles_prev[i] = P.triangles_prev[i];
@@ -890,24 +903,16 @@ Particule & Particule:: operator=(const Particule &P){
  */
 void Particule::Affiche(){
 	
-//	std::cout<<" volume of solide := "<<volume()<<std::endl;
- 	std::cout<<" Point min x:= "<< min_x<<std::endl;
-  std::cout<<" Point max x:= "<< max_x<<std::endl;
-	std::cout<<" Point min y:= "<< min_y<<std::endl;
-	std::cout<<" Point max y:= "<< max_y<<std::endl;
-	std::cout<<" Point min z:= "<< min_z<<std::endl;
-	std::cout<<" Point max z:= "<< max_z<<std::endl;
-// 	for(int i=0; i<triangles.size(); i++){
-// 		std::cout<<" triangles:= "<< triangles[i]<<std::endl;
-// 	}
-//std::cout<<" P interface size := "<< Points_interface.size()<<std::endl;
-// std::cout<<" T interface size := "<< Triangles_interface.size()<<std::endl;
-
-//  for(int i=0; i<Triangles_interface.size(); i++){
-// 	if(!fluide[i])
-// 	//std::cout<<"nr triangle "<<j<<" contact fluide "<<fluide[j]<<"  points interface:= "<<interface[j][i]<<std::endl;
-// 	std::cout<<"triangles size"<<Triangles_interface[i].size()<<std::endl;
-// }
+	for(int i=0; i<faces.size(); i++){
+		cout<<"face "<<i<<endl;
+		cout<<" voisin "<<faces[i].voisin<<endl;
+		for(int j=0; j<faces[i].size() ;j++){
+			cout<<" vertex "<<faces[i].vertex[j].num<<endl;
+			for(int k=0; k<faces[i].vertex[j].particules.size();k++){
+				cout<<faces[i].vertex[j].particules[k]<<endl;
+			}
+		}
+	}
 
 }
 
@@ -971,9 +976,9 @@ void Particule::solve_position(double dt){
     rot[2][2] = 1.-2.*CGAL::to_double(e.operator[](0)*e.operator[](0)+e.operator[](1)*e.operator[](1));
     for(int i=0;i<3;i++){
       for(int j=0;j<3;j++){
-	Q[i][j] = rot[i][0]*rotref[0][j];
-	Q[i][j] += rot[i][1]*rotref[1][j];
-	Q[i][j] += rot[i][2]*rotref[2][j];
+				Q[i][j] = rot[i][0]*rotref[0][j];
+				Q[i][j] += rot[i][1]*rotref[1][j];
+				Q[i][j] += rot[i][2]*rotref[2][j];
       }
     }    
     eprev = e;
@@ -982,7 +987,7 @@ void Particule::solve_position(double dt){
     Omega[0] = Omega[1] = Omega[2] = 0.;
     for(int j=0;j<3;j++){
       for(int k=0;k<3;k++){
-	Omega[j] += CGAL::to_double(omega.operator[](k)*Q[k][j]);
+	       Omega[j] += CGAL::to_double(omega.operator[](k)*Q[k][j]);
       }
     }
     //cout << "debut " << Omega[0] << " " << Omega[1] << " " << Omega[2] << endl;
@@ -1067,7 +1072,7 @@ void Particule::solve_position(double dt){
       err3 = fabs((dt*a[2]-2.*(d1-d2)*etemp1*etemp2)/(2.*(d1+d2)*etemp0)-etemp3);
     }
     if(err1>epsilon || err2>epsilon || err3>epsilon){
-      cout << "Probl�me de r�solution de la rotation, e1=" << etemp1 << " e2=" << etemp2 << " e3=" << etemp3 << endl;
+      cout << "Probleme de resolution de la rotation, e1=" << etemp1 << " e2=" << etemp2 << " e3=" << etemp3 << endl;
       cout << "erreur=" << err1 << " " << err2 << " " << err3 << endl;
     }
     //cout << k << endl;
@@ -1176,6 +1181,7 @@ void Particule::solve_position(double dt){
   Aff_transformation_3 translation(CGAL::TRANSLATION,Vector_3(Point_3(0.,0.,0.),x0)+Dx);
   Aff_transformation_3 translation_inv(CGAL::TRANSLATION,Vector_3(x0,Point_3(0.,0.,0.)));
   mvt_t = translation*(rotation*translation_inv);
+	//cout<<"position du centre de la particule "<<x0+Dx<<endl;
 }
 
 /*!
@@ -1818,6 +1824,7 @@ Solide & Solide:: operator=(const Solide &S){
 void Solide::Affiche(){
 	
   for(int i=0; i<solide.size(); i++){
+		cout<<"Particule "<<i<<endl;
     solide[i].Affiche();
   }
 
@@ -1926,6 +1933,7 @@ void Solide::Init(const char* s){
 	  if(points_particules[P[i].faces[j].vertex[k].num][l]){
 	    P[i].faces[j].vertex[k].particules.push_back(l);
 	    //cout << i << " " << j << " " << k << " " <<  P[i].faces[j].vertex[k].num << " " << l << endl;
+			//cout << P[i].faces[j].vertex[k].num << " " << l << endl;
 	    //getchar();
 	  }
 	}
@@ -2059,6 +2067,7 @@ void Solide::Solve_position(double dt){
   for(int i=0;i<size();i++){
     solide[i].solve_position(dt);
   }
+  breaking_criterion();
   update_triangles();
 	for(int i=0;i<size();i++){
 		double x_min = solide[i].max_x, y_min=solide[i].max_y, z_min=solide[i].max_z, 
@@ -2324,6 +2333,7 @@ void Solide::update_triangles(){
 		solide[i].triangles.erase(solide[i].triangles.begin(),solide[i].triangles.end());
 		solide[i].normales.erase(solide[i].normales.begin(),solide[i].normales.end());
 		solide[i].fluide.erase(solide[i].fluide.begin(),solide[i].fluide.end());
+		solide[i].vide.erase(solide[i].vide.begin(),solide[i].vide.end());
 		
 		//Calcul de la nouvelle position des triangles
 		for(int f=0;f<solide[i].faces.size();f++){
@@ -2357,10 +2367,15 @@ void Solide::update_triangles(){
 				Vector_3 normale = CGAL::cross_product(vect0,vect1);
 				normale = normale*(1./sqrt(CGAL::to_double(normale.squared_length())));
 				solide[i].normales.push_back(normale);
-				if(solide[i].faces[f].voisin == -1){
+				if(solide[i].faces[f].voisin < 0){
 					solide[i].fluide.push_back(true);
 				} else {
 					solide[i].fluide.push_back(false);
+				}
+				if( solide[i].faces[f].voisin == -2){
+					solide[i].vide.push_back(true);
+				} else {
+					solide[i].vide.push_back(false);
 				}
 			}
 	
@@ -2394,12 +2409,17 @@ void Solide::update_triangles(){
 			Vector_3 normale = CGAL::cross_product(vect0,vect1);
 			normale = normale*(1./sqrt(CGAL::to_double(normale.squared_length())));
 			solide[i].normales.push_back(normale);
-			if(solide[i].faces[f].voisin == -1){
+			if(solide[i].faces[f].voisin < 0){
 				solide[i].fluide.push_back(true);
 			} 
 			else {
 				solide[i].fluide.push_back(false);
 		  }
+		  if( solide[i].faces[f].voisin == -2){
+				solide[i].vide.push_back(true);
+			} else {
+				solide[i].vide.push_back(false);
+			}
 	  }
   }
 			
@@ -2737,6 +2757,158 @@ for(int it=0; it<nb_part; it++){
 	}
 	vtk << "\n";
 	vtk.close();
+}
+
+void Solide::breaking_criterion(){
+	for(int it=0; it<solide.size(); it++){
+		//cout<<"particule it "<<it<<endl; 
+		for(int i=0; i<solide[it].faces.size(); i++){
+			if(solide[it].faces[i].voisin >= 0){
+				for(int iter=0; iter<solide.size(); iter++){
+						if(it!=iter){
+								if(solide[it].faces[i].voisin == iter){
+									//cout<<"tag break "<<solide[it].faces[i].voisin<<endl;
+									double distance = sqrt(CGAL::to_double(CGAL::squared_distance(Point_3(solide[it].Dx.x() + solide[it].x0.x(), solide[it].Dx.y() + solide[it].x0.y(), solide[it].Dx.z() + solide[it].x0.z())  ,Point_3(solide[iter].Dx.x() + solide[iter].x0.x(),solide[iter].Dx.y() + solide[iter].x0.y(), solide[iter].Dx.z() + solide[iter].x0.z()) )));
+	                  if( (distance - solide[it].faces[i].D0)/solide[it].faces[i].D0 >= k_max){
+										cout<<"BREAK!!!!"<<endl; //cout<<"particule iter "<<iter<<endl;
+										solide[it].faces[i].voisin = -2;
+										int j;
+										for(int f=0; f<solide[iter].faces.size(); f++){ //
+											if(solide[iter].faces[f].voisin == it){
+										    solide[iter].faces[f].voisin = -2;
+												j=f;
+											}
+										}
+										for(int count=0; count<solide[it].faces.size() ; count++){
+											for(int ii=0; ii<solide[it].faces[count].vertex.size(); ii++)
+											{ 
+												std::vector<int> particules;
+												for(int part=0; part<solide[it].faces[count].vertex[ii].particules.size(); part++){
+													if(solide[it].faces[count].vertex[ii].particules[part] != iter){
+														particules.push_back(solide[it].faces[count].vertex[ii].particules[part]);
+													}
+												}
+													solide[it].faces[count].vertex[ii].particules.erase(solide[it].faces[count].vertex[ii].particules.begin(),
+																																					solide[it].faces[count].vertex[ii].particules.end());
+												  solide[it].faces[count].vertex[ii].particules = particules;
+																																					
+											}
+									 }
+									 for(int count=0; count<solide[iter].faces.size() ; count++){
+										 for(int ii=0; ii<solide[iter].faces[count].vertex.size(); ii++)
+											{ 
+												std::vector<int> particules;
+												for(int part=0; part<solide[iter].faces[count].vertex[ii].particules.size(); part++){
+													if(solide[iter].faces[count].vertex[ii].particules[part] != it){
+														particules.push_back(solide[iter].faces[count].vertex[ii].particules[part]);
+													}
+												}
+												solide[iter].faces[count].vertex[ii].particules.erase(solide[iter].faces[count].vertex[ii].particules.begin(),
+																																							solide[iter].faces[count].vertex[ii].particules.end());
+												solide[iter].faces[count].vertex[ii].particules = particules;
+											}
+									  }
+									  for(int count=0; count<solide.size() ; count++){
+											if(count != it && count != iter){
+												bool voisin_it = false;
+												for(int jj=0; jj<solide[count].faces.size() ; jj++){
+													if(solide[count].faces[jj].voisin==it){
+														voisin_it=true;
+													}
+												}
+												if(!voisin_it){
+													//cout<<"voisin it"<<endl;
+													for(int kk=0; kk<solide[it].faces[i].size() ; kk++){
+															for(int jj=0; jj<solide[count].faces.size() ; jj++){
+																for(int ii=0; ii<solide[count].faces[jj].vertex.size(); ii++)
+																{   
+																	if(solide[it].faces[i].vertex[kk].num == solide[count].faces[jj].vertex[ii].num){
+																			std::vector<int> particules;
+																			for(int part=0; part<solide[count].faces[jj].vertex[ii].particules.size(); part++){
+																				if(solide[count].faces[jj].vertex[ii].particules[part] != it){
+																					particules.push_back(solide[count].faces[jj].vertex[ii].particules[part]);
+																				}
+																			}
+																			solide[count].faces[jj].vertex[ii].particules.erase(solide[count].faces[jj].vertex[ii].particules.begin(), solide[count].faces[jj].vertex[ii].particules.end());
+																			solide[count].faces[jj].vertex[ii].particules = particules;
+																  }
+																}
+															}
+													}
+													for(int kk=0; kk<solide[it].faces[i].size() ; kk++){
+														for(int jj=0; jj<solide[it].faces.size() ; jj++){
+															for(int ii=0; ii<solide[it].faces[jj].vertex.size(); ii++)
+															{   
+																if(solide[it].faces[i].vertex[kk].num == solide[it].faces[jj].vertex[ii].num){
+																	std::vector<int> particules;
+																	for(int part=0; part<solide[it].faces[jj].vertex[ii].particules.size(); part++){
+																		if(solide[it].faces[jj].vertex[ii].particules[part] != count){
+																			particules.push_back(solide[it].faces[jj].vertex[ii].particules[part]);
+																		}
+																	}
+																	solide[it].faces[jj].vertex[ii].particules.erase(solide[it].faces[jj].vertex[ii].particules.begin(), solide[it].faces[jj].vertex[ii].particules.end());
+																	solide[it].faces[jj].vertex[ii].particules = particules;
+																}
+															}
+														}
+													}
+												}
+												bool voisin_iter = false;
+												for(int jj=0; jj<solide[count].faces.size() ; jj++){
+													if(solide[count].faces[jj].voisin == iter){
+														voisin_iter=true;
+													}
+												}
+												if(!voisin_iter){
+													//cout<<"voisin iter"<<endl;
+													for(int kk=0; kk<solide[iter].faces[j].size() ; kk++){
+														for(int jj=0; jj<solide[count].faces.size() ; jj++){
+															for(int ii=0; ii<solide[count].faces[jj].vertex.size(); ii++)
+															{   
+																if(solide[iter].faces[j].vertex[kk].num == solide[count].faces[jj].vertex[ii].num){
+																	std::vector<int> particules;
+																	for(int part=0; part<solide[count].faces[jj].vertex[ii].particules.size(); part++){
+																		if(solide[count].faces[jj].vertex[ii].particules[part] != iter){
+																			particules.push_back(solide[count].faces[jj].vertex[ii].particules[part]);
+																		}
+																	}
+																	solide[count].faces[jj].vertex[ii].particules.erase(solide[count].faces[jj].vertex[ii].particules.begin(), solide[count].faces[jj].vertex[ii].particules.end());
+																	solide[count].faces[jj].vertex[ii].particules = particules;
+																}
+															}
+														}
+													}
+													for(int kk=0; kk<solide[iter].faces[j].size() ; kk++){
+														for(int jj=0; jj<solide[iter].faces.size() ; jj++){
+															for(int ii=0; ii<solide[iter].faces[jj].vertex.size(); ii++)
+															{   
+																if(solide[iter].faces[j].vertex[kk].num == solide[iter].faces[jj].vertex[ii].num){
+																	std::vector<int> particules;
+																	for(int part=0; part<solide[iter].faces[jj].vertex[ii].particules.size(); part++){
+																		if(solide[iter].faces[jj].vertex[ii].particules[part] != count){
+																			particules.push_back(solide[iter].faces[jj].vertex[ii].particules[part]);
+																		}
+																	}
+																	solide[iter].faces[jj].vertex[ii].particules.erase(solide[iter].faces[jj].vertex[ii].particules.begin(), solide[iter].faces[jj].vertex[ii].particules.end());
+																	solide[iter].faces[jj].vertex[ii].particules = particules;
+																}
+															}
+														}
+													}
+												}
+												
+											} //end !it et !iter
+										}//end count
+									  
+									} //break
+								}
+						}
+					}
+			}
+		}
+	}
+	//cout<<"Affiche "<<endl; Affiche();
+	//cout<<"fin break"<<endl;
 }
 
 

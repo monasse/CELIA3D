@@ -21,7 +21,7 @@ public:
   int size(){
 	return particules.size();
   }
-  std::vector<int> particules; //!< Vecteur de particules auxquelles \a poz appartient 
+  std::vector<int> particules; //!< Vecteur de particules auxquelles \a pos appartient 
 };
 
 //! D&eacute;finition de la classe Face
@@ -107,6 +107,10 @@ class Particule
   std::vector<Vector_3> normales_prev; //!< normales ext&eacute;rieures aux \a Particule.triangles_prev
     
     /*! 
+		* \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
+		*/
+		std::vector<bool> vide; //!< =true si \a Particule.triangles en contact avec le fluide
+    /*! 
      * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
      */
 		std::vector<bool> fluide; //!< =true si \a Particule.triangles en contact avec le fluide
@@ -163,7 +167,7 @@ class Particule
      * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
      */
 		Vector_3 Ffprev; //!< Forces fluides exerc&eacute;es sur le solide entre t-dt/2 et t
-  Vector_3 Mi; //!< Moments int&eacute;rieurs du solide
+    Vector_3 Mi; //!< Moments int&eacute;rieurs du solide
     /*! 
      * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
      */
@@ -202,6 +206,7 @@ public:
   void Solve_vitesse(double dt);
   void Forces_internes();
   void update_triangles();
+	void breaking_criterion();
   double Energie();
   double Energie_potentielle();
   double Energie_cinetique();

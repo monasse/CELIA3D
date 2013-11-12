@@ -42,9 +42,9 @@ void Grille::Forces_fluide(Solide& S, const double dt){
     Kernel::FT mx = 0.,my = 0. ,mz = 0.;
 		
 		for(int it=0; it<S.solide[iter_s].triangles.size(); it++){
-			if(S.solide[iter_s].fluide[it]){
+			//if(S.solide[iter_s].fluide[it]){
 				for(int iter=0; iter<S.solide[iter_s].Position_Triangles_interface[it].size(); iter++)
-				{
+				{  
 					double aire= std::sqrt(CGAL::to_double(S.solide[iter_s].Triangles_interface[it][iter].squared_area()));
 					if(dt>eps){	
 						int i= S.solide[iter_s].Position_Triangles_interface[it][iter][0]; 
@@ -54,7 +54,7 @@ void Grille::Forces_fluide(Solide& S, const double dt){
 						double tempx = (grille[i][j][k].pdtx/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].x()));
 						double tempy = (grille[i][j][k].pdty/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].y()));
 						double tempz = (grille[i][j][k].pdtz/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].z()));
-						
+						//cout<<"tag tag "<<iter<<" "<<grille[i][j][k].pdtx<<" "<<grille[i][j][k].y<<endl;
 						Vector_3 temp_Mf = cross_product(Vector_3(Xn,Point_3(centroid(S.solide[iter_s].Triangles_interface[it][iter].operator[](0),
 																						S.solide[iter_s].Triangles_interface[it][iter].operator[](1),
 																						S.solide[iter_s].Triangles_interface[it][iter].operator[](2)))), 
@@ -63,14 +63,13 @@ void Grille::Forces_fluide(Solide& S, const double dt){
 					mx+= temp_Mf.x(); my+= temp_Mf.y(); mz+= temp_Mf.z();
 					}
 			   }
+		//}
 		}
-		}
-		
 		S.solide[iter_s].Ff = Vector_3(fx,fy,fz);
 		S.solide[iter_s].Mf = Vector_3(CGAL::to_double(mx),CGAL::to_double(my),CGAL::to_double(mz)); 
 		Ffluide = Ffluide + S.solide[iter_s].Ff;
 	} //fin boucle sur les particules
-	cout<<"forces fluide "<<Ffluide<<endl;	
+	  cout<<"forces fluide "<<Ffluide<<endl;	
 }	
 
 /*!
@@ -101,7 +100,7 @@ void Grille::Modif_fnum(const double dt){
 		for(int j=marge;j<Ny+marge;j++){ 
 			for(int k=marge;k<Nz+marge;k++){
 				c = grille[i][j][k];
-				if(std::abs(c.alpha-1.)>eps){
+				if(std::abs(c.alpha-1.)>eps && !c.vide){
 					ci = grille[i-1][j][k];    //Cellule  i-1
 					cj = grille[i][j-1][k];    //Cellule  j-1
 					ck = grille[i][j][k-1];    //Cellule  k-1
@@ -116,19 +115,30 @@ void Grille::Modif_fnum(const double dt){
 						+ (1.-c.kappaj)*c.dtfyj[l] - (1.-cj.kappaj)*cj.dtfyj[l]
 						+ (1.-c.kappak)*c.dtfzk[l] - (1.-ck.kappak)*ck.dtfzk[l] - c.delta_w[l];
 						c.flux_modif[l] /= (1.-c.alpha);
-					}		
+					}
 					//Mise a jour des valeurs dans les cellules
 					c.rho = c.rho0  +  c.flux_modif[0];
 					c.impx = c.impx0 + c.flux_modif[1];
 					c.impy = c.impy0 + c.flux_modif[2];
 					c.impz = c.impz0 + c.flux_modif[3];
 					c.rhoE = c.rhoE0 + c.flux_modif[4];
-					c.u = c.impx/c.rho;
-					c.v = c.impy/c.rho;
-					c.w = c.impz/c.rho;
-					c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2. - c.rho*c.w*c.w/2.);
-					phi_x+=c.phi_x*vol/dt; phi_y+=c.phi_y*vol/dt; phi_z+=c.phi_z*vol/dt;
-					
+					if(std::abs(c.rho) > eps){
+						c.u = c.impx/c.rho;
+						c.v = c.impy/c.rho;
+						c.w = c.impz/c.rho;
+						c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2. - c.rho*c.w*c.w/2.);
+						if(std::abs(c.p) > eps){
+						c.vide = false;
+						}
+						phi_x+=c.phi_x*vol/dt; phi_y+=c.phi_y*vol/dt; phi_z+=c.phi_z*vol/dt;
+					}
+					//if( (c.rho <= eps && c.rho >= 0.) || (c.p <= eps && c.p >= 0.)){
+						if( (abs(c.rho) <= eps) || (abs(c.p) <= eps)){
+						c.u = 0.; c.v = 0.; c.w = 0.; c.p = 0.;
+						c.impx=0.; c.impy=0.; c.impz=0.; c.rhoE=0.;
+						c.vide = true;
+					}
+					else{c.vide = false;}
 				}
 				grille[i][j][k] = c;      
 			}
@@ -159,7 +169,7 @@ void Grille::Mixage(){
 			for(int k=marge;k<Nz+marge;k++){
 				cp = grille[i][j][k];
 				bool test=true;
-				if( (cp.alpha>epsa ||cp.p <0. || cp.rho<0.) && abs(cp.alpha-1.)>eps){
+				if( (cp.alpha>epsa ||cp.p <0. || cp.rho<0.) && abs(cp.alpha-1.)>eps && !cp.vide){
 					
 					for(int ii=-1; ii<=1 && test; ii++){
 						for(int jj=-1; jj<=1 && test; jj++){
@@ -524,10 +534,7 @@ void Grille::Fill_cel(Solide& S){
 		  for(int k=marge;k<Nz+marge;k++){
 				Triangle_3 Tri;
 				c = grille[i][j][k];
-				if((std::abs(c.alpha-1.)<eps)){
-					//test 18 septembre 2013
-					//if((std::abs(c.rho)>eps)){cout<<"cellule solide non vide "<< c.rho<<endl;}
-					//fin test 18 septembre 2013
+				if((std::abs(c.alpha-1.)<eps) ){
 				  Point_3 center_cell(c.x, c.y, c.z);
 				  int nbx=0, nby=0,nbz=0;
 				  Point_3 projete(0.,0.,0.); //Projete sur la face la plus proche
@@ -621,6 +628,10 @@ void Grille::Fill_cel(Solide& S){
 				  c.impy = c.rho*c.v;
 				  c.impz = c.rho*c.w;
 				  c.rhoE = c.rho/2.*(c.u*c.u+c.v*c.v+c.w*c.w)+c.p/(gam-1.);
+					if( (c.rho <= eps && c.rho >= 0.) || (c.p <= eps && c.p >= 0.)){
+						c.vide = true;
+					}
+					else{c.vide = false;}
 				  grille[i][j][k] = c;
 				}
 			}
@@ -1264,12 +1275,12 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 				Vector_3 V_f = P.vitesse_parois_prev(center_prev);
 				c.phi_v += aire_prev * (CGAL::to_double(c.pdtx*n_prev.x()*V_f.x()  + c.pdty*n_prev.y()*V_f.y()+
 				c.pdtz*n_prev.z()*V_f.z()))/volume_cel;
-//test 11 octobre 2013			
-// 				if (abs(c.phi_x)<=eps) {c.phi_x = 0.;} 
-// 				if (abs(c.phi_y)<=eps) {c.phi_y = 0.;} 
-// 				if (abs(c.phi_z)<=eps) {c.phi_z = 0.;} 
-// 				if (abs(c.phi_v)<=eps) {c.phi_v = 0.;} 
-//fin test 11 octobre 2013			
+				//test 11 octobre 2013
+				// 				if (abs(c.phi_x)<=eps) {c.phi_x = 0.;} 
+				// 				if (abs(c.phi_y)<=eps) {c.phi_y = 0.;} 
+				// 				if (abs(c.phi_z)<=eps) {c.phi_z = 0.;} 
+				// 				if (abs(c.phi_v)<=eps) {c.phi_v = 0.;} 
+				//fin test 11 octobre 2013
 				grille[in1][jn1][kn1] = c;
 			}
 		}//explicit algo
@@ -1284,12 +1295,12 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 				c.phi_z += c.pdtz * aire *( CGAL::to_double(n.z()))/(c.dx*c.dy*c.dz);
 				Vector_3 V_f = P.vitesse_parois(center_n);
 				c.phi_v += aire * (CGAL::to_double(c.pdtx*n.x()*V_f.x()  + c.pdty*n.y()*V_f.y() + c.pdtz*n.z()*V_f.z()))/(c.dx*c.dy*c.dz);
-//test 11 octobre 2013				
-// 				if (abs(c.phi_x)<=eps) {c.phi_x = 0.;} 
-// 				if (abs(c.phi_y)<=eps) {c.phi_y = 0.;} 
-// 				if (abs(c.phi_z)<=eps) {c.phi_z = 0.;} 
-// 				if (abs(c.phi_v)<=eps) {c.phi_v = 0.;} 
-// test 11 octobre 2013
+				//test 11 octobre 2013
+				// 				if (abs(c.phi_x)<=eps) {c.phi_x = 0.;} 
+				// 				if (abs(c.phi_y)<=eps) {c.phi_y = 0.;} 
+				// 				if (abs(c.phi_z)<=eps) {c.phi_z = 0.;} 
+				// 				if (abs(c.phi_v)<=eps) {c.phi_v = 0.;} 
+				// test 11 octobre 2013
 				grille[in1][jn1][kn1] = c;
 			}
 		} //semi_implicit algo
@@ -1670,8 +1681,8 @@ void Grille::Mixage_cible(){
 			for(int k=marge;k<Nz+marge;k++){
 				Cellule cp = grille[i][j][k];
 				int ii=i, jj=j, kk=k;
-				if((cp.alpha>epsa || cp.p<0. || cp.rho<0.) && abs(cp.alpha-1.)>eps){
-					Cellule cg = cible(grille[i][j][k], i, j,k, ii,jj,kk);
+				if((cp.alpha>epsa || cp.p<0. || cp.rho<0.) && abs(cp.alpha-1.)>eps && !cp.vide){
+					Cellule cg = cible(grille[i][j][k], i, j,k, ii,jj,kk, i,j,k);
 					
 					cg.cible_alpha += (1.-cp.alpha);
 					cg.cible_rho  += (1.-cp.alpha)*cp.rho;
@@ -1702,7 +1713,7 @@ void Grille::Mixage_cible(){
 			for(int k=marge;k<Nz+marge;k++){
 				Cellule cp = grille[i][j][k];
 
-				if(std::abs(cp.cible_alpha)>0.){
+				if(std::abs(cp.cible_alpha)>0. && !cp.vide){
 					cp.rho = ((1.-cp.alpha)*cp.rho + cp.cible_rho)/((1.-cp.alpha) + cp.cible_alpha);
 					cp.impx = ((1.-cp.alpha)*cp.impx + cp.cible_impx)/((1.-cp.alpha) + cp.cible_alpha);
 					cp.impy = ((1.-cp.alpha)*cp.impy + cp.cible_impy)/((1.-cp.alpha) + cp.cible_alpha);
@@ -1734,7 +1745,7 @@ void Grille::Mixage_cible(){
 					cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
 					grille[i][j][k] = cp;
 					
-					if(grille[i][j][k].p<0. || grille[i][j][k].rho<0.){
+					if(grille[i][j][k].p<0. || grille[i][j][k].rho<0. && !cp.vide){
 						test_fini = false;
 					}
 			}
