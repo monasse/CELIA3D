@@ -241,7 +241,7 @@ void reprise(){
 
 double Rho(double x,double y, double z){ 
 	double rho;
-	if(x<0.5)  //{rho = 8.;}
+	if(x<0.28) // {rho = 8.;}
 	{rho = 1.4;}
 	else {rho = 1.4;}
 
@@ -304,7 +304,7 @@ double W(double x,double y, double z){
 double P(double x,double y, double z, double dx, double dy, double dz){ 
 	
 	double p;
-	if(x<0.5)//{p = 116.5;} 
+	if(x<0.28)//{p = 116.5;} 
 	{p = 1.;} 
 	else {p = 1.;}
 // if(x>0.2 && x<0.6 &&  y>0.41 && y<0.46){p=0.;}

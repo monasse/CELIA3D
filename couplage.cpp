@@ -122,18 +122,18 @@ void Grille::Modif_fnum(const double dt){
 					c.impy = c.impy0 + c.flux_modif[2];
 					c.impz = c.impz0 + c.flux_modif[3];
 					c.rhoE = c.rhoE0 + c.flux_modif[4];
-					if(std::abs(c.rho) > eps){
+					if(std::abs(c.rho) > eps_vide){
 						c.u = c.impx/c.rho;
 						c.v = c.impy/c.rho;
 						c.w = c.impz/c.rho;
 						c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2. - c.rho*c.w*c.w/2.);
-						if(std::abs(c.p) > eps){
+						if(std::abs(c.p) > eps_vide){
 						c.vide = false;
 						}
 						phi_x+=c.phi_x*vol/dt; phi_y+=c.phi_y*vol/dt; phi_z+=c.phi_z*vol/dt;
 					}
 					//if( (c.rho <= eps && c.rho >= 0.) || (c.p <= eps && c.p >= 0.)){
-						if( (abs(c.rho) <= eps) || (abs(c.p) <= eps)){
+					if( (abs(c.rho) <= eps_vide) || (abs(c.p) <= eps_vide)){
 						c.u = 0.; c.v = 0.; c.w = 0.; c.p = 0.;
 						c.impx=0.; c.impy=0.; c.impz=0.; c.rhoE=0.;
 						c.vide = true;
@@ -174,7 +174,7 @@ void Grille::Mixage(){
 					for(int ii=-1; ii<=1 && test; ii++){
 						for(int jj=-1; jj<=1 && test; jj++){
 							for(int kk=-1; kk<=1 && test; kk++){
-								if (grille[i+ii][j+jj][k+kk].alpha <eps && grille[i+ii][j+jj][k+kk].p>0. && grille[i+ii][j+jj][k+kk].rho>0. && i+ii>=marge && i+ii<Nx+marge && j+jj>=marge && j+jj<Ny+marge && k+kk>=marge && k+kk<Nz+marge)
+								if (grille[i+ii][j+jj][k+kk].alpha <eps && grille[i+ii][j+jj][k+kk].p>0. && grille[i+ii][j+jj][k+kk].rho>0. && i+ii>=marge && i+ii<Nx+marge && j+jj>=marge && j+jj<Ny+marge && k+kk>=marge && k+kk<Nz+marge && !grille[i+ii][j+jj][k+kk].vide)
 								{
 									test=false;
 									cg = grille[i+ii][j+jj][k+kk];
@@ -231,7 +231,7 @@ void Grille::Mixage(){
 					
 					if(test){
 						
-						if (grille[i-2][j][k].alpha == 0. && grille[i-2][j][k].p>0. && grille[i-2][j][k].rho>0. && i-2>=marge)
+						if (grille[i-2][j][k].alpha == 0. && grille[i-2][j][k].p>0. && grille[i-2][j][k].rho>0. && i-2>=marge && !grille[i-2][j][k].vide)
 						{
 							cg = grille[i-2][j][k];
 							
@@ -272,7 +272,7 @@ void Grille::Mixage(){
 							grille[i-2][j][k] = cg;
 							test = false;
 						}
-						else if (grille[i+2][j][k].alpha == 0. && grille[i+2][j][k].p>0. && grille[i+2][j][k].rho>0. &&  i+2<Nx+marge)
+						else if (grille[i+2][j][k].alpha == 0. && grille[i+2][j][k].p>0. && grille[i+2][j][k].rho>0. &&  i+2<Nx+marge && !grille[i+2][j][k].vide)
 						{
 							cg = grille[i+2][j][k];
 							
@@ -313,7 +313,7 @@ void Grille::Mixage(){
 							test = false;
 						}
 						
-						else if (grille[i][j-2][k].alpha == 0. && grille[i][j-2][k].p>0. && grille[i][j-2][k].rho>0. && j-2>=marge)
+						else if (grille[i][j-2][k].alpha == 0. && grille[i][j-2][k].p>0. && grille[i][j-2][k].rho>0. && j-2>=marge && !grille[i][j-2][k].vide)
 						{
 							cg = grille[i][j-2][k];
 							
@@ -355,7 +355,7 @@ void Grille::Mixage(){
 							test = false;
 							
 						}
-						else if (grille[i][j+2][k].alpha == 0. && grille[i][j+2][k].p>0. && grille[i][j+2][k].rho>0.&& j+2<Ny+marge)
+						else if (grille[i][j+2][k].alpha == 0. && grille[i][j+2][k].p>0. && grille[i][j+2][k].rho>0.&& j+2<Ny+marge && !grille[i][j+2][k].vide)
 						{
 							cg = grille[i][j+2][k];
 							
@@ -395,7 +395,7 @@ void Grille::Mixage(){
 							grille[i][j+2][k] = cg;
 							test = false;
 						}
-						else if (grille[i][j][k-2].alpha == 0. && grille[i][j][k-2].p>0. && grille[i][j][k-2].rho>0.&& k-2>=marge)
+						else if (grille[i][j][k-2].alpha == 0. && grille[i][j][k-2].p>0. && grille[i][j][k-2].rho>0.&& k-2>=marge && !grille[i][j][k-2].vide)
 						{
 							cg = grille[i][j][k-2];
 							
@@ -436,7 +436,7 @@ void Grille::Mixage(){
 							grille[i][j][k-2] = cg;
 							test = false;
 						}
-						else if(grille[i][j][k+2].alpha == 0. && grille[i][j][k+2].p>0. && grille[i][j][k+2].rho>0. && k+2 < Nz+marge)
+						else if(grille[i][j][k+2].alpha == 0. && grille[i][j][k+2].p>0. && grille[i][j][k+2].rho>0. && k+2 < Nz+marge && !grille[i][j][k+2].vide)
 						{
 							cg = grille[i][j][k+2];
 							
@@ -627,8 +627,10 @@ void Grille::Fill_cel(Solide& S){
 				  c.impx = c.rho*c.u;
 				  c.impy = c.rho*c.v;
 				  c.impz = c.rho*c.w;
+					if(std::abs(2.*(c.u*c.u+c.v*c.v+c.w*c.w)+c.p/(gam-1.)) > eps_vide){
 				  c.rhoE = c.rho/2.*(c.u*c.u+c.v*c.v+c.w*c.w)+c.p/(gam-1.);
-					if( (c.rho <= eps && c.rho >= 0.) || (c.p <= eps && c.p >= 0.)){
+					}
+					if( (std::abs(c.rho) <= eps_vide ) || (std::abs(c.p)<= eps_vide) ){
 						c.vide = true;
 					}
 					else{c.vide = false;}
@@ -1680,10 +1682,13 @@ void Grille::Mixage_cible(){
 		for(int j=marge;j<Ny+marge;j++){ 
 			for(int k=marge;k<Nz+marge;k++){
 				Cellule cp = grille[i][j][k];
-				int ii=i, jj=j, kk=k;
 				if((cp.alpha>epsa || cp.p<0. || cp.rho<0.) && abs(cp.alpha-1.)>eps && !cp.vide){
-					Cellule cg = cible(grille[i][j][k], i, j,k, ii,jj,kk, i,j,k);
-					
+				  std::vector< std::vector<int> > tab_cible; 
+					std::vector<int> poz(3); poz[0]= i; poz[1] = j; poz[2] = k; tab_cible.push_back(poz);
+
+
+          Cellule cg = cible(grille[i][j][k], tab_cible);
+
 					cg.cible_alpha += (1.-cp.alpha);
 					cg.cible_rho  += (1.-cp.alpha)*cp.rho;
 					cg.cible_impx += (1.-cp.alpha)*cp.impx;
@@ -1691,12 +1696,13 @@ void Grille::Mixage_cible(){
 					cg.cible_impz += (1.-cp.alpha)*cp.impz;
 					cg.cible_rhoE += (1.-cp.alpha)*cp.rhoE;
 					
-					cp.cible_i= ii;
-					cp.cible_j = jj;
-					cp.cible_k = kk;
+					cp.cible_i= cg.i;
+					cp.cible_j = cg.j;
+					cp.cible_k = cg.k;
 					
 					grille[i][j][k] = cp;
-					grille[ii][jj][kk] = cg;
+					grille[cg.i][cg.j][cg.k] = cg;
+
 
 				}
 				else{
@@ -1719,10 +1725,22 @@ void Grille::Mixage_cible(){
 					cp.impy = ((1.-cp.alpha)*cp.impy + cp.cible_impy)/((1.-cp.alpha) + cp.cible_alpha);
 					cp.impz = ((1.-cp.alpha)*cp.impz + cp.cible_impz)/((1.-cp.alpha) + cp.cible_alpha);
 					cp.rhoE = ((1.-cp.alpha)*cp.rhoE + cp.cible_rhoE)/((1.-cp.alpha) + cp.cible_alpha);
+					if(std::abs(cp.rho) > eps_vide){
 					cp.u = cp.impx/cp.rho;
 					cp.v = cp.impy/cp.rho;
 					cp.w = cp.impz/cp.rho;
 					cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
+					if(std::abs(cp.p) < eps_vide){
+						cp.vide=true;
+					}
+				}
+					else{
+						cp.u = 0.;
+						cp.v = 0.;
+						cp.w = 0.;
+						cp.p = 0.;
+						cp.vide=true;
+					}
 					grille[i][j][k] = cp;
 				}
 			}
@@ -1739,10 +1757,22 @@ void Grille::Mixage_cible(){
 					cp.impy = cible.impy;
 					cp.impz = cible.impz;
 					cp.rhoE = cible.rhoE;
+					if(std::abs(cp.rho) > eps_vide){
 					cp.u = cp.impx/cp.rho;
 					cp.v = cp.impy/cp.rho;
 					cp.w = cp.impz/cp.rho;
 					cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
+					if(std::abs(cp.p) < eps_vide){
+						cp.vide=true;
+					}
+				}
+					else{
+						cp.u = 0.;
+						cp.v = 0.;
+						cp.w = 0.;
+						cp.p = 0.;
+						cp.vide=true;
+					}
 					grille[i][j][k] = cp;
 					
 					if(grille[i][j][k].p<0. || grille[i][j][k].rho<0. && !cp.vide){

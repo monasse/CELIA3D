@@ -29,21 +29,21 @@ bool explicite = true;
  * \warning  <b> Param&egrave;tre sp&eacute;cifique au  couplage! </b>
  */
 //Parametres pour le fluide
-const double gam = 1.4;            //constante des gaz parfaits 
+const double gam = 1.4;                   //constante des gaz parfaits 
 const double eps =  0.00000000000001;     //constante proche de 0 pour le controle 
-const double epsa = 0.5;           //fraction de cellule coupee
-const int ordremax = 11;           //ordre maximal du schema
-const int marge = 6;              //marge de cellules a appliquer au debut et a la fin du tableau des cellules  
-
+const double epsa = 0.5;                  //fraction de cellule coupee
+const int ordremax = 11;                  //ordre maximal du schema
+const int marge = 6;                      //marge de cellules a appliquer au debut et a la fin du tableau des cellules  
+const double eps_vide =  0.0000000001;     
 const int N_dim=3;
 
 const double X0 = 0;              //pozition de l'origine
 const double Y0 = 0;
 const double Z0 = 0;
 
-const int Nx =43;                 //nombre de cellules de fluide selon x
-const int Ny =43;                 //nombre de cellules de fluide selon y
-const int Nz =13;                 //nombre de cellules de fluide selon z
+const int Nx =73;                 //nombre de cellules de fluide selon x
+const int Ny =53;                 //nombre de cellules de fluide selon y
+const int Nz =27;                 //nombre de cellules de fluide selon z
 
 const double domainex = 2.;            //Largeur du domaine fluide selon x
 const double domainey = 2.;          //Largeur du domaine fluide selon y

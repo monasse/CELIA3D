@@ -267,7 +267,7 @@ int main(){
 		cout<<"Energie Fluide: "<< Fluide.Energie() << " Energie Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 		ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S <<" "<<Fluide.Masse() - masse <<"  "<< volume_solide - volume_initial<<endl;
 		center<< t << " "<<S.solide[nb_part-1].x0.operator[](0) + S.solide[nb_part-1].Dx.operator[](0) << " "<<S.solide[nb_part-1].x0.operator[](1) + S.solide[nb_part-1].Dx.operator[](1) << " "<<S.solide[nb_part-1].x0.operator[](2) + S.solide[nb_part-1].Dx.operator[](2) <<endl;
-
+		cout<<"Variation Energie: "<< Fluide.Energie() +  S.Energie() - E0<<" Variation Masse : "<< Fluide.Masse() - masse<<endl;
 		
 		dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
 		//Fluide.affiche("avant Solve");
@@ -290,7 +290,7 @@ int main(){
 // 		S.Affiche();
 		user_time4.start();
 		Fluide.Parois_particles(S,dt);
-		Fluide.parois_cellule_vide(S);
+	  //Fluide.parois_cellule_vide(S);
 		temps_intersections += CGAL::to_double(user_time4.time());
 		user_time4.reset();
 		}
@@ -328,12 +328,13 @@ int main(){
 		S.Solve_vitesse(dt);
 		user_time.start();
 		Fluide.Swap_2d(dt,S);
-		cout<<"apres swap"<<endl;
-		Fluide.affiche();
+		//cout<<"apres swap"<<endl;
+		//Fluide.affiche();
 		temps_swap += CGAL::to_double(user_time.time());
 		user_time.reset();
 		Fluide.Modif_fnum(dt);
-		//Fluide.affiche("modif_fnum");
+		//cout<<"apres modif flux"<<endl;
+		//Fluide.affiche();
 		cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
 		//Fluide.Mixage();
 		Fluide.Mixage_cible(); //test 8 nov. 2013
@@ -341,11 +342,11 @@ int main(){
 		//Fluide.affiche("mixage");
 		Fluide.Fill_cel(S);
 		//Fluide.affiche("fill_cell");
-		cout<<"apres fill"<<endl;
-		Fluide.affiche();
+		//cout<<"apres fill"<<endl;
+		//Fluide.affiche();
 		Fluide.BC();
-		cout<<"apres BC"<<endl;
-		Fluide.affiche();
+		//cout<<"apres BC"<<endl;
+		//Fluide.affiche();
 		//Fluide.affiche("BC");
 		//temps_iter<< n << " "<<t<<" "<<dt<<endl;
 		t+= dt;

@@ -1079,12 +1079,7 @@ void Grille::parois_cellule_vide(Solide& S) {
 // 			for(int k=0;k<Nz+2*marge;k++){
 // 				Cellule c = grille[i][j][k]; 
 // 				
-//  				if(c.x>0.2 && c.x<0.8 &&  c.y>0.38 && c.y<0.47 && c.z>0.41 && c.z<0.61){
-// 				 //if(c.z>0.5){
-// 				//if(c.z>0.5 ){
-// 					//cout<<"tag tag"<<endl;
-// 					//cout<<c.x<<c.y<<c.z<<endl;
-// 					//getchar();
+//  				if(c.x>0.3 && c.x<0.6 &&  c.y>0.18 && c.y<0.47 && c.z>0.4 && c.z<0.6){
 // 					c.vide=true;
 // 					c.rho=0.;
 // 					c.p=0.;
@@ -1164,7 +1159,7 @@ void Grille::parois_cellule_vide(Solide& S) {
 							triang_cellule(box_grille[i] , trianglesB); 
 							for ( int j = 0; j < S.solide[iter_s].triangles.size(); j++){ 
 								if (CGAL::do_intersect(box_grille[i],S.solide[iter_s].triangles[j]) ) {
-									if(S.solide[iter_s].vide[j] && grille[a][b][c].alpha <1.){
+									if(S.solide[iter_s].vide[j] && abs(grille[a][b][c].alpha0 -1.)<eps){
 										//cout<<" vide "<< grille[a][b][c].y << endl;  getchar();
 										grille[a][b][c].vide = true;
 										grille[a][b][c].rho = 0.;

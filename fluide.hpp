@@ -49,6 +49,10 @@ public :
   double x;       
   double y;
   double z; 
+	
+	int i;
+	int j;
+	int k;
 
   //! (dx, dy,dz) Taille de la cellule.
   double dx;       
@@ -373,10 +377,10 @@ class Grille
   void Swap_2d(const double dt, Solide& S); // Sous-programme de calcul des quantitees balayees
   void Swap_3d(const double dt, Solide& S); // Sous-programme de calcul des quantitees balayees
 	
-	Cellule voisin_fluide(const Cellule &c, const int &i,  const int &j,  const int &k, bool &target, int & ii, int &jj, int &kk);
-	Cellule voisin_mixt(const Cellule &c, const int &i, const int &j,  const int &k, bool &target, int & ii, int &jj, int &kk);
-	Cellule voisin(const Cellule &c, const int &i, const int &j, const int &k, int & ii, int &jj, int &kk);
-	Cellule cible(const Cellule &c, const int &i, const int &j, const int &k, int & ii, int &jj, int &kk, const int ref_i, const int ref_j, const int ref_k);
+	Cellule voisin_fluide(const Cellule &c,  bool &target);
+	Cellule voisin_mixt(const Cellule &c,  bool &target);
+	Cellule voisin(const Cellule &c);
+	Cellule cible(const Cellule &c, std::vector< std::vector<int> > & tab_cible );
 	void Mixage_cible();
 	void Parois_particles(Solide& S,double dt);
 	//void Parois_tetra(Solide& S,double dt);
