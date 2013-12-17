@@ -42,7 +42,7 @@ void Grille::Forces_fluide(Solide& S, const double dt){
     Kernel::FT mx = 0.,my = 0. ,mz = 0.;
 		
 		for(int it=0; it<S.solide[iter_s].triangles.size(); it++){
-			//if(S.solide[iter_s].fluide[it]){
+			//if(S.solide[iter_s].fluide[it] && !S.solide[iter_s].vide[it]){
 				for(int iter=0; iter<S.solide[iter_s].Position_Triangles_interface[it].size(); iter++)
 				{  
 					double aire= std::sqrt(CGAL::to_double(S.solide[iter_s].Triangles_interface[it][iter].squared_area()));
@@ -64,12 +64,19 @@ void Grille::Forces_fluide(Solide& S, const double dt){
 					}
 			   }
 		//}
-		}
+	}
 		S.solide[iter_s].Ff = Vector_3(fx,fy,fz);
 		S.solide[iter_s].Mf = Vector_3(CGAL::to_double(mx),CGAL::to_double(my),CGAL::to_double(mz)); 
 		Ffluide = Ffluide + S.solide[iter_s].Ff;
 	} //fin boucle sur les particules
-	  cout<<"forces fluide "<<Ffluide<<endl;	
+	  cout<<"forces fluide "<<Ffluide<<endl;
+		for(int it=0; it<S.solide.size(); it++){
+			for(int i=0; i<S.solide[it].faces.size(); i++){
+				if(S.solide[it].faces[i].voisin == -2){
+					S.solide[it].faces[i].voisin = -1;
+				}
+			}
+		}
 }	
 
 /*!

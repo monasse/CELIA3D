@@ -203,7 +203,7 @@ int main(){
 	  t = temps[numrep];
 	}
 	Solide S;
-	S.Init("maillage_break_2.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
+	S.Init("maillage_tetra_break.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	//S.Affiche();
 	Grille Fluide;
 	Fluide.Init();
@@ -297,13 +297,13 @@ int main(){
 		
 		else{ //algo de couplage semi-implicit
 			//semi-implicit
-			int kmax=50;
+			int kmax=20;
 			double erreur = 1.;
 			user_time5.start();
 			Solide Sk = S;
 			Solide Sk_prev = Sk;
 			int k;
-			for(k=0;(erreur>1.e-19) && (k<kmax) ;k++){
+			for(k=0;(erreur>1.e-10) && (k<kmax) ;k++){
 				Fluide.Forces_fluide(Sk,dt);
 				Copy_f_m(S,Sk); //attention c'est tres important d'appeller cette fonction car sinon on va ecraser les valeurs Sk.F_f et Sk.M_f!!!!!
 				Sk_prev = Sk; 
@@ -337,7 +337,7 @@ int main(){
 		//Fluide.affiche();
 		cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
 		//Fluide.Mixage();
-		Fluide.Mixage_cible(); //test 8 nov. 2013
+		Fluide.Mixage_cible(); //test 25 nov. 2013
 		cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
 		//Fluide.affiche("mixage");
 		Fluide.Fill_cel(S);

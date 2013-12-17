@@ -739,7 +739,6 @@ Particule::Particule(Point_3 c, const double x_min, const double y_min, const do
 					}
 					if(faces[i].voisin == -2){
 						vide.push_back(true);
-						//cout<<" vide "<<faces[i].centre << endl;  getchar();
 					} else {
 						vide.push_back(false);
 					}
@@ -2161,9 +2160,10 @@ void Solide::Forces_internes(){
 				solide[i].Mi = solide[i].Mi + cross_product(solide[i].mvt_t.transform(XC1),S/solide[i].faces[j].D0*E/(1.+nu)*Delta_u);
 				solide[i].Mi = solide[i].Mi + cross_product(solide[i].mvt_t.transform(XC1),S*E*nu/(1.+nu)/(1.-2.*nu)*epsilonIJ*(nIJ+Delta_u/DIJ-(Delta_u*nIJ)/DIJ*nIJ));
 				//Moments de flexion/torsion
-				double alphan = (1.+2.*nu)*E/4./(1.+nu)/S*(solide[i].faces[j].Is+solide[i].faces[j].It);
-				double alphas = E/4./(1.+nu)/S*((3.+2.*nu)*solide[i].faces[j].Is-(1.+2.*nu)*solide[i].faces[j].It);
-				double alphat = E/4./(1.+nu)/S*((3.+2.*nu)*solide[i].faces[j].It-(1.+2.*nu)*solide[i].faces[j].Is);
+				double kappa = 1.;
+				double alphan = (2.+2.*nu-kappa)*E/4./(1.+nu)/S*(solide[i].faces[j].Is+solide[i].faces[j].It);
+				double alphas = E/4./(1.+nu)/S*((2.+2.*nu+kappa)*solide[i].faces[j].Is-(2.+2.*nu-kappa)*solide[i].faces[j].It);
+				double alphat = E/4./(1.+nu)/S*((2.+2.*nu+kappa)*solide[i].faces[j].It-(2.+2.*nu-kappa)*solide[i].faces[j].Is);
 				solide[i].Mi = solide[i].Mi + S/solide[i].faces[j].D0*(alphan*cross_product(solide[i].mvt_t.transform(solide[i].faces[j].normale),solide[part].mvt_t.transform(solide[i].faces[j].normale))+alphas*cross_product(solide[i].mvt_t.transform(solide[i].faces[j].s),solide[part].mvt_t.transform(solide[i].faces[j].s))+alphat*cross_product(solide[i].mvt_t.transform(solide[i].faces[j].t),solide[part].mvt_t.transform(solide[i].faces[j].t)));
 			}
 		}
@@ -2272,9 +2272,10 @@ double Solide::Energie_potentielle(){
 	//Energie de rappel elastique
 	Ep += 1./4.*S/solide[i].faces[j].D0*E/(1.+nu)*CGAL::to_double(Delta_u*Delta_u);
 	//Moments de flexion/torsion
-	double alphan = (1.+2.*nu)*E/4./(1.+nu)/S*(solide[i].faces[j].Is+solide[i].faces[j].It);
-	double alphas = E/4./(1.+nu)/S*((3.+2.*nu)*solide[i].faces[j].Is-(1.+2.*nu)*solide[i].faces[j].It);
-	double alphat = E/4./(1.+nu)/S*((3.+2.*nu)*solide[i].faces[j].It-(1.+2.*nu)*solide[i].faces[j].Is);
+	double kappa = 1.;
+	double alphan = (2.+2.*nu-kappa)*E/4./(1.+nu)/S*(solide[i].faces[j].Is+solide[i].faces[j].It);
+	double alphas = E/4./(1.+nu)/S*((2.+2.*nu+kappa)*solide[i].faces[j].Is-(2.+2.*nu-kappa)*solide[i].faces[j].It);
+	double alphat = E/4./(1.+nu)/S*((2.+2.*nu+kappa)*solide[i].faces[j].It-(2.+2.*nu-kappa)*solide[i].faces[j].Is);
 	Ep += S/2./solide[i].faces[j].D0*(alphan*(1.-CGAL::to_double(solide[i].mvt_t.transform(solide[i].faces[j].normale)*solide[part].mvt_t.transform(solide[i].faces[j].normale)))+alphas*(1.-CGAL::to_double(solide[i].mvt_t.transform(solide[i].faces[j].s)*solide[part].mvt_t.transform(solide[i].faces[j].s)))+alphat*(1.-CGAL::to_double(solide[i].mvt_t.transform(solide[i].faces[j].t)*solide[part].mvt_t.transform(solide[i].faces[j].t))));
       }
     }
@@ -2767,7 +2768,6 @@ void Solide::breaking_criterion(){
 				for(int iter=0; iter<solide.size(); iter++){
 						if(it!=iter){
 								if(solide[it].faces[i].voisin == iter){
-									//cout<<"tag break "<<solide[it].faces[i].voisin<<endl;
 									double distance = sqrt(CGAL::to_double(CGAL::squared_distance(Point_3(solide[it].Dx.x() + solide[it].x0.x(), solide[it].Dx.y() + solide[it].x0.y(), solide[it].Dx.z() + solide[it].x0.z())  ,Point_3(solide[iter].Dx.x() + solide[iter].x0.x(),solide[iter].Dx.y() + solide[iter].x0.y(), solide[iter].Dx.z() + solide[iter].x0.z()) )));
 	                  if( (distance - solide[it].faces[i].D0)/solide[it].faces[i].D0 >= k_max){
 										cout<<"BREAK!!!!"<<endl; //cout<<"particule iter "<<iter<<endl;

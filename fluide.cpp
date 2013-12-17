@@ -514,8 +514,8 @@ void Grille::affiche()
 			for(int j=1;j<Ny+2*marge-1;j++){ 
 				for(int k=1;k<Nz+2*marge-1;k++){
 					if(grille[i][j][k].vide ){
-						if(grille[i][j][k].alpha < 1.){
-								cout<<"cellule vide "<<grille[i][j][k].x<< " "<<grille[i][j][k].y<<" "<<grille[i][j][k].z<<" alpha0 "<<grille[i][j][k].alpha0 <<"  alpha "<<grille[i][j][k].alpha <<endl; }
+						//if(grille[i][j][k].alpha < 1.){
+								//cout<<"cellule vide "<<grille[i][j][k].x<< " "<<grille[i][j][k].y<<" "<<grille[i][j][k].z<<" alpha0 "<<grille[i][j][k].alpha0 <<"  alpha "<<grille[i][j][k].alpha <<endl; }
 								//cout<<" rho= "<<grille[i][j][k].rho<< " p= "<<grille[i][j][k].p<<endl; 
 								count++;
 							}
