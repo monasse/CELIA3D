@@ -1165,15 +1165,21 @@ void Particule::solve_position(double dt){
     }
     omega = Vector_3(omega1,omega2,omega3);
     omega_half = omega;
+		if(flag_2d){
+			omega = Vector_3(0.,0.,omega3);
+			omega_half = omega;
+		}
   }//Fin du calcul dans le cas d'une particule libre
   /*Test de fixer la rotation
   rot[0][0]= rot[1][1] = rot[2][2] =1.;
   rot[0][1] = rot[0][2] =rot[1][0] = rot[1][2] = rot[2][0] = rot[2][1] = 0.;
   //rotprev[0][0]= rotprev[1][1] = rotprev[2][2] =1.;
   //rotprev[0][1] = rotprev[0][2] =rotprev[1][0] = rotprev[1][2] = rotprev[2][0] = rotprev[2][1] = 0.;
+
   omega = Vector_3(0.,0.,0.);
   omega_half = omega;
   //fin test */
+
   //Mise a jour de la transformation donnant le mouvement de la particule
   mvt_tprev = mvt_t;
   Aff_transformation_3 rotation(rot[0][0],rot[0][1],rot[0][2],rot[1][0],rot[1][1],rot[1][2],rot[2][0],rot[2][1],rot[2][2]);
@@ -1299,8 +1305,10 @@ void Particule::solve_vitesse(double dt){
       }
     }
 //     //Test pour fixer les composantes x et y de la rotation
-// 		omega1 = 0.;
-// 		omega2 = 0.;
+			if(flag_2d){
+			 		omega1 = 0.;
+			 		omega2 = 0.;
+			}
 // 		//fin test 
     omega = Vector_3(omega1,omega2,omega3);
     /*Test de fixer la rotation

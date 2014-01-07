@@ -28,6 +28,9 @@ bool explicite = true;
 /*! 
  * \warning  <b> Param&egrave;tre sp&eacute;cifique au  couplage! </b>
  */
+
+bool flag_2d = true;
+
 //Parametres pour le fluide
 const double gam = 1.4;                   //constante des gaz parfaits 
 const double eps =  0.00000000000001;     //constante proche de 0 pour le controle 
@@ -41,11 +44,11 @@ const double X0 = 0;              //pozition de l'origine
 const double Y0 = 0;
 const double Z0 = 0;
 
-const int Nx =51;                 //nombre de cellules de fluide selon x
-const int Ny =11;                 //nombre de cellules de fluide selon y
-const int Nz =3;                 //nombre de cellules de fluide selon z
+const int Nx =55;                 //nombre de cellules de fluide selon x
+const int Ny =55;                 //nombre de cellules de fluide selon y
+const int Nz =55;                 //nombre de cellules de fluide selon z
 
-const double domainex = 3.;            //Largeur du domaine fluide selon x
+const double domainex = 1.;            //Largeur du domaine fluide selon x
 const double domainey = 1.;          //Largeur du domaine fluide selon y
 const double domainez = 1.;          //Largeur du domaine fluide selon z
 
@@ -54,15 +57,15 @@ const double deltay = domainey/Ny;       //Pas d'espace pour le fluide selon y
 const double deltaz = domainez/Nz;       //Pas d'espace pour le fluide selon z
 
 //Parametres solides
-const double rhos =2.e3; //Densite du solide 
+const double rhos =100; //Densite du solide 
 const double nu = 0.; //Coefficient de Poisson du materiau
-const double E = 20.e9; //Module d'Young du materiau
+const double E = 7000; //Module d'Young du materiau
 const double k_max = 0.01; 
 
 //Parametres temprels
 const double T = 0.5;             //temps total de simulation
 const double cfl = 0.5;            //valeur de la cfl fluide
-const double cfls = 0.1;           //Valeur de la cfl solide
+const double cfls = 0.5;           //Valeur de la cfl solide
 const int nimp = 100;                //Nombre d'impressions
 const double dtimp = T/nimp;        //Pas de temps entre deux impressions
 const int Nmax = 1000000;           //nombre maximal d'iterations en temps

@@ -50,17 +50,18 @@ void Grille::Forces_fluide(Solide& S, const double dt){
 						int i= S.solide[iter_s].Position_Triangles_interface[it][iter][0]; 
 						int j= S.solide[iter_s].Position_Triangles_interface[it][iter][1]; 
 						int k= S.solide[iter_s].Position_Triangles_interface[it][iter][2]; 
-						
-						double tempx = (grille[i][j][k].pdtx/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].x()));
-						double tempy = (grille[i][j][k].pdty/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].y()));
-						double tempz = (grille[i][j][k].pdtz/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].z()));
-						//cout<<"tag tag "<<iter<<" "<<grille[i][j][k].pdtx<<" "<<grille[i][j][k].y<<endl;
-						Vector_3 temp_Mf = cross_product(Vector_3(Xn,Point_3(centroid(S.solide[iter_s].Triangles_interface[it][iter].operator[](0),
-																						S.solide[iter_s].Triangles_interface[it][iter].operator[](1),
-																						S.solide[iter_s].Triangles_interface[it][iter].operator[](2)))), 
-																						Vector_3(-tempx,-tempy,-tempz));
-					fx-= tempx; fy-= tempy; fz-= tempz;
-					mx+= temp_Mf.x(); my+= temp_Mf.y(); mz+= temp_Mf.z();
+						if(i>=marge && i<Nx+marge && j>=marge && j<Ny+marge && k>=marge && k<Nz+marge){
+							double tempx = (grille[i][j][k].pdtx/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].x()));
+							double tempy = (grille[i][j][k].pdty/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].y()));
+							double tempz = (grille[i][j][k].pdtz/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].z()));
+							//cout<<"tag tag "<<iter<<" "<<grille[i][j][k].pdtx<<" "<<grille[i][j][k].y<<endl;
+							Vector_3 temp_Mf = cross_product(Vector_3(Xn,Point_3(centroid(S.solide[iter_s].Triangles_interface[it][iter].operator[](0),
+																							S.solide[iter_s].Triangles_interface[it][iter].operator[](1),
+																							S.solide[iter_s].Triangles_interface[it][iter].operator[](2)))), 
+																							Vector_3(-tempx,-tempy,-tempz));
+						fx-= tempx; fy-= tempy; fz-= tempz;
+						mx+= temp_Mf.x(); my+= temp_Mf.y(); mz+= temp_Mf.z();
+					  }
 					}
 			   }
 		//}

@@ -203,7 +203,7 @@ int main(){
 	  t = temps[numrep];
 	}
 	Solide S;
-	S.Init("maillage_tetra_break.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
+	S.Init("maillage.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	//S.Affiche();
 	Grille Fluide;
 	Fluide.Init();
