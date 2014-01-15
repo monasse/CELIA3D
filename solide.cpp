@@ -714,35 +714,64 @@ Particule::Particule(Point_3 c, const double x_min, const double y_min, const do
 			}
 		}
 		
-	else{
-				Point_3 s,r,v;
-				s = faces[i].centre;
-				for(int k=0;k<faces[i].size();k++){
-					int kp = (k+1)%(faces[i].size());
-					r = faces[i].vertex[k].pos;
-					v = faces[i].vertex[kp].pos;
-					Vector_3 vect0(s,r);
-					Vector_3 vect1(s,v);
-					/*Verification que les faces ne sont pas alignees
-					for(int j=kp+1;(j<faces[i].size()) && (CGAL::to_double(vect0*vect1) == 0.);j++){
-			v = faces[i].vertex[j].pos;
-			vect1 = Vector_3(s,v);
-			k++;
-			}*/
-					Triangle_3 Tri(s,r,v);
-					triangles.push_back(Tri);
-					normales.push_back(faces[i].normale);
-					if(faces[i].voisin < 0){
-			           fluide.push_back(true);
-					} else {
-			           fluide.push_back(false);
-					}
-					if(faces[i].voisin == -2){
-						vide.push_back(true);
-					} else {
-						vide.push_back(false);
-					}
+// 	else if(flag_2d){
+// 				Point_3 s,r,v,t;
+// 				
+// 
+// 					s = faces[i].vertex[0].pos;
+// 					r = faces[i].vertex[1].pos;
+// 					v = faces[i].vertex[2].pos;
+// 					t = faces[i].vertex[3].pos;
+// 					
+// 					Triangle_3 Tri1(s,r,v);
+// 					triangles.push_back(Tri1);
+// 					Triangle_3 Tri2(v,t,s);
+// 					triangles.push_back(Tri2);
+// 					
+// 					normales.push_back(faces[i].normale);
+// 					normales.push_back(faces[i].normale);
+// 					
+// 					if(faces[i].voisin < 0){
+// 			           fluide.push_back(true);
+// 								 fluide.push_back(true);
+// 					} else {
+// 			           fluide.push_back(false);
+// 								 fluide.push_back(false);
+// 					}
+// 					if(faces[i].voisin == -2){
+// 						vide.push_back(true);
+// 						vide.push_back(true);
+// 					} else {
+// 						vide.push_back(false);
+// 						vide.push_back(false);
+// 					}
+// 
+// 		}
+		else{
+			Point_3 s,r,v;
+			s = faces[i].centre;
+			for(int k=0;k<faces[i].size();k++){
+				int kp = (k+1)%(faces[i].size());
+				r = faces[i].vertex[k].pos;
+				v = faces[i].vertex[kp].pos;
+				Vector_3 vect0(s,r);
+				Vector_3 vect1(s,v);
+				
+				Triangle_3 Tri(s,r,v);
+				triangles.push_back(Tri);
+				normales.push_back(faces[i].normale);
+				
+				if(faces[i].voisin < 0){
+					fluide.push_back(true);
+				} else {
+					fluide.push_back(false);
 				}
+				if(faces[i].voisin == -2){
+					vide.push_back(true);
+				} else {
+					vide.push_back(false);
+				}
+			}
 		}
 		
   }// end boucle sur les faces
@@ -2346,7 +2375,7 @@ void Solide::update_triangles(){
 		
 		//Calcul de la nouvelle position des triangles
 		for(int f=0;f<solide[i].faces.size();f++){
-			Point_3 s,r,v;
+			Point_3 s,r,v,t;
 			
 			if(solide[i].faces[f].size() == 3){
 				vector<Point_3> ri,vi,si ;
@@ -2387,7 +2416,68 @@ void Solide::update_triangles(){
 					solide[i].vide.push_back(false);
 				}
 			}
-	
+// 	 else if(flag_2d){
+//  cout<<"update tag 0"<<endl;
+// 			 vector<Point_3> si,ri,vi,ti;
+// 			 for(int part=0;part<solide[i].faces[f].vertex[0].size();part++){
+// 				 int p = solide[i].faces[f].vertex[0].particules[part];
+// 				 si.push_back(solide[p].mvt_t.transform(solide[i].faces[f].vertex[0].pos));
+// 			 }
+// 			 s = centroid(ri.begin(),ri.end());
+// 			 for(int part=0;part<solide[i].faces[f].vertex[1].size();part++){
+// 				 int p = solide[i].faces[f].vertex[1].particules[part];
+// 				 ri.push_back(solide[p].mvt_t.transform(solide[i].faces[f].vertex[1].pos));
+// 			 }
+// 			 r = centroid(ri.begin(),ri.end());
+// 			 for(int part=0;part<solide[i].faces[f].vertex[2].size();part++){
+// 				 int p = solide[i].faces[f].vertex[2].particules[part];
+// 				 vi.push_back(solide[p].mvt_t.transform(solide[i].faces[f].vertex[2].pos));
+// 			 }
+// 			 v = centroid(vi.begin(),vi.end());
+// 			 
+// 			 for(int part=0;part<solide[i].faces[f].vertex[3].size();part++){
+// 				 int p = solide[i].faces[f].vertex[3].particules[part];
+// 				 ti.push_back(solide[p].mvt_t.transform(solide[i].faces[f].vertex[3].pos));
+// 			 }
+// 			 t = centroid(vi.begin(),vi.end());
+// 			 
+// 			 
+// 			 Vector_3 vect0(r,s);
+// 			 Vector_3 vect1(r,v);
+// 			 Triangle_3 Tri1(s,r,v);
+// 			 solide[i].triangles.push_back(Tri1);
+// 			 Vector_3 normale = CGAL::cross_product(vect0,vect1);
+// 			 normale = normale*(1./sqrt(CGAL::to_double(normale.squared_length())));
+// 			 solide[i].normales.push_back(normale);
+// 			 
+// 			 Vector_3 vect2(v,s);
+// 			 Vector_3 vect3(v,t);
+// 			 Triangle_3 Tri2(v,t,s);
+// 			 solide[i].triangles.push_back(Tri2);
+// 			 Vector_3 normale2 = CGAL::cross_product(vect2,vect3);
+// 			 normale2 = normale2*(1./sqrt(CGAL::to_double(normale2.squared_length())));
+// 			 solide[i].normales2.push_back(normale2);
+// 			 
+// 			 
+// 			 
+// 			 
+// 			 if(solide[i].faces[f].voisin < 0){
+// 				 solide[i].fluide.push_back(true);
+// 				 solide[i].fluide.push_back(true);
+// 			 } 
+// 			 else {
+// 				 solide[i].fluide.push_back(false);
+// 				 solide[i].fluide.push_back(false);
+// 			 }
+// 			 if( solide[i].faces[f].voisin == -2){
+// 				 solide[i].vide.push_back(true);
+// 				 solide[i].vide.push_back(true);
+// 			 } else {
+// 				 solide[i].vide.push_back(false);
+// 				 solide[i].vide.push_back(false);
+// 			 }
+// 			 cout<<"update tag 1"<<endl;
+// 	 }
 		else{
 			
 			vector<Point_3> si;

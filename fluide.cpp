@@ -2577,7 +2577,7 @@ void Grille::fnumz(const double sigma, double t){
     
     // Correction d'entropie
      corentz(sigma);
-    
+  if(!flag_2d){
     if(BC_z_in ==  1 || BC_z_out ==  1){
         for(int i=0;i<Nx+2*marge;i++){
             for(int j=0;j<Ny+2*marge;j++){
@@ -2632,6 +2632,7 @@ void Grille::fnumz(const double sigma, double t){
 				}
 			}
 		}  
+	}	
 }
 
 
@@ -3000,7 +3001,7 @@ void Grille::BC(){
     }
     
     // Inner Boundary Condition for z
-    
+  if(!flag_2d){  
     for(int i=0;i<Nx+2*marge;i++){
         for(int j=0;j<Ny+2*marge;j++){
             for(int k=0;k<marge;k++){
@@ -3109,7 +3110,58 @@ void Grille::BC(){
             }
         }
     }
-    
+	}
+	
+	else{
+		for(int i=0;i<Nx+2*marge;i++){
+			for(int j=0;j<Ny+2*marge;j++){
+				for(int k=0;k<marge;k++){
+					Cellule  c = grille[i][j][k];
+					Cellule  cm = grille[i][j][marge]; 
+					
+						c.rho = cm.rho;
+						c.u = cm.u;
+						c.v = cm.v;
+						c.w = -cm.w;
+						c.p = cm.p;
+						c.impx = cm.impx;
+						c.impy = cm.impy;
+						c.impz = -cm.impz;
+						c.rhoE= cm.rhoE;
+						c.vide = cm.vide;
+
+
+					grille[i][j][k] = c;
+				}
+			}
+		}
+		
+	
+		// Outer Boundary Condition for z
+		
+		for(int i=0;i<Nx+2*marge;i++){
+			for(int j=0;j<Ny+2*marge;j++){
+				for(int k=Nz+marge;k<Nz+2*marge;k++){
+					Cellule  c = grille[i][j][k];
+					Cellule  cm = grille[i][j][marge];      //Cellule miroir
+
+						c.rho = cm.rho;
+						c.u = cm.u;
+						c.v = cm.v;
+						c.w = -cm.w;
+						c.p = cm.p;
+						c.impx = cm.impx;
+						c.impy = cm.impy;
+						c.impz = -cm.impz;
+						c.rhoE= cm.rhoE;
+						c.vide = cm.vide;
+
+					grille[i][j][k] = c;
+				}
+			}
+		}
+	
+	}
     
 } 
 

@@ -29,7 +29,7 @@ bool explicite = true;
  * \warning  <b> Param&egrave;tre sp&eacute;cifique au  couplage! </b>
  */
 
-bool flag_2d = true;
+bool flag_2d = false;
 
 //Parametres pour le fluide
 const double gam = 1.4;                   //constante des gaz parfaits 
@@ -46,7 +46,7 @@ const double Z0 = 0;
 
 const int Nx =55;                 //nombre de cellules de fluide selon x
 const int Ny =55;                 //nombre de cellules de fluide selon y
-const int Nz =55;                 //nombre de cellules de fluide selon z
+const int Nz =1;                 //nombre de cellules de fluide selon z
 
 const double domainex = 1.;            //Largeur du domaine fluide selon x
 const double domainey = 1.;          //Largeur du domaine fluide selon y
