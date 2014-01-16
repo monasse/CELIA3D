@@ -148,7 +148,7 @@ class Particule
      */
 		std::vector< std::vector<std::vector<int> > > Position_Triangles_interface_prev; //!< index de la cellule o&ugrave; se trouve \a Triangles_interface au temps t-dt
 
-  bool fixe; //!< =true si la particule est fix&eacute;e, false sinon
+  int fixe; //!< =true si la particule est fix&eacute;e, false sinon
   double m; //!< Masse de la particule
   double V; //!< Volume de la particule
   double Vl; //!< Volume libre de la particule (pour le calcul d'epsilon)

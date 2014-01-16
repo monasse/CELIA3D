@@ -44,41 +44,41 @@ const double X0 = 0;              //pozition de l'origine
 const double Y0 = 0;
 const double Z0 = 0;
 
-const int Nx =55;                 //nombre de cellules de fluide selon x
-const int Ny =55;                 //nombre de cellules de fluide selon y
-const int Nz =1;                 //nombre de cellules de fluide selon z
+const int Nx =36;                 //nombre de cellules de fluide selon x
+const int Ny =36;                 //nombre de cellules de fluide selon y
+const int Nz =24;                 //nombre de cellules de fluide selon z
 
-const double domainex = 1.;            //Largeur du domaine fluide selon x
-const double domainey = 1.;          //Largeur du domaine fluide selon y
-const double domainez = 1.;          //Largeur du domaine fluide selon z
+const double domainex = 0.3;            //Largeur du domaine fluide selon x
+const double domainey = 0.3;          //Largeur du domaine fluide selon y
+const double domainez = 0.2;          //Largeur du domaine fluide selon z
 
 const double deltax = domainex/Nx;      //Pas d'espace pour le fluide selon x
 const double deltay = domainey/Ny;       //Pas d'espace pour le fluide selon y
 const double deltaz = domainez/Nz;       //Pas d'espace pour le fluide selon z
 
 //Parametres solides
-const double rhos =100; //Densite du solide 
+const double rhos = 70470.; //Densite du solide 
 const double nu = 0.; //Coefficient de Poisson du materiau
-const double E = 7000; //Module d'Young du materiau
+const double E = 5.; //Module d'Young du materiau
 const double k_max = 0.01; 
 
 //Parametres temprels
-const double T = 0.0075; //0.02;             //temps total de simulation
+const double T = 0.05;             //temps total de simulation
 const double cfl = 0.5;            //valeur de la cfl fluide
 const double cfls = 0.5;           //Valeur de la cfl solide
-const int nimp = 100;                //Nombre d'impressions
+const int nimp = 1000.;                //Nombre d'impressions
 const double dtimp = T/nimp;        //Pas de temps entre deux impressions
 const int Nmax = 1000000;           //nombre maximal d'iterations en temps
 
 //Conditions aux limites
 //Type de CL :  1 = reflecting ("miroir"); 2 = periodic("periodique"); 3= outflow("transmisibles"); 
 
-const int BC_x_in =  2;                 // Inner Boundary Condition for x
-const int BC_x_out = 2;                 // Outer Boundary Condition for x
-const int BC_y_in =  1;                 // Inner Boundary Condition for y
-const int BC_y_out = 1;                 // Outer Boundary Condition for y
-const int BC_z_in =  1;                 // Inner Boundary Condition for z
-const int BC_z_out = 1;                 // Outer Boundary Condition for z
+const int BC_x_in =  3;                 // Inner Boundary Condition for x
+const int BC_x_out = 3;                 // Outer Boundary Condition for x
+const int BC_y_in =  3;                 // Inner Boundary Condition for y
+const int BC_y_out = 3;                 // Outer Boundary Condition for y
+const int BC_z_in =  3;                 // Inner Boundary Condition for z
+const int BC_z_out = 3;                 // Outer Boundary Condition for z
 
 double Rho(double x = 0.,double y = 0., double z = 0.);
 
