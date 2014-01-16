@@ -958,7 +958,7 @@ inline double signe(const double x)
  */
 void Particule::solve_position(double dt){
   double rot[3][3];
-  if(fixe){
+  if(fixe==1){
     Dx = Vector_3(0.,0.,0.);
     Dxprev = Vector_3(0.,0.,0.);
     u = Vector_3(0.,0.,0.);
@@ -970,10 +970,19 @@ void Particule::solve_position(double dt){
     omega = Vector_3(0.,0.,0.);
     omega_half = omega;
   } else {
-    Dxprev = Dx;
-    u = u+(Fi+Ff)/2.*(dt/m);
-    u_half = u;
-    Dx = Dx+u*dt;
+    if(fixe==0){ //fixe=0: particule mobile
+      Dxprev = Dx;
+      u = u+(Fi+Ff)/2.*(dt/m);
+      u_half = u;
+      Dx = Dx+u*dt;
+    }
+    else if(fixe==2 || fixe==3){//fixe=2: fixee en deplacement ; fixe=3: fixee en deplacement et rotation seulement selon l'axe y
+      Dx = Vector_3(0.,0.,0.);
+      Dxprev = Vector_3(0.,0.,0.);
+      u = Vector_3(0.,0.,0.);
+      u_half = u;
+    }
+      
 		//Tests pour verifier qu'on a toujours une matrice de rotation
 		for(int i=0;i<3;i++){
 			double norm = rotref[i][0]*rotref[i][0]+rotref[i][1]*rotref[i][1]+rotref[i][2]*rotref[i][2];
@@ -1084,6 +1093,11 @@ void Particule::solve_position(double dt){
       etemp1 = x1;
       etemp2 = x2;
       etemp3 = x3;
+      if(fixe==3){//fixe=3: on fixe la rotation en x et en z
+	etemp1=0.;
+	etemp3=0.;
+      }
+      
 // 	  //Test : on fixe la rotation en x et y
 // 			etemp1 = 0.;
 // 			etemp2 = 0.;
@@ -1098,6 +1112,11 @@ void Particule::solve_position(double dt){
       err1 = fabs((dt*a[0]-2.*(d2-d3)*etemp2*etemp3)/(2.*(d2+d3)*etemp0)-etemp1);
       err2 = fabs((dt*a[1]-2.*(d3-d1)*etemp1*etemp3)/(2.*(d1+d3)*etemp0)-etemp2);
       err3 = fabs((dt*a[2]-2.*(d1-d2)*etemp1*etemp2)/(2.*(d1+d2)*etemp0)-etemp3);
+      if(fixe==3){
+	err1 = 0.;
+	err3 = 0.;
+      }
+      
     }
     if(err1>epsilon || err2>epsilon || err3>epsilon){
       cout << "Probleme de resolution de la rotation, e1=" << etemp1 << " e2=" << etemp2 << " e3=" << etemp3 << endl;
@@ -1227,11 +1246,17 @@ void Particule::solve_position(double dt){
 * \return void
  */
 void Particule::solve_vitesse(double dt){
-  if(fixe){
+  if(fixe==1){
     u = Vector_3(0.,0.,0.);
     omega = Vector_3(0.,0.,0.);
   } else {
-    u = u+(Fi+Ff)/2.*(dt/m);
+    if(fixe==0){
+      u = u+(Fi+Ff)/2.*(dt/m);
+    }
+    else if(fixe==2 || fixe==3){
+      u = Vector_3(0.,0.,0.);
+    }
+    
     //Calcul de la matrice de rotation totale depuis le rep�re inertiel jusqu'au temps t
     double Q[3][3];
     double e0 = sqrt(1.-CGAL::to_double(e.squared_length()));
@@ -1338,6 +1363,11 @@ void Particule::solve_vitesse(double dt){
 			 		omega1 = 0.;
 			 		omega2 = 0.;
 			}
+			if(fixe==3){
+			  omega1=0.;
+			  omega3=0.;
+			}
+			
 // 		//fin test 
     omega = Vector_3(omega1,omega2,omega3);
     /*Test de fixer la rotation
@@ -1910,7 +1940,7 @@ void Solide::Init(const char* s){
   }
   for(int i=0;i<nb_particule;i++){
     int Nfaces;
-    bool fixe;
+    int fixe;
     double X,Y,Z,u,v,w,theta,phi,psi,xmin,ymin,zmin,xmax,ymax,zmax;
     string s;
     maillage >> s >> Nfaces >> fixe;
@@ -1953,8 +1983,12 @@ void Solide::Init(const char* s){
     
 		Point_3 center_part= centroid(points_c.begin(), points_c.end());
 	
-    P[i] = Particule(center_part, xmin, ymin, zmin, xmax, ymax, zmax, Faces);
-    P[i].fixe = fixe;
+		if(fixe==0 || fixe==1){
+		  P[i] = Particule(center_part, xmin, ymin, zmin, xmax, ymax, zmax, Faces);
+		} else {
+		  P[i] = Particule(centre, xmin, ymin, zmin, xmax, ymax, zmax, Faces);
+		}
+		P[i].fixe = fixe;
     P[i].u = Vector_3(u,v,w);
     P[i].omega = Vector_3(theta,phi,psi);
 		P[i].u_half = Vector_3(u,v,w);
