@@ -1725,6 +1725,165 @@ void Grille::fnumx(const double sigma, double t){
 			}
 		}
     
+    if(BC_x_out==3){
+      int i=Nx+marge-1;
+      for(int j=0;j<Ny+2*marge;j++){
+	for(int k=0;k<Nz+2*marge;k++){
+	  Cellule c = grille[i][j][k];
+	  if(c.p<eps || c.rho<eps){
+	    cout << "p ou rho negatifs : p " << c.p << " rho " << c.rho;
+	    getchar();
+	  }
+	  double cr = sqrt(gam*c.p/c.rho);
+	  Cellule cg = grille[i-1][j][k];
+	  Cellule cg2 = grille[i-2][j][k];
+	  double drho = (c.rho-cg2.rho)/dx/2.;
+	  double du = (c.u-cg2.u)/dx/2.;
+	  double dv = (c.v-cg2.v)/dx/2.;
+	  double dw = (c.w-cg2.w)/dx/2.;
+	  double dp = (c.p-cg2.p)/dx/2.;
+	  double L = min(min(domainex,domainey),domainez);
+	  double k = 0.278;
+	  double alpha = k*(cr*cr-c.u*c.u)/L/cr;
+	  double pinf = P(c.x,c.y,c.z,dx,dy,dz);
+	  double L0 = c.u*(cr*cr*drho-dp);
+	  double L1 = (c.u+cr)*(c.rho*cr*du+dp);
+	  double L2 = c.rho*c.u*cr*dv;
+	  double L3 = c.rho*c.u*cr*dw;
+	  double L4 = alpha*(c.p-pinf);
+	  if(c.u>0. && c.u-cr<0.){
+	    //Sortie subsonique
+	    L0 = c.u*(cr*cr*drho-dp);
+	    L1 = (c.u+cr)*(c.rho*cr*du+dp);
+	    L2 = c.rho*c.u*cr*dv;
+	    L3 = c.rho*c.u*cr*dw;
+	    L4 = alpha*(c.p-pinf);
+	  }
+	  else if(c.u>0. && c.u-cr>0.){
+	    //Sortie supersonique
+	    L0 = c.u*(cr*cr*drho-dp);
+	    L1 = (c.u+cr)*(c.rho*cr*du+dp);
+	    L2 = c.rho*c.u*cr*dv;
+	    L3 = c.rho*c.u*cr*dw;
+	    L4 = (c.u-cr)*(-c.rho*cr*du+dp);
+	  }
+	  else if(c.u<0. && c.u+cr>0.){
+	    //Entree subsonique
+	    L0 = 0.;
+	    L1 = alpha*(c.p-pinf);
+	    L2 = 0.;
+	    L3 = 0.;
+	    L4 = L1;
+	  }
+	  else if(c.u<0. && c.u+cr<0.){
+	    //Entree supersonique
+	    L0 = 0.;
+	    L1 = alpha*(c.p-pinf);
+	    L2 = 0.;
+	    L3 = 0.;
+	    L4 = L1;
+	  }
+	  double d0 = (L0+L1/2.+L4/2.)/cr/cr;
+	  double d1 = (L1-L4)/2./c.rho/cr;
+	  double d2 = L2/c.rho/cr;
+	  double d3 = L3/c.rho/cr;
+	  double d4 = (L1+L4)/2.;
+	  d0 *= dx;
+	  d1 *= dx;
+	  d2 *= dx;
+	  d3 *= dx;
+	  d4 *= dx;
+	  double kappa = 0.05;
+	  c.fluxi[0] = cg.fluxi[0]+d0;
+	  c.fluxi[1] = cg.fluxi[1]+(c.u*d0+c.rho*d1);
+	  c.fluxi[2] = cg.fluxi[2]+(c.v*d0+c.rho*d2);
+	  c.fluxi[3] = cg.fluxi[3]+(c.w*d0+c.rho*d3);
+	  c.fluxi[4] = cg.fluxi[4]+((c.u*c.u+c.v*c.v+c.w*c.w)/2.*d0+c.rho*c.u*d1+c.rho*c.v*d2+c.rho*c.w*d3+d4/(gam-1.));
+	  grille[i][j][k] = c;
+	}
+      }
+    }
+
+    if(BC_x_in==3){
+      int i=marge-1;
+      for(int j=0;j<Ny+2*marge;j++){
+	for(int k=0;k<Nz+2*marge;k++){
+	  Cellule c = grille[i][j][k];
+	  if(c.p<eps || c.rho<eps){
+	    cout << "p ou rho negatifs : p " << c.p << " rho " << c.rho;
+	    getchar();
+	  }
+	  Cellule cd = grille[i+1][j][k];
+	  Cellule cd2 = grille[i+2][j][k];
+	  double cr = sqrt(gam*cd.p/cd.rho);
+	  double drho = (cd2.rho-c.rho)/dx/2.;
+	  double du = (cd2.u-c.u)/dx/2.;
+	  double dv = (cd2.v-c.v)/dx/2.;
+	  double dw = (cd2.w-c.w)/dx/2.;
+	  double dp = (cd2.p-c.p)/dx/2.;
+	  double L = min(min(domainex,domainey),domainez);
+	  double k = 0.278;
+	  double alpha = k*(cr*cr-c.u*c.u)/L/cr;
+	  double pinf = P(cd.x,cd.y,cd.z,dx,dy,dz);
+	  double L0 = cd.u*(cr*cr*drho-dp);
+	  double L4 = (cd.u-cr)*(-cd.rho*cr*du+dp);
+	  double L2 = cd.rho*cd.u*cr*dv;
+	  double L3 = cd.rho*cd.u*cr*dw;
+	  double L1 = alpha*(cd.p-pinf);
+	  if(cd.u<0. && c.u-cr>0.){
+	    //Sortie subsonique
+	    L0 = cd.u*(cr*cr*drho-dp);
+	    L4 = (cd.u-cr)*(-cd.rho*cr*du+dp);
+	    L2 = cd.rho*cd.u*cr*dv;
+	    L3 = cd.rho*cd.u*cr*dw;
+	    L1 = alpha*(cd.p-pinf);
+	  }
+	  else if(cd.u<0. && cd.u-cr<0.){
+	    //Sortie supersonique
+	    L0 = cd.u*(cr*cr*drho-dp);
+	    L4 = (cd.u-cr)*(-cd.rho*cr*du+dp);
+	    L2 = cd.rho*cd.u*cr*dv;
+	    L3 = cd.rho*cd.u*cr*dw;
+	    L4 = (cd.u+cr)*(cd.rho*cr*du+dp);
+	  }
+	  else if(cd.u>0. && cd.u-cr<0.){
+	    //Entree subsonique
+	    L0 = 0.;
+	    L4 = alpha*(cd.p-pinf);
+	    L2 = 0.;
+	    L3 = 0.;
+	    L1 = L4;
+	  }
+	  else if(cd.u>0. && cd.u-cr>0.){
+	    //Entree supersonique
+	    L0 = 0.;
+	    L4 = alpha*(c.p-pinf);
+	    L2 = 0.;
+	    L3 = 0.;
+	    L1 = L4;
+	  }
+	  double d0 = (L0+L1/2.+L4/2.)/cr/cr;
+	  double d1 = (L1-L4)/2./cd.rho/cr;
+	  double d2 = L2/cd.rho/cr;
+	  double d3 = L3/cd.rho/cr;
+	  double d4 = (L1+L4)/2.;
+	  d0 *= dx;
+	  d1 *= dx;
+	  d2 *= dx;
+	  d3 *= dx;
+	  d4 *= dx;
+	  double kappa = 0.05;
+	  c.fluxi[0] = cd.fluxi[0]-d0;
+	  c.fluxi[1] = cd.fluxi[1]-(cd.u*d0+cd.rho*d1);
+	  c.fluxi[2] = cd.fluxi[2]-(cd.v*d0+cd.rho*d2);
+	  c.fluxi[3] = cd.fluxi[3]-(cd.w*d0+cd.rho*d3);
+	  c.fluxi[4] = cd.fluxi[4]-((cd.u*cd.u+cd.v*cd.v+cd.w*cd.w)/2.*d0+cd.rho*cd.u*d1+cd.rho*cd.v*d2+cd.rho*cd.w*d3+d4/(gam-1.));
+	  grille[i][j][k] = c;
+	}
+      }
+    }
+    
+
 }
 
 
@@ -2177,6 +2336,164 @@ void Grille::fnumy(const double sigma, double t){
 				}
 			}
 		}
+
+    if(BC_y_out==3){
+      int j=Ny+marge-1;
+      for(int k=0;k<Nz+2*marge;k++){
+	for(int i=0;i<Nx+2*marge;i++){
+	  Cellule c = grille[i][j][k];
+	  if(c.p<eps || c.rho<eps){
+	    cout << "p ou rho negatifs : p " << c.p << " rho " << c.rho;
+	    getchar();
+	  }
+	  double cr = sqrt(gam*c.p/c.rho);
+	  Cellule cg = grille[i][j-1][k];
+	  Cellule cg2 = grille[i][j-2][k];
+	  double drho = (c.rho-cg2.rho)/dy/2.;
+	  double du = (c.u-cg2.u)/dy/2.;
+	  double dv = (c.v-cg2.v)/dy/2.;
+	  double dw = (c.w-cg2.w)/dy/2.;
+	  double dp = (c.p-cg2.p)/dy/2.;
+	  double L = min(min(domainex,domainey),domainez);
+	  double k = 0.278;
+	  double alpha = k*(cr*cr-c.v*c.v)/L/cr;
+	  double pinf = P(c.x,c.y,c.z,dx,dy,dz);
+	  double L0 = c.v*(cr*cr*drho-dp);
+	  double L1 = (c.v+cr)*(c.rho*cr*dv+dp);
+	  double L2 = c.rho*c.v*cr*dw;
+	  double L3 = c.rho*c.v*cr*du;
+	  double L4 = alpha*(c.p-pinf);
+	  if(c.v>0. && c.v-cr<0.){
+	    //Sortie subsonique
+	    L0 = c.v*(cr*cr*drho-dp);
+	    L1 = (c.v+cr)*(c.rho*cr*dv+dp);
+	    L2 = c.rho*c.v*cr*dw;
+	    L3 = c.rho*c.v*cr*du;
+	    L4 = alpha*(c.p-pinf);
+	  }
+	  else if(c.v>0. && c.v-cr>0.){
+	    //Sortie supersonique
+	    L0 = c.v*(cr*cr*drho-dp);
+	    L1 = (c.v+cr)*(c.rho*cr*dv+dp);
+	    L2 = c.rho*c.v*cr*dw;
+	    L3 = c.rho*c.v*cr*du;
+	    L4 = (c.v-cr)*(-c.rho*cr*dv+dp);
+	  }
+	  else if(c.v<0. && c.v+cr>0.){
+	    //Entree subsonique
+	    L0 = 0.;
+	    L1 = alpha*(c.p-pinf);
+	    L2 = 0.;
+	    L3 = 0.;
+	    L4 = L1;
+	  }
+	  else if(c.v<0. && c.v+cr<0.){
+	    //Entree supersonique
+	    L0 = 0.;
+	    L1 = alpha*(c.p-pinf);
+	    L2 = 0.;
+	    L3 = 0.;
+	    L4 = L1;
+	  }
+	  double d0 = (L0+L1/2.+L4/2.)/cr/cr;
+	  double d1 = (L1-L4)/2./c.rho/cr;
+	  double d2 = L2/c.rho/cr;
+	  double d3 = L3/c.rho/cr;
+	  double d4 = (L1+L4)/2.;
+	  d0 *= dy;
+	  d1 *= dy;
+	  d2 *= dy;
+	  d3 *= dy;
+	  d4 *= dy;
+	  double kappa = 0.05;
+	  c.fluxj[0] = cg.fluxj[0]+d0;
+	  c.fluxj[2] = cg.fluxj[2]+(c.v*d0+c.rho*d1);
+	  c.fluxj[3] = cg.fluxj[3]+(c.w*d0+c.rho*d2);
+	  c.fluxj[1] = cg.fluxj[1]+(c.u*d0+c.rho*d3);
+	  c.fluxj[4] = cg.fluxj[4]+((c.u*c.u+c.v*c.v+c.w*c.w)/2.*d0+c.rho*c.v*d1+c.rho*c.w*d2+c.rho*c.u*d3+d4/(gam-1.));
+	  grille[i][j][k] = c;
+	}
+      }
+    }
+
+    if(BC_y_in==3){
+      int j=marge-1;
+      for(int k=0;k<Nz+2*marge;k++){
+	for(int i=0;i<Nx+2*marge;i++){
+	  Cellule c = grille[i][j][k];
+	  if(c.p<eps || c.rho<eps){
+	    cout << "p ou rho negatifs : p " << c.p << " rho " << c.rho;
+	    getchar();
+	  }
+	  Cellule cd = grille[i][j+1][k];
+	  Cellule cd2 = grille[i][j+2][k];
+	  double cr = sqrt(gam*cd.p/cd.rho);
+	  double drho = (cd2.rho-c.rho)/dy/2.;
+	  double du = (cd2.u-c.u)/dy/2.;
+	  double dv = (cd2.v-c.v)/dy/2.;
+	  double dw = (cd2.w-c.w)/dy/2.;
+	  double dp = (cd2.p-c.p)/dy/2.;
+	  double L = min(min(domainex,domainey),domainez);
+	  double k = 0.278;
+	  double alpha = k*(cr*cr-c.v*c.v)/L/cr;
+	  double pinf = P(cd.x,cd.y,cd.z,dx,dy,dz);
+	  double L0 = cd.v*(cr*cr*drho-dp);
+	  double L4 = (cd.v-cr)*(-cd.rho*cr*dv+dp);
+	  double L2 = cd.rho*cd.v*cr*dw;
+	  double L3 = cd.rho*cd.v*cr*du;
+	  double L1 = alpha*(cd.p-pinf);
+	  if(cd.v<0. && c.v-cr>0.){
+	    //Sortie subsonique
+	    L0 = cd.v*(cr*cr*drho-dp);
+	    L4 = (cd.v-cr)*(-cd.rho*cr*dv+dp);
+	    L2 = cd.rho*cd.v*cr*dw;
+	    L3 = cd.rho*cd.v*cr*du;
+	    L1 = alpha*(cd.p-pinf);
+	  }
+	  else if(cd.v<0. && cd.v-cr<0.){
+	    //Sortie supersonique
+	    L0 = cd.v*(cr*cr*drho-dp);
+	    L4 = (cd.v-cr)*(-cd.rho*cr*dv+dp);
+	    L2 = cd.rho*cd.v*cr*dw;
+	    L3 = cd.rho*cd.v*cr*du;
+	    L4 = (cd.v+cr)*(cd.rho*cr*dv+dp);
+	  }
+	  else if(cd.v>0. && cd.v-cr<0.){
+	    //Entree subsonique
+	    L0 = 0.;
+	    L4 = alpha*(cd.p-pinf);
+	    L2 = 0.;
+	    L3 = 0.;
+	    L1 = L4;
+	  }
+	  else if(cd.v>0. && cd.v-cr>0.){
+	    //Entree supersonique
+	    L0 = 0.;
+	    L4 = alpha*(c.p-pinf);
+	    L2 = 0.;
+	    L3 = 0.;
+	    L1 = L4;
+	  }
+	  double d0 = (L0+L1/2.+L4/2.)/cr/cr;
+	  double d1 = (L1-L4)/2./cd.rho/cr;
+	  double d2 = L2/cd.rho/cr;
+	  double d3 = L3/cd.rho/cr;
+	  double d4 = (L1+L4)/2.;
+	  d0 *= dy;
+	  d1 *= dy;
+	  d2 *= dy;
+	  d3 *= dy;
+	  d4 *= dy;
+	  double kappa = 0.05;
+	  c.fluxj[0] = cd.fluxj[0]-d0;
+	  c.fluxj[2] = cd.fluxj[2]-(cd.v*d0+cd.rho*d1);
+	  c.fluxj[3] = cd.fluxj[3]-(cd.w*d0+cd.rho*d2);
+	  c.fluxj[1] = cd.fluxj[1]-(cd.u*d0+cd.rho*d3);
+	  c.fluxj[4] = cd.fluxj[4]-((cd.u*cd.u+cd.v*cd.v+cd.w*cd.w)/2.*d0+cd.rho*cd.v*d1+cd.rho*cd.w*d2+cd.rho*cd.u*d3+d4/(gam-1.));
+	  grille[i][j][k] = c;
+	}
+      }
+    }
   
 }
 
@@ -2633,6 +2950,165 @@ void Grille::fnumz(const double sigma, double t){
 			}
 		}  
 	}	
+
+  if(BC_z_out==3){
+      int k=Nz+marge-1;
+      for(int i=0;i<Nx+2*marge;i++){
+	for(int j=0;j<Ny+2*marge;j++){
+	  Cellule c = grille[i][j][k];
+	  if(c.p<eps || c.rho<eps){
+	    cout << "p ou rho negatifs : p " << c.p << " rho " << c.rho;
+	    getchar();
+	  }
+	  double cr = sqrt(gam*c.p/c.rho);
+	  Cellule cg = grille[i][j][k-1];
+	  Cellule cg2 = grille[i][j][k-2];
+	  double drho = (c.rho-cg2.rho)/dz/2.;
+	  double du = (c.u-cg2.u)/dz/2.;
+	  double dv = (c.v-cg2.v)/dz/2.;
+	  double dw = (c.w-cg2.w)/dz/2.;
+	  double dp = (c.p-cg2.p)/dz/2.;
+	  double L = min(min(domainex,domainey),domainez);
+	  double k = 0.278;
+	  double alpha = k*(cr*cr-c.w*c.w)/L/cr;
+	  double pinf = P(c.x,c.y,c.z,dx,dy,dz);
+	  double L0 = c.w*(cr*cr*drho-dp);
+	  double L1 = (c.w+cr)*(c.rho*cr*dw+dp);
+	  double L2 = c.rho*c.w*cr*du;
+	  double L3 = c.rho*c.w*cr*dv;
+	  double L4 = alpha*(c.p-pinf);
+	  if(c.w>0. && c.w-cr<0.){
+	    //Sortie subsonique
+	    L0 = c.w*(cr*cr*drho-dp);
+	    L1 = (c.w+cr)*(c.rho*cr*dw+dp);
+	    L2 = c.rho*c.w*cr*du;
+	    L3 = c.rho*c.w*cr*dv;
+	    L4 = alpha*(c.p-pinf);
+	  }
+	  else if(c.w>0. && c.w-cr>0.){
+	    //Sortie supersonique
+	    L0 = c.w*(cr*cr*drho-dp);
+	    L1 = (c.w+cr)*(c.rho*cr*dw+dp);
+	    L2 = c.rho*c.w*cr*du;
+	    L3 = c.rho*c.w*cr*dv;
+	    L4 = (c.w-cr)*(-c.rho*cr*dw+dp);
+	  }
+	  else if(c.w<0. && c.w+cr>0.){
+	    //Entree subsonique
+	    L0 = 0.;
+	    L1 = alpha*(c.p-pinf);
+	    L2 = 0.;
+	    L3 = 0.;
+	    L4 = L1;
+	  }
+	  else if(c.w<0. && c.w+cr<0.){
+	    //Entree supersonique
+	    L0 = 0.;
+	    L1 = alpha*(c.p-pinf);
+	    L2 = 0.;
+	    L3 = 0.;
+	    L4 = L1;
+	  }
+	  double d0 = (L0+L1/2.+L4/2.)/cr/cr;
+	  double d1 = (L1-L4)/2./c.rho/cr;
+	  double d2 = L2/c.rho/cr;
+	  double d3 = L3/c.rho/cr;
+	  double d4 = (L1+L4)/2.;
+	  d0 *= dz;
+	  d1 *= dz;
+	  d2 *= dz;
+	  d3 *= dz;
+	  d4 *= dz;
+	  double kappa = 0.05;
+	  c.fluxk[0] = cg.fluxk[0]+d0;
+	  c.fluxk[3] = cg.fluxk[3]+(c.w*d0+c.rho*d1);
+	  c.fluxk[1] = cg.fluxk[1]+(c.u*d0+c.rho*d2);
+	  c.fluxk[2] = cg.fluxk[2]+(c.v*d0+c.rho*d3);
+	  c.fluxk[4] = cg.fluxk[4]+((c.u*c.u+c.v*c.v+c.w*c.w)/2.*d0+c.rho*c.w*d1+c.rho*c.u*d2+c.rho*c.v*d3+d4/(gam-1.));
+	  grille[i][j][k] = c;
+	}
+      }
+    }
+
+    if(BC_z_in==3){
+      int k=marge-1;
+      for(int i=0;i<Nx+2*marge;i++){
+	for(int j=0;j<Ny+2*marge;j++){
+	  Cellule c = grille[i][j][k];
+	  if(c.p<eps || c.rho<eps){
+	    cout << "p ou rho negatifs : p " << c.p << " rho " << c.rho;
+	    getchar();
+	  }
+	  Cellule cd = grille[i][j][k+1];
+	  Cellule cd2 = grille[i][j][k+2];
+	  double cr = sqrt(gam*cd.p/cd.rho);
+	  double drho = (cd2.rho-c.rho)/dz/2.;
+	  double du = (cd2.u-c.u)/dz/2.;
+	  double dv = (cd2.v-c.v)/dz/2.;
+	  double dw = (cd2.w-c.w)/dz/2.;
+	  double dp = (cd2.p-c.p)/dz/2.;
+	  double L = min(min(domainex,domainey),domainez);
+	  double k = 0.278;
+	  double alpha = k*(cr*cr-c.w*c.w)/L/cr;
+	  double pinf = P(cd.x,cd.y,cd.z,dx,dy,dz);
+	  double L0 = cd.w*(cr*cr*drho-dp);
+	  double L4 = (cd.w-cr)*(-cd.rho*cr*dw+dp);
+	  double L2 = cd.rho*cd.w*cr*du;
+	  double L3 = cd.rho*cd.w*cr*dv;
+	  double L1 = alpha*(cd.p-pinf);
+	  if(cd.w<0. && c.w-cr>0.){
+	    //Sortie subsonique
+	    L0 = cd.w*(cr*cr*drho-dp);
+	    L4 = (cd.w-cr)*(-cd.rho*cr*dw+dp);
+	    L2 = cd.rho*cd.w*cr*du;
+	    L3 = cd.rho*cd.w*cr*dv;
+	    L1 = alpha*(cd.p-pinf);
+	  }
+	  else if(cd.w<0. && cd.w-cr<0.){
+	    //Sortie supersonique
+	    L0 = cd.w*(cr*cr*drho-dp);
+	    L4 = (cd.w-cr)*(-cd.rho*cr*dw+dp);
+	    L2 = cd.rho*cd.w*cr*du;
+	    L3 = cd.rho*cd.w*cr*dv;
+	    L4 = (cd.w+cr)*(cd.rho*cr*dw+dp);
+	  }
+	  else if(cd.w>0. && cd.w-cr<0.){
+	    //Entree subsonique
+	    L0 = 0.;
+	    L4 = alpha*(cd.p-pinf);
+	    L2 = 0.;
+	    L3 = 0.;
+	    L1 = L4;
+	  }
+	  else if(cd.w>0. && cd.w-cr>0.){
+	    //Entree supersonique
+	    L0 = 0.;
+	    L4 = alpha*(c.p-pinf);
+	    L2 = 0.;
+	    L3 = 0.;
+	    L1 = L4;
+	  }
+	  double d0 = (L0+L1/2.+L4/2.)/cr/cr;
+	  double d1 = (L1-L4)/2./cd.rho/cr;
+	  double d2 = L2/cd.rho/cr;
+	  double d3 = L3/cd.rho/cr;
+	  double d4 = (L1+L4)/2.;
+	  d0 *= dz;
+	  d1 *= dz;
+	  d2 *= dz;
+	  d3 *= dz;
+	  d4 *= dz;
+	  double kappa = 0.05;
+	  c.fluxk[0] = cd.fluxk[0]-d0;
+	  c.fluxk[1] = cd.fluxk[1]-(cd.w*d0+cd.rho*d1);
+	  c.fluxk[2] = cd.fluxk[2]-(cd.u*d0+cd.rho*d2);
+	  c.fluxk[3] = cd.fluxk[3]-(cd.v*d0+cd.rho*d3);
+	  c.fluxk[4] = cd.fluxk[4]-((cd.u*cd.u+cd.v*cd.v+cd.w*cd.w)/2.*d0+cd.rho*cd.w*d1+cd.rho*cd.u*d2+cd.rho*cd.v*d3+d4/(gam-1.));
+	  grille[i][j][k] = c;
+	}
+      }
+    }
+
 }
 
 
