@@ -332,6 +332,9 @@ class Grille
   
   // Sous-programme pour mettre des conditions aux limites 
   void BC();
+	void BC_couplage(double tab[marge][3]);
+	void BC_couplage_1d(vector< vector < double> > tab_1d);
+
 
    // Calcul des quantites conservatives totales 
    double Masse();
@@ -395,7 +398,7 @@ private :
   double dz;
 	vector< vector< vector<Cellule > > > grille; //!< Maillage fluide.
 	//Cellule grille[Nx+2*marge][Ny+2*marge][Nz+2*marge];   //tableau des cellules 
-    
+
 };
 
 #endif

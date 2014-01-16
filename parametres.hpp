@@ -63,7 +63,7 @@ const double E = 7000; //Module d'Young du materiau
 const double k_max = 0.01; 
 
 //Parametres temprels
-const double T = 0.5;             //temps total de simulation
+const double T = 0.0075; //0.02;             //temps total de simulation
 const double cfl = 0.5;            //valeur de la cfl fluide
 const double cfls = 0.5;           //Valeur de la cfl solide
 const int nimp = 100;                //Nombre d'impressions
@@ -71,7 +71,7 @@ const double dtimp = T/nimp;        //Pas de temps entre deux impressions
 const int Nmax = 1000000;           //nombre maximal d'iterations en temps
 
 //Conditions aux limites
-//Type de CL :  1 = reflecting ("miroir"); 2 = periodic("periodique"); 3= outflow("transmisibles");
+//Type de CL :  1 = reflecting ("miroir"); 2 = periodic("periodique"); 3= outflow("transmisibles"); 
 
 const int BC_x_in =  2;                 // Inner Boundary Condition for x
 const int BC_x_out = 2;                 // Outer Boundary Condition for x

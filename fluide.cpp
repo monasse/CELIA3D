@@ -469,6 +469,7 @@ Grille::Grille(): grille(Nx+2*marge, vector< vector<Cellule> >(Ny+2*marge, vecto
             }
         } 
     }
+   
 } 
 /**
  \fn Grille::Grille(int Nx0, int Ny0, int Nz0, double dx0, double x0, double dy0,double y0, double dz0, double z0)
@@ -492,6 +493,7 @@ Grille::Grille(int Nx0, int Ny0, int Nz0, double dx0, double x0, double dy0,doub
             }
         } 
     }
+    
 }
 /**
  \fn Grille::~Grille()
@@ -849,6 +851,8 @@ void Grille::solve_fluidx(const double dt){
     }
     melange(dt);   
 } 
+
+
 
 /**
  \fn void Grille::solve_fluidy(const double dt)
@@ -2776,6 +2780,46 @@ void Grille::Solve(const double dt, double t, int n){
  \details Type de CL :  1 = reflecting ("miroir"); 2 = periodic(&quot;p&eacute;riodique"); 3= outflow("transmissibles").
  \return void
  */
+void Grille::BC_couplage(double tab[marge][3]){
+	for(int i=0;i<marge;i++){
+		for(int j=0;j<Ny+2*marge;j++){
+			for(int k=0;k<Nz+2*marge;k++){
+				Cellule c = grille[i][j][k];
+				c.rho = tab[i][0];
+				c.impx = tab[i][1];
+				c.rhoE= tab[i][2];
+				
+				c.impy = 0.;
+				c.impz = 0.;
+				c.u = c.impx/c.rho; 
+				c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.); 
+				c.v = 0.;
+				c.w = 0.;
+				grille[i][j][k] = c;
+			}
+		}
+	}
+}
+void Grille::BC_couplage_1d(vector< vector < double> > tab_1d){
+	for(int i=0;i<marge;i++){
+		double rho_moy=0.;
+		double impx_moy=0.;
+		double rhoE_moy=0.;
+		int count=0;
+		for(int j=0;j<Ny+2*marge;j++){
+			for(int k=0;k<Nz+2*marge;k++){
+				Cellule c = grille[i][j][k];
+				rho_moy += c.rho;
+				impx_moy += c.impx;
+				rhoE_moy += c.rhoE;
+				count++;
+			}
+		}
+		tab_1d[i][0]=rho_moy/count;
+		tab_1d[i][1]=impx_moy/count;
+		tab_1d[i][2]=rhoE_moy/count;
+	}
+}
 void Grille::BC(){ 
     
     // Inner Boundary Condition for x
