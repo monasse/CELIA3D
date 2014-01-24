@@ -131,6 +131,9 @@ int main(){
   char temps_it[]="resultats/temps.dat";
   char temps_reprise[]="resultats/temps_reprise.dat";
   char solide_center[]="resultats/solide_center.dat"; 
+	char porte_rot_e[]="resultats/porte_e.dat"; 
+	char porte_rot_w[]="resultats/porte_w.dat"; 
+	char door_press[]="resultats/door.dat"; 
   //En cas de reprise
   double temps[numrep+1];
   if(rep){
@@ -152,6 +155,9 @@ int main(){
 	std::ofstream temps_iter(temps_it,ios::out);
 	std::ofstream sorties_reprise(temps_reprise,ios::out);
 	std::ofstream center(solide_center,ios::out);
+	std::ofstream porte_e(porte_rot_e,ios::out);
+	std::ofstream porte_w(porte_rot_w,ios::out);
+	std::ofstream door(door_press,ios::out);
 	if(temps_iter)
 	{
 		// cout <<"ouverture de 'temps.dat' reussie" << endl;
@@ -227,26 +233,6 @@ int main(){
 	//Fluide1D.affiche();
 	//fin probleme1D
 	
-	//conditions aux limites couplage 1D pour la grille 3d
-	double tab[marge][3];
-	for(int iter_tab=0; iter_tab<marge; iter_tab++){
-		tab[iter_tab][0] = Fluide1D.grille[N+2*marge-iter_tab].rho;
-		tab[iter_tab][1] = Fluide1D.grille[N+2*marge-iter_tab].imp;
-		tab[iter_tab][2] = Fluide1D.grille[N+2*marge-iter_tab].rhoE;
-	}
-	Fluide.BC_couplage(tab);
-	//fin conditions aux limites couplage 1D pour la grille 3d
-	
-	//conditions aux limites couplage 1D pour la grille 1d
-	vector< vector < double> > tab_1d;
-	tab_1d.resize(marge, std::vector<double>(0));
-	for(int iter_tab=0; iter_tab<marge; iter_tab++){
-		tab_1d[iter_tab].resize(3, 0.);
-	}
-	Fluide.BC_couplage_1d(tab_1d);
-	Fluide1D.cond_lim_couplage(tab_1d);
-	//fin conditions aux limites couplage 1D pour la grille 1d
-	
 	int iter=0;	
 	clock_t start,end;
 	start =clock();
@@ -284,14 +270,7 @@ int main(){
 	double volume_solide = 0.;
 	for (int n=0; (t<T) && n<Nmax; n++){
 		
-		if(t>next_timp){
-			Fluide.Impression(kimp);
-			Fluide1D.impression(xt,t);
-			S.Impression(kimp);
-			sorties_reprise << t << endl;
-			kimp++;
-			next_timp += dtimp;
-		}
+
 		cout<<"iteration="<<n<< " dt="<<dt<<" t="<<t<<endl;
 		//probleme1D
 		if(t<=0.0075){
@@ -299,30 +278,100 @@ int main(){
 			dt =Fluide1D.pas_temps(t, T);
 			Fluide1D.solve_fluid( dt,t);
 			Fluide1D.cond_lim();
+			Fluide1D.impression_1d(t,n);
 			t+= dt;
 			iter++;
+			//Sortie des parametres du fluide vers gnuplot
+			ofstream fluide_temp("resultats/fluide1d_temp.txt",ios::out | ios::trunc);
+			for(int i=marge; i<N+marge; i++){
+				Cellule1D c = Fluide1D.grille[i];
+				fluide_temp << c.x << " " << t << " " << c.rho << " " << c.u << " " << c.p <<endl;
+			}
+			
+// 			//Ouverture gnuplot
+// 			char* path1;
+// 			char* path2;
+// 			
+// 			path1 = "/usr/bin/gnuplot";
+// 			path2 = "/u/cermics/l/puscasa/Bureau/ouverture_porte/resultats/fluide1d_temp.txt";
+// 			FILE* gp = popen(path1,"w");
+// 			if(gp == NULL){
+// 				cout << "Oops, I can't find %s." << "gnuplot" << endl;
+// 				exit(EXIT_FAILURE);
+// 				getchar();
+// 			}
+// 			
+// 			fprintf(gp,"set xrange [0:4];\n");
+// 			fprintf(gp,"p '");
+// 			fprintf(gp,path2);
+// 			fprintf(gp,"' u 1:($3)");
+// 			fprintf(gp," w l;\n");
+// 			fflush(gp);
+			
 		}
 		else{
-		
+			
+			if(t>next_timp){
+				Fluide.Impression(kimp);
+				S.Impression(kimp);
+				Fluide1D.impression(t, kimp);
+				sorties_reprise << t << endl;
+				kimp++;
+				next_timp += dtimp;
+			}
 			cout<<"Energie Fluide: "<< Fluide.Energie() << " Energie Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
 			ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S <<" "<<Fluide.Masse() - masse <<"  "<< volume_solide - volume_initial<<endl;
 			center<< t << " "<<S.solide[nb_part-1].x0.operator[](0) + S.solide[nb_part-1].Dx.operator[](0) << " "<<S.solide[nb_part-1].x0.operator[](1) + S.solide[nb_part-1].Dx.operator[](1) << " "<<S.solide[nb_part-1].x0.operator[](2) + S.solide[nb_part-1].Dx.operator[](2) <<endl;
 			cout<<"Variation Energie: "<< Fluide.Energie() +  S.Energie() - E0<<" Variation Masse : "<< Fluide.Masse() - masse<<endl;
-			
+			//sorties rotation
+			double x_door, y_door,z_door;
+			for(int iter_s=0; iter_s<nb_part; iter_s++){
+				if(S.solide[iter_s].fixe==3){
+					porte_e<< t << " "<<S.solide[iter_s].e[0]<<" "<<S.solide[iter_s].e[1]<<" " <<S.solide[iter_s].e[2]<< endl;
+					porte_w<< t << " "<<S.solide[iter_s].omega[0]<<" "<<S.solide[iter_s].omega[1]<<" " <<S.solide[iter_s].omega[2]<< endl;
+					x_door= CGAL::to_double(S.solide[iter_s].x0.operator[](0) + S.solide[iter_s].Dx.operator[](0));
+					y_door= CGAL::to_double(S.solide[iter_s].x0.operator[](1) + S.solide[iter_s].Dx.operator[](1));
+					z_door= CGAL::to_double(S.solide[iter_s].x0.operator[](2) + S.solide[iter_s].Dx.operator[](2));
+				}
+			}
+			Point_3 Door(x_door,y_door,z_door);
+			Cellule c= Fluide.in_cell(Door);
+			door<< t << " "<<c.p<< endl;
+			//fin sorties porte
 			dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
 			//Fluide.affiche("avant Solve");
 			cout<<"avant solve"<<endl;
 			Fluide.affiche();
 			user_time2.start();
-			Fluide.Solve(dt, t, n);
+			//Fluide1D.solve_fluid( dt,t);
+			//Fluide1D.cond_lim();
+			double tab[marge][3];
+			for(int iter_tab=0; iter_tab<marge; iter_tab++){
+				tab[iter_tab][0] = Fluide1D.grille[N+iter_tab].rho;
+				tab[iter_tab][1] = Fluide1D.grille[N+iter_tab].imp;
+				tab[iter_tab][2] = Fluide1D.grille[N+iter_tab].rhoE;
+			}
+			Fluide.BC_couplage(tab);
+			//conditions aux limites couplage 1D pour la grille 1d
+			vector< vector < double> > tab_1d;
+			tab_1d.resize(marge, std::vector<double>(0));
+			for(int iter_tab=0; iter_tab<marge; iter_tab++){
+				tab_1d[iter_tab].resize(3, 0.);
+			}
+			Fluide.BC_couplage_1d(tab_1d);
+			cout<<" cd limites 3d pour la grille 1d "<<tab_1d[0][0]<< " "<<tab_1d[1][0]<< " "<<tab_1d[2][0]<< " "<<tab_1d[3][0]<<" "<<tab_1d[4][0]<<" "<<tab_1d[5][0]<<endl;
+			Fluide1D.cond_lim_couplage(tab_1d);
+			//fin conditions aux limites couplage 1D pour la grille 1d
+			cout<<" cd limites 1d pour la grille 3d avant solve "<<tab[0][0]<< " "<<tab[1][0]<< " "<<tab[2][0]<< " "<<tab[3][0]<<" "<<tab[4][0]<<" "<<tab[5][0]<<endl;
+			Fluide.Solve(dt, t, n, tab);
+			Fluide1D.solve_fluid(dt,t);
+			Fluide1D.cond_lim();
 			//cout << "Temps calcul flux: " << user_time2.time() << " seconds." << endl;
+			cout<<" cd limites 1d pour la grille 3d apres solve "<<tab[0][0]<< " "<<tab[1][0]<< " "<<tab[2][0]<< " "<<tab[3][0]<<" "<<tab[4][0]<<" "<<tab[5][0]<<endl;
 			cout<<"apres solve"<<endl;
 			Fluide.affiche();
 			temps_flux += CGAL::to_double(user_time2.time());
 			user_time2.reset();
-			//Fluide.affiche("Solve");
-			
-			//S.Forces_internes();
 			if(explicite){ //algo de couplage explicit
 			Fluide.Forces_fluide(S,dt);
 			S.Solve_position(dt);
@@ -385,6 +434,7 @@ int main(){
 			//cout<<"apres fill"<<endl;
 			//Fluide.affiche();
 			Fluide.BC();
+			
 			//cout<<"apres BC"<<endl;
 			//Fluide.affiche();
 			//Fluide.affiche("BC");

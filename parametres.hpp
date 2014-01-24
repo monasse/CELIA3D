@@ -65,8 +65,8 @@ const double k_max = 0.01;
 //Parametres temprels
 const double T = 0.05;             //temps total de simulation
 const double cfl = 0.5;            //valeur de la cfl fluide
-const double cfls = 0.5;           //Valeur de la cfl solide
-const int nimp = 1000.;                //Nombre d'impressions
+const double cfls = 0.1;           //Valeur de la cfl solide
+const int nimp = 100;                //Nombre d'impressions
 const double dtimp = T/nimp;        //Pas de temps entre deux impressions
 const int Nmax = 1000000;           //nombre maximal d'iterations en temps
 

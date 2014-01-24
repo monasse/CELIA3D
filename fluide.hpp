@@ -333,7 +333,7 @@ class Grille
   // Sous-programme pour mettre des conditions aux limites 
   void BC();
 	void BC_couplage(double tab[marge][3]);
-	void BC_couplage_1d(vector< vector < double> > tab_1d);
+	void BC_couplage_1d(vector< vector < double> > &tab_1d);
 
 
    // Calcul des quantites conservatives totales 
@@ -355,7 +355,7 @@ class Grille
   // Fonction qui melange les cellules a densite ou pression negative 
   void melange(const double dt);
   // Calcul du flux dans la direction x entre les cellules 
-  void fnumx( const double sigma, double t);
+  void fnumx( const double sigma, double t, double tab[marge][3]);
   // Calcul du flux dans la direction y entre les cellules 
   void fnumy(const double sigma, double t);
   // Calcul du flux dans la direction z entre les cellules 
@@ -368,7 +368,7 @@ class Grille
   void corenty(double sigma);
   //Correction d'entropie selon z
   void corentz(double sigma);
-  void Solve(const double dt, double t, int n); 
+	void Solve(const double dt, double t, int n, double tab[marge][3]); 
     
   void Forces_fluide(Solide& S, const double dt); // Calcul des Forces fluides et Moments fluides exerces sur le solide	
   void Parois(Solide& S,double dt);  // Mise a jour de kappai,kappaj,kappak et alpha  
