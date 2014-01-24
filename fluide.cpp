@@ -469,6 +469,7 @@ Grille::Grille(): grille(Nx+2*marge, vector< vector<Cellule> >(Ny+2*marge, vecto
             }
         } 
     }
+   
 } 
 /**
  \fn Grille::Grille(int Nx0, int Ny0, int Nz0, double dx0, double x0, double dy0,double y0, double dz0, double z0)
@@ -492,6 +493,7 @@ Grille::Grille(int Nx0, int Ny0, int Nz0, double dx0, double x0, double dy0,doub
             }
         } 
     }
+    
 }
 /**
  \fn Grille::~Grille()
@@ -849,6 +851,8 @@ void Grille::solve_fluidx(const double dt){
     }
     melange(dt);   
 } 
+
+
 
 /**
  \fn void Grille::solve_fluidy(const double dt)
@@ -1285,7 +1289,7 @@ void Grille::corentz(double sigma){
  \param t temps curent de simulation
  \return void
  */ 
-void Grille::fnumx(const double sigma, double t){ 
+void Grille::fnumx(const double sigma, double t, double tab[marge][3]){ 
    // Cellule c, ci, cg, cd, cg2, cg3, cg4, cg5, cd2, cd3, cd4;
     //Initialisation du flux au flux centre
     for(int i=0; i<Nx+2*marge-1; i++){ 
@@ -1725,11 +1729,14 @@ void Grille::fnumx(const double sigma, double t){
 			}
 		}
     
+    BC_couplage(tab);
+    
     if(BC_x_out==3){
       int i=Nx+marge-1;
       for(int j=0;j<Ny+2*marge;j++){
 	for(int k=0;k<Nz+2*marge;k++){
 	  Cellule c = grille[i][j][k];
+		if(c.y>0.2 || c.y<0.1 || c.z<0.09 || c.x>0.1){
 	  if(c.p<eps || c.rho<eps){
 	    cout << "p ou rho negatifs : p " << c.p << " rho " << c.rho;
 	    getchar();
@@ -1799,7 +1806,8 @@ void Grille::fnumx(const double sigma, double t){
 	  c.fluxi[2] = cg.fluxi[2]+(c.v*d0+c.rho*d2);
 	  c.fluxi[3] = cg.fluxi[3]+(c.w*d0+c.rho*d3);
 	  c.fluxi[4] = cg.fluxi[4]+((c.u*c.u+c.v*c.v+c.w*c.w)/2.*d0+c.rho*c.u*d1+c.rho*c.v*d2+c.rho*c.w*d3+d4/(gam-1.));
-	  grille[i][j][k] = c;
+		}
+		grille[i][j][k] = c;
 	}
       }
     }
@@ -1809,6 +1817,7 @@ void Grille::fnumx(const double sigma, double t){
       for(int j=0;j<Ny+2*marge;j++){
 	for(int k=0;k<Nz+2*marge;k++){
 	  Cellule c = grille[i][j][k];
+		if(c.y>0.2 || c.y<0.1 || c.z<0.09 || c.x>0.1){
 	  if(c.p<eps || c.rho<eps){
 	    cout << "p ou rho negatifs : p " << c.p << " rho " << c.rho;
 	    getchar();
@@ -1878,6 +1887,7 @@ void Grille::fnumx(const double sigma, double t){
 	  c.fluxi[2] = cd.fluxi[2]-(cd.v*d0+cd.rho*d2);
 	  c.fluxi[3] = cd.fluxi[3]-(cd.w*d0+cd.rho*d3);
 	  c.fluxi[4] = cd.fluxi[4]-((cd.u*cd.u+cd.v*cd.v+cd.w*cd.w)/2.*d0+cd.rho*cd.u*d1+cd.rho*cd.v*d2+cd.rho*cd.w*d3+d4/(gam-1.));
+		}
 	  grille[i][j][k] = c;
 	}
       }
@@ -3121,7 +3131,7 @@ void Grille::fnumz(const double sigma, double t){
  \param n  num&eacute;ro des iterations en temps
  \return void
  */
-void Grille::Solve(const double dt, double t, int n){
+void Grille::Solve(const double dt, double t, int n, double tab[marge][3]){
     
     //Cellule c;   
     for(int i=0;i<Nx+2*marge;i++){
@@ -3145,39 +3155,40 @@ void Grille::Solve(const double dt, double t, int n){
 	
     if(n%6==0){
 
-        fnumx(dt/dx,t);     //Calcul des flux numeriques pour le fluide seul selon x
+        fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
 				//cout<<"Masse x: "<<"  "<< Masse() <<endl;
         solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
 				//cout<<"Masse x: "<<"  "<< Masse() <<endl;
 				BC();           //Imposition des conditions aux limites pour le fluide
-		
+				BC_couplage(tab);
 		
         fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
 				//cout<<"Masse y: "<<"  "<< Masse() <<endl;
         solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
 				//cout<<"Masse y: "<<"  "<< Masse() <<endl;
 		    BC();           //Imposition des conditions aux limites pour le fluide
-		
+				BC_couplage(tab);
+				
         fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
 				//cout<<"Masse z: "<<"  "<< Masse() <<endl;
         solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
 				//cout<<"Masse : z"<<"  "<< Masse() <<endl;
         BC();           //Imposition des conditions aux limites pour le fluide
-				
+				BC_couplage(tab);
     } 
     else if(n%6==2){
-        fnumx(dt/dx,t);     //Calcul des flux numeriques pour le fluide seul selon x
+         fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
         solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
 		BC();           //Imposition des conditions aux limites pour le fluide
-        
+		BC_couplage(tab);    
         fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
         solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
 		BC();           //Imposition des conditions aux limites pour le fluide
-        
+		BC_couplage(tab);   
         fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
         solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
 		BC();           //Imposition des conditions aux limites pour le fluide
-        
+		BC_couplage(tab);    
     } 
     
     else if(n%6==1){
@@ -3185,15 +3196,15 @@ void Grille::Solve(const double dt, double t, int n){
         fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
         solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
 		BC();           //Imposition des conditions aux limites pour le fluide
-        
-        fnumx(dt/dx,t);     //Calcul des flux numeriques pour le fluide seul selon x
+		BC_couplage(tab);    
+         fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
         solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
 		BC();           //Imposition des conditions aux limites pour le fluide
-        
+	BC_couplage(tab);    
         fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
         solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
         BC();           //Imposition des conditions aux limites pour le fluide
-        
+			BC_couplage(tab);
     } 
     
     else if(n%6==3){
@@ -3201,30 +3212,30 @@ void Grille::Solve(const double dt, double t, int n){
         fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
         solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
 		BC();           //Imposition des conditions aux limites pour le fluide
-        
+		BC_couplage(tab);      
         fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
         solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
 		BC();           //Imposition des conditions aux limites pour le fluide
-        
-        fnumx(dt/dx,t);     //Calcul des flux numeriques pour le fluide seul selon x
+		BC_couplage(tab);      
+         fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
         solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
 		BC();           //Imposition des conditions aux limites pour le fluide
-        
+		BC_couplage(tab);      
     }
     else if(n%6==4){
         
         fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
         solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
 		BC();           //Imposition des conditions aux limites pour le fluide
-        
-        fnumx(dt/dx,t);     //Calcul des flux numeriques pour le fluide seul selon x
+		BC_couplage(tab);      
+         fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
         solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
 		BC();           //Imposition des conditions aux limites pour le fluide
-        
+		BC_couplage(tab);      
         fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
         solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y 
         BC();           //Imposition des conditions aux limites pour le fluide
-        
+				BC_couplage(tab);   
         
     }
     else if(n%6==5){
@@ -3232,15 +3243,15 @@ void Grille::Solve(const double dt, double t, int n){
         fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
         solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
 		BC();           //Imposition des conditions aux limites pour le fluide
-        
+		BC_couplage(tab);     
         fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
         solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
 		BC();           //Imposition des conditions aux limites pour le fluide
-        
-        fnumx(dt/dx,t);     //Calcul des flux numeriques pour le fluide seul selon x
+		BC_couplage(tab);      
+         fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
         solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
 		BC();           //Imposition des conditions aux limites pour le fluide
-        
+		BC_couplage(tab);      
     }
   
     
@@ -3252,6 +3263,50 @@ void Grille::Solve(const double dt, double t, int n){
  \details Type de CL :  1 = reflecting ("miroir"); 2 = periodic(&quot;p&eacute;riodique"); 3= outflow("transmissibles").
  \return void
  */
+void Grille::BC_couplage(double tab[marge][3]){
+	for(int i=0;i<marge;i++){
+		for(int j=0;j<Ny+2*marge;j++){
+			for(int k=0;k<Nz+2*marge;k++){
+				Cellule c = grille[i][j][k];
+				if(c.y<0.2 && c.y>0.1 && c.z>0.09){
+					c.rho = tab[i][0];	
+					c.impx = tab[i][1];
+					c.rhoE= tab[i][2];
+				
+					c.impy = 0.;
+					c.impz = 0.;
+					c.u = c.impx/c.rho; 
+					c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.); 
+					c.v = 0.;
+					c.w = 0.;
+				}
+				grille[i][j][k] = c;
+			}
+		}
+	}
+}
+void Grille::BC_couplage_1d(vector< vector < double> > &tab_1d){
+	for(int i=0;i<marge;i++){
+		double rho_moy=0.;
+		double impx_moy=0.;
+		double rhoE_moy=0.;
+		int count=0;
+		for(int j=0;j<Ny+2*marge;j++){
+			for(int k=0;k<Nz+2*marge;k++){
+				Cellule c = grille[i+marge][j][k];
+				if(c.y<0.2 && c.y>0.1 && c.z>0.09){
+					rho_moy += c.rho;
+					impx_moy += c.impx;
+					rhoE_moy += c.rhoE;
+					count++;
+				}
+			}
+		}
+		tab_1d[i][0]=rho_moy/count;
+		tab_1d[i][1]=impx_moy/count;
+		tab_1d[i][2]=rhoE_moy/count;
+	}
+}
 void Grille::BC(){ 
     
     // Inner Boundary Condition for x
