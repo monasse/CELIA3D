@@ -513,7 +513,158 @@ void Grille::Mixage(){
 	}
 }
 
+/**
+ \fn void Grille::Solve(const double dt, double t, int n)
+ \brief R&eacute;solution des &eacute;quations fluide.
+ \details Alternance directionnelle &agrave; chaque pas de temps.
+ \param t temps curent de simulation
+ \param dt pas de temps 
+ \param n  num&eacute;ro des iterations en temps
+ \return void
+ */
+void Grille::Solve(const double dt, double t, int n, double tab[marge][3], Solide& S){
+    
+    //Cellule c;   
+    for(int i=0;i<Nx+2*marge;i++){
+        for(int j=0;j<Ny+2*marge;j++){
+            for(int k=0;k<Nz+2*marge;k++){
+				        Cellule  c = grille[i][j][k];
+                c.rho0 = c.rho;
+                c.impx0 = c.impx;
+                c.impy0 = c.impy;
+                c.impz0 = c.impz;
+                c.rhoE0 = c.rhoE;
+				        c.p1=c.p;
+				        c.alpha0=c.alpha;
+				        c.kappai0 = c.kappai; c.kappaj0 = c.kappaj; c.kappak0 = c.kappak;
+                grille[i][j][k] = c;
+            }
+        }
+    }
+   
+    //alternance directionnelle a chaque pas de temps
+	
+    if(n%6==0){
 
+        fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
+				//cout<<"Masse x: "<<"  "<< Masse() <<endl;
+        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
+				//cout<<"Masse x: "<<"  "<< Masse() <<endl;
+				BC();           //Imposition des conditions aux limites pour le fluide
+				Fill_cel(S);
+				BC_couplage(tab);
+		
+        fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
+				//cout<<"Masse y: "<<"  "<< Masse() <<endl;
+        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
+				//cout<<"Masse y: "<<"  "<< Masse() <<endl;
+		    BC();           //Imposition des conditions aux limites pour le fluide
+		    Fill_cel(S);
+				BC_couplage(tab);
+				
+        fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
+				//cout<<"Masse z: "<<"  "<< Masse() <<endl;
+        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
+				//cout<<"Masse : z"<<"  "<< Masse() <<endl;
+        BC();           //Imposition des conditions aux limites pour le fluide
+	Fill_cel(S);
+	BC_couplage(tab);
+    } 
+    else if(n%6==2){
+         fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
+        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
+		BC();           //Imposition des conditions aux limites pour le fluide
+		Fill_cel(S);
+		BC_couplage(tab);    
+        fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
+        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
+		BC();           //Imposition des conditions aux limites pour le fluide
+		Fill_cel(S);
+		BC_couplage(tab);   
+        fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
+        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
+		BC();           //Imposition des conditions aux limites pour le fluide
+		Fill_cel(S);
+		BC_couplage(tab);    
+    } 
+    
+    else if(n%6==1){
+        
+        fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
+        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
+		BC();           //Imposition des conditions aux limites pour le fluide
+		Fill_cel(S);
+		BC_couplage(tab);    
+         fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
+        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
+		BC();           //Imposition des conditions aux limites pour le fluide
+		Fill_cel(S);
+	BC_couplage(tab);    
+        fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
+        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
+        BC();           //Imposition des conditions aux limites pour le fluide
+	Fill_cel(S);
+	BC_couplage(tab);
+    } 
+    
+    else if(n%6==3){
+        
+        fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
+        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
+		BC();           //Imposition des conditions aux limites pour le fluide
+		Fill_cel(S);
+		BC_couplage(tab);      
+        fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
+        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
+		BC();           //Imposition des conditions aux limites pour le fluide
+		Fill_cel(S);
+		BC_couplage(tab);      
+         fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
+        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
+		BC();           //Imposition des conditions aux limites pour le fluide
+		Fill_cel(S);
+		BC_couplage(tab);      
+    }
+    else if(n%6==4){
+        
+        fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
+        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
+		BC();           //Imposition des conditions aux limites pour le fluide
+		Fill_cel(S);
+		BC_couplage(tab);      
+         fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
+        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
+		BC();           //Imposition des conditions aux limites pour le fluide
+		Fill_cel(S);
+		BC_couplage(tab);      
+        fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
+        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y 
+        BC();           //Imposition des conditions aux limites pour le fluide
+	Fill_cel(S);
+	BC_couplage(tab);   
+        
+    }
+    else if(n%6==5){
+        
+        fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
+        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
+		BC();           //Imposition des conditions aux limites pour le fluide
+		Fill_cel(S);
+		BC_couplage(tab);     
+        fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
+        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
+		BC();           //Imposition des conditions aux limites pour le fluide
+		Fill_cel(S);
+		BC_couplage(tab);      
+         fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
+        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
+		BC();           //Imposition des conditions aux limites pour le fluide
+		Fill_cel(S);
+		BC_couplage(tab);      
+    }
+  
+    
+}
 
 
 /*!
@@ -538,96 +689,118 @@ void Grille::Fill_cel(Solide& S){
 
 	//std::cout<<"center faces number: " <<count<<std::endl;
 	for(int i=marge;i<Nx+marge;i++){
-		for(int j=marge;j<Ny+marge;j++){
-		  for(int k=marge;k<Nz+marge;k++){
-				Triangle_3 Tri;
-				c = grille[i][j][k];
-				if((std::abs(c.alpha-1.)<eps) ){
-				  Point_3 center_cell(c.x, c.y, c.z);
-				  int nbx=0, nby=0,nbz=0;
-				  Point_3 projete(0.,0.,0.); //Projete sur la face la plus proche
-					Vector_3 V_f(0.,0.,0.); //Vitesse de la paroi au point projete
-				  double dist_min = 10000000.;
-				  for(int iter=0; iter<nb_part; iter++){
-						for(int it=0;it<S.solide[iter].triangles.size();it++){
-					  if(S.solide[iter].fluide[it]){
-							Plane_3 P(S.solide[iter].triangles[it].operator[](0),S.solide[iter].triangles[it].operator[](1),S.solide[iter].triangles[it].operator[](2));
-						for(int k=3;k<S.solide[iter].triangles.size() && P.is_degenerate();k++){//Test si le plan est degenere
-							P = Plane_3(S.solide[iter].triangles[it].operator[](0),S.solide[iter].triangles[it].operator[](1),S.solide[iter].triangles[it].operator[](k));
-						}
-						Point_3 xP = P.projection(center_cell);
-						//Test pour savoir si le projete est dans la face
-						bool test = true;
-						for(int k=0;k<2 && test;k++){
-							Point_3 x1 = S.solide[iter].triangles[it].operator[](k);
-							Point_3 x2 = S.solide[iter].triangles[it].operator[](k+1);
-						  Vector_3 vect1(xP,x1);
-						  Vector_3 vect2(xP,x2);
-						  if(CGAL::to_double(CGAL::cross_product(vect1,vect2)*S.solide[iter].normales[it])<0.){
-							test = false;
-						  }
-						}
-						//1er cas : on est dans la face
-						if(test){
-						  double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,xP)));
-						  if(d<dist_min && inside_box(Fluide,xP)){
-							dist_min = d;
-							projete = xP;
-							V_f = S.solide[iter].vitesse_parois(xP);
-						  }
-						}
-						//2eme cas : on est hors de la face
-						else{
-						  //Recherche du point le plus proche sur toutes les aretes
-						  for(int k=0;k<3;k++){
-							int kp = (k+1)%3;
-							Point_3 x1 = S.solide[iter].triangles[it].operator[](k);
-							Point_3 x2 = S.solide[iter].triangles[it].operator[](kp);
-							double d1 = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,x1)));
-							double d2 = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,x2)));
-							double d12 = sqrt(CGAL::to_double(CGAL::squared_distance(x1,x2)));
-							//1er sous-cas : on est plus proche du point x1
-							if(d1*d1+d12*d12<d2*d2){
-							  if(d1<dist_min && inside_box(Fluide,x1)){
-								dist_min = d1;
-								projete = x1;
-								V_f = S.solide[iter].vitesse_parois(x1);
-							  }
-							}
-							//2eme sous-cas : on est plus proche du point x2
-							else if(d2*d2+d12*d12<d1*d1){
-							  if(d2<dist_min && inside_box(Fluide,x2)){
-								dist_min = d2;
-								projete = x2;
-								V_f = S.solide[iter].vitesse_parois(x2);
-							  }
-							}
-							//3eme sous-cas : on prend le projete sur (x1,x2)
-							else {
-							  Line_3 L(x1,x2);
-							  double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,L)));
-							  Point_3 proj = L.projection(center_cell);
-							  if(d<dist_min && inside_box(Fluide,proj)){
-								dist_min = d;
-								projete = proj;
-								V_f = S.solide[iter].vitesse_parois(proj);
-							  }
-							}
-							}//Recherche du point le plus proche sur toutes les aretes
-						}
-					  }
-					}
-				  }
-				  //Calcul du symetrique par rapport au plan defini par centre_face et normale_face
-				  Point_3 symm_center = center_cell + Vector_3(center_cell,projete)*2;
-				  Vector_3 normale(center_cell,projete);
-				  double norme = sqrt(CGAL::to_double(normale.squared_length()));
-          assert(norme!= 0.);
-				  normale = normale*1./norme;
-				  cm = in_cell(symm_center);
-				  Vector_3 vit_m(cm.u,cm.v,cm.w); //Vitesse au point miroir
-					Vector_3 vit = vit_m - normale*2.*((vit_m-V_f)*normale);
-				  c.rho = cm.rho;
+	  for(int j=marge;j<Ny+marge;j++){
+	    for(int k=marge;k<Nz+marge;k++){
+	      Triangle_3 Tri;
+	      c = grille[i][j][k];
+	      if((std::abs(c.alpha-1.)<eps) ){
+		Point_3 center_cell(c.x, c.y, c.z);
+		int nbx=0, nby=0,nbz=0;
+		Point_3 projete(0.,0.,0.); //Projete sur la face la plus proche
+		Vector_3 V_f(0.,0.,0.); //Vitesse de la paroi au point projete
+		double dist_min = 10000000.;
+		bool fluide = false;
+		int cas = 0;
+		Point_3 triangle1;
+		Point_3 triangle2;
+		Point_3 triangle3;
+		for(int iter=0; iter<nb_part; iter++){
+		  for(int it=0;it<S.solide[iter].triangles.size();it++){
+		    if(S.solide[iter].fluide[it]){
+		      Plane_3 P(S.solide[iter].triangles[it].operator[](0),S.solide[iter].triangles[it].operator[](1),S.solide[iter].triangles[it].operator[](2));
+		      /*for(int k=3;k<S.solide[iter].triangles.size() && P.is_degenerate();k++){//Test si le plan est degenere
+			P = Plane_3(S.solide[iter].triangles[it].operator[](0),S.solide[iter].triangles[it].operator[](1),S.solide[iter].triangles[it].operator[](k));
+			}*/
+		      Point_3 xP = P.projection(center_cell);
+		      //Test pour savoir si le projete est dans la face
+		      bool test = true;
+		      for(int k=0;k<3 && test;k++){
+			int kp = (k+1)%3;
+			Point_3 x1 = S.solide[iter].triangles[it].operator[](k);
+			Point_3 x2 = S.solide[iter].triangles[it].operator[](kp);
+			Vector_3 vect1(xP,x1);
+			Vector_3 vect2(xP,x2);
+			if(CGAL::to_double(CGAL::cross_product(vect1,vect2)*S.solide[iter].normales[it])<0.){
+			  test = false;
+			}
+		      }
+		      //1er cas : on est dans la face
+		      if(test){
+			double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,xP)));
+			if(d<dist_min && inside_box(Fluide,xP)){
+			  dist_min = d;
+			  projete = xP;
+			  V_f = S.solide[iter].vitesse_parois(xP);
+			  fluide = S.solide[iter].fluide[it];
+			  cas = 1;
+			  triangle1=S.solide[iter].triangles[it].operator[](0);
+			  triangle2=S.solide[iter].triangles[it].operator[](1);
+			  triangle3=S.solide[iter].triangles[it].operator[](2);
+			}
+		      }
+		      //2eme cas : on est hors de la face
+		      else{
+			//Recherche du point le plus proche sur toutes les aretes
+			for(int k=0;k<3;k++){
+			  int kp = (k+1)%3;
+			  Point_3 x1 = S.solide[iter].triangles[it].operator[](k);
+			  Point_3 x2 = S.solide[iter].triangles[it].operator[](kp);
+			  double d1 = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,x1)));
+			  double d2 = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,x2)));
+			  double d12 = sqrt(CGAL::to_double(CGAL::squared_distance(x1,x2)));
+			  //1er sous-cas : on est plus proche du point x1
+			  if(d1*d1+d12*d12<d2*d2){
+			    if(d1<dist_min && inside_box(Fluide,x1)){
+			      dist_min = d1;
+			      projete = x1;
+			      V_f = S.solide[iter].vitesse_parois(x1);
+			      fluide = S.solide[iter].fluide[it];
+			      cas = 2;
+			    }
+			  }
+			  //2eme sous-cas : on est plus proche du point x2
+			  else if(d2*d2+d12*d12<d1*d1){
+			    if(d2<dist_min && inside_box(Fluide,x2)){
+			      dist_min = d2;
+			      projete = x2;
+			      V_f = S.solide[iter].vitesse_parois(x2);
+			      fluide = S.solide[iter].fluide[it];
+			      cas = 3;
+			    }
+			  }
+			  //3eme sous-cas : on prend le projete sur (x1,x2)
+			  else {
+			    Line_3 L(x1,x2);
+			    double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,L)));
+			    Point_3 proj = L.projection(center_cell);
+			    if(d<dist_min && inside_box(Fluide,proj)){
+			      dist_min = d;
+			      projete = proj;
+			      V_f = S.solide[iter].vitesse_parois(proj);
+			      fluide = S.solide[iter].fluide[it];
+			      cas = 4;
+			    }
+			  }
+			}//Recherche du point le plus proche sur toutes les aretes
+		      }
+		    }
+		  }
+		}
+		//Calcul du symetrique par rapport au plan defini par centre_face et normale_face
+		Point_3 symm_center = center_cell + Vector_3(center_cell,projete)*2;
+		Vector_3 normale(center_cell,projete);
+		double norme = sqrt(CGAL::to_double(normale.squared_length()));
+		assert(norme!= 0.);
+		normale = normale*1./norme;
+		cm = in_cell(symm_center);
+		Vector_3 vit_m(cm.u,cm.v,cm.w); //Vitesse au point miroir
+		Vector_3 vit = vit_m - normale*2.*((vit_m-V_f)*normale);
+		if(abs(cm.alpha-1.)<eps){
+		  cout << "cellule cible solide: originel=" << c.x << " " << c.y << " " << c.z << " cible=" << cm.x << " " << cm.y << " " << cm.z << " projete=" << projete.x() << " " << projete.y() << " " << projete.z() << " fluide=" << fluide << " cas=" <<  cas << " triangle=" << triangle1.x() << " " << triangle1.y() << " " << triangle1.z() << " " << triangle2.x() << " " << triangle2.y() << " " << triangle2.z() << " " << triangle3.x() << " " << triangle3.y() << " " << triangle3.z() << " " << endl;
+		  //getchar();
+		}
+		
+		c.rho = cm.rho;
 				  c.u = CGAL::to_double(vit.operator[](0));
 				  c.v = CGAL::to_double(vit.operator[](1));
 				  c.w = CGAL::to_double(vit.operator[](2));

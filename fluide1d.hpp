@@ -304,16 +304,34 @@ class Grille1D
 			return grille[i]; 
 		} 
 		
-		void init(){ 
-			for(int i=0;i<N+2*marge;i++){ 
-				Cellule1D c = grille[i]; 
-				c.rho = rho_1D(c.x); 
-				c.u   = u_1D(c.x); 
-				c.p   = p_1D(c.x); 
-				c.imp = c.rho*c.u; 
-				c.rhoE= c.rho*c.u*c.u/2.+c.p/(gam-1.); 
-				grille[i] = c; 
-			} 
+		void init(){
+		  if(rep){
+		    std::ostringstream oss;
+		    oss << "resultats/xt" << numrep << ".dat";
+		    string s = oss.str();
+		    const char* nom = s.c_str();
+		    std::ifstream init(nom,std::ios::in);
+		    string dump;
+		    double x;
+		    for(int i=marge;i<N+marge;i++){
+		      Cellule1D c = grille[i];
+		      init >> x >> c.rho >> c.p >> c.u;
+		      c.imp = c.rho*c.u; 
+		      c.rhoE= c.rho*c.u*c.u/2.+c.p/(gam-1.);
+		      grille[i]=c;
+		    }
+		    cond_lim();
+		  } else {
+		    for(int i=0;i<N+2*marge;i++){ 
+		      Cellule1D c = grille[i]; 
+		      c.rho = rho_1D(c.x); 
+		      c.u   = u_1D(c.x); 
+		      c.p   = p_1D(c.x); 
+		      c.imp = c.rho*c.u; 
+		      c.rhoE= c.rho*c.u*c.u/2.+c.p/(gam-1.); 
+		      grille[i] = c; 
+		    }
+		  }
 		}
 		
 		void affiche(){ 

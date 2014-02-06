@@ -368,7 +368,7 @@ class Grille
   void corenty(double sigma);
   //Correction d'entropie selon z
   void corentz(double sigma);
-	void Solve(const double dt, double t, int n, double tab[marge][3]); 
+  void Solve(const double dt, double t, int n, double tab[marge][3], Solide& S); 
     
   void Forces_fluide(Solide& S, const double dt); // Calcul des Forces fluides et Moments fluides exerces sur le solide	
   void Parois(Solide& S,double dt);  // Mise a jour de kappai,kappaj,kappak et alpha  
@@ -388,7 +388,7 @@ class Grille
 	void Parois_particles(Solide& S,double dt);
 	//void Parois_tetra(Solide& S,double dt);
 	void parois_cellule_vide(Solide& S);
-private :
+//private :
 
 	double x;          //!< Position de l'origine.
   double y;
