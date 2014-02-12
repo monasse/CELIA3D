@@ -1951,6 +1951,9 @@ void Solide::Init(const char* s){
     xmin = X;
     ymin = Y;
     zmin = Z;
+    xmax = X;
+    ymax = Y;
+    zmax = Z;
     const int nb_faces = Nfaces;
     std::vector<Face> Faces(nb_faces);
 		std::vector<Point_3> points_c;
