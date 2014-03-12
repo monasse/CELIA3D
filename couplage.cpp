@@ -1957,7 +1957,8 @@ void Grille::Mixage_cible(){
 					grille[i][j][k] = cp;
 					
 					if(grille[i][j][k].p<0. || grille[i][j][k].rho<0. && !cp.vide){
-						test_fini = false;
+					  cout << "test non fini x=" << grille[i][j][k].x << " y=" <<  grille[i][j][k].y << " z=" <<  grille[i][j][k].z << " p=" <<  grille[i][j][k].p << " rho=" <<  grille[i][j][k].rho << " cible x=" << cible.x << " y=" << cible.y << " z=" << cible.z << endl;
+					  test_fini = false;
 					}
 			}
 		}
