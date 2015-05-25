@@ -1956,7 +1956,7 @@ void Grille::Mixage_cible(){
 					}
 					grille[i][j][k] = cp;
 					
-					if(grille[i][j][k].p<0. || grille[i][j][k].rho<0. && !cp.vide){
+					if((grille[i][j][k].p<0. || grille[i][j][k].rho<0.) && !cp.vide){
 					  cout << "test non fini x=" << grille[i][j][k].x << " y=" <<  grille[i][j][k].y << " z=" <<  grille[i][j][k].z << " p=" <<  grille[i][j][k].p << " rho=" <<  grille[i][j][k].rho << " cible x=" << cible.x << " y=" << cible.y << " z=" << cible.z << endl;
 					  test_fini = false;
 					}
@@ -1968,4 +1968,221 @@ void Grille::Mixage_cible(){
 		cout<<" non test_fini "<<endl;
 		Mixage_cible();
 	}
+}
+
+/*!
+* \fn bool Grille:: Mixage_cible2()
+*  \brief M&eacute;lange conservatif de petites cellules coup&eacute;es.
+*  \details On d&eacute;finit une petite cellule tel que \f$ alpha > epsa \f$ (\a Cellule.alpha fraction occup&eacute;e par du solide dans la cellule, et \a epsa: fraction de cellule coup&eacute;e d&eacute;finit dans parametres.hpp ). Afin ne pas modifier le pas de temps tout en garantissant la condition de CFL, les petites cellules sont fusionn&eacute;es avec leurs voisines.
+	*	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
+	*	\return void
+	*/
+bool Grille::Mixage_cible2(){
+  //Test pour savoir si apres mixage, on a toujours des valeurs negatives
+  bool test_fini = true;
+  cout << "Mixage_cible2" << endl;
+  //Etape 0 : tout initialiser
+  for(int i=0;i<Nx+2*marge;i++){
+    for(int j=0;j<Ny+2*marge;j++){ 
+      for(int k=0;k<Nz+2*marge;k++){
+	grille[i][j][k].cible_alpha = 0.;
+	grille[i][j][k].cible_rho = 0.;
+	grille[i][j][k].cible_impx = 0.;
+	grille[i][j][k].cible_impy = 0.;
+	grille[i][j][k].cible_impz = 0.;
+	grille[i][j][k].cible_rhoE = 0.;
+	grille[i][j][k].cible_i = i;
+	grille[i][j][k].cible_j = j;
+	grille[i][j][k].cible_k = k;
+      }
+    }
+  }
+  //Premier pas : definir la cible dans le voisinage de chaque cellule (on garde la cellule comme cible si pas de pb). On utilise pour cela les fonctions voisin_fluide (voisin entierement fluide, p>0, rho>0, kappa minimal), voisin_mixt (alpha_cible<alpha, p>0, rho>0, kappa minimal) et voisin (p et rho >0 si possible, kappa minimal)
+  for(int i=marge;i<Nx+marge;i++){
+    for(int j=marge;j<Ny+marge;j++){
+      for(int k=marge;k<Nz+marge;k++){
+	Cellule cp = grille[i][j][k];
+	if((cp.alpha>epsa || cp.p<0. || cp.rho<0.) && abs(cp.alpha-1.)>eps && !cp.vide){
+	  //Recherche avec voisin_fluide
+	  bool target = true;
+	  Cellule cell_cible;
+	  cell_cible = voisin_fluide(cp, target);
+	  if(target){ 
+	    cp.cible_i = cell_cible.i;
+	    cp.cible_j = cell_cible.j;
+	    cp.cible_k = cell_cible.k;
+	  } else {
+	    //Recherche avec voisin_mixt
+	    target = true;
+	    cell_cible= voisin_mixt(cp,target);
+	    if(target){
+	      cp.cible_i = cell_cible.i;
+	      cp.cible_j = cell_cible.j;
+	      cp.cible_k = cell_cible.k;
+	    } else {
+	      //Recherche avec voisin
+	      cell_cible= voisin(cp);
+	      cp.cible_i = cell_cible.i;
+	      cp.cible_j = cell_cible.j;
+	      cp.cible_k = cell_cible.k;
+	    }
+	  }
+	}
+	grille[i][j][k] = cp;
+      }
+    }
+  }
+  //Deuxieme pas : on determine les cibles de chaque cellule en suivant la cible de la cible. Bien sur, on s'arrete des qu'on ne bouge plus ou qu'on tourne en rond. On met ensuite a jour les quantites equivalentes pour la cellule cible apres melange
+  for(int i=marge;i<Nx+marge;i++){
+    for(int j=marge;j<Ny+marge;j++){
+      for(int k=marge;k<Nz+marge;k++){
+	Cellule cp = grille[i][j][k];
+	if((cp.alpha>epsa || cp.p<0. || cp.rho<0.) && abs(cp.alpha-1.)>eps && !cp.vide){
+	  //Liste des points parcourus
+	  std::vector< std::vector<int> > tab_cible; 
+	  std::vector<int> poz(3); poz[0]= i; poz[1] = j; poz[2] = k; tab_cible.push_back(poz);
+	  int l=cp.cible_i;
+	  int m=cp.cible_j;
+	  int n=cp.cible_k;
+	  bool test=true;
+	  for(int count=1;test;count++){
+	    Cellule cible = grille[l][m][n];
+	    poz[0] = l;
+	    poz[1] = m;
+	    poz[2] = n;
+	    //Test pour verifier si la cible pointe vers une cellule deja visitee
+	    for(int iter=0;iter<tab_cible.size() && test;iter++){
+	      //Si une cellule a ete visitee, on met le test a false
+	      if(abs(tab_cible[iter][0]-l)+abs(tab_cible[iter][1]-m)+abs(tab_cible[iter][2]-n)<eps){
+		test = false;
+	      }
+	    }
+	    //Si la cellule cible n'a jamais ete visitee, on la prend comme suivante 
+	    if(test){
+	      tab_cible.push_back(poz);
+	      l = cible.cible_i;
+	      m = cible.cible_j;
+	      n = cible.cible_k;
+	    }
+	    //Sinon, on la prend comme cellule cible pour toutes les cellules visitees pour couper la boucle
+	    else {
+	      for(int iter=0;iter<tab_cible.size() && test;iter++){
+		grille[tab_cible[iter][0]][tab_cible[iter][1]][tab_cible[iter][2]].cible_i = l;
+		grille[tab_cible[iter][0]][tab_cible[iter][1]][tab_cible[iter][2]].cible_j = m;
+		grille[tab_cible[iter][0]][tab_cible[iter][1]][tab_cible[iter][2]].cible_k = n;
+	      }
+	      grille[l][m][n].cible_i = l;
+	      grille[l][m][n].cible_j = m;
+	      grille[l][m][n].cible_k = n;
+	    }
+	  }
+	  
+	  cp.cible_i = l;
+	  cp.cible_j = m;
+	  cp.cible_k = n;
+	  
+	}
+	grille[i][j][k] = cp;
+      }
+    }
+  }
+  //Troisieme pas : on met a jour les valeurs des cellules cibles (pointent vers elle-memes)
+  for(int i=marge;i<Nx+marge;i++){
+    for(int j=marge;j<Ny+marge;j++){
+      for(int k=marge;k<Nz+marge;k++){
+	Cellule cp =grille[i][j][k];
+	Cellule cg = grille[cp.cible_i][cp.cible_j][cp.cible_k];
+	cg.cible_alpha += (1.-cp.alpha);
+	cg.cible_rho  += (1.-cp.alpha)*cp.rho;
+	cg.cible_impx += (1.-cp.alpha)*cp.impx;
+	cg.cible_impy += (1.-cp.alpha)*cp.impy;
+	cg.cible_impz += (1.-cp.alpha)*cp.impz;
+	cg.cible_rhoE += (1.-cp.alpha)*cp.rhoE;
+	grille[i][j][k] = cp;
+	grille[cp.cible_i][cp.cible_j][cp.cible_k] = cg;
+      }
+    }
+  }
+  for(int i=marge;i<Nx+marge;i++){
+    for(int j=marge;j<Ny+marge;j++){
+      for(int k=marge;k<Nz+marge;k++){
+	Cellule cp =grille[i][j][k];
+	if(abs(cp.cible_i-i)+abs(cp.cible_j-j)+abs(cp.cible_k-k)<eps && abs(cp.cible_alpha)>eps && !cp.vide){
+	  cp.rho = cp.cible_rho/cp.cible_alpha;
+	  cp.impx = cp.cible_impx/cp.cible_alpha;
+	  cp.impy = cp.cible_impy/cp.cible_alpha;
+	  cp.impz = cp.cible_impz/cp.cible_alpha;
+	  cp.rhoE = cp.cible_rhoE/cp.cible_alpha;
+	  if(std::abs(cp.rho) > eps_vide){
+	    cp.u = cp.impx/cp.rho;
+	    cp.v = cp.impy/cp.rho;
+	    cp.w = cp.impz/cp.rho;
+	    cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
+	    if(std::abs(cp.p) < eps_vide){
+	      cp.vide=true;
+	    }
+	  }
+	  else{
+	    cp.u = 0.;
+	    cp.v = 0.;
+	    cp.w = 0.;
+	    cp.p = 0.;
+	    cp.vide=true;
+	  }
+	  if(cp.rho<0. || cp.p<0.){
+	    Cellule cible = grille[cp.cible_i][cp.cible_j][cp.cible_k];
+	    cout << "test non fini x=" << cp.x << " y=" <<  cp.y << " z=" <<  cp.z << " p=" <<  cp.p << " rho=" <<  cp.rho << " alpha=" << cp.alpha << " cible x=" << cible.x << " y=" << cible.y << " z=" << cible.z << " p=" << cible.p << " rho=" << cible.rho << " alpha=" << cible.alpha << " cible_alpha=" << cp.cible_alpha << " cible_rho=" << cp.cible_rho << " cible_rhoE" << cp.cible_rhoE << endl;
+	    test_fini = false;
+	    //Recherche avec voisin_fluide
+	    bool target = true;
+	    Cellule cell_cible;
+	    cell_cible = voisin_fluide(cp, target);
+	    if(target){ 
+	      cout << "voisin_fluide x=" << cell_cible.x << " y=" << cell_cible.y << " z=" << cell_cible.z << " rho=" << cell_cible.rho << " p=" << cell_cible.p << " alpha=" << cell_cible.alpha << endl;
+	    } else {
+	      //Recherche avec voisin_mixt
+	      target = true;
+	      cell_cible= voisin_mixt(cp,target);
+	      if(target){
+		cout << "voisin_mixt x=" << cell_cible.x << " y=" << cell_cible.y << " z=" << cell_cible.z << " rho=" << cell_cible.rho << " p=" << cell_cible.p << " alpha=" << cell_cible.alpha << endl;
+	      } else {
+		//Recherche avec voisin
+		cell_cible= voisin(cp);
+		cout << "voisin x=" << cell_cible.x << " y=" << cell_cible.y << " z=" << cell_cible.z << " rho=" << cell_cible.rho << " p=" << cell_cible.p << " alpha=" << cell_cible.alpha << endl;
+	      }
+	    }
+	  }
+	}
+	grille[i][j][k] = cp;
+      }
+    }
+  }
+  //Quatrieme et dernier pas : on met la valeur de la cible dans chaque cellule
+  for(int i=marge;i<Nx+marge;i++){
+    for(int j=marge;j<Ny+marge;j++){
+      for(int k=marge;k<Nz+marge;k++){
+	Cellule cp = grille[i][j][k];
+	if(abs(cp.cible_i-i)+abs(cp.cible_j-j)+abs(cp.cible_k-k)>eps){
+	  Cellule cg = grille[cp.cible_i][cp.cible_j][cp.cible_k];
+	  cp.rho = cg.rho;
+	  cp.impx = cg.impx;
+	  cp.impy = cg.impy;
+	  cp.impz = cg.impz;
+	  cp.rhoE = cg.rhoE;
+	  cp.u = cg.u;
+	  cp.v = cg.v;
+	  cp.w = cg.w;
+	  cp.p = cg.p;
+	  cp.vide = cg.vide;
+	}
+	grille[i][j][k] = cp;
+      }
+    }
+  }
+  //S'il y avait toujours de valeurs negatives, on recommence !
+  //if(!test_fini){
+  //  cout << "test non fini" << endl;
+  //  Mixage_cible2();
+  //}
+  return test_fini;
 }

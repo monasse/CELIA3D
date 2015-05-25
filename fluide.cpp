@@ -3135,7 +3135,7 @@ void Grille::BC_couplage(double tab[marge][3]){
 		for(int j=0;j<Ny+2*marge;j++){
 			for(int k=0;k<Nz+2*marge;k++){
 				Cellule c = grille[i][j][k];
-				if(c.y<0.2 && c.y>0.1 && c.z>0.09){
+				if(c.y<0.2 && c.y>0.1 && c.z>0.083){
 					c.rho = tab[i][0];	
 					c.impx = tab[i][1];
 					c.rhoE= tab[i][2];
@@ -3161,7 +3161,7 @@ void Grille::BC_couplage_1d(vector< vector < double> > &tab_1d){
 		for(int j=marge;j<Ny+marge;j++){
 			for(int k=marge;k<Nz+marge;k++){
 				Cellule c = grille[i+marge][j][k];
-				if(c.y<0.2 && c.y>0.1 && c.z>0.09){
+				if(c.y<0.2 && c.y>0.1 && c.z>0.083){
 				  rho_moy += (1.-c.alpha)*c.rho;
 				  impx_moy += (1.-c.alpha)*c.impx;
 				  rhoE_moy += (1.-c.alpha)*c.rhoE;
@@ -3902,27 +3902,33 @@ Cellule Grille::voisin(const Cellule &c) {
 	{
 		return grille[i][j][k-1];
 	}
-	else if( ((i+1)>=marge) && ((i+1)< (Nx+marge)) && (std::abs(dir - c.kappai)<eps) && (!grille[i+1][j][k].vide))
+	//else if( ((i+1)>=marge) && ((i+1)< (Nx+marge)) && (std::abs(dir - c.kappai)<eps) && (!grille[i+1][j][k].vide))
+	else if( ((i+1)>=marge) && ((i+1)< (Nx+marge)) && (grille[i+1][j][k].p>0.) && (grille[i+1][j][k].rho>0.) && (!grille[i+1][j][k].vide))
 	{
 		return grille[i+1][j][k];
 	}
-	else if ( ((j+1)>=marge) && ((j+1)< (Ny+marge)) && (std::abs(dir - c.kappaj)<eps) && (!grille[i][j+1][k].vide))
+	//else if ( ((j+1)>=marge) && ((j+1)< (Ny+marge)) && (std::abs(dir - c.kappaj)<eps) && (!grille[i][j+1][k].vide))
+	else if ( ((j+1)>=marge) && ((j+1)< (Ny+marge)) && (grille[i][j+1][k].p>0.) && (grille[i][j+1][k].rho>0.) && (!grille[i][j+1][k].vide))
 	{
 		return grille[i][j+1][k];
 	}
-	else if (((k+1)>=marge) && ((k+1)< (Nz+marge)) && (std::abs(dir - c.kappak)<eps) && (!grille[i][j][k+1].vide))
+	//else if (((k+1)>=marge) && ((k+1)< (Nz+marge)) && (std::abs(dir - c.kappak)<eps) && (!grille[i][j][k+1].vide))
+	else if (((k+1)>=marge) && ((k+1)< (Nz+marge)) && (grille[i][j][k+1].p>0.) && (grille[i][j][k+1].rho>0.) && (!grille[i][j][k+1].vide))
 	{
 		return grille[i][j][k+1];
 	}
-	else if ( ((i-1)>=marge) && ((i-1)< (Nx+marge)) && (std::abs(dir - grille[i-1][j][k].kappai)) && (!grille[i-1][j][k].vide))
+	//else if ( ((i-1)>=marge) && ((i-1)< (Nx+marge)) && (std::abs(dir - grille[i-1][j][k].kappai)) && (!grille[i-1][j][k].vide))
+	else if ( ((i-1)>=marge) && ((i-1)< (Nx+marge)) && (grille[i-1][j][k].p>0.) && (grille[i-1][j][k].rho>0.) && (!grille[i-1][j][k].vide))
 	{
 		return grille[i-1][j][k];
 	}
-	else if(((j-1)>=marge) && ((j-1)< (Ny+marge)) && (std::abs(dir - grille[i][j-1][k].kappaj)) && (!grille[i][j-1][k].vide))
+	//else if(((j-1)>=marge) && ((j-1)< (Ny+marge)) && (std::abs(dir - grille[i][j-1][k].kappaj)) && (!grille[i][j-1][k].vide))
+	else if(((j-1)>=marge) && ((j-1)< (Ny+marge)) && (grille[i][j-1][k].p>0.) && (grille[i][j-1][k].rho>0.) && (!grille[i][j-1][k].vide))
 	{
 		return grille[i][j-1][k];
 	}
-	else if (((k-1)>=marge) && ((k-1)< (Nz+marge)) && (!grille[i][j][k-1].vide))
+	//else if (((k-1)>=marge) && ((k-1)< (Nz+marge)) && (!grille[i][j][k-1].vide))
+	else if (((k-1)>=marge) && ((k-1)< (Nz+marge)) && (grille[i][j][k-1].p>0.) && (grille[i][j][k-1].rho>0.) && (!grille[i][j][k-1].vide))
 	{
 		return grille[i][j][k-1];
 	}

@@ -16,7 +16,7 @@ using std::string;
 //! \brief Flag pour une reprise &eacute;ventuelle : false si on ne reprend pas, true si on reprend. \a rep indique si on part de conditions 
 //! initiales (false) ou si on reprend &agrave; partir d'un temps donn&eacute; (true). Dans ce dernier cas, le num&eacute;ro des fichiers de reprise est donn&eacute; par  numrep. 
 int rep = false;
-int numrep = 0;  //!<  Num&eacute;ro de la reprise 
+int numrep = 18;  //!<  Num&eacute;ro de la reprise 
 
 
 /*! 
@@ -57,7 +57,7 @@ const double deltay = domainey/Ny;       //Pas d'espace pour le fluide selon y
 const double deltaz = domainez/Nz;       //Pas d'espace pour le fluide selon z
 
 //Parametres solides
-const double rhos = 70470.; //Densite du solide 
+const double rhos = 2698.9; //Densite du solide 
 const double nu = 0.; //Coefficient de Poisson du materiau
 const double E = 5.; //Module d'Young du materiau
 const double k_max = 0.01; 

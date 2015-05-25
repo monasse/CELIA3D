@@ -190,11 +190,11 @@ int main(){
 	double dE0rep,dE0Srep,dm0;
 	if(rep){
 	  double t_ener = 0.;
-	  double E,Es,dE,dEs,dm;
+	  double E,Es,dE,dEs,dm, tmp;
 	  for(int i=0;t_ener<temps[numrep];i++){
-	    in_energie >>t_ener >> E >> Es >> dE >> dEs >> dm;
+	    in_energie >>t_ener >> E >> Es >> dE >> dEs >> dm >> tmp;
 	    if(t_ener<=temps[numrep]){
-	      ener << t_ener << " " << E << " " << Es << " " << dE << " " << dEs << " " << dm << endl;
+	      ener << t_ener << " " << E << " " << Es << " " << dE << " " << dEs << " " << dm << 0 << endl;
 	      dE0rep = dE;
 	      dE0Srep = dEs;
 	      dm0 = dm;
@@ -268,6 +268,7 @@ int main(){
 	double variation_energy= 0.;
 	double variation_volume = 0.;
 	double volume_solide = 0.;
+	double flux=0.;
 	for (int n=0; (t<T) && n<Nmax; n++){
 		
 
@@ -320,7 +321,26 @@ int main(){
 				next_timp += dtimp;
 			}
 			cout<<"Energie Fluide: "<< Fluide.Energie() << " Energie Solide:" << S.Energie() <<"  "<<"Masse : "<<"  "<< Fluide.Masse() <<endl;
-			ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S <<" "<<Fluide.Masse() - masse <<"  "<< volume_solide - volume_initial<<endl;
+			//double flux = 0.;
+			for(int i=marge;i<Nx+marge;i++){
+			  for(int j=marge;j<Ny+marge;j++){
+			    flux += dt*deltax*deltay*(1.-Fluide.grille[i][j][marge-1].kappak)*Fluide.grille[i][j][marge-1].fluxk[0];
+			    flux -= dt*deltax*deltay*(1.-Fluide.grille[i][j][Nz+marge-1].kappak)*Fluide.grille[i][j][Nz+marge-1].fluxk[0];
+			  }
+			}
+			for(int i=marge;i<Nx+marge;i++){
+			  for(int k=marge;k<Nz+marge;k++){
+			    flux += dt*deltax*deltaz*(1.-Fluide.grille[i][marge-1][k].kappaj)*Fluide.grille[i][marge-1][k].fluxj[0];
+			    flux -= dt*deltax*deltaz*(1.-Fluide.grille[i][Ny+marge-1][k].kappaj)*Fluide.grille[i][Ny+marge-1][k].fluxj[0];
+			  }
+			}
+			for(int k=marge;k<Nz+marge;k++){
+			  for(int j=marge;j<Ny+marge;j++){
+			    flux += dt*deltay*deltaz*(1.-Fluide.grille[marge-1][j][k].kappai)*Fluide.grille[marge-1][j][k].fluxi[0];
+			    flux -= dt*deltay*deltaz*(1.-Fluide.grille[Nx+marge-1][j][k].kappai)*Fluide.grille[Nx+marge-1][j][k].fluxi[0];
+			  }
+			}
+			ener << t << " " << Fluide.Energie()+S.Energie() << " " << S.Energie() << " " << Fluide.Energie()+S.Energie()-E0 << " " << S.Energie()-E0S <<" "<<Fluide.Masse() - masse <<"  "<< flux<<endl;
 			center<< t << " "<<S.solide[nb_part-1].x0.operator[](0) + S.solide[nb_part-1].Dx.operator[](0) << " "<<S.solide[nb_part-1].x0.operator[](1) + S.solide[nb_part-1].Dx.operator[](1) << " "<<S.solide[nb_part-1].x0.operator[](2) + S.solide[nb_part-1].Dx.operator[](2) <<endl;
 			cout<<"Variation Energie: "<< Fluide.Energie() +  S.Energie() - E0<<" Variation Masse : "<< Fluide.Masse() - masse<<endl;
 			//sorties rotation
@@ -334,7 +354,7 @@ int main(){
 					//z_door= CGAL::to_double(S.solide[iter_s].x0.operator[](2) + S.solide[iter_s].Dx.operator[](2));
 					double x_door = 0.11;
 					double y_door = 0.15;
-					double z_door = 0.137;
+					double z_door = 0.13;
 					Point_3 P(x_door,y_door,z_door);
 					Door = S.solide[iter_s].mvt_t.transform(P);
 				}
@@ -344,7 +364,7 @@ int main(){
 			//fin sorties porte
 			dt = min(Fluide.pas_temps(t, T),S.pas_temps(t,T));
 			//Fluide.affiche("avant Solve");
-			cout<<"avant solve"<<endl;
+			//cout<<"avant solve"<<endl;
 			Fluide.affiche();
 			user_time2.start();
 			//Fluide1D.solve_fluid( dt,t);
@@ -355,7 +375,8 @@ int main(){
 				tab[iter_tab][1] = Fluide1D.grille[N+iter_tab].imp;
 				tab[iter_tab][2] = Fluide1D.grille[N+iter_tab].rhoE;
 			}
-			cout<<" cd limites 1d pour la grille 3d avant solve "<<tab[0][2]<< " "<<tab[1][2]<< " "<<tab[2][2]<< " "<<tab[3][2]<<" "<<tab[4][2]<<" "<<tab[5][2]<<endl;
+			//cout<<" cd limites 1d pour la grille 3d avant solve "<<tab[0][2]<< " "<<tab[1][2]<< " "<<tab[2][2]<< " "<<tab[3][2]<<" "<<tab[4][2]<<" "<<tab[5][2]<<endl;
+			cout <<"BC_couplage Variation Masse : "<< Fluide.Masse() - masse<<endl;
 			Fluide.BC_couplage(tab);
 			//conditions aux limites couplage 1D pour la grille 1d
 			vector< vector < double> > tab_1d;
@@ -363,34 +384,36 @@ int main(){
 			for(int iter_tab=0; iter_tab<marge; iter_tab++){
 				tab_1d[iter_tab].resize(3, 0.);
 			}
+			cout <<"BC_couplage_1d Variation Masse : "<< Fluide.Masse() - masse<<endl;
 			Fluide.BC_couplage_1d(tab_1d);
-			cout<<" cd limites 3d pour la grille 1d "<<tab_1d[0][2]<< " "<<tab_1d[1][2]<< " "<<tab_1d[2][2]<< " "<<tab_1d[3][2]<<" "<<tab_1d[4][2]<<" "<<tab_1d[5][2]<<endl;
+			//cout<<" cd limites 3d pour la grille 1d "<<tab_1d[0][2]<< " "<<tab_1d[1][2]<< " "<<tab_1d[2][2]<< " "<<tab_1d[3][2]<<" "<<tab_1d[4][2]<<" "<<tab_1d[5][2]<<endl;
+			cout <<"Fluide1D.cond_lim_couplage Variation Masse : "<< Fluide.Masse() - masse<<endl;
 			Fluide1D.cond_lim_couplage(tab_1d);
 			//fin conditions aux limites couplage 1D pour la grille 1d
 			//cout<<" cd limites 1d pour la grille 3d avant solve "<<tab[0][0]<< " "<<tab[1][0]<< " "<<tab[2][0]<< " "<<tab[3][0]<<" "<<tab[4][0]<<" "<<tab[5][0]<<endl;
-			cout << "x fluide3d=" << Fluide.grille[marge][23][23].x << " " << Fluide.grille[marge+1][23][23].x << " " << Fluide.grille[marge+2][23][23].x << " " << Fluide.grille[marge+3][23][23].x << " " << Fluide.grille[marge+4][23][23].x << " " << Fluide.grille[marge+5][23][23].x << endl;
-			cout << "y fluide3d=" << Fluide.grille[marge][23][23].y << " " << Fluide.grille[marge+1][23][23].y << " " << Fluide.grille[marge+2][23][23].y << " " << Fluide.grille[marge+3][23][23].y << " " << Fluide.grille[marge+4][23][23].y << " " << Fluide.grille[marge+5][23][23].y << endl;
-			cout << "z fluide3d=" << Fluide.grille[marge][23][23].z << " " << Fluide.grille[marge+1][23][23].z << " " << Fluide.grille[marge+2][23][23].z << " " << Fluide.grille[marge+3][23][23].z << " " << Fluide.grille[marge+4][23][23].z << " " << Fluide.grille[marge+5][23][23].z << endl;
-			cout << "p marge fluide 1d=" << Fluide1D.grille[N+marge].p << " " << Fluide1D.grille[N+marge+1].p << " " << Fluide1D.grille[N+marge+2].p << " " << Fluide1D.grille[N+marge+3].p << " " << Fluide1D.grille[N+marge+4].p << " " << Fluide1D.grille[N+marge+5].p << endl;
-			cout << "p       fluide 3d=" << Fluide.grille[marge][23][23].p << " " << Fluide.grille[marge+1][23][23].p << " " << Fluide.grille[marge+2][23][23].p << " " << Fluide.grille[marge+3][23][23].p << " " << Fluide.grille[marge+4][23][23].p << " " << Fluide.grille[marge+5][23][23].p << endl;
-			cout << "p marge fluide 3d=" << Fluide.grille[0][23][23].p << " " << Fluide.grille[1][23][23].p << " " << Fluide.grille[2][23][23].p << " " << Fluide.grille[3][23][23].p << " " << Fluide.grille[4][23][23].p << " " << Fluide.grille[5][23][23].p << endl;
-			cout << "p       fluide 1d=" << Fluide1D.grille[N].p << " " << Fluide1D.grille[N+1].p << " " << Fluide1D.grille[N+2].p << " " << Fluide1D.grille[N+3].p << " " << Fluide1D.grille[N+4].p << " " << Fluide1D.grille[N+5].p << endl;
-			cout << "rho marge fluide 1d=" << Fluide1D.grille[N+marge].rho << " " << Fluide1D.grille[N+marge+1].rho << " " << Fluide1D.grille[N+marge+2].rho << " " << Fluide1D.grille[N+marge+3].rho << " " << Fluide1D.grille[N+marge+4].rho << " " << Fluide1D.grille[N+marge+5].rho << endl;
-			cout << "rho       fluide 3d=" << Fluide.grille[marge][23][23].rho << " " << Fluide.grille[marge+1][23][23].rho << " " << Fluide.grille[marge+2][23][23].rho << " " << Fluide.grille[marge+3][23][23].rho << " " << Fluide.grille[marge+4][23][23].rho << " " << Fluide.grille[marge+5][23][23].rho << endl;
-			cout << "rho marge fluide 3d=" << Fluide.grille[0][23][23].rho << " " << Fluide.grille[1][23][23].rho << " " << Fluide.grille[2][23][23].rho << " " << Fluide.grille[3][23][23].rho << " " << Fluide.grille[4][23][23].rho << " " << Fluide.grille[5][23][23].rho << endl;
-			cout << "rho       fluide 1d=" << Fluide1D.grille[N].rho << " " << Fluide1D.grille[N+1].rho << " " << Fluide1D.grille[N+2].rho << " " << Fluide1D.grille[N+3].rho << " " << Fluide1D.grille[N+4].rho << " " << Fluide1D.grille[N+5].rho << endl;
-			for(int i=0;i<Nx+2*marge;i++){
+			//cout << "x fluide3d=" << Fluide.grille[marge][23][23].x << " " << Fluide.grille[marge+1][23][23].x << " " << Fluide.grille[marge+2][23][23].x << " " << Fluide.grille[marge+3][23][23].x << " " << Fluide.grille[marge+4][23][23].x << " " << Fluide.grille[marge+5][23][23].x << endl;
+			//cout << "y fluide3d=" << Fluide.grille[marge][23][23].y << " " << Fluide.grille[marge+1][23][23].y << " " << Fluide.grille[marge+2][23][23].y << " " << Fluide.grille[marge+3][23][23].y << " " << Fluide.grille[marge+4][23][23].y << " " << Fluide.grille[marge+5][23][23].y << endl;
+			//cout << "z fluide3d=" << Fluide.grille[marge][23][23].z << " " << Fluide.grille[marge+1][23][23].z << " " << Fluide.grille[marge+2][23][23].z << " " << Fluide.grille[marge+3][23][23].z << " " << Fluide.grille[marge+4][23][23].z << " " << Fluide.grille[marge+5][23][23].z << endl;
+			//cout << "p marge fluide 1d=" << Fluide1D.grille[N+marge].p << " " << Fluide1D.grille[N+marge+1].p << " " << Fluide1D.grille[N+marge+2].p << " " << Fluide1D.grille[N+marge+3].p << " " << Fluide1D.grille[N+marge+4].p << " " << Fluide1D.grille[N+marge+5].p << endl;
+			//cout << "p       fluide 3d=" << Fluide.grille[marge][23][23].p << " " << Fluide.grille[marge+1][23][23].p << " " << Fluide.grille[marge+2][23][23].p << " " << Fluide.grille[marge+3][23][23].p << " " << Fluide.grille[marge+4][23][23].p << " " << Fluide.grille[marge+5][23][23].p << endl;
+			//cout << "p marge fluide 3d=" << Fluide.grille[0][23][23].p << " " << Fluide.grille[1][23][23].p << " " << Fluide.grille[2][23][23].p << " " << Fluide.grille[3][23][23].p << " " << Fluide.grille[4][23][23].p << " " << Fluide.grille[5][23][23].p << endl;
+			//cout << "p       fluide 1d=" << Fluide1D.grille[N].p << " " << Fluide1D.grille[N+1].p << " " << Fluide1D.grille[N+2].p << " " << Fluide1D.grille[N+3].p << " " << Fluide1D.grille[N+4].p << " " << Fluide1D.grille[N+5].p << endl;
+			//cout << "rho marge fluide 1d=" << Fluide1D.grille[N+marge].rho << " " << Fluide1D.grille[N+marge+1].rho << " " << Fluide1D.grille[N+marge+2].rho << " " << Fluide1D.grille[N+marge+3].rho << " " << Fluide1D.grille[N+marge+4].rho << " " << Fluide1D.grille[N+marge+5].rho << endl;
+			//cout << "rho       fluide 3d=" << Fluide.grille[marge][23][23].rho << " " << Fluide.grille[marge+1][23][23].rho << " " << Fluide.grille[marge+2][23][23].rho << " " << Fluide.grille[marge+3][23][23].rho << " " << Fluide.grille[marge+4][23][23].rho << " " << Fluide.grille[marge+5][23][23].rho << endl;
+			//cout << "rho marge fluide 3d=" << Fluide.grille[0][23][23].rho << " " << Fluide.grille[1][23][23].rho << " " << Fluide.grille[2][23][23].rho << " " << Fluide.grille[3][23][23].rho << " " << Fluide.grille[4][23][23].rho << " " << Fluide.grille[5][23][23].rho << endl;
+			//cout << "rho       fluide 1d=" << Fluide1D.grille[N].rho << " " << Fluide1D.grille[N+1].rho << " " << Fluide1D.grille[N+2].rho << " " << Fluide1D.grille[N+3].rho << " " << Fluide1D.grille[N+4].rho << " " << Fluide1D.grille[N+5].rho << endl;
+			/*for(int i=0;i<Nx+2*marge;i++){
 			  for(int j=1;j<Ny+2*marge;j++){
 			    for(int k=1;k<Nz+2*marge;k++){
 			      Cellule c = Fluide.grille[i][j][k];
 			      Cellule cg = Fluide.grille[i][j-1][k];
 			      Cellule cb = Fluide.grille[i][j][k-1];
-			      if(c.y<0.2 && c.y>0.1 && c.z>0.09 && c.z<0.2 && abs(c.alpha-1.)>eps){
-				if(cg.y<0.2 && cg.y>0.1 && cg.z>0.09 && abs(cg.alpha-1.)>eps && abs(cg.p-c.p)>0.1){
+			      if(c.y<0.2 && c.y>0.1 && c.z>0.083 && c.z<0.2 && abs(c.alpha-1.)>eps){
+				if(cg.y<0.2 && cg.y>0.1 && cg.z>0.083 && abs(cg.alpha-1.)>eps && abs(cg.p-c.p)>0.1){
 				  //cout << "cellules differentes cg=" << cg.x << " " << cg.y << " " << cg.z << " " << cg.alpha << " " << cg.p << " c=" << c.x << " " << c.y << " " << c.z << " " << c.alpha << " " << c.p << endl;
 				  //getchar();
 				}
-				if(cb.y<0.2 && cb.y>0.1 && cb.z>0.09 && abs(cb.alpha-1.)>eps && abs(cb.p-c.p)>0.1){
+				if(cb.y<0.2 && cb.y>0.1 && cb.z>0.083 && abs(cb.alpha-1.)>eps && abs(cb.p-c.p)>0.1){
 				  //cout << "cellules differentes cb=" << cb.x << " " << cb.y << " " << cb.z << " " << cb.alpha << " " << cb.p << " c=" << c.x << " " << c.y << " " << c.z << " " << c.alpha << " " << c.p << endl;
 				  //getchar();
 				}
@@ -398,30 +421,36 @@ int main(){
 			      
 			    }
 			  }
-			}
+			  }*/
 			
 			if(Fluide1D.grille[N].p != 101325.){
 			  //getchar();
 			}
+			cout <<"Fluide.Solve Variation Masse : "<< Fluide.Masse() - masse<<endl;
 			Fluide.Solve(dt, t, n, tab, S);
+			cout <<"Fluide1D.solve_fluid Variation Masse : "<< Fluide.Masse() - masse<<endl;
 			Fluide1D.solve_fluid(dt,t);
+			cout <<"Fluide1D.cond_lim Variation Masse : "<< Fluide.Masse() - masse<<endl;
 			Fluide1D.cond_lim();
 			//cout << "Temps calcul flux: " << user_time2.time() << " seconds." << endl;
-			cout<<" cd limites 1d pour la grille 3d apres solve "<<tab[0][2]<< " "<<tab[1][2]<< " "<<tab[2][2]<< " "<<tab[3][2]<<" "<<tab[4][2]<<" "<<tab[5][2]<<endl;
-			cout<<"apres solve"<<endl;
+			//cout<<" cd limites 1d pour la grille 3d apres solve "<<tab[0][2]<< " "<<tab[1][2]<< " "<<tab[2][2]<< " "<<tab[3][2]<<" "<<tab[4][2]<<" "<<tab[5][2]<<endl;
+			//cout<<"apres solve"<<endl;
 			Fluide.affiche();
 			temps_flux += CGAL::to_double(user_time2.time());
 			user_time2.reset();
 			if(explicite){ //algo de couplage explicit
-			Fluide.Forces_fluide(S,dt);
-			S.Solve_position(dt);
-			//S.Solve_vitesse(dt);
-	// 		S.Affiche();
-			user_time4.start();
-			Fluide.Parois_particles(S,dt);
-			//Fluide.parois_cellule_vide(S);
-			temps_intersections += CGAL::to_double(user_time4.time());
-			user_time4.reset();
+			  cout <<"Forces_fluide Variation Masse : "<< Fluide.Masse() - masse<<endl;
+			  Fluide.Forces_fluide(S,dt);
+			  cout <<"Solve_position Variation Masse : "<< Fluide.Masse() - masse<<endl;
+			  S.Solve_position(dt);
+			  //S.Solve_vitesse(dt);
+			  // 		S.Affiche();
+			  user_time4.start();
+			  cout <<"Parois_particles Variation Masse : "<< Fluide.Masse() - masse<<endl;
+			  Fluide.Parois_particles(S,dt);
+			  //Fluide.parois_cellule_vide(S);
+			  temps_intersections += CGAL::to_double(user_time4.time());
+			  user_time4.reset();
 			}
 			
 			else{ //algo de couplage semi-implicit
@@ -433,15 +462,18 @@ int main(){
 				Solide Sk_prev = Sk;
 				int k;
 				for(k=0;(erreur>1.e-10) && (k<kmax) ;k++){
-					Fluide.Forces_fluide(Sk,dt);
-					Copy_f_m(S,Sk); //attention c'est tres important d'appeller cette fonction car sinon on va ecraser les valeurs Sk.F_f et Sk.M_f!!!!!
-					Sk_prev = Sk; 
-					Sk = S ; 
-					Sk.Solve_position(dt);
-					//S.Solve_vitesse(dt);
-					Fluide.Parois_particles(Sk,dt);
-					erreur = Error(Sk, Sk_prev);
-					//cout<<" erreur := "<<erreur<<endl;
+				  cout <<"Forces_fluide semiimpl Variation Masse : "<< Fluide.Masse() - masse<<endl;
+				  Fluide.Forces_fluide(Sk,dt);
+				  Copy_f_m(S,Sk); //attention c'est tres important d'appeller cette fonction car sinon on va ecraser les valeurs Sk.F_f et Sk.M_f!!!!!
+				  Sk_prev = Sk; 
+				  Sk = S ;
+				  cout <<"Solve_position semiimpl Variation Masse : "<< Fluide.Masse() - masse<<endl;
+				  Sk.Solve_position(dt);
+				  //S.Solve_vitesse(dt);
+				  cout <<"Parois_particles semiimpl Variation Masse : "<< Fluide.Masse() - masse<<endl;
+				  Fluide.Parois_particles(Sk,dt);
+				  erreur = Error(Sk, Sk_prev);
+				  //cout<<" erreur := "<<erreur<<endl;
 				}//fin boucle 
 				S=Sk;
 				temps_semi_implicit += CGAL::to_double(user_time4.time());
@@ -451,29 +483,42 @@ int main(){
 				//semi-implicit	
 			}
 			user_time3.start();
+			cout <<"Forces_internes Variation Masse : "<< Fluide.Masse() - masse<<endl;
 			S.Forces_internes();
 			temps_solide_f_int += CGAL::to_double(user_time3.time());
 			user_time3.reset();
+			cout <<"Solve_vitesse Variation Masse : "<< Fluide.Masse() - masse<<endl;
 			S.Solve_vitesse(dt);
 			user_time.start();
+			cout <<"Swap_2d Variation Masse : "<< Fluide.Masse() - masse<<endl;
 			Fluide.Swap_2d(dt,S);
 			//cout<<"apres swap"<<endl;
 			//Fluide.affiche();
 			temps_swap += CGAL::to_double(user_time.time());
 			user_time.reset();
+			cout <<"Modif_fnum Variation Masse : "<< Fluide.Masse() - masse<<endl;
 			Fluide.Modif_fnum(dt);
 			//cout<<"apres modif flux"<<endl;
 			//Fluide.affiche();
-			cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
+			//cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
 			//Fluide.Mixage();
-			Fluide.Mixage_cible(); //test 25 nov. 2013
-			cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
+			//Fluide.Mixage_cible(); //test 25 nov. 2013
+			bool test_fini = false;
+			for(int count=1;!test_fini && count<100;count++){
+			  cout <<"Mixage_cible2 iteration " << count << " Variation Masse : "<< Fluide.Masse() - masse<<endl;
+			  test_fini = Fluide.Mixage_cible2(); //test 14 mars 2014
+			  cout << "iterations de Mixage_cible2=" << count << endl;
+			}
+			//cout<<"Masse : "<<"  "<< Fluide.Masse() - masse <<endl;
 			//Fluide.affiche("mixage");
+			cout <<"Fill_cel Variation Masse : "<< Fluide.Masse() - masse<<endl;
 			Fluide.Fill_cel(S);
 			//Fluide.affiche("fill_cell");
 			//cout<<"apres fill"<<endl;
 			//Fluide.affiche();
+			cout <<"BC Variation Masse : "<< Fluide.Masse() - masse<<endl;
 			Fluide.BC();
+			cout <<"BC_couplage Variation Masse : "<< Fluide.Masse() - masse<<endl;
 			Fluide.BC_couplage(tab);
 			
 			//cout<<"apres BC"<<endl;

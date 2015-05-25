@@ -2190,6 +2190,10 @@ void Solide::Forces_internes(){
 	for(int i=0;i<size();i++){
 		solide[i].Fi = Vector_3(0.,0.,0.);
 		solide[i].Mi = Vector_3(0.,0.,0.);
+		//Test : moment dans la direction y pour faire retomber la porte sous l'action de son poids
+		double e = CGAL::to_double(solide[i].e.y());
+		double sintheta = 2.*e*sqrt(1.-e*e);
+		solide[i].Mi = Vector_3(0.,-solide[i].m*9.81*0.045*sintheta,0.);
 	}
 	//Calcul de la deformation volumique epsilon de chaque particule
 	for(int i=0;i<size();i++){

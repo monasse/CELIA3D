@@ -385,6 +385,7 @@ class Grille
 	Cellule voisin(const Cellule &c);
 	Cellule cible(const Cellule &c, std::vector< std::vector<int> > & tab_cible );
 	void Mixage_cible();
+  bool Mixage_cible2();
 	void Parois_particles(Solide& S,double dt);
 	//void Parois_tetra(Solide& S,double dt);
 	void parois_cellule_vide(Solide& S);
