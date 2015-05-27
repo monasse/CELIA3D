@@ -332,7 +332,7 @@ class Grille
   
   // Sous-programme pour mettre des conditions aux limites 
   void BC();
-	void BC_couplage(double tab[marge][3]);
+  void BC_couplage(double tab[marge][3], bool couplage1d);
 	void BC_couplage_1d(vector< vector < double> > &tab_1d);
 
 
@@ -355,7 +355,7 @@ class Grille
   // Fonction qui melange les cellules a densite ou pression negative 
   void melange(const double dt);
   // Calcul du flux dans la direction x entre les cellules 
-  void fnumx( const double sigma, double t, double tab[marge][3]);
+  void fnumx( const double sigma, double t, double tab[marge][3], bool couplage1d);
   // Calcul du flux dans la direction y entre les cellules 
   void fnumy(const double sigma, double t);
   // Calcul du flux dans la direction z entre les cellules 
@@ -368,7 +368,7 @@ class Grille
   void corenty(double sigma);
   //Correction d'entropie selon z
   void corentz(double sigma);
-  void Solve(const double dt, double t, int n, double tab[marge][3], Solide& S); 
+  void Solve(const double dt, double t, int n, double tab[marge][3], bool couplage1d, Solide& S); 
     
   void Forces_fluide(Solide& S, const double dt); // Calcul des Forces fluides et Moments fluides exerces sur le solide	
   void Parois(Solide& S,double dt);  // Mise a jour de kappai,kappaj,kappak et alpha  
@@ -387,7 +387,8 @@ class Grille
 	void Mixage_cible();
   bool Mixage_cible2();
 	void Parois_particles(Solide& S,double dt);
-	//void Parois_tetra(Solide& S,double dt);
+  std::vector<Point_3> intersection(Triangle_3 t1, Triangle_3 t2);
+  //void Parois_tetra(Solide& S,double dt);
 	void parois_cellule_vide(Solide& S);
 //private :
 

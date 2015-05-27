@@ -514,7 +514,7 @@ void Grille::Mixage(){
 }
 
 /**
- \fn void Grille::Solve(const double dt, double t, int n)
+ \fn void Grille::Solve(const double dt, double t, double tab[marge][3], bool couplage1d, int n)
  \brief R&eacute;solution des &eacute;quations fluide.
  \details Alternance directionnelle &agrave; chaque pas de temps.
  \param t temps curent de simulation
@@ -522,7 +522,7 @@ void Grille::Mixage(){
  \param n  num&eacute;ro des iterations en temps
  \return void
  */
-void Grille::Solve(const double dt, double t, int n, double tab[marge][3], Solide& S){
+void Grille::Solve(const double dt, double t, int n, double tab[marge][3], bool couplage1d, Solide& S){
     
     //Cellule c;   
     for(int i=0;i<Nx+2*marge;i++){
@@ -534,9 +534,9 @@ void Grille::Solve(const double dt, double t, int n, double tab[marge][3], Solid
                 c.impy0 = c.impy;
                 c.impz0 = c.impz;
                 c.rhoE0 = c.rhoE;
-				        c.p1=c.p;
-				        c.alpha0=c.alpha;
-				        c.kappai0 = c.kappai; c.kappaj0 = c.kappaj; c.kappak0 = c.kappak;
+		c.p1=c.p;
+		c.alpha0=c.alpha;
+		c.kappai0 = c.kappai; c.kappaj0 = c.kappaj; c.kappak0 = c.kappak;
                 grille[i][j][k] = c;
             }
         }
@@ -546,65 +546,65 @@ void Grille::Solve(const double dt, double t, int n, double tab[marge][3], Solid
 	
     if(n%6==0){
 
-        fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
-				//cout<<"Masse x: "<<"  "<< Masse() <<endl;
-        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
-				//cout<<"Masse x: "<<"  "<< Masse() <<endl;
-				BC();           //Imposition des conditions aux limites pour le fluide
-				Fill_cel(S);
-				BC_couplage(tab);
-		
-        fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
+      fnumx(dt/dx,t,tab,couplage1d);     //Calcul des flux numeriques pour le fluide seul selon x
+      //cout<<"Masse x: "<<"  "<< Masse() <<endl;
+      solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
+      //cout<<"Masse x: "<<"  "<< Masse() <<endl;
+      BC();           //Imposition des conditions aux limites pour le fluide
+      Fill_cel(S);
+      BC_couplage(tab,couplage1d);
+      
+      fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
+      //cout<<"Masse y: "<<"  "<< Masse() <<endl;
+      solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
 				//cout<<"Masse y: "<<"  "<< Masse() <<endl;
-        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
-				//cout<<"Masse y: "<<"  "<< Masse() <<endl;
-		    BC();           //Imposition des conditions aux limites pour le fluide
-		    Fill_cel(S);
-				BC_couplage(tab);
-				
-        fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
-				//cout<<"Masse z: "<<"  "<< Masse() <<endl;
-        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
-				//cout<<"Masse : z"<<"  "<< Masse() <<endl;
-        BC();           //Imposition des conditions aux limites pour le fluide
-	Fill_cel(S);
-	BC_couplage(tab);
+      BC();           //Imposition des conditions aux limites pour le fluide
+      Fill_cel(S);
+      BC_couplage(tab,couplage1d);
+      
+      fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
+      //cout<<"Masse z: "<<"  "<< Masse() <<endl;
+      solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
+      //cout<<"Masse : z"<<"  "<< Masse() <<endl;
+      BC();           //Imposition des conditions aux limites pour le fluide
+      Fill_cel(S);
+      BC_couplage(tab,couplage1d);
     } 
     else if(n%6==2){
-         fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
-        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
-		BC();           //Imposition des conditions aux limites pour le fluide
-		Fill_cel(S);
-		BC_couplage(tab);    
-        fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
-        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
-		BC();           //Imposition des conditions aux limites pour le fluide
-		Fill_cel(S);
-		BC_couplage(tab);   
-        fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
-        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
-		BC();           //Imposition des conditions aux limites pour le fluide
-		Fill_cel(S);
-		BC_couplage(tab);    
+      fnumx(dt/dx,t,tab,couplage1d);     //Calcul des flux numeriques pour le fluide seul selon x
+      solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
+      BC();           //Imposition des conditions aux limites pour le fluide
+      Fill_cel(S);
+      BC_couplage(tab,couplage1d);
+      fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
+      solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
+      BC();           //Imposition des conditions aux limites pour le fluide
+      Fill_cel(S);
+      BC_couplage(tab,couplage1d);   
+      fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
+      solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
+      BC();           //Imposition des conditions aux limites pour le fluide
+      Fill_cel(S);
+      BC_couplage(tab,couplage1d);    
     } 
     
     else if(n%6==1){
-        
-        fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
-        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
-		BC();           //Imposition des conditions aux limites pour le fluide
-		Fill_cel(S);
-		BC_couplage(tab);    
-         fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
+      
+      fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
+      solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
+      BC();           //Imposition des conditions aux limites pour le fluide
+      Fill_cel(S);
+      BC_couplage(tab,couplage1d);    
+      fnumx(dt/dx,t,tab,couplage1d);     //Calcul des flux numeriques pour le fluide seul selon x
         solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
 		BC();           //Imposition des conditions aux limites pour le fluide
 		Fill_cel(S);
-	BC_couplage(tab);    
+	BC_couplage(tab,couplage1d);    
         fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
         solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
         BC();           //Imposition des conditions aux limites pour le fluide
 	Fill_cel(S);
-	BC_couplage(tab);
+	BC_couplage(tab,couplage1d);
     } 
     
     else if(n%6==3){
@@ -613,17 +613,17 @@ void Grille::Solve(const double dt, double t, int n, double tab[marge][3], Solid
         solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
 		BC();           //Imposition des conditions aux limites pour le fluide
 		Fill_cel(S);
-		BC_couplage(tab);      
+		BC_couplage(tab,couplage1d);      
         fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
         solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
 		BC();           //Imposition des conditions aux limites pour le fluide
 		Fill_cel(S);
-		BC_couplage(tab);      
-         fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
+		BC_couplage(tab,couplage1d);      
+         fnumx(dt/dx,t,tab,couplage1d);     //Calcul des flux numeriques pour le fluide seul selon x
         solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
 		BC();           //Imposition des conditions aux limites pour le fluide
 		Fill_cel(S);
-		BC_couplage(tab);      
+		BC_couplage(tab,couplage1d);      
     }
     else if(n%6==4){
         
@@ -631,17 +631,17 @@ void Grille::Solve(const double dt, double t, int n, double tab[marge][3], Solid
         solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
 		BC();           //Imposition des conditions aux limites pour le fluide
 		Fill_cel(S);
-		BC_couplage(tab);      
-         fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
+		BC_couplage(tab,couplage1d);      
+         fnumx(dt/dx,t,tab,couplage1d);     //Calcul des flux numeriques pour le fluide seul selon x
         solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
 		BC();           //Imposition des conditions aux limites pour le fluide
 		Fill_cel(S);
-		BC_couplage(tab);      
+		BC_couplage(tab,couplage1d);      
         fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
         solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y 
         BC();           //Imposition des conditions aux limites pour le fluide
 	Fill_cel(S);
-	BC_couplage(tab);   
+	BC_couplage(tab,couplage1d);   
         
     }
     else if(n%6==5){
@@ -650,17 +650,17 @@ void Grille::Solve(const double dt, double t, int n, double tab[marge][3], Solid
         solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
 		BC();           //Imposition des conditions aux limites pour le fluide
 		Fill_cel(S);
-		BC_couplage(tab);     
+		BC_couplage(tab,couplage1d);     
         fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
         solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
 		BC();           //Imposition des conditions aux limites pour le fluide
 		Fill_cel(S);
-		BC_couplage(tab);      
-         fnumx(dt/dx,t,tab);     //Calcul des flux numeriques pour le fluide seul selon x
+		BC_couplage(tab,couplage1d);      
+         fnumx(dt/dx,t,tab,couplage1d);     //Calcul des flux numeriques pour le fluide seul selon x
         solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
 		BC();           //Imposition des conditions aux limites pour le fluide
 		Fill_cel(S);
-		BC_couplage(tab);      
+		BC_couplage(tab,couplage1d);      
     }
   
     

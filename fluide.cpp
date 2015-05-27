@@ -1289,7 +1289,7 @@ void Grille::corentz(double sigma){
  \param t temps curent de simulation
  \return void
  */ 
-void Grille::fnumx(const double sigma, double t, double tab[marge][3]){ 
+void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool couplage1d){ 
    // Cellule c, ci, cg, cd, cg2, cg3, cg4, cg5, cd2, cd3, cd4;
     //Initialisation du flux au flux centre
     for(int i=0; i<Nx+2*marge-1; i++){ 
@@ -1729,7 +1729,7 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3]){
 			}
 		}
     
-    BC_couplage(tab);
+    BC_couplage(tab,couplage1d);
     
     if(BC_x_out==3){
       int i=Nx+marge-1;
@@ -3130,27 +3130,29 @@ void Grille::fnumz(const double sigma, double t){
  \details Type de CL :  1 = reflecting ("miroir"); 2 = periodic(&quot;p&eacute;riodique"); 3= outflow("transmissibles").
  \return void
  */
-void Grille::BC_couplage(double tab[marge][3]){
-	for(int i=0;i<marge;i++){
-		for(int j=0;j<Ny+2*marge;j++){
-			for(int k=0;k<Nz+2*marge;k++){
-				Cellule c = grille[i][j][k];
-				if(c.y<0.2 && c.y>0.1 && c.z>0.083){
-					c.rho = tab[i][0];	
-					c.impx = tab[i][1];
-					c.rhoE= tab[i][2];
-				
-					c.impy = 0.;
-					c.impz = 0.;
-					c.u = c.impx/c.rho; 
-					c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.); 
-					c.v = 0.;
-					c.w = 0.;
-				}
-				grille[i][j][k] = c;
-			}
-		}
+void Grille::BC_couplage(double tab[marge][3], bool couplage1d){
+  if(couplage1d){
+    for(int i=0;i<marge;i++){
+      for(int j=0;j<Ny+2*marge;j++){
+	for(int k=0;k<Nz+2*marge;k++){
+	  Cellule c = grille[i][j][k];
+	  if(c.y<0.2 && c.y>0.1 && c.z>0.083){
+	    c.rho = tab[i][0];	
+	    c.impx = tab[i][1];
+	    c.rhoE= tab[i][2];
+	    
+	    c.impy = 0.;
+	    c.impz = 0.;
+	    c.u = c.impx/c.rho; 
+	    c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.); 
+	    c.v = 0.;
+	    c.w = 0.;
+	  }
+	  grille[i][j][k] = c;
 	}
+      }
+    }
+  }
 }
 void Grille::BC_couplage_1d(vector< vector < double> > &tab_1d){
 	for(int i=0;i<marge;i++){

@@ -145,4 +145,45 @@ void triang_cellule(const Bbox& cel, Triangles& trianglesB){
   
 }
 
+
+//Nouvelle version de l'intersection triangle/triangle
+//But : accelerer le calcul, car nous n'avons pas besoin du type precis de l'intersection, juste de la liste des points extremes de l'intersection
+//Reduit a l'intersection segment/triangle de CGAL
+std::vector<Point_3> intersection_bis(Triangle_3 t1, Triangle_3 t2)
+{
+  std::vector<Point_3> result;
+  //Intersections entre les segments de t1 et le triangle t2
+  for(int k=0;k<3;k++){
+    int kp = (k+1)%3;
+    Point_3 P;
+    Segment_3 seg;
+    Segment_3 arete(t1.operator[](k),t1.operator[](kp));
+    CGAL::Object intersec = CGAL::intersection(arete,t2);
+    if(CGAL::assign(P,intersec)){
+      result.push_back(P);
+    }
+    else if(CGAL::assign(seg,intersec)){
+      result.push_back(seg.operator[](0));
+      result.push_back(seg.operator[](1));
+    }
+  }
+  //Intersections entre les segments de t2 et le triangle t1
+  for(int k=0;k<3;k++){
+    int kp = (k+1)%3;
+    Point_3 P;
+    Segment_3 seg;
+    Segment_3 arete(t2.operator[](k),t2.operator[](kp));
+    CGAL::Object intersec = CGAL::intersection(arete,t1);
+    if(CGAL::assign(P,intersec)){
+      result.push_back(P);
+    }
+    else if(CGAL::assign(seg,intersec)){
+      result.push_back(seg.operator[](0));
+      result.push_back(seg.operator[](1));
+    }
+  }
+    
+  return result;
+}
+
 #endif
