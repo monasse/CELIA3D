@@ -163,7 +163,7 @@ void Grille::Parois(Solide& S,double dt) {
 							if(c>0) {grille[a][b][c-1].kappak = 1.;}
 							//fin test 3 janvier 2013
 							volume_s += volume_cel;
-							box_in_solide = false;
+							//box_in_solide = false;
 						}
 						else 
 						{    
@@ -258,19 +258,27 @@ void Grille::Parois(Solide& S,double dt) {
 				} //fin boucle sur les particules
 				user_time2.start();
 				//traitement calcul de alpha et kappa pour la cellule=grille[i]!!!!!!
-				if(intersection && exterieur){
-					Triangulation T(Points_poly.begin(), Points_poly.end());
+				if(intersection && exterieur && Points_poly.size()>0){
+				  //Triangulation T(Points_poly.begin(), Points_poly.end());
+				  std::vector<Point_3> Points_poly2 = redondances(Points_poly.begin(), Points_poly.end());
 					
-					if (T.dimension() == 3){
+				  //if (T.dimension() == 3){
 						Polyhedron_3 poly;
-						CGAL::convex_hull_3(T.points_begin(), T.points_end(), poly);
+						//CGAL::convex_hull_3(T.points_begin(), T.points_end(), poly);
+						CGAL::convex_hull_3(Points_poly2.begin(), Points_poly2.end(), poly);
 						//int l=0, n=0;
-						Finite_cells_iterator cit;
-						for (cit = T.finite_cells_begin(); cit!= T.finite_cells_end(); cit++){
+						/*Finite_cells_iterator cit;
+						for (cit = poly.finite_cells_begin(); cit!= poly.finite_cells_end(); cit++){
 							alpha+= CGAL::to_double(T.tetrahedron( cit).volume());
+							}*/
+						Point_3 P = (*(poly.facets_begin())).halfedge()->vertex()->point();
+						Facet_iterator fiter;
+						for (fiter = poly.facets_begin(); fiter!= poly.facets_end(); fiter++){
+						  Tetrahedron T(P,(*fiter).halfedge()->vertex()->point(),(*fiter).halfedge()->next()->vertex()->point(), (*fiter).halfedge()->opposite()->vertex()->point());
+						  alpha+= CGAL::to_double(T.volume());
 						}
 						
-						Facet_iterator fiter;
+						//Facet_iterator fiter;
 						for (fiter = poly.facets_begin(); fiter!= poly.facets_end(); fiter++){
 							
 							Triangle_3 K((*fiter).halfedge()->vertex()->point(),(*fiter).halfedge()->next()->vertex()->point(),
@@ -311,7 +319,7 @@ void Grille::Parois(Solide& S,double dt) {
 													 } //calcul des aires parietales
 													 
 						}
-					}
+						/*}
 					
 					if (T.dimension() == 2){
 						//int l=0, n=0;
@@ -354,9 +362,9 @@ void Grille::Parois(Solide& S,double dt) {
 								kappa[5] +=sqrt(CGAL::to_double(K.squared_area()));
 								
 							}
-						}
+							}*/
 						
-					}
+						//}
 					
 					cel.alpha = alpha/volume_cel;
 					cel.kappai = kappa[3]/(deltay * deltaz);
@@ -820,30 +828,56 @@ void Grille::Parois_particles(Solide& S,double dt) {
 				    //traitement calcul de alpha et kappa pour la cellule=grille[i]!!!!!!
 				    user_time2.start();
 				    alpha_time.start();
-				    if(intersection && exterieur){
+				    if(intersection && exterieur && Points_poly.size()>0){
 				      
 				      triangulation_time.start();
-				      Triangulation T(Points_poly.begin(), Points_poly.end());
+				      //Triangulation Tr(Points_poly.begin(), Points_poly.end());
+				      std::vector<Point_3> Points_poly2 = redondances(Points_poly.begin(), Points_poly.end());
+				      //cout << "Points_poly.size()=" << Points_poly.size() << " Points_poly2.size()=" << Points_poly2.size() << endl;
+				      /*cout << "Points_poly:" << endl;
+				      for(std::vector<Point_3>::iterator it=Points_poly.begin();it!=Points_poly.end();it++){
+					cout << (*it).x() << " " << (*it).y() << " " << (*it).z() << endl;
+					getchar();
+					}*/
+				      /*cout << "Triangulation:" << endl;
+				      for(Point_iterator it=Tr.points_begin();it!=Tr.points_end();it++){
+					cout << (*it).x() << " " << (*it).y() << " " << (*it).z() << endl;
+					getchar();
+					}*/
+				      
+				      
 				      temps_triangulation += CGAL::to_double(triangulation_time.time());
 				      triangulation_time.reset();
 				      
-				      if (T.dimension() == 3){
-					Polyhedron_3 poly;
-					convex_hull_time.start();
-					CGAL::convex_hull_3(T.points_begin(), T.points_end(), poly);
+				      //if (T.dimension() == 3){
+				      Polyhedron_3 poly;
+				      convex_hull_time.start();
+				      //cout << "before convex_hull size=" << Points_poly.size() << endl;
+				      CGAL::convex_hull_3(Points_poly2.begin(), Points_poly2.end(), poly);
+				      //CGAL::convex_hull_3(Tr.points_begin(), Tr.points_end(), poly);
+//getchar();
+				      //cout << "after convex_hull facets=" << poly.size_of_facets() << " vertices=" << poly.size_of_vertices() << endl;
 					nb_convex_hull += 1.;
 					temps_convex_hull += CGAL::to_double(convex_hull_time.time());
 					convex_hull_time.reset();
 					volume_time.start();
-					Finite_cells_iterator cit;
-					for (cit = T.finite_cells_begin(); cit!= T.finite_cells_end(); cit++){
-					  alpha+= CGAL::to_double(T.tetrahedron( cit).volume());
+					//Finite_cells_iterator cit;
+					//for (cit = poly.finite_cells_begin(); cit!= poly.finite_cells_end(); cit++){
+					//alpha+= CGAL::to_double(poly.tetrahedron( cit).volume());
+					//}
+					Point_3 P = (*(poly.facets_begin())).halfedge()->vertex()->point();
+					Facet_iterator fiter;
+					for (fiter = poly.facets_begin(); fiter!= poly.facets_end(); fiter++){
+					  Tetrahedron T(P,(*fiter).halfedge()->vertex()->point(),(*fiter).halfedge()->next()->vertex()->point(), (*fiter).halfedge()->opposite()->vertex()->point());
+					  alpha+= CGAL::to_double(T.volume());
 					}
+					
+					
 					temps_volume += CGAL::to_double(volume_time.time());
 					volume_time.reset();
 					
 					kappa_time1.start();
-					Facet_iterator fiter;
+					//Facet_iterator fiter;
 					for (fiter = poly.facets_begin(); fiter!= poly.facets_end(); fiter++){
 					  nb_kappa1 +=1.;
 					  Triangle_3 K((*fiter).halfedge()->vertex()->point(),(*fiter).halfedge()->next()->vertex()->point(),
@@ -886,9 +920,9 @@ void Grille::Parois_particles(Solide& S,double dt) {
 					}
 					temps_kappa1 += CGAL::to_double(kappa_time1.time());
 					kappa_time1.reset();
-				      }
+					//}
 						
-				      if (T.dimension() == 2){
+				    /*if (T.dimension() == 2){
 					kappa_time2.start();
 					Finite_faces_iterator it;
 					for (it = T.finite_facets_begin(); it != T.finite_facets_end(); it++){
@@ -934,7 +968,7 @@ void Grille::Parois_particles(Solide& S,double dt) {
 					temps_kappa2 += CGAL::to_double(kappa_time2.time());
 					kappa_time2.reset();
 					
-				      }
+					}*/
 						
 				      cel.alpha  += alpha/volume_cel;
 				      cel.kappai += kappa[3]/(deltay * deltaz);
@@ -1020,7 +1054,7 @@ void Grille::Parois_particles(Solide& S,double dt) {
 	cout << "   test_inside=" << 100*temps_test_inside/temps_total << "%" << endl;
 	cout << "   intersect=" << 100*temps_intersect/temps_total << "%          t_moy=" << temps_intersect/nb_intersect << " nb_intersect=" << nb_intersect << endl;
 	cout << "   alpha=" << 100*temps_alpha/temps_total << "%" << endl;
-	cout << "      triangulation=" << 100*temps_triangulation/temps_total << "%" << endl;
+	cout << "      triangulation=" << 100*temps_triangulation/temps_total << "%          t_moy=" << temps_triangulation/nb_convex_hull << " nb_triangulation=" << nb_convex_hull << endl;
 	cout << "      convex_hull=" << 100*temps_convex_hull/temps_total << "%          t_moy=" << temps_convex_hull/nb_convex_hull << " nb_convex_hull=" << nb_convex_hull << endl;
 	cout << "      volume=" << 100*temps_volume/temps_total << "%" << endl;
 	cout << "      kappa 3d=" << 100*temps_kappa1/temps_total << "%          t_moy=" << temps_kappa1/nb_kappa1 << " nb_kappa1=" << nb_kappa1 << endl;

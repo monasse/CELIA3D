@@ -186,4 +186,24 @@ std::vector<Point_3> intersection_bis(Triangle_3 t1, Triangle_3 t2)
   return result;
 }
 
+//Nettoyage des redondances de Points_poly avant calcul du convex hull
+std::vector<Point_3> redondances(std::vector<Point_3>::iterator begin, std::vector<Point_3>::iterator end)
+{
+  const double eps_relat = std::numeric_limits<double>::epsilon( );
+  std::vector<Point_3> result;
+  for(std::vector<Point_3>::iterator it=begin;it!=end;it++){
+    bool test = true;
+    for(std::vector<Point_3>::iterator iter=result.begin();iter!=result.end() && test;iter++){
+      test = ((abs((*it).operator[](0) - (*iter).operator[](0))>eps_relat) || (abs((*it).operator[](1) - (*iter).operator[](1))>eps_relat) || (abs((*it).operator[](2) - (*iter).operator[](2))>eps_relat));
+    }
+    if(test){
+      result.push_back(*it);
+      //std::cout << (*it).x() << " " << (*it).y() << " " << (*it).z() << std::endl;
+      //std::getchar();
+    }
+  }
+  return result;
+}
+
+
 #endif
