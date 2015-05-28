@@ -145,7 +145,25 @@ void triang_cellule(const Bbox& cel, Triangles& trianglesB){
   
 }
 
+//Intersection arete/triangle
+std::vector<Point_3> intersection_bis(Segment_3 seg, Triangle_3 t)
+{
+  std::vector<Point_3> result;
+  Point_3 P;
+  Segment_3 s;
+  CGAL::Object intersec = CGAL::intersection(seg,t);
+  if(CGAL::assign(P,intersec)){
+    result.push_back(P);
+  }
+  else if(CGAL::assign(s,intersec)){
+    result.push_back(s.operator[](0));
+    result.push_back(s.operator[](1));
+  }
+    
+  return result;
+}
 
+  
 //Nouvelle version de l'intersection triangle/triangle
 //But : accelerer le calcul, car nous n'avons pas besoin du type precis de l'intersection, juste de la liste des points extremes de l'intersection
 //Reduit a l'intersection segment/triangle de CGAL
