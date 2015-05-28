@@ -92,6 +92,8 @@ typedef Triangles::iterator              Triangle3_iterator;
  */
 void triang_cellule(const Bbox& cel, Triangles& trianglesB){
   
+  trianglesB.clear();
+  
 	    Point_3 s1B(cel.xmin(), cel.ymin(), cel.zmin());
 	    Point_3 r1B(cel.xmax(), cel.ymin(), cel.zmin());
 	    Point_3 t1B(cel.xmax(), cel.ymax(), cel.zmin());

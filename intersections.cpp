@@ -732,59 +732,51 @@ void Grille::Parois_particles(Solide& S,double dt) {
 				    else 
 				    {    
 				      triang_cellule(box_grille[i] , trianglesB); 
-							
+					
+				      //Test pour savoir si les coins de la cellule sont dans le solide
+				      for(int kx=0;kx<2;kx++){
+					for(int ky=0;ky<2;ky++){
+					  for(int kz=0;kz<2;kz++){
+					    double x = box_grille[i].xmin()+kx*(box_grille[i].xmax()-box_grille[i].xmin());
+					    double y = box_grille[i].ymin()+ky*(box_grille[i].ymax()-box_grille[i].ymin());
+					    double z = box_grille[i].zmin()+kz*(box_grille[i].zmax()-box_grille[i].zmin());
+					    point_in_solide = inside_convex_polygon(S.solide[iter_s],Point_3(x,y,z));
+					    if(point_in_solide) {Points_poly.push_back(Point_3(x,y,z)); point_in_solide=false;
+					      //cout << "Coin cellule " << x << " " << y << " " << z << endl;
+					      //getchar();
+					    }
+					  }
+					}
+				      }
+				      
 				      for ( int j = 0; j < S.solide[iter_s].triangles.size(); j++){ 
 								
 					//test if point is in cell_box
 					point_in_cell = inside_box(box_grille[i], S.solide[iter_s].triangles[j].operator[](0));
 					if(point_in_cell) {Points_poly.push_back(S.solide[iter_s].triangles[j].operator[](0)); point_in_cell=false;
 					  Points_interface[iter_s][j].push_back(S.solide[iter_s].triangles[j].operator[](0));
+					  //cout << "Sommet solide " << S.solide[iter_s].triangles[j].operator[](0).x() << " " << S.solide[iter_s].triangles[j].operator[](0).y() << " " << S.solide[iter_s].triangles[j].operator[](0).z() << " Solide=" << iter_s << " Triangle=" << j << endl;
+					  //getchar();
 					}
 								
 					point_in_cell = inside_box(box_grille[i], S.solide[iter_s].triangles[j].operator[](1));
 					if(point_in_cell) {Points_poly.push_back(S.solide[iter_s].triangles[j].operator[](1)); point_in_cell=false;
 					  Points_interface[iter_s][j].push_back(S.solide[iter_s].triangles[j].operator[](1));
+					  //cout << "Sommet solide " << S.solide[iter_s].triangles[j].operator[](1).x() << " " << S.solide[iter_s].triangles[j].operator[](1).y() << " " << S.solide[iter_s].triangles[j].operator[](1).z() << " Solide=" << iter_s << " Triangle=" << j << endl;
+					  //getchar();
 					}
 								
 					point_in_cell = inside_box(box_grille[i], S.solide[iter_s].triangles[j].operator[](2));
 					if(point_in_cell) {Points_poly.push_back(S.solide[iter_s].triangles[j].operator[](2)); point_in_cell=false;
 					  Points_interface[iter_s][j].push_back(S.solide[iter_s].triangles[j].operator[](2));
+					  //cout << "Sommet solide " << S.solide[iter_s].triangles[j].operator[](2).x() << " " << S.solide[iter_s].triangles[j].operator[](2).y() << " " << S.solide[iter_s].triangles[j].operator[](2).z() << " Solide=" << iter_s << " Triangle=" << j << endl;
+					  //getchar();
 					}
 								
 								
 					if (CGAL::do_intersect(box_grille[i],S.solide[iter_s].triangles[j]) ) {
-					  //Test pour savoir si les coins de la cellule sont dans le solide
-					  point_in_solide = inside_convex_polygon(S.solide[iter_s],Point_3(box_grille[i].xmin(),box_grille[i].ymin(),box_grille[i].zmin()));
-					  if(point_in_solide) {Points_poly.push_back(Point_3(box_grille[i].xmin(),box_grille[i].ymin(),box_grille[i].zmin())); point_in_solide=false;
-					  }
-
-					  point_in_solide = inside_convex_polygon(S.solide[iter_s],Point_3(box_grille[i].xmin(),box_grille[i].ymin(),box_grille[i].zmax()));
-					  if(point_in_solide) {Points_poly.push_back(Point_3(box_grille[i].xmin(),box_grille[i].ymin(),box_grille[i].zmax())); point_in_solide=false;
-					  }
-
-					  point_in_solide = inside_convex_polygon(S.solide[iter_s],Point_3(box_grille[i].xmin(),box_grille[i].ymax(),box_grille[i].zmin()));
-					  if(point_in_solide) {Points_poly.push_back(Point_3(box_grille[i].xmin(),box_grille[i].ymax(),box_grille[i].zmin())); point_in_solide=false;
-					  }
-
-					  point_in_solide = inside_convex_polygon(S.solide[iter_s],Point_3(box_grille[i].xmin(),box_grille[i].ymax(),box_grille[i].zmax()));
-					  if(point_in_solide) {Points_poly.push_back(Point_3(box_grille[i].xmin(),box_grille[i].ymax(),box_grille[i].zmax())); point_in_solide=false;
-					  }
-
-					  point_in_solide = inside_convex_polygon(S.solide[iter_s],Point_3(box_grille[i].xmax(),box_grille[i].ymin(),box_grille[i].zmin()));
-					  if(point_in_solide) {Points_poly.push_back(Point_3(box_grille[i].xmax(),box_grille[i].ymin(),box_grille[i].zmin())); point_in_solide=false;
-					  }
-
-					  point_in_solide = inside_convex_polygon(S.solide[iter_s],Point_3(box_grille[i].xmax(),box_grille[i].ymin(),box_grille[i].zmax()));
-					  if(point_in_solide) {Points_poly.push_back(Point_3(box_grille[i].xmax(),box_grille[i].ymin(),box_grille[i].zmax())); point_in_solide=false;
-					  }
-
-					  point_in_solide = inside_convex_polygon(S.solide[iter_s],Point_3(box_grille[i].xmax(),box_grille[i].ymax(),box_grille[i].zmin()));
-					  if(point_in_solide) {Points_poly.push_back(Point_3(box_grille[i].xmax(),box_grille[i].ymax(),box_grille[i].zmin())); point_in_solide=false;
-					  }
-
-					  point_in_solide = inside_convex_polygon(S.solide[iter_s],Point_3(box_grille[i].xmax(),box_grille[i].ymax(),box_grille[i].zmax()));
-					  if(point_in_solide) {Points_poly.push_back(Point_3(box_grille[i].xmax(),box_grille[i].ymax(),box_grille[i].zmax())); point_in_solide=false;
-					  }
+					  
+					  
 
 					  //Intersections des aretes de la cellule avec le triangle
 					  for(int kx=0;kx<2;kx++){
@@ -807,6 +799,8 @@ void Grille::Parois_particles(Solide& S,double dt) {
 						    {
 						      Points_poly.push_back(result[l]);
 						      Points_interface[iter_s][j].push_back(result[l]);
+						      //cout << "Intersection arete en x " << result[l].x() << " " << result[l].y() << " " << result[l].z() << " Solide=" << iter_s << " Triangle=" << j << endl;
+						      //getchar();
 						    }
 						  }
 						  //end intersection seg et t1
@@ -825,12 +819,14 @@ void Grille::Parois_particles(Solide& S,double dt) {
 						    {
 						      Points_poly.push_back(result[l]);
 						      Points_interface[iter_s][j].push_back(result[l]);
+						      //cout << "Intersection arete en y " << result[l].x() << " " << result[l].y() << " " << result[l].z() << " Solide=" << iter_s << " Triangle=" << j << endl;
+						      //getchar();
 						    }
 						  }
 						  //end intersection seg et t1
 						}
 						if(kz==0){
-						  double z2 = box_grille[i].xmax();
+						  double z2 = box_grille[i].zmax();
 						  Segment_3 seg(Point_3(x1,y1,z1),Point_3(x1,y1,z2));
 						  if (CGAL::do_intersect(seg,S.solide[iter_s].triangles[j]) ) {
 						    intersect_time.start();
@@ -843,6 +839,8 @@ void Grille::Parois_particles(Solide& S,double dt) {
 						    {
 						      Points_poly.push_back(result[l]);
 						      Points_interface[iter_s][j].push_back(result[l]);
+						      //cout << "Intersection arete en z " << result[l].x() << " " << result[l].y() << " " << result[l].z() << " Solide=" << iter_s << " Triangle=" << j << endl;
+						      //getchar();
 						    }
 						  }
 						  //end intersection seg et t1
@@ -854,23 +852,25 @@ void Grille::Parois_particles(Solide& S,double dt) {
 
 					  //Intersections des aretes de la face solide avec les triangles de la cellule
 					  for ( int k = 0; k < trianglesB.size(); k++){	
-					    if (CGAL::do_intersect(S.solide[iter_s].triangles[j],trianglesB[k]) ) {
+					    //if (CGAL::do_intersect(S.solide[iter_s].triangles[j],trianglesB[k]) ) {
 					      for(int l=0;l<3;l++){
 						int lp = (l+1)%3;
 						Segment_3 seg(S.solide[iter_s].triangles[j].operator[](l),S.solide[iter_s].triangles[j].operator[](lp));
-						
-						intersect_time.start();
-						nb_intersect+=1.;
-						std::vector<Point_3> result = intersection_bis(seg,trianglesB[k]);
-						temps_intersect += CGAL::to_double(intersect_time.time());
-						intersect_time.reset();
-						
-						for(int l= 0; l<result.size(); l++)
-						{
-						  Points_poly.push_back(result[l]);
-						  Points_interface[iter_s][j].push_back(result[l]);
+						if (CGAL::do_intersect(seg,trianglesB[k]) ) {
+						  intersect_time.start();
+						  nb_intersect+=1.;
+						  std::vector<Point_3> result = intersection_bis(seg,trianglesB[k]);
+						  temps_intersect += CGAL::to_double(intersect_time.time());
+						  intersect_time.reset();
+						  
+						  for(int l= 0; l<result.size(); l++)
+						  {
+						    Points_poly.push_back(result[l]);
+						    Points_interface[iter_s][j].push_back(result[l]);
+						    //cout << "Intersection arete triangle " << result[l].x() << " " << result[l].y() << " " << result[l].z() << " Solide=" << iter_s << " Triangle=" << j << " trianglesB=" << k << endl;
+						    //getchar();
+						  }
 						}
-					      }
 					      //end intersection seg et t2
 					    }
 					  } //end boucle sur trianglesB
@@ -896,7 +896,12 @@ void Grille::Parois_particles(Solide& S,double dt) {
 				      for(std::vector<Point_3>::iterator it=Points_poly.begin();it!=Points_poly.end();it++){
 					cout << (*it).x() << " " << (*it).y() << " " << (*it).z() << endl;
 					getchar();
-				      }*/
+				      }
+				      cout << "Points_poly2:" << endl;
+				      for(std::vector<Point_3>::iterator it=Points_poly2.begin();it!=Points_poly2.end();it++){
+					cout << (*it).x() << " " << (*it).y() << " " << (*it).z() << endl;
+					getchar();
+				      }//*/
 				      /*cout << "Triangulation:" << endl;
 				      for(Point_iterator it=Tr.points_begin();it!=Tr.points_end();it++){
 					cout << (*it).x() << " " << (*it).y() << " " << (*it).z() << endl;
