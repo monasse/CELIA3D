@@ -371,7 +371,6 @@ class Grille
   void Solve(const double dt, double t, int n, double tab[marge][3], bool couplage1d, Solide& S); 
     
   void Forces_fluide(Solide& S, const double dt); // Calcul des Forces fluides et Moments fluides exerces sur le solide	
-  void Parois(Solide& S,double dt);  // Mise a jour de kappai,kappaj,kappak et alpha  
   void Modif_fnum(const double dt);  // Modification du flux
   void Mixage(); // Procedure de mixage pour le cellules avec c.alpha>0.5
   void Fill_cel(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.)
