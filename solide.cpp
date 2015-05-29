@@ -2530,40 +2530,40 @@ void Solide::update_triangles(){
 			s = centroid(si.begin(),si.end());
 			
 			for(int k=0;k<solide[i].faces[f].size();k++){
-			int kp = (k+1)%(solide[i].faces[f].size());
-			vector<Point_3> ri,vi;
-			for(int part=0;part<solide[i].faces[f].vertex[k].size();part++){
-				int p = solide[i].faces[f].vertex[k].particules[part];
-				ri.push_back(solide[p].mvt_t.transform(solide[i].faces[f].vertex[k].pos));
+			  int kp = (k+1)%(solide[i].faces[f].size());
+			  vector<Point_3> ri,vi;
+			  for(int part=0;part<solide[i].faces[f].vertex[k].size();part++){
+			    int p = solide[i].faces[f].vertex[k].particules[part];
+			    ri.push_back(solide[p].mvt_t.transform(solide[i].faces[f].vertex[k].pos));
+			  }
+			  r = centroid(ri.begin(),ri.end());
+			  for(int part=0;part<solide[i].faces[f].vertex[kp].size();part++){
+			    int p = solide[i].faces[f].vertex[kp].particules[part];
+			    vi.push_back(solide[p].mvt_t.transform(solide[i].faces[f].vertex[kp].pos));
+			  }
+			  v = centroid(vi.begin(),vi.end());
+			  Vector_3 vect0(s,r);
+			  Vector_3 vect1(s,v);
+			  Triangle_3 Tri(s,r,v);
+			  solide[i].triangles.push_back(Tri);
+			  Vector_3 normale = CGAL::cross_product(vect0,vect1);
+			  normale = normale*(1./sqrt(CGAL::to_double(normale.squared_length())));			  
+			  solide[i].normales.push_back(normale);
+			  if(solide[i].faces[f].voisin < 0){
+			    solide[i].fluide.push_back(true);
+			  } 
+			  else {
+			    solide[i].fluide.push_back(false);
+			  }
+			  if( solide[i].faces[f].voisin == -2){
+			    solide[i].vide.push_back(true);
+			  } else {
+			    solide[i].vide.push_back(false);
+			  }
 			}
-			r = centroid(ri.begin(),ri.end());
-			for(int part=0;part<solide[i].faces[f].vertex[kp].size();part++){
-				int p = solide[i].faces[f].vertex[kp].particules[part];
-				vi.push_back(solide[p].mvt_t.transform(solide[i].faces[f].vertex[kp].pos));
-			}
-			v = centroid(vi.begin(),vi.end());
-			Vector_3 vect0(s,r);
-			Vector_3 vect1(s,v);
-			Triangle_3 Tri(s,r,v);
-			solide[i].triangles.push_back(Tri);
-			Vector_3 normale = CGAL::cross_product(vect0,vect1);
-			normale = normale*(1./sqrt(CGAL::to_double(normale.squared_length())));
-			solide[i].normales.push_back(normale);
-			if(solide[i].faces[f].voisin < 0){
-				solide[i].fluide.push_back(true);
-			} 
-			else {
-				solide[i].fluide.push_back(false);
-		  }
-		  if( solide[i].faces[f].voisin == -2){
-				solide[i].vide.push_back(true);
-			} else {
-				solide[i].vide.push_back(false);
-			}
-	  }
-  }
+		}
 			
-	 }//Calcul de la nouvelle position des triangles
+		}//Calcul de la nouvelle position des triangles
 		
 	}
 }

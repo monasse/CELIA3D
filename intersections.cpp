@@ -190,8 +190,8 @@ de celles-ci avec la grille fluide. On fait simplement une triangulation contena
  */
 
 void Grille::Parois_particles(Solide& S,double dt) {
-  CGAL::Timer total_time,bbox_time,do_intersect_time,triangularisation_time,test_time,test_inside_time,alpha_time,intersect_time,convex_hull_time,volume_time,kappa_time1,kappa_time2,triangulation_time;
-  double temps_total=0.,temps_bbox=0.,temps_do_intersect=0.,temps_triangularisation=0.,temps_test=0.,temps_test_inside=0.,temps_alpha=0.,temps_intersect=0.,nb_intersect=0.,temps_convex_hull=0.,nb_convex_hull=0.,temps_volume=0.,temps_kappa1=0.,temps_kappa2=0.,nb_kappa1=0.,nb_kappa2=0.,temps_triangulation=0.;
+  CGAL::Timer total_time,bbox_time,do_intersect_time,triangularisation_time,test_time,test_inside_time,alpha_time,intersect_time,convex_hull_time,volume_time,kappa_time1,kappa_time2,triangulation_time,vertices_time;
+  double temps_total=0.,temps_bbox=0.,temps_do_intersect=0.,temps_triangularisation=0.,temps_test=0.,temps_test_inside=0.,temps_alpha=0.,temps_intersect=0.,nb_intersect=0.,temps_convex_hull=0.,nb_convex_hull=0.,temps_volume=0.,temps_kappa1=0.,temps_kappa2=0.,nb_kappa1=0.,nb_kappa2=0.,temps_triangulation=0.,temps_vertices=0.;
   
   total_time.start();
   bbox_time.start();
@@ -248,12 +248,31 @@ void Grille::Parois_particles(Solide& S,double dt) {
 		nb_triangles += S.solide[iter].triangles.size();
 	}
 	cout<<"nombres de traiangles : "<<nb_triangles<<endl;
-	
+
+	vertices_time.start();
 	const double eps_box = 0.1;
 	std::vector<Bbox> solide(nb_particules);
 	for(int it=0; it<nb_particules; it++){
 		solide[it] = Bbox(S.solide[it].min_x-eps_box,S.solide[it].min_y-eps_box, S.solide[it].min_z-eps_box, S.solide[it].max_x+eps_box, S.solide[it].max_y+eps_box, S.solide[it].max_z+eps_box);
+		//Mise a jour des sommets de la particule
+		Particule& P = S.solide[it];
+		P.vertices.clear();
+		for(std::vector<Face>::iterator f=P.faces.begin();f!=P.faces.end();f++){
+		  for(std::vector<Vertex>::iterator v=(*f).vertex.begin();v!=(*f).vertex.end();v++){
+		    bool test_new = true;
+		    Point_3 p1 = (*v).pos;
+		    for(std::vector<Point_3>::iterator pit=P.vertices.begin();pit!=P.vertices.end() && test_new;pit++){
+		      test_new = ((*pit)!=p1);
+		    }
+		    if(test_new){
+		      P.vertices.push_back(p1);
+		    }
+		  }
+		}
+		
+		
 	}
+	temps_vertices += CGAL::to_double(vertices_time.time());
 	
 	temps_bbox += CGAL::to_double(bbox_time.time());
 	
@@ -332,26 +351,35 @@ void Grille::Parois_particles(Solide& S,double dt) {
 					  }
 					}
 				      }
+
+				      //Test si les sommets du solide sont dans la cellule
+				      for(std::vector<Point_3>::iterator sommet=S.solide[iter_s].vertices.begin();sommet!=S.solide[iter_s].vertices.end();sommet++){
+					point_in_cell = inside_box(box_grille[i], (*sommet));
+					if(point_in_cell) {Points_poly.push_back((*sommet)); point_in_cell=false;
+					}
+				      }
+				      
+				      
 				      
 				      for ( int j = 0; j < S.solide[iter_s].triangles.size(); j++){ 
 								
 					//test if point is in cell_box
 					point_in_cell = inside_box(box_grille[i], S.solide[iter_s].triangles[j].operator[](0));
-					if(point_in_cell) {Points_poly.push_back(S.solide[iter_s].triangles[j].operator[](0)); point_in_cell=false;
+					if(point_in_cell) {point_in_cell=false;
 					  Points_interface[iter_s][j].push_back(S.solide[iter_s].triangles[j].operator[](0));
 					  //cout << "Sommet solide " << S.solide[iter_s].triangles[j].operator[](0).x() << " " << S.solide[iter_s].triangles[j].operator[](0).y() << " " << S.solide[iter_s].triangles[j].operator[](0).z() << " Solide=" << iter_s << " Triangle=" << j << endl;
 					  //getchar();
 					}
 								
 					point_in_cell = inside_box(box_grille[i], S.solide[iter_s].triangles[j].operator[](1));
-					if(point_in_cell) {Points_poly.push_back(S.solide[iter_s].triangles[j].operator[](1)); point_in_cell=false;
+					if(point_in_cell) {point_in_cell=false;
 					  Points_interface[iter_s][j].push_back(S.solide[iter_s].triangles[j].operator[](1));
 					  //cout << "Sommet solide " << S.solide[iter_s].triangles[j].operator[](1).x() << " " << S.solide[iter_s].triangles[j].operator[](1).y() << " " << S.solide[iter_s].triangles[j].operator[](1).z() << " Solide=" << iter_s << " Triangle=" << j << endl;
 					  //getchar();
 					}
 								
 					point_in_cell = inside_box(box_grille[i], S.solide[iter_s].triangles[j].operator[](2));
-					if(point_in_cell) {Points_poly.push_back(S.solide[iter_s].triangles[j].operator[](2)); point_in_cell=false;
+					if(point_in_cell) {point_in_cell=false;
 					  Points_interface[iter_s][j].push_back(S.solide[iter_s].triangles[j].operator[](2));
 					  //cout << "Sommet solide " << S.solide[iter_s].triangles[j].operator[](2).x() << " " << S.solide[iter_s].triangles[j].operator[](2).y() << " " << S.solide[iter_s].triangles[j].operator[](2).z() << " Solide=" << iter_s << " Triangle=" << j << endl;
 					  //getchar();
@@ -447,20 +475,28 @@ void Grille::Parois_particles(Solide& S,double dt) {
 						  temps_intersect += CGAL::to_double(intersect_time.time());
 						  intersect_time.reset();
 						  
-						  for(int l= 0; l<result.size(); l++)
+						  for(int lt= 0; lt<result.size(); lt++)
 						  {
-						    Points_poly.push_back(result[l]);
-						    Points_interface[iter_s][j].push_back(result[l]);
+						    if(S.solide[iter_s].triangles[j].operator[](l)<=S.solide[iter_s].triangles[j].operator[](lp)){
+						      Points_poly.push_back(result[lt]);
+						      //cout << "arete retenue p1=" << S.solide[iter_s].triangles[j].operator[](l).x() << " " << S.solide[iter_s].triangles[j].operator[](l).y() << " " << S.solide[iter_s].triangles[j].operator[](l).z() << " p2=" << S.solide[iter_s].triangles[j].operator[](lp).x() << " " << S.solide[iter_s].triangles[j].operator[](lp).y() << " " << S.solide[iter_s].triangles[j].operator[](lp).z() << endl;
+						      //getchar();
+						    } //else {
+						      //cout << "arete REJETEE p1=" << S.solide[iter_s].triangles[j].operator[](l).x() << " " << S.solide[iter_s].triangles[j].operator[](l).y() << " " << S.solide[iter_s].triangles[j].operator[](l).z() << " p2=" << S.solide[iter_s].triangles[j].operator[](lp).x() << " " << S.solide[iter_s].triangles[j].operator[](lp).y() << " " << S.solide[iter_s].triangles[j].operator[](lp).z() << endl;
+						      //getchar();
+						    //}
+						    
+						    Points_interface[iter_s][j].push_back(result[lt]);
 						    //cout << "Intersection arete triangle " << result[l].x() << " " << result[l].y() << " " << result[l].z() << " Solide=" << iter_s << " Triangle=" << j << " trianglesB=" << k << endl;
 						    //getchar();
 						  }
 						}
-					      //end intersection seg et t2
-					    }
+						//end intersection seg et t2
+					      }
 					  } //end boucle sur trianglesB
-									
+					  
 					} // if intersection cellule[i] avec triangle[j]	 
-								
+					
 				      } // end boucle sur triangles
 				    } //else 
 						
@@ -473,18 +509,21 @@ void Grille::Parois_particles(Solide& S,double dt) {
 				      
 				      triangulation_time.start();
 				      //Triangulation Tr(Points_poly.begin(), Points_poly.end());
-				      std::vector<Point_3> Points_poly2 = redondances(Points_poly.begin(), Points_poly.end());
-				      /*cout << "Points_poly.size()=" << Points_poly.size() << " Points_poly2.size()=" << Points_poly2.size() << endl;
-				      //getchar();
-				      cout << "Points_poly:" << endl;
-				      for(std::vector<Point_3>::iterator it=Points_poly.begin();it!=Points_poly.end();it++){
-					cout << (*it).x() << " " << (*it).y() << " " << (*it).z() << endl;
+				      /*std::vector<Point_3> Points_poly2 = redondances(Points_poly.begin(), Points_poly.end());
+				      if(Points_poly.size()!=Points_poly2.size()){
+					
+					cout << "Points_poly.size()=" << Points_poly.size() << " Points_poly2.size()=" << Points_poly2.size() << endl;
 					getchar();
-				      }
-				      cout << "Points_poly2:" << endl;
-				      for(std::vector<Point_3>::iterator it=Points_poly2.begin();it!=Points_poly2.end();it++){
-					cout << (*it).x() << " " << (*it).y() << " " << (*it).z() << endl;
-					getchar();
+					cout << "Points_poly:" << endl;
+					for(std::vector<Point_3>::iterator it=Points_poly.begin();it!=Points_poly.end();it++){
+					  cout << (*it).x() << " " << (*it).y() << " " << (*it).z() << endl;
+					  getchar();
+					}
+					cout << "Points_poly2:" << endl;
+					for(std::vector<Point_3>::iterator it=Points_poly2.begin();it!=Points_poly2.end();it++){
+					  cout << (*it).x() << " " << (*it).y() << " " << (*it).z() << endl;
+					  getchar();
+					  }
 				      }//*/
 				      /*cout << "Triangulation:" << endl;
 				      for(Point_iterator it=Tr.points_begin();it!=Tr.points_end();it++){
@@ -500,7 +539,7 @@ void Grille::Parois_particles(Solide& S,double dt) {
 				      Polyhedron_3 poly;
 				      convex_hull_time.start();
 				      //cout << "before convex_hull size=" << Points_poly.size() << endl;
-				      CGAL::convex_hull_3(Points_poly2.begin(), Points_poly2.end(), poly);
+				      CGAL::convex_hull_3(Points_poly.begin(), Points_poly.end(), poly);
 				      //CGAL::convex_hull_3(Tr.points_begin(), Tr.points_end(), poly);
 //getchar();
 				      //cout << "after convex_hull facets=" << poly.size_of_facets() << " vertices=" << poly.size_of_vertices() << endl;
@@ -696,6 +735,7 @@ void Grille::Parois_particles(Solide& S,double dt) {
 	
 	cout << "######### COUTS INTERSECTIONS ##########" << endl;
 	cout << "Bbox=" << 100*temps_bbox/temps_total << "%" << endl;
+	cout << "tri vertices=" << 100*temps_vertices/temps_total << "%" << endl;
 	cout << "do_intersect=" << 100*temps_do_intersect/temps_total << "%" << endl;
 	cout << "   test intersect=" << 100*temps_test/temps_total << "%" << endl;
 	cout << "   test_inside=" << 100*temps_test_inside/temps_total << "%" << endl;
@@ -707,7 +747,7 @@ void Grille::Parois_particles(Solide& S,double dt) {
 	cout << "      kappa 3d=" << 100*temps_kappa1/temps_total << "%          t_moy=" << temps_kappa1/nb_kappa1 << " nb_kappa1=" << nb_kappa1 << endl;
 	cout << "      kappa 2d=" << 100*temps_kappa2/temps_total << "%          t_moy=" << temps_kappa2/nb_kappa2 << " nb_kappa2=" << nb_kappa2 << endl;
 	cout << "triangularisation=" << 100*temps_triangularisation/temps_total << "%" << endl;
-	cout << "Reste=" << 100-100*(temps_bbox+temps_do_intersect+temps_triangularisation)/temps_total << "%" << endl;
+	cout << "Reste=" << 100-100*(temps_bbox+temps_vertices+temps_do_intersect+temps_triangularisation)/temps_total << "%" << endl;
 	cout << "########################################" << endl;
 	
 }

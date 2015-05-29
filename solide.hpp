@@ -85,7 +85,9 @@ class Particule
   bool cube; //!< = true si la particule est un cube, false sinon
 
   std::vector<Face> faces; //!< liste de faces de la particule
-    
+
+  std::vector<Point_3> vertices;//!< liste des sommets de la particule
+  
     /*! 
      * \warning  <b> Param&egrave;tre  sp&eacute;cifique  au  couplage! </b>
      */  
