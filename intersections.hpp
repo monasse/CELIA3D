@@ -148,12 +148,12 @@ void triang_cellule(const Bbox& cel, Triangles& trianglesB){
 }
 
 //Intersection arete/triangle
-std::vector<Point_3> intersection_bis(Segment_3 seg, Triangle_3 t)
+std::vector<Point_3> intersection_bis(const Segment_3& seg, const Triangle_3& t)
 {
   std::vector<Point_3> result;
   Point_3 P;
   Segment_3 s;
-  CGAL::Object intersec = CGAL::intersection(seg,t);
+  const CGAL::Object& intersec = CGAL::intersection(seg,t);
   if(CGAL::assign(P,intersec)){
     result.push_back(P);
   }
@@ -169,7 +169,7 @@ std::vector<Point_3> intersection_bis(Segment_3 seg, Triangle_3 t)
 //Nouvelle version de l'intersection triangle/triangle
 //But : accelerer le calcul, car nous n'avons pas besoin du type precis de l'intersection, juste de la liste des points extremes de l'intersection
 //Reduit a l'intersection segment/triangle de CGAL
-std::vector<Point_3> intersection_bis(Triangle_3 t1, Triangle_3 t2)
+std::vector<Point_3> intersection_bis(const Triangle_3& t1, const Triangle_3& t2)
 {
   std::vector<Point_3> result;
   //Intersections entre les segments de t1 et le triangle t2
@@ -178,7 +178,7 @@ std::vector<Point_3> intersection_bis(Triangle_3 t1, Triangle_3 t2)
     Point_3 P;
     Segment_3 seg;
     Segment_3 arete(t1.operator[](k),t1.operator[](kp));
-    CGAL::Object intersec = CGAL::intersection(arete,t2);
+    const CGAL::Object& intersec = CGAL::intersection(arete,t2);
     if(CGAL::assign(P,intersec)){
       result.push_back(P);
     }
@@ -193,7 +193,7 @@ std::vector<Point_3> intersection_bis(Triangle_3 t1, Triangle_3 t2)
     Point_3 P;
     Segment_3 seg;
     Segment_3 arete(t2.operator[](k),t2.operator[](kp));
-    CGAL::Object intersec = CGAL::intersection(arete,t1);
+    const CGAL::Object& intersec = CGAL::intersection(arete,t1);
     if(CGAL::assign(P,intersec)){
       result.push_back(P);
     }
@@ -207,7 +207,7 @@ std::vector<Point_3> intersection_bis(Triangle_3 t1, Triangle_3 t2)
 }
 
 //Nettoyage des redondances de Points_poly avant calcul du convex hull
-std::vector<Point_3> redondances(std::vector<Point_3>::iterator begin, std::vector<Point_3>::iterator end)
+std::vector<Point_3> redondances(const std::vector<Point_3>::iterator& begin, const std::vector<Point_3>::iterator& end)
 {
   const double eps_relat = std::numeric_limits<double>::epsilon( );
   std::vector<Point_3> result;
