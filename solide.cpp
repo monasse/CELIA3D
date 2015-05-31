@@ -209,27 +209,28 @@ void Face::Inertie(){
 
 Particule::Particule()
 {   
-  min_x = 0.; 
+  /*min_x = 0.; 
   min_y = 0.;
   min_z = 0.;
   max_x = 1. ;
   max_y = 1.;
-  max_z = 1.;
-
+  max_z = 1.;*/
+  bbox = Bbox(0.,0.,0.,1.,1.,1.);
+  
   x0 = Point_3(0.5,0.5,0.5);
 	
   cube = true;
 	
-  const Point_3 s1(min_x,min_y,min_z);
-  const Point_3 r1(max_x, min_y, min_z);
-  const Point_3 t1(max_x, max_y, min_z);
-  const Point_3 v1(min_x, max_y, min_z);
+  const Point_3 s1(0.,0.,0.);
+  const Point_3 r1(1.,0.,0.);
+  const Point_3 t1(1.,1.,0.);
+  const Point_3 v1(0.,1.,0.);
 	
 	
-  const Point_3 s2(min_x,min_y,max_z);
-  const Point_3 r2(max_x, min_y, max_z);
-  const Point_3 t2(max_x, max_y, max_z);
-  const Point_3 v2(min_x, max_y, max_z);
+  const Point_3 s2(0.,0.,1.);
+  const Point_3 r2(1.,0.,1.);
+  const Point_3 t2(1.,1.,1.);
+  const Point_3 v2(0.,1.,1.);
 
   //Face 1
   std::vector<Vertex> vert1(4);
@@ -434,27 +435,28 @@ Particule::Particule()
 Particule::Particule(const double x_min, const double y_min, const double z_min, 
 		     const double x_max, const double y_max,const double z_max)
 {   
-  min_x = x_min; 
+  /*min_x = x_min; 
   min_y = y_min;
   min_z = z_min;
   max_x = x_max ;
   max_y = y_max;
-  max_z = z_max;
-
+  max_z = z_max;*/
+  bbox = Bbox(x_min,y_min,z_min,x_max,y_max,z_max);
+  
   x0 = Point_3((x_min+x_max)/2.,(y_min+y_max)/2.,(z_min+z_max)/2.);
 	
   cube = true;
 	
-  const Point_3 s1(min_x,min_y,min_z);
-  const Point_3 r1(max_x, min_y, min_z);
-  const Point_3 t1(max_x, max_y, min_z);
-  const Point_3 v1(min_x, max_y, min_z);
+  const Point_3 s1(x_min, y_min, z_min);
+  const Point_3 r1(x_max, y_min, z_min);
+  const Point_3 t1(x_max, y_max, z_min);
+  const Point_3 v1(x_min, y_max, z_min);
 	
 	
-  const Point_3 s2(min_x,min_y,max_z);
-  const Point_3 r2(max_x, min_y, max_z);
-  const Point_3 t2(max_x, max_y, max_z);
-  const Point_3 v2(min_x, max_y, max_z);
+  const Point_3 s2(x_min, y_min, z_max);
+  const Point_3 r2(x_max, y_min, z_max);
+  const Point_3 t2(x_max, y_max, z_max);
+  const Point_3 v2(x_min, y_max, z_max);
 	
   //Face 1
   std::vector<Vertex> vert1(4);
@@ -662,13 +664,14 @@ Particule::Particule(Point_3 c, const double x_min, const double y_min, const do
 		     const double x_max, const double y_max,const double z_max, 
 		     std::vector<Face> & F)
 {   
-  min_x = x_min; 
+  /*min_x = x_min; 
   min_y = y_min;
   min_z = z_min;
   max_x = x_max ;
   max_y = y_max;
-  max_z = z_max;
-
+  max_z = z_max;*/
+  bbox = Bbox(x_min,y_min,z_min,x_max,y_max,z_max);
+  
   x0 = c;
 	
   cube = false;
@@ -802,12 +805,13 @@ Particule & Particule:: operator=(const Particule &P){
 	
 	assert(this != &P);
 	
-	min_x = P.min_x;
+	/*min_x = P.min_x;
 	min_y = P.min_y;
 	min_z = P.min_z;
 	max_x = P.max_x;
 	max_y = P.max_y;
-	max_z = P.max_z;
+	max_z = P.max_z;*/
+	bbox = P.bbox;
 	cube  = P.cube;
 	
 	faces = P.faces;
@@ -2143,11 +2147,17 @@ void Solide::Solve_position(double dt){
   breaking_criterion();
   update_triangles();
 	for(int i=0;i<size();i++){
-		double x_min = solide[i].max_x, y_min=solide[i].max_y, z_min=solide[i].max_z, 
-		       x_max =solide[i].max_x, y_max=solide[i].max_y, z_max =solide[i].max_z;
-					 
-		for(int j=0;j<solide[i].triangles.size();j++){
+	  //double x_min = solide[i].max_x, y_min=solide[i].max_y, z_min=solide[i].max_z, x_max =solide[i].max_x, y_max=solide[i].max_y, z_max =solide[i].max_z;
+	
+	  for(std::vector<Triangle_3>::iterator it=solide[i].triangles.begin();it!=solide[i].triangles.end();it++){
+	    for(int k=0;k<3;k++){
+	      solide[i].bbox = Bbox(min(solide[i].bbox.xmin(),CGAL::to_double((*it).vertex(k).x())),min(solide[i].bbox.ymin(),CGAL::to_double((*it).vertex(k).y())),min(solide[i].bbox.zmin(),CGAL::to_double((*it).vertex(k).z())),max(solide[i].bbox.xmax(),CGAL::to_double((*it).vertex(k).x())),max(solide[i].bbox.ymax(),CGAL::to_double((*it).vertex(k).y())),max(solide[i].bbox.zmax(),CGAL::to_double((*it).vertex(k).z())));
+	    }
+	  }
+	  
+	  /*for(int j=0;j<solide[i].triangles.size();j++){
 			
+	    
 			x_min = min( x_min ,min(CGAL::to_double(solide[i].triangles[j].operator[](0).x()), min(CGAL::to_double(solide[i].triangles[j].operator[]                       (1).x()), CGAL::to_double(solide[i].triangles[j].operator[](2).x()) )) );
 			
 			y_min = min( y_min ,min(CGAL::to_double(solide[i].triangles[j].operator[](0).y()), min(CGAL::to_double(solide[i].triangles[j].operator[] (1).y()), CGAL::to_double(solide[i].triangles[j].operator[](2).y()) )) );
@@ -2161,7 +2171,7 @@ void Solide::Solve_position(double dt){
 			z_max = max( z_max ,max(CGAL::to_double(solide[i].triangles[j].operator[](0).z()), max(CGAL::to_double(solide[i].triangles[j].operator[] (1).z()), CGAL::to_double(solide[i].triangles[j].operator[](2).z()) )) );
 		}
 		solide[i].min_x = x_min; solide[i].min_y = y_min; solide[i].min_z = z_min;
-		solide[i].max_x = x_max; solide[i].max_y = y_max; solide[i].max_z = z_max;
+		solide[i].max_x = x_max; solide[i].max_y = y_max; solide[i].max_z = z_max;*/
 	}
 	
 }
@@ -2592,13 +2602,13 @@ double Error(Solide& S1, Solide& S2){
 	
 	for(int it=0; it<S1.size(); it++){
 		
-		double h_max1 = std::max(std::max((S1.solide[it].max_x - S1.solide[it].min_x),(S1.solide[it].max_y - S1.solide[it].min_y)),              (S1.solide[it].max_z - S1.solide[it].min_z)); 
-		double h_max2 = std::max(std::max((S2.solide[it].max_x - S2.solide[it].min_x),(S2.solide[it].max_y - S2.solide[it].min_y)),              (S2.solide[it].max_z - S2.solide[it].min_z)); 
-		double h_max = max(h_max1, h_max2);
-		double err1 = std::max(std::max(std::abs(CGAL::to_double(S1.solide[it].Dx.operator[](0) - S2.solide[it].Dx.operator[](0))), std::abs(CGAL::to_double(S1.solide[it].Dx.operator[](1) - S2.solide[it].Dx.operator[](1)) )), std::abs(CGAL::to_double(S1.solide[it].Dx.operator[](2) - S2.solide[it].Dx.operator[](2)))); 
-		double err2 = std::max(std::max(std::abs(CGAL::to_double(S1.solide[it].e.operator[](0) - S2.solide[it].e.operator[](0))), std::abs(CGAL::to_double(S1.solide[it].e.operator[](1) - S2.solide[it].e.operator[](1)))), std::abs(CGAL::to_double(S1.solide[it].e.operator[](2) - S2.solide[it].e.operator[](2)))); ;
-		double erreur_temp = err1 + h_max * err2;
-		erreur = std::max(erreur_temp, erreur);
+	  double h_max1 = std::max(std::max((S1.solide[it].bbox.xmax() - S1.solide[it].bbox.xmin()),(S1.solide[it].bbox.ymax() - S1.solide[it].bbox.ymin())),              (S1.solide[it].bbox.zmax() - S1.solide[it].bbox.zmin())); 
+	  double h_max2 = std::max(std::max((S2.solide[it].bbox.xmax() - S2.solide[it].bbox.xmin()),(S2.solide[it].bbox.ymax() - S2.solide[it].bbox.ymin())),              (S2.solide[it].bbox.zmax() - S2.solide[it].bbox.zmin())); 
+	  double h_max = max(h_max1, h_max2);
+	  double err1 = std::max(std::max(std::abs(CGAL::to_double(S1.solide[it].Dx.operator[](0) - S2.solide[it].Dx.operator[](0))), std::abs(CGAL::to_double(S1.solide[it].Dx.operator[](1) - S2.solide[it].Dx.operator[](1)) )), std::abs(CGAL::to_double(S1.solide[it].Dx.operator[](2) - S2.solide[it].Dx.operator[](2)))); 
+	  double err2 = std::max(std::max(std::abs(CGAL::to_double(S1.solide[it].e.operator[](0) - S2.solide[it].e.operator[](0))), std::abs(CGAL::to_double(S1.solide[it].e.operator[](1) - S2.solide[it].e.operator[](1)))), std::abs(CGAL::to_double(S1.solide[it].e.operator[](2) - S2.solide[it].e.operator[](2)))); ;
+	  double erreur_temp = err1 + h_max * err2;
+	  erreur = std::max(erreur_temp, erreur);
 	}
 	
 	return erreur;
@@ -2631,14 +2641,16 @@ void Copy_f_m(Solide& S1, Solide& S2){
 */
 bool inside_box(const Bbox& cell, const Point_3& P){
 	
-	bool in = false;
+  /*bool in = false;
 	
 	if((cell.xmin() - P.x())<= eps_relat && (cell.ymin() - P.y())<= eps_relat &&
 		(cell.zmin() - P.z())<= eps_relat && (cell.xmax() - P.x())>=-eps_relat &&
 		(cell.ymax() - P.y())>=-eps_relat && (cell.zmax() - P.z())>=-eps_relat )
 	{ in = true; }
 	
-	return in;
+	return in;*/
+  return ((cell.xmin() - P.x())<= eps_relat && (cell.ymin() - P.y())<= eps_relat && (cell.zmin() - P.z())<= eps_relat && (cell.xmax() - P.x())>=-eps_relat && (cell.ymax() - P.y())>=-eps_relat && (cell.zmax() - P.z())>=-eps_relat );
+  
 }	
 
 /*!
@@ -2653,17 +2665,16 @@ bool inside_convex_polygon(const Particule& S, const Point_3& P){
 	
 	bool in = false;
 	
-	if((S.min_x - P.x())<= eps_relat && (S.min_y - P.y())<= eps_relat && 
-		(S.min_z - P.z())<= eps_relat && (S.max_x - P.x())>=-eps_relat && 
-		(S.max_y - P.y())>=-eps_relat && (S.max_z - P.z())>=-eps_relat )
+	//if((S.min_x - P.x())<= eps_relat && (S.min_y - P.y())<= eps_relat && (S.min_z - P.z())<= eps_relat && (S.max_x - P.x())>=-eps_relat && (S.max_y - P.y())>=-eps_relat && (S.max_z - P.z())>=-eps_relat )
+	if(CGAL::do_overlap(S.bbox,P.bbox()))
 	{
 		if(S.cube) {in = true;}
 		else{
 			in = true;
-			for(int l= 0; l<S.triangles.size(); l++){
-				Point_3 vertex = S.triangles[l].operator[](0);
-				Vector_3 vect(P,vertex);
-				if((CGAL::to_double(vect*S.normales[l])) < 0.){in = false;}
+			for(int l= 0; l<S.triangles.size() && in; l++){
+			  const Point_3& vertex = S.triangles[l].operator[](0);
+			  Vector_3 vect(P,vertex);
+			  if((CGAL::to_double(vect*S.normales[l])) < 0.){in = false;}
 			}
 		}
 	}
@@ -2673,10 +2684,11 @@ bool inside_convex_polygon(const Particule& S, const Point_3& P){
 
 bool inside_tetra(const Tetrahedron &tetra, const Point_3& P){
 	
-	bool in = false;
-	in=tetra.has_on_negative_side(P);
+  //bool in = false;
+  //in=tetra.has_on_negative_side(P);
 	
-	return in;
+  //return in;
+  return tetra.has_on_negative_side(P);
 }
 
 /*!
@@ -2691,9 +2703,8 @@ bool box_inside_convex_polygon(const Particule& S, const Bbox& cell){
 	
 	bool in = false;
 	
-	if ((S.min_x - cell.xmin()) <= eps_relat && (S.min_y - cell.ymin() <= eps_relat) && 
-		 (S.min_z - cell.zmin()) <= eps_relat && (S.max_x - cell.xmax() >=-eps_relat) && 
-		 (S.max_y - cell.ymax()) >=-eps_relat && (S.max_z - cell.zmax()>=-eps_relat) ) 
+	//if ((S.min_x - cell.xmin()) <= eps_relat && (S.min_y - cell.ymin() <= eps_relat) && (S.min_z - cell.zmin()) <= eps_relat && (S.max_x - cell.xmax() >=-eps_relat) && (S.max_y - cell.ymax()) >=-eps_relat && (S.max_z - cell.zmax()>=-eps_relat) ) 
+	if(CGAL::do_overlap(S.bbox,cell))
 	{
 		if(S.cube) { return S.cube;}
 		
@@ -2744,11 +2755,10 @@ bool box_inside_tetra(const Tetrahedron &tetra, const Bbox& cell){
 	
 	bool in = false;
 	
-	Bbox box_tetra= tetra.bbox();
+	//Bbox box_tetra= tetra.bbox();
 	
-	if ((box_tetra.xmin() - cell.xmin()) <= eps_relat && (box_tetra.ymin() - cell.ymin() <= eps_relat) && 
-		 (box_tetra.zmin() - cell.zmin()) <= eps_relat && (box_tetra.xmax() - cell.xmax() >=-eps_relat) && 
-		 (box_tetra.ymax() - cell.ymax()) >=-eps_relat && (box_tetra.zmax() - cell.zmax()>=-eps_relat) ) 
+	//if ((box_tetra.xmin() - cell.xmin()) <= eps_relat && (box_tetra.ymin() - cell.ymin() <= eps_relat) && (box_tetra.zmin() - cell.zmin()) <= eps_relat && (box_tetra.xmax() - cell.xmax() >=-eps_relat) && (box_tetra.ymax() - cell.ymax()) >=-eps_relat && (box_tetra.zmax() - cell.zmax()>=-eps_relat) )
+	if(CGAL::do_overlap(tetra.bbox(),cell))
 	{
 			in = true;
 			

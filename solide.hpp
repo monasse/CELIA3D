@@ -76,14 +76,15 @@ class Particule
   void solve_vitesse(double dt);
   Vector_3 vitesse_parois(Point_3& X_f);  
   Vector_3 vitesse_parois_prev(Point_3& X_f);  
-  double min_x; //!< la plus petite coordonn&eacute;e  de la particule selon x
-  double min_y; //!< la plus petite coordonn&eacute;e  de la particule selon y
-  double min_z; //!< la plus petite coordonn&eacute;e  de la particule selon z
-  double max_x; //!< la plus grande coordonn&eacute;e  de la particule selon x
-  double max_y; //!< la plus petite coordonn&eacute;e  de la particule selon y
-  double max_z; //!< la plus petite coordonn&eacute;e  de la particule selon z
+  //double min_x; //!< la plus petite coordonn&eacute;e  de la particule selon x
+  //double min_y; //!< la plus petite coordonn&eacute;e  de la particule selon y
+  //double min_z; //!< la plus petite coordonn&eacute;e  de la particule selon z
+  //double max_x; //!< la plus grande coordonn&eacute;e  de la particule selon x
+  //double max_y; //!< la plus petite coordonn&eacute;e  de la particule selon y
+  //double max_z; //!< la plus petite coordonn&eacute;e  de la particule selon z
   bool cube; //!< = true si la particule est un cube, false sinon
-
+  Bbox bbox;
+  
   std::vector<Face> faces; //!< liste de faces de la particule
 
   std::vector<Point_3> vertices;//!< liste des sommets de la particule
