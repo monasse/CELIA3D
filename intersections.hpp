@@ -72,6 +72,7 @@ typedef CDT::Face_handle 	             Face_cdt_handle;
 typedef CDT::Vertex_handle  	         Vertex_cdt_handle; 
 
 typedef Kernel::Point_2                  Point_2;
+
 typedef CGAL::Triangle_2<Kernel>         Triangle_2;
 typedef std::vector<Triangle_2>          Triangles_2;
 typedef std::vector<Point_2>             Points_2;
