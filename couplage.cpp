@@ -1527,29 +1527,15 @@ void Sous_Maillage_2d(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2
 	  const CGAL::Object& result = CGAL::intersection(*t,*t1); //calcul d'intersection entre les deux triangles
 	  if(CGAL::assign(tri,result)){ tri2.push_back(tri); }
 	  else if(CGAL::assign(vPoints,result)){
-	    /*Triangulation_2 T;
+	    Triangulation_2 T;
 	    T.insert(vPoints.begin(), vPoints.end());
 	    if( (T.is_valid() ) && (T.dimension() == 2)){
 	      for (Triangulation_2::Finite_faces_iterator fit=T.finite_faces_begin(); fit!=T.finite_faces_end();++fit)
 	      { 
-		//Point_2 s = fit->vertex(0)->point();
-		//Point_2 v = fit->vertex(1)->point();
-		//Point_2 r = fit->vertex(2)->point();
-		//if(Triangle_2(s,v,r).area()>eps){ tri2.push_back(Triangle_2(s,v,r));}
-		Triangulation_2::Face_handle face = fit;
-		tri2.push_back(T.triangle(face));
+		if(T.triangle(fit).area()>eps){
+		  tri2.push_back(T.triangle(fit));
+		}
 	      }
-	      }*/
-	    if(vPoints.size()>3){
-	      const Point_2& s = vPoints[0];
-	      for(int l=1;l<vPoints.size()-1;l++){
-		const Point_2& v = vPoints[l];
-		const Point_2& r = vPoints[l+1];
-		if(Triangle_2(s,v,r).area()>eps){ tri2.push_back(Triangle_2(s,v,r));}
-	      }
-	    } else {
-	      cout << "probleme Sous_maillage_2d vPoints.size()=" << vPoints.size() << endl;
-	      getchar();
 	    }
 	  }
 	}
