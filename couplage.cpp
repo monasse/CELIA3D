@@ -37,7 +37,7 @@ void Grille::Forces_fluide(Solide& S, const double dt){
 		
 		S.solide[iter_s].Ffprev = S.solide[iter_s].Ff;
 		S.solide[iter_s].Mfprev = S.solide[iter_s].Mf;
-		Point_3 Xn(S.solide[iter_s].x0.operator[](0) + S.solide[iter_s].Dx.operator[](0), S.solide[iter_s].x0.operator[](1) + S.solide[iter_s].Dx.operator[](1),S.solide[iter_s].x0.operator[](2) + S.solide[iter_s].Dx.operator[](2));
+		Point_3 Xn = S.solide[iter_s].x0 + S.solide[iter_s].Dx;
     double fx=0.; double fy=0.; double fz=0.;
     Kernel::FT mx = 0.,my = 0. ,mz = 0.;
 		
@@ -101,17 +101,16 @@ void Grille::Forces_fluide(Solide& S, const double dt){
 */
 void Grille::Modif_fnum(const double dt){
 	
-	Cellule c,ci,cj,ck; 
 	double phi_x=0., phi_y=0., phi_z=0.;
 	double vol=deltax*deltay*deltaz;
 	for(int i=marge;i<Nx+marge;i++){
 		for(int j=marge;j<Ny+marge;j++){ 
 			for(int k=marge;k<Nz+marge;k++){
-				c = grille[i][j][k];
+			  Cellule& c = grille[i][j][k];
 				if(std::abs(c.alpha-1.)>eps && !c.vide){
-					ci = grille[i-1][j][k];    //Cellule  i-1
-					cj = grille[i][j-1][k];    //Cellule  j-1
-					ck = grille[i][j][k-1];    //Cellule  k-1
+				  Cellule& ci = grille[i-1][j][k];    //Cellule  i-1
+				  Cellule& cj = grille[i][j-1][k];    //Cellule  j-1
+				  Cellule& ck = grille[i][j][k-1];    //Cellule  k-1
            
 					c.flux_modif[0] = 0.;
 					c.flux_modif[1] = c.phi_x;
@@ -148,7 +147,7 @@ void Grille::Modif_fnum(const double dt){
 					}
 					else{c.vide = false;}
 				}
-				grille[i][j][k] = c;      
+				//grille[i][j][k] = c;      
 			}
 		}
 	}
@@ -168,14 +167,13 @@ U_p = U_{p} + E_{pg}, \quad  \quad U_g = U_{g} + E_{gp} \f}
 */
 void Grille::Mixage(){
 	
-	Cellule cp, cg;
 	
 	bool test_fini = true;
 	
 	for(int i=marge;i<Nx+marge;i++){
 		for(int j=marge;j<Ny+marge;j++){ 
-			for(int k=marge;k<Nz+marge;k++){
-				cp = grille[i][j][k];
+		  for(int k=marge;k<Nz+marge;k++){
+		    Cellule& cp = grille[i][j][k];
 				bool test=true;
 				if( (cp.alpha>epsa ||cp.p <0. || cp.rho<0.) && abs(cp.alpha-1.)>eps && !cp.vide){
 					
@@ -185,7 +183,7 @@ void Grille::Mixage(){
 								if (grille[i+ii][j+jj][k+kk].alpha <eps && grille[i+ii][j+jj][k+kk].p>0. && grille[i+ii][j+jj][k+kk].rho>0. && i+ii>=marge && i+ii<Nx+marge && j+jj>=marge && j+jj<Ny+marge && k+kk>=marge && k+kk<Nz+marge && !grille[i+ii][j+jj][k+kk].vide)
 								{
 									test=false;
-									cg = grille[i+ii][j+jj][k+kk];
+									Cellule& cg = grille[i+ii][j+jj][k+kk];
 									double temp_rhop= cp.rho;
 									double temp_rhog=cg.rho;
 									cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
@@ -221,8 +219,8 @@ void Grille::Mixage(){
 									cg.w = cg.impz/cg.rho;
 									cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
 									
-									grille[i][j][k] = cp;
-									grille[i+ii][j+jj][k+kk] = cg;
+									//grille[i][j][k] = cp;
+									//grille[i+ii][j+jj][k+kk] = cg;
 									
 // 									if( std::abs((1.-cp.alpha)*cp.Mrho + (1.-cg.alpha)*cg.Mrho)>eps){
 // 										cout<<" rho p initial "<<temp_rhop<<" rho g initial "<<temp_rhog<<endl;
@@ -241,7 +239,7 @@ void Grille::Mixage(){
 						
 						if (grille[i-2][j][k].alpha == 0. && grille[i-2][j][k].p>0. && grille[i-2][j][k].rho>0. && i-2>=marge && !grille[i-2][j][k].vide)
 						{
-							cg = grille[i-2][j][k];
+							Cellule& cg = grille[i-2][j][k];
 							
 							cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
 							cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
@@ -276,13 +274,13 @@ void Grille::Mixage(){
 							cg.w = cg.impz/cg.rho;
 							cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
 							
-							grille[i][j][k] = cp;
-							grille[i-2][j][k] = cg;
+							//grille[i][j][k] = cp;
+							//grille[i-2][j][k] = cg;
 							test = false;
 						}
 						else if (grille[i+2][j][k].alpha == 0. && grille[i+2][j][k].p>0. && grille[i+2][j][k].rho>0. &&  i+2<Nx+marge && !grille[i+2][j][k].vide)
 						{
-							cg = grille[i+2][j][k];
+							Cellule& cg = grille[i+2][j][k];
 							
 							cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
 							cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
@@ -316,14 +314,14 @@ void Grille::Mixage(){
 							cg.w = cg.impz/cg.rho;
 							cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
 							
-							grille[i][j][k] = cp;
-							grille[i+2][j][k] = cg;
+							//grille[i][j][k] = cp;
+							//grille[i+2][j][k] = cg;
 							test = false;
 						}
 						
 						else if (grille[i][j-2][k].alpha == 0. && grille[i][j-2][k].p>0. && grille[i][j-2][k].rho>0. && j-2>=marge && !grille[i][j-2][k].vide)
 						{
-							cg = grille[i][j-2][k];
+							Cellule& cg = grille[i][j-2][k];
 							
 							cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
 							cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
@@ -358,14 +356,14 @@ void Grille::Mixage(){
 							cg.w = cg.impz/cg.rho;
 							cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
 							
-							grille[i][j][k] = cp;
-							grille[i][j-2][k] = cg;
+							//grille[i][j][k] = cp;
+							//grille[i][j-2][k] = cg;
 							test = false;
 							
 						}
 						else if (grille[i][j+2][k].alpha == 0. && grille[i][j+2][k].p>0. && grille[i][j+2][k].rho>0.&& j+2<Ny+marge && !grille[i][j+2][k].vide)
 						{
-							cg = grille[i][j+2][k];
+							Cellule& cg = grille[i][j+2][k];
 							
 							cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
 							cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
@@ -399,13 +397,13 @@ void Grille::Mixage(){
 							cg.w = cg.impz/cg.rho;
 							cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
 							
-							grille[i][j][k] = cp;
-							grille[i][j+2][k] = cg;
+							//grille[i][j][k] = cp;
+							//grille[i][j+2][k] = cg;
 							test = false;
 						}
 						else if (grille[i][j][k-2].alpha == 0. && grille[i][j][k-2].p>0. && grille[i][j][k-2].rho>0.&& k-2>=marge && !grille[i][j][k-2].vide)
 						{
-							cg = grille[i][j][k-2];
+							Cellule& cg = grille[i][j][k-2];
 							
 							cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
 							cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
@@ -440,13 +438,13 @@ void Grille::Mixage(){
 							cg.w = cg.impz/cg.rho;
 							cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
 							
-							grille[i][j][k] = cp;
-							grille[i][j][k-2] = cg;
+							//grille[i][j][k] = cp;
+							//grille[i][j][k-2] = cg;
 							test = false;
 						}
 						else if(grille[i][j][k+2].alpha == 0. && grille[i][j][k+2].p>0. && grille[i][j][k+2].rho>0. && k+2 < Nz+marge && !grille[i][j][k+2].vide)
 						{
-							cg = grille[i][j][k+2];
+							Cellule& cg = grille[i][j][k+2];
 							
 							cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
 							cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
@@ -481,8 +479,8 @@ void Grille::Mixage(){
 							cg.w = cg.impz/cg.rho;
 							cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
 							
-							grille[i][j][k] = cp;
-							grille[i][j][k+2] = cg;
+							//grille[i][j][k] = cp;
+							//grille[i][j][k+2] = cg;
 							test = false;
 						}
 						
@@ -679,7 +677,6 @@ Algo: on cherche l'interface la plus proche du centre de la cellule (boucle sur 
 
 void Grille::Fill_cel(Solide& S){
 	
-	Cellule c, cm;
 	int nb_part = S.size();
 	double dist[6*nb_part];
 	double dist_min = 100;
@@ -692,7 +689,7 @@ void Grille::Fill_cel(Solide& S){
 	  for(int j=marge;j<Ny+marge;j++){
 	    for(int k=marge;k<Nz+marge;k++){
 	      Triangle_3 Tri;
-	      c = grille[i][j][k];
+	      Cellule& c = grille[i][j][k];
 	      if((std::abs(c.alpha-1.)<eps) ){
 		Point_3 center_cell(c.x, c.y, c.z);
 		int nbx=0, nby=0,nbz=0;
@@ -792,7 +789,7 @@ void Grille::Fill_cel(Solide& S){
 		double norme = sqrt(CGAL::to_double(normale.squared_length()));
 		assert(norme!= 0.);
 		normale = normale*1./norme;
-		cm = in_cell(symm_center);
+		const Cellule& cm = in_cell(symm_center);
 		Vector_3 vit_m(cm.u,cm.v,cm.w); //Vitesse au point miroir
 		Vector_3 vit = vit_m - normale*2.*((vit_m-V_f)*normale);
 		if(abs(cm.alpha-1.)<eps){
@@ -815,7 +812,7 @@ void Grille::Fill_cel(Solide& S){
 						c.vide = true;
 					}
 					else{c.vide = false;}
-				  grille[i][j][k] = c;
+					//grille[i][j][k] = c;
 				}
 			}
 		}
@@ -864,7 +861,7 @@ double volume_prisme(const Triangle_3& T1,const Triangle_3& T2){
 	*/
 double volume_tetra(const Tetrahedron& Tet){
 	
-	double volume=0.;
+  /*double volume=0.;
 	
 	Vector_3 V = cross_product( Vector_3(Tet.operator[](0),Tet.operator[](1)), Vector_3(Tet.operator[](0),Tet.operator[](2)) );
 	
@@ -872,7 +869,8 @@ double volume_tetra(const Tetrahedron& Tet){
 	volume = CGAL::to_double( (Vector_3(Tet.operator[](0),Tet.operator[](3)) *V) );
 	volume /= 6.;
 	
-	return volume;
+	return volume;*/
+  return CGAL::to_double(Tet.volume());
 }
 
 /*!
@@ -899,12 +897,22 @@ Point_3 tr(const Triangle_3& Tn, const Triangle_3& Tn1, const Point_3& Xn){
   
   double lambda = 0., mu = 0.;
 	
-  double dom = std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
+  /*double dom = std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
 						       Vector_3(Tn.operator[](2),Tn.operator[](1))).squared_length() ));
   double num1 = std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Xn),
 							Vector_3(Tn.operator[](2),Tn.operator[](1))).squared_length() ));
   double num2 = std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
-							Vector_3(Tn.operator[](2),Xn)).squared_length() )); 
+  Vector_3(Tn.operator[](2),Xn)).squared_length() )); */
+  
+  double AC2 = CGAL::to_double(Vector_3(Tn.vertex(0),Tn.vertex(2)).squared_length());
+  double BC2 = CGAL::to_double(Vector_3(Tn.vertex(1),Tn.vertex(2)).squared_length());
+  double AC_BC = CGAL::to_double(Vector_3(Tn.vertex(0),Tn.vertex(2))*Vector_3(Tn.vertex(1),Tn.vertex(2)));
+  double XC_AC = CGAL::to_double(Vector_3(Xn,Tn.vertex(2))*Vector_3(Tn.vertex(0),Tn.vertex(2)));
+  double XC_BC = CGAL::to_double(Vector_3(Xn,Tn.vertex(2))*Vector_3(Tn.vertex(1),Tn.vertex(2)));
+  double dom = AC2*BC2-AC_BC*AC_BC;
+  double num1 = BC2*XC_AC-AC_BC*XC_BC;
+  double num2 = AC2*XC_BC-AC_BC*XC_AC;
+
 
   lambda =  num1/dom;
   mu = num2/dom;
@@ -965,9 +973,18 @@ Point_2 tr(const Triangle_3& Tn1, const Point_3& Xn){
 		
   double lambda = 0., mu = 0.;
 
-  double dom =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Tn1.operator[](0)), Vector_3(Tn1.operator[](2),Tn1.operator[](1))).squared_length() ));
+/*  double dom =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Tn1.operator[](0)), Vector_3(Tn1.operator[](2),Tn1.operator[](1))).squared_length() ));
   double num1 =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Xn), Vector_3(Tn1.operator[](2),Tn1.operator[](1))).squared_length() ));
-  double num2 =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Tn1.operator[](0)), Vector_3(Tn1.operator[](2),Xn)).squared_length() )); 
+  double num2 =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Tn1.operator[](0)), Vector_3(Tn1.operator[](2),Xn)).squared_length() )); */
+  double AC2 = CGAL::to_double(Vector_3(Tn1.vertex(0),Tn1.vertex(2)).squared_length());
+  double BC2 = CGAL::to_double(Vector_3(Tn1.vertex(1),Tn1.vertex(2)).squared_length());
+  double AC_BC = CGAL::to_double(Vector_3(Tn1.vertex(0),Tn1.vertex(2))*Vector_3(Tn1.vertex(1),Tn1.vertex(2)));
+  double XC_AC = CGAL::to_double(Vector_3(Xn,Tn1.vertex(2))*Vector_3(Tn1.vertex(0),Tn1.vertex(2)));
+  double XC_BC = CGAL::to_double(Vector_3(Xn,Tn1.vertex(2))*Vector_3(Tn1.vertex(1),Tn1.vertex(2)));
+  double dom = AC2*BC2-AC_BC*AC_BC;
+  double num1 = BC2*XC_AC-AC_BC*XC_BC;
+  double num2 = AC2*XC_BC-AC_BC*XC_AC;
+
 												 
  
   lambda =  num1/dom;
@@ -981,7 +998,7 @@ Point_2 tr(const Triangle_3& Tn1, const Point_3& Xn){
 /*!
 *\fn Triangle_2 tr(Triangle_3 Tn1, Triangle_3 T)
 *\brief Transformation d'un Triangle_3 en Triangle_2 
-	*\details Appel &agrave; la fonction tr(Triangle_3, Point_3) pour chaque somment du triangle.
+	*\details Appel &agrave; la fonction tr(Triangle_3, Point_3) pour chaque sommet du triangle.
 	*\param Tn1 Triangle_3 
 	*\param T  Triangle_3 
 	*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
@@ -1135,8 +1152,8 @@ void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,i
 	
 	if((in!=in1 && jn==jn1 && kn==kn1)|| (in==in1 && jn!=jn1 && kn==kn1) || (in==in1 && jn==jn1 && kn!=kn1))
 	{
-		Cellule c0 = grille[in][jn][kn];
-		Cellule c1 = grille[in1][jn1][kn1];
+		Cellule& c0 = grille[in][jn][kn];
+		Cellule& c1 = grille[in1][jn1][kn1];
 		Cells.push_back(c0); Cells.push_back(c1);
 		box_cells.push_back(Bbox(c0.x -c0.dx/2.,c0.y -c0.dy/2.,c0.z -c0.dz/2.,
 											c0.x +c0.dx/2.,c0.y +c0.dy/2.,c0.z + c0.dz/2.));
@@ -1145,10 +1162,10 @@ void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,i
 	}
 	else if(in!=in1 && jn!=jn1 && kn==kn1){
 		
-		Cellule c0 = grille[in][jn][kn];
-		Cellule c1 = grille[in1][jn1][kn1];
-		Cellule c2 = grille[in1][jn][kn];
-		Cellule c3 = grille[in][jn1][kn1];
+		Cellule& c0 = grille[in][jn][kn];
+		Cellule& c1 = grille[in1][jn1][kn1];
+		Cellule& c2 = grille[in1][jn][kn];
+		Cellule& c3 = grille[in][jn1][kn1];
 		
 		Cells.push_back(c0); Cells.push_back(c1); Cells.push_back(c2); Cells.push_back(c3);
 		
@@ -1163,10 +1180,10 @@ void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,i
 	}
 	else if(in!=in1 && jn==jn1 && kn!=kn1){
 		
-		Cellule c0 = grille[in][jn][kn];
-		Cellule c1 = grille[in1][jn1][kn1];
-		Cellule c2 = grille[in][jn][kn1];
-		Cellule c3 = grille[in1][jn1][kn];
+		Cellule& c0 = grille[in][jn][kn];
+		Cellule& c1 = grille[in1][jn1][kn1];
+		Cellule& c2 = grille[in][jn][kn1];
+		Cellule& c3 = grille[in1][jn1][kn];
 		
 		Cells.push_back(c0); Cells.push_back(c1); Cells.push_back(c2); Cells.push_back(c3);
 		
@@ -1181,10 +1198,10 @@ void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,i
 	}
 	else if(in==in1 && jn!=jn1 && kn!=kn1){
 		
-		Cellule c0 = grille[in][jn][kn];
-		Cellule c1 = grille[in1][jn1][kn1];
-		Cellule c2 = grille[in][jn1][kn];
-		Cellule c3 = grille[in1][jn][kn1];
+		Cellule& c0 = grille[in][jn][kn];
+		Cellule& c1 = grille[in1][jn1][kn1];
+		Cellule& c2 = grille[in][jn1][kn];
+		Cellule& c3 = grille[in1][jn][kn1];
 		
 		Cells.push_back(c0); Cells.push_back(c1); Cells.push_back(c2); Cells.push_back(c3);
 		
@@ -1199,14 +1216,14 @@ void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,i
 	}
 	else{
 	
-		Cellule c0 = grille[in][jn][kn];
-		Cellule c1 = grille[in1][jn1][kn1];
-		Cellule c2 = grille[in1][jn][kn];
-		Cellule c3 = grille[in][jn1][kn];
-		Cellule c4 = grille[in][jn][kn1];
-		Cellule c5 = grille[in1][jn1][kn];
-		Cellule c6 = grille[in1][jn][kn1];
-		Cellule c7 = grille[in][jn1][kn1];
+		Cellule& c0 = grille[in][jn][kn];
+		Cellule& c1 = grille[in1][jn1][kn1];
+		Cellule& c2 = grille[in1][jn][kn];
+		Cellule& c3 = grille[in][jn1][kn];
+		Cellule& c4 = grille[in][jn][kn1];
+		Cellule& c5 = grille[in1][jn1][kn];
+		Cellule& c6 = grille[in1][jn][kn1];
+		Cellule& c7 = grille[in][jn1][kn1];
 		
 		
 		Cells.push_back(c0); Cells.push_back(c1); Cells.push_back(c2); Cells.push_back(c3);
@@ -1255,23 +1272,23 @@ Calcul du flux &agrave; la parois: soit \a f un morceau d'interface, le flux &ag
 *\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 *\return void
 */
-void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  Particule & P, double & volume_test){
+void Grille::swap_face(const Triangles& T3d_prev, const Triangles& T3d_n, const double dt, Particule & P, double & volume_test){
 	
   //CGAL::Timer user_time, user_time2;
   //double time=0.;
   std::vector<Bbox> box_prismes(T3d_prev.size());
   for (int i=0; i< T3d_prev.size(); i++){
-    Bbox box_triangles_prev = T3d_prev[i].bbox();
-    Bbox box_triangles_n = T3d_n[i].bbox();
-    box_prismes[i]= box_triangles_prev.operator+(box_triangles_n);
+    const Bbox& box_triangles_prev = T3d_prev[i].bbox();
+    const Bbox& box_triangles_n = T3d_n[i].bbox();
+    box_prismes[i]= box_triangles_prev + box_triangles_n;
   } 
 	
   for (int i=0; i< box_prismes.size(); i++){
     //double vol_test=0.; 
     int in=0, jn=0, kn=0, in1=0, jn1=0, kn1=0;
     bool interieur = true;
-    Point_3 center_prev= centroid(T3d_prev[i].operator[](0),T3d_prev[i].operator[](1),T3d_prev[i].operator[](2));
-    Point_3 center_n= centroid(T3d_n[i].operator[](0),T3d_n[i].operator[](1),T3d_n[i].operator[](2));
+    const Point_3& center_prev= centroid(T3d_prev[i].operator[](0),T3d_prev[i].operator[](1),T3d_prev[i].operator[](2));
+    const Point_3& center_n= centroid(T3d_n[i].operator[](0),T3d_n[i].operator[](1),T3d_n[i].operator[](2));
     in_cell(center_prev, in, jn, kn, interieur);
     in_cell(center_n, in1, jn1, kn1, interieur);
 		
@@ -1280,22 +1297,22 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
       double x= CGAL::to_double(center_n.operator[](0));
       double y= CGAL::to_double(center_n.operator[](1));
       double z= CGAL::to_double(center_n.operator[](2));
-      Cellule cd= grille[in1+1][jn1][kn1];
+      Cellule& cd= grille[in1+1][jn1][kn1];
       if (cd.is_in_cell(x,y,z) ) {in1=in1+1;}
       else{
-	Cellule cg= grille[in1-1][jn1][kn1];
+	Cellule& cg= grille[in1-1][jn1][kn1];
 	if (cg.is_in_cell(x,y,z)) {in1=in1-1;}
 	else{
-	  Cellule ch= grille[in1][jn1+1][kn1];
+	  Cellule& ch= grille[in1][jn1+1][kn1];
 	  if (ch.is_in_cell(x,y,z)) {jn1=jn1+1;}
 	  else{
-	    Cellule cb= grille[in1][jn1-1][kn1];
+	    Cellule& cb= grille[in1][jn1-1][kn1];
 	    if (cb.is_in_cell(x,y,z)) {jn1=jn1-1;}
 	    else{
-	      Cellule cd= grille[in1][jn1][kn1+1];
+	      Cellule& cd= grille[in1][jn1][kn1+1];
 	      if (cd.is_in_cell(x,y,z)) {kn1=kn1+1;}
 	      else{
-		Cellule cder= grille[in1][jn1][kn1-1];
+		Cellule& cder= grille[in1][jn1][kn1-1];
 		if (cder.is_in_cell(x,y,z)) {kn1=kn1-1;}
 	      }
 	    }
@@ -1304,7 +1321,7 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
       }
     } // end if alpha==1
 		  
-    Cellule c= grille[in1][jn1][kn1];
+    Cellule& c= grille[in1][jn1][kn1];
     double volume_cel = c.dx*c.dy*c.dz;  
     if ( (in==in1) && (jn==jn1) && (kn==kn1) && (interieur==true)){
       // le prisme est contenu dans une seule cellule 
@@ -1316,7 +1333,7 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
 	c.delta_w[2] += volume_p*c.impy0/volume_cel; 
 	c.delta_w[3] += volume_p*c.impz0/volume_cel; 
 	c.delta_w[4] += volume_p*c.rhoE0/volume_cel;
-	grille[in1][jn1][kn1] = c;
+	//grille[in1][jn1][kn1] = c;
       }
       volume_test += volume_p;
     }	
@@ -1332,73 +1349,73 @@ void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  
       Point_3 f = centroid(T3d_prev[i].operator[](0),T3d_n[i].operator[](0), T3d_prev[i].operator[](2),T3d_n[i].operator[](2));
       Point_3 g = centroid(T3d_prev[i].operator[](0),T3d_n[i].operator[](0), T3d_prev[i].operator[](1),T3d_n[i].operator[](1));
 
-      Tetrahedron tet0 (T3d_prev[i].operator[](0),T3d_n[i].operator[](0), g, f);
+      Tetrahedron tet0 (T3d_prev[i].operator[](0),T3d_n[i].operator[](0), f, g);
       //if(!tet0.is_degenerate ()){
       if(abs(tet0.volume ())>eps){
 	vect_Tet.push_back(tet0);
 	box_Tet.push_back(tet0.bbox());
       }
 			
-      Tetrahedron tet1 (T3d_prev[i].operator[](1),T3d_n[i].operator[](1), e, g);
+      Tetrahedron tet1 (T3d_prev[i].operator[](1),T3d_n[i].operator[](1), g, e);
       //if(!tet1.is_degenerate ()){
       if(abs(tet1.volume ())>eps){
 	vect_Tet.push_back(tet1);
 	box_Tet.push_back(tet1.bbox());
       }
 
-      Tetrahedron tet2 (T3d_prev[i].operator[](2),T3d_n[i].operator[](2), f, e);
+      Tetrahedron tet2 (T3d_prev[i].operator[](2),T3d_n[i].operator[](2), e, f);
       //if(!tet2.is_degenerate ()){
       if(abs(tet2.volume ())>eps){
 	vect_Tet.push_back(tet2);
 	box_Tet.push_back(tet2.bbox());
       }
 
-      Tetrahedron tet3 (T3d_prev[i].operator[](0),T3d_prev[i].operator[](1), T3d_prev[i].operator[](2), g);
+      Tetrahedron tet3 (T3d_prev[i].operator[](0),T3d_prev[i].operator[](1), g, T3d_prev[i].operator[](2));
       if(abs(tet3.volume ())>eps){
 	vect_Tet.push_back(tet3);
 	box_Tet.push_back(tet3.bbox());
       }
 
-      Tetrahedron tet4 (T3d_prev[i].operator[](0),g, T3d_prev[i].operator[](2), f);
+      Tetrahedron tet4 (T3d_prev[i].operator[](0),g, f, T3d_prev[i].operator[](2));
       // 			if(!tet4.is_degenerate ()){
       if(abs(tet4.volume ())>eps){
 	vect_Tet.push_back(tet4);
 	box_Tet.push_back(tet4.bbox());
       }
-      Tetrahedron tet5 (T3d_prev[i].operator[](1),e, T3d_prev[i].operator[](2), g);
+      Tetrahedron tet5 (T3d_prev[i].operator[](1),e, g, T3d_prev[i].operator[](2));
       //if(!tet5.is_degenerate ()){
       if(abs(tet5.volume ())>eps){
 	vect_Tet.push_back(tet5);
 	box_Tet.push_back(tet5.bbox());
       }
 
-      Tetrahedron tet6 (e,g,f, T3d_prev[i].operator[](2));
+      Tetrahedron tet6 (e,f,g, T3d_prev[i].operator[](2));
       //if(!tet6.is_degenerate ()){
       if(abs(tet6.volume ())>eps){
 	vect_Tet.push_back(tet6);
 	box_Tet.push_back(tet6.bbox());
       }
 
-      Tetrahedron tet7 (e,f,g, T3d_n[i].operator[](2));
+      Tetrahedron tet7 (e,g,f, T3d_n[i].operator[](2));
       //if(!tet7.is_degenerate ()){
       if(abs(tet7.volume ())>eps){
 	vect_Tet.push_back(tet7);
 	box_Tet.push_back(tet7.bbox());
       }
-      Tetrahedron tet8 (e, T3d_n[i].operator[](1),T3d_n[i].operator[](2),g);
+      Tetrahedron tet8 (e, T3d_n[i].operator[](1),g,T3d_n[i].operator[](2));
       //if(!tet8.is_degenerate ()){
       if(abs(tet8.volume ())>eps){
 	vect_Tet.push_back(tet8);
 	box_Tet.push_back(tet8.bbox());
       }
-      Tetrahedron tet9 (T3d_n[i].operator[](0),T3d_n[i].operator[](2),g,f);
+      Tetrahedron tet9 (T3d_n[i].operator[](0),T3d_n[i].operator[](2),f,g);
       //if(!tet9.is_degenerate ()){
       if(abs(tet9.volume ())>eps){
 	vect_Tet.push_back(tet9);
 	box_Tet.push_back(tet9.bbox());
       }
 
-      Tetrahedron tet10 (T3d_n[i].operator[](0),T3d_n[i].operator[](1),g,T3d_n[i].operator[](2));
+      Tetrahedron tet10 (T3d_n[i].operator[](0),T3d_n[i].operator[](1),T3d_n[i].operator[](2),g);
       //if(!tet10.is_degenerate ()){
       if(abs(tet10.volume ())>eps){
 	vect_Tet.push_back(tet10);
@@ -1507,14 +1524,6 @@ Algorithme:\n
 */
 void Sous_Maillage_2d(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2& tri2){
 	
-  //std::vector<Bbox_2> boxesTn(Tn.size()), boxesTn1(Tn1.size()); //tres outil pour les intersections 
-  //on associe a chaque triangle un Box (une boite contenant le triangle)
-  //for(int it=0; it< Tn.size(); it++){
-  //boxesTn[it] = Tn[it].bbox();
-  //}
-  //for(int iter=0; iter< Tn1.size(); iter++){
-  //boxesTn1[iter] = Tn1[iter].bbox();
-//}
   Triangle_2 tri;
   std::vector<Point_2> vPoints; 
   int k=0;
@@ -1529,14 +1538,14 @@ void Sous_Maillage_2d(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2
 	  else if(CGAL::assign(vPoints,result)){
 	    Triangulation_2 T;
 	    T.insert(vPoints.begin(), vPoints.end());
-	    if( (T.is_valid() ) && (T.dimension() == 2)){
+	    //if( (T.is_valid() ) && (T.dimension() == 2)){
 	      for (Triangulation_2::Finite_faces_iterator fit=T.finite_faces_begin(); fit!=T.finite_faces_end();++fit)
 	      { 
 		if(T.triangle(fit).area()>eps){
 		  tri2.push_back(T.triangle(fit));
 		}
 	      }
-	    }
+	      //}
 	  }
 	}
       }
@@ -1569,18 +1578,18 @@ void sous_maillage_faceTn_faceTn1_2d(const Triangle_3& Tn, const Triangles& tn, 
   double temps_total=0.,temps_bary1=0.,temps_bary2=0.,temps_bary3=0.,temps_sous_maillage=0.,temps_2d_3d=0.,temps_2d_3d_bis=0.;	
   total_time.start();bary1_time.start();bary2_time.start();bary3_time.start();sous_maillage_time.start();time_2d_3d.start();time_2d_3d_bis.start();
   
-  bary1_time.reset();
+  /*bary1_time.reset();
   Triangles tn_n1(tn.size());
   for(int i=0; i<tn.size(); i++){
     tn_n1[i] = tr(Tn, Tn1, tn[i]); // transf barycentrique de tn 
   }
   //user_time.reset();
-  temps_bary1 += bary1_time.time();
+  temps_bary1 += bary1_time.time();*/
   
   bary2_time.reset();
-  Triangles_2 Tn_n1_2(tn_n1.size());
-  for(int i=0; i<tn_n1.size(); i++){
-    Tn_n1_2[i] = tr(Tn1, tn_n1[i]);
+  Triangles_2 Tn_2(tn.size());
+  for(int i=0; i<tn.size(); i++){
+    Tn_2[i] = tr(Tn, tn[i]);
   }
   temps_bary2 += bary2_time.time();
   
@@ -1593,7 +1602,7 @@ void sous_maillage_faceTn_faceTn1_2d(const Triangle_3& Tn, const Triangles& tn, 
   
   sous_maillage_time.reset();
   Triangles_2 tri2;
-  Sous_Maillage_2d(Tn1_2, Tn_n1_2, tri2);
+  Sous_Maillage_2d(Tn1_2, Tn_2, tri2);
   temps_sous_maillage += sous_maillage_time.time();
   
   time_2d_3d.reset();
@@ -1642,7 +1651,7 @@ void sous_maillage_faceTn_faceTn1_2d(const Triangle_3& Tn, const Triangles& tn, 
   cout << "sous_maillage=" << 100*temps_sous_maillage/temps_total << "%     t_moy=" << temps_sous_maillage << endl;
   cout << "2d_3d=" << 100*temps_2d_3d/temps_total << "%     t_moy=" << temps_2d_3d << endl;
   cout << "2d_3d_bis=" << 100*temps_2d_3d_bis/temps_total << "%     t_moy=" << temps_2d_3d_bis << endl;
-  cout << "Reste=" << 100*(1.-(temps_bary1+temps_bary2+temps_bary2+temps_sous_maillage+temps_2d_3d)/temps_total) << "%" << endl;
+  cout << "Reste=" << 100*(1.-(temps_bary1+temps_bary2+temps_bary3+temps_sous_maillage+temps_2d_3d+temps_2d_3d_bis)/temps_total) << "%" << endl;
   cout << "###################################################" << endl;
   getchar();//*/
 }
@@ -1915,13 +1924,13 @@ void Grille::Mixage_cible(){
 	for(int i=marge;i<Nx+marge;i++){
 		for(int j=marge;j<Ny+marge;j++){ 
 			for(int k=marge;k<Nz+marge;k++){
-				Cellule cp = grille[i][j][k];
+				Cellule& cp = grille[i][j][k];
 				if((cp.alpha>epsa || cp.p<0. || cp.rho<0.) && abs(cp.alpha-1.)>eps && !cp.vide){
 				  std::vector< std::vector<int> > tab_cible; 
 					std::vector<int> poz(3); poz[0]= i; poz[1] = j; poz[2] = k; tab_cible.push_back(poz);
 
 
-          Cellule cg = cible(grille[i][j][k], tab_cible);
+          Cellule& cg = cible(grille[i][j][k], tab_cible);
 
 					cg.cible_alpha += (1.-cp.alpha);
 					cg.cible_rho  += (1.-cp.alpha)*cp.rho;
@@ -1934,8 +1943,8 @@ void Grille::Mixage_cible(){
 					cp.cible_j = cg.j;
 					cp.cible_k = cg.k;
 					
-					grille[i][j][k] = cp;
-					grille[cg.i][cg.j][cg.k] = cg;
+					//grille[i][j][k] = cp;
+					//grille[cg.i][cg.j][cg.k] = cg;
 
 
 				}
@@ -1951,7 +1960,7 @@ void Grille::Mixage_cible(){
 	for(int i=marge;i<Nx+marge;i++){
 		for(int j=marge;j<Ny+marge;j++){ 
 			for(int k=marge;k<Nz+marge;k++){
-				Cellule cp = grille[i][j][k];
+				Cellule& cp = grille[i][j][k];
 
 				if(std::abs(cp.cible_alpha)>0. && !cp.vide){
 					cp.rho = ((1.-cp.alpha)*cp.rho + cp.cible_rho)/((1.-cp.alpha) + cp.cible_alpha);
@@ -1975,7 +1984,7 @@ void Grille::Mixage_cible(){
 						cp.p = 0.;
 						cp.vide=true;
 					}
-					grille[i][j][k] = cp;
+					//grille[i][j][k] = cp;
 				}
 			}
 		}
@@ -1984,8 +1993,8 @@ void Grille::Mixage_cible(){
 	for(int i=marge;i<Nx+marge;i++){
 		for(int j=marge;j<Ny+marge;j++){ 
 			for(int k=marge;k<Nz+marge;k++){
-				Cellule cp = grille[i][j][k];
-				Cellule cible=grille[cp.cible_i][cp.cible_j][cp.cible_k];
+				Cellule& cp = grille[i][j][k];
+				Cellule& cible=grille[cp.cible_i][cp.cible_j][cp.cible_k];
 					cp.rho = cible.rho;
 					cp.impx = cible.impx;
 					cp.impy = cible.impy;
@@ -2007,7 +2016,7 @@ void Grille::Mixage_cible(){
 						cp.p = 0.;
 						cp.vide=true;
 					}
-					grille[i][j][k] = cp;
+					//grille[i][j][k] = cp;
 					
 					if((grille[i][j][k].p<0. || grille[i][j][k].rho<0.) && !cp.vide){
 					  cout << "test non fini x=" << grille[i][j][k].x << " y=" <<  grille[i][j][k].y << " z=" <<  grille[i][j][k].z << " p=" <<  grille[i][j][k].p << " rho=" <<  grille[i][j][k].rho << " cible x=" << cible.x << " y=" << cible.y << " z=" << cible.z << endl;
@@ -2054,7 +2063,7 @@ bool Grille::Mixage_cible2(){
   for(int i=marge;i<Nx+marge;i++){
     for(int j=marge;j<Ny+marge;j++){
       for(int k=marge;k<Nz+marge;k++){
-	Cellule cp = grille[i][j][k];
+	Cellule& cp = grille[i][j][k];
 	if((cp.alpha>epsa || cp.p<0. || cp.rho<0.) && abs(cp.alpha-1.)>eps && !cp.vide){
 	  //Recherche avec voisin_fluide
 	  bool target = true;
@@ -2081,7 +2090,7 @@ bool Grille::Mixage_cible2(){
 	    }
 	  }
 	}
-	grille[i][j][k] = cp;
+	//grille[i][j][k] = cp;
       }
     }
   }
@@ -2089,7 +2098,7 @@ bool Grille::Mixage_cible2(){
   for(int i=marge;i<Nx+marge;i++){
     for(int j=marge;j<Ny+marge;j++){
       for(int k=marge;k<Nz+marge;k++){
-	Cellule cp = grille[i][j][k];
+	Cellule& cp = grille[i][j][k];
 	if((cp.alpha>epsa || cp.p<0. || cp.rho<0.) && abs(cp.alpha-1.)>eps && !cp.vide){
 	  //Liste des points parcourus
 	  std::vector< std::vector<int> > tab_cible; 
@@ -2099,7 +2108,7 @@ bool Grille::Mixage_cible2(){
 	  int n=cp.cible_k;
 	  bool test=true;
 	  for(int count=1;test;count++){
-	    Cellule cible = grille[l][m][n];
+	    Cellule& cible = grille[l][m][n];
 	    poz[0] = l;
 	    poz[1] = m;
 	    poz[2] = n;
@@ -2135,7 +2144,7 @@ bool Grille::Mixage_cible2(){
 	  cp.cible_k = n;
 	  
 	}
-	grille[i][j][k] = cp;
+	//grille[i][j][k] = cp;
       }
     }
   }
@@ -2143,23 +2152,23 @@ bool Grille::Mixage_cible2(){
   for(int i=marge;i<Nx+marge;i++){
     for(int j=marge;j<Ny+marge;j++){
       for(int k=marge;k<Nz+marge;k++){
-	Cellule cp =grille[i][j][k];
-	Cellule cg = grille[cp.cible_i][cp.cible_j][cp.cible_k];
+	Cellule& cp =grille[i][j][k];
+	Cellule& cg = grille[cp.cible_i][cp.cible_j][cp.cible_k];
 	cg.cible_alpha += (1.-cp.alpha);
 	cg.cible_rho  += (1.-cp.alpha)*cp.rho;
 	cg.cible_impx += (1.-cp.alpha)*cp.impx;
 	cg.cible_impy += (1.-cp.alpha)*cp.impy;
 	cg.cible_impz += (1.-cp.alpha)*cp.impz;
 	cg.cible_rhoE += (1.-cp.alpha)*cp.rhoE;
-	grille[i][j][k] = cp;
-	grille[cp.cible_i][cp.cible_j][cp.cible_k] = cg;
+	//grille[i][j][k] = cp;
+	//grille[cp.cible_i][cp.cible_j][cp.cible_k] = cg;
       }
     }
   }
   for(int i=marge;i<Nx+marge;i++){
     for(int j=marge;j<Ny+marge;j++){
       for(int k=marge;k<Nz+marge;k++){
-	Cellule cp =grille[i][j][k];
+	Cellule& cp =grille[i][j][k];
 	if(abs(cp.cible_i-i)+abs(cp.cible_j-j)+abs(cp.cible_k-k)<eps && abs(cp.cible_alpha)>eps && !cp.vide){
 	  cp.rho = cp.cible_rho/cp.cible_alpha;
 	  cp.impx = cp.cible_impx/cp.cible_alpha;
@@ -2183,7 +2192,7 @@ bool Grille::Mixage_cible2(){
 	    cp.vide=true;
 	  }
 	  if(cp.rho<0. || cp.p<0.){
-	    Cellule cible = grille[cp.cible_i][cp.cible_j][cp.cible_k];
+	    Cellule& cible = grille[cp.cible_i][cp.cible_j][cp.cible_k];
 	    cout << "test non fini x=" << cp.x << " y=" <<  cp.y << " z=" <<  cp.z << " p=" <<  cp.p << " rho=" <<  cp.rho << " alpha=" << cp.alpha << " cible x=" << cible.x << " y=" << cible.y << " z=" << cible.z << " p=" << cible.p << " rho=" << cible.rho << " alpha=" << cible.alpha << " cible_alpha=" << cp.cible_alpha << " cible_rho=" << cp.cible_rho << " cible_rhoE" << cp.cible_rhoE << endl;
 	    test_fini = false;
 	    //Recherche avec voisin_fluide
@@ -2206,7 +2215,7 @@ bool Grille::Mixage_cible2(){
 	    }
 	  }
 	}
-	grille[i][j][k] = cp;
+	//grille[i][j][k] = cp;
       }
     }
   }
@@ -2214,9 +2223,9 @@ bool Grille::Mixage_cible2(){
   for(int i=marge;i<Nx+marge;i++){
     for(int j=marge;j<Ny+marge;j++){
       for(int k=marge;k<Nz+marge;k++){
-	Cellule cp = grille[i][j][k];
+	Cellule& cp = grille[i][j][k];
 	if(abs(cp.cible_i-i)+abs(cp.cible_j-j)+abs(cp.cible_k-k)>eps){
-	  Cellule cg = grille[cp.cible_i][cp.cible_j][cp.cible_k];
+	  Cellule& cg = grille[cp.cible_i][cp.cible_j][cp.cible_k];
 	  cp.rho = cg.rho;
 	  cp.impx = cg.impx;
 	  cp.impy = cg.impy;
@@ -2228,7 +2237,7 @@ bool Grille::Mixage_cible2(){
 	  cp.p = cg.p;
 	  cp.vide = cg.vide;
 	}
-	grille[i][j][k] = cp;
+	//grille[i][j][k] = cp;
       }
     }
   }

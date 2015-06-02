@@ -525,7 +525,7 @@ void Grille::affiche()
 								variation_delta_w_rho +=grille[i][j][k].delta_w[0];
 								variation_volume += (grille[i][j][k].alpha - grille[i][j][k].alpha0)*grille[i][j][k].rho1;
 								}
-            }
+			}
         }
      cout<<"nb cellules vides:= "<< count <<endl;
     //cout<<"variation rho:= "<< variation_delta_w_rho - variation_volume <<endl;
@@ -541,10 +541,10 @@ void Grille:: affiche(string r)
 		double vol=0.;
 		for(int i=marge;i<Nx+marge;i++){
 		  for(int j=marge;j<Ny+marge;j++){
-			Cellule cb = grille[i][j][marge];
+			Cellule& cb = grille[i][j][marge];
             for(int k=marge;k<Nz+marge;k++){ 
 			  s++;
-			  Cellule c = grille[i][j][k];
+			  Cellule& c = grille[i][j][k];
 			  if(abs(c.w)>eps){
 				cout << r << " " << c.x << " " << c.y << " " << c.z << " w=" << c.w << endl;
 				//getchar();
@@ -569,7 +569,7 @@ Cellule Grille::cellule(int i,int j, int k){
  \param p un point
  \return Cellule (cellule qui contient \a p)
  */
-Cellule Grille::in_cell(Point_3 p){
+Cellule Grille::in_cell(const Point_3& p){
   int i,j,k;
   i = (int) (floor(CGAL::to_double((p.operator[](0)-x)/dx))+marge);
   j = (int) (floor(CGAL::to_double((p.operator[](1)-y)/dy))+marge);
@@ -602,7 +602,7 @@ Cellule Grille::in_cell(Point_3 p){
  \param interieur = true si le point \a p se trouve &agrave; l'interieur du domaine, false sinon 
  \return void
  */
-void Grille::in_cell(Point_3 p, int &i, int& j, int& k, bool& interieur){
+void Grille::in_cell(const Point_3& p, int &i, int& j, int& k, bool& interieur){
 	
 	i = (int) (floor(CGAL::to_double((p.operator[](0)-x)/dx))+marge);
 	j = (int) (floor(CGAL::to_double((p.operator[](1)-y)/dy))+marge);
@@ -621,11 +621,10 @@ void Grille::in_cell(Point_3 p, int &i, int& j, int& k, bool& interieur){
  */
 void Grille::Init(){
     
-    Cellule c; 
     for(int i=0;i<Nx+2*marge;i++){
         for(int j=0;j<Ny+2*marge;j++){
             for(int k=0;k<Nz+2*marge;k++){
-                c = grille[i][j][k];
+                Cellule& c = grille[i][j][k];
                 c.dx = deltax; c.dy = deltay; c.dz = deltaz;
                 c.x = x+c.dx/2.+(i-marge)*c.dx;
                 c.y = y+c.dy/2.+(j-marge)*c.dy;
@@ -641,7 +640,7 @@ void Grille::Init(){
                 c.kappai = c.kappaj = c.kappak = c.alpha = 0.;
 			          if(c.rho >eps_vide && c.p>eps_vide){c.vide=false;}
 			          else {c.vide=true;}
-                grille[i][j][k] = c;
+				  //grille[i][j][k] = c;
             }
         }
     }         
@@ -661,7 +660,7 @@ double Grille::pas_temps(double t, double T){
     for(int i=marge;i<Nx+marge;i++){
         for(int j=marge;j<Ny+marge;j++){
             for(int k=marge;k<Nz+marge;k++){
-              Cellule c = grille[i][j][k];
+              Cellule& c = grille[i][j][k];
 							  if(!c.vide){
 									double c2 = gam*c.p/c.rho;
 									double dt1 = cfl*min(c.dx/(sqrt(c2)+abs(c.u)),min(c.dy/(sqrt(c2)+abs(c.v)), c.dz/(sqrt(c2)+abs(c.w))));
@@ -683,7 +682,7 @@ double Grille::Masse(){
     for(int i=marge;i<Nx+marge;i++){
         for(int j=marge;j<Ny+marge;j++){
             for(int k=marge;k<Nz+marge;k++){
-							Cellule c = grille[i][j][k]; 
+							Cellule& c = grille[i][j][k]; 
                 m += c.rho*c.dx*c.dy*c.dz*(1.-c.alpha);
             }
         }
@@ -701,7 +700,7 @@ double Grille::Impulsionx(){
     for(int i=marge;i<Nx+marge;i++){
         for(int j=marge;j<Ny+marge;j++){
             for(int k=marge;k<Nz+marge;k++){
-							Cellule c = grille[i][j][k]; 
+							Cellule& c = grille[i][j][k]; 
                 impx += c.impx*c.dx*c.dy*c.dz*(1.-c.alpha);
             }
         }
@@ -718,7 +717,7 @@ double Grille::Impulsiony(){
     for(int i=marge;i<Nx+marge;i++){
         for(int j=marge;j<Ny+marge;j++){
             for(int k=marge;k<Nz+marge;k++){
-                Cellule c = grille[i][j][k];  
+                Cellule& c = grille[i][j][k];  
                 impy += c.impy*c.dx*c.dy*c.dz*(1.-c.alpha);
             }
         }
@@ -735,7 +734,7 @@ double Grille::Impulsionz(){
     for(int i=marge;i<Nx+marge;i++){
         for(int j=marge;j<Ny+marge;j++){
             for(int k=marge;k<Nz+marge;k++){
-                Cellule c = grille[i][j][k];  
+                Cellule& c = grille[i][j][k];  
                 impz += c.impz*c.dx*c.dy*c.dz*(1.-c.alpha);
             }
         }
@@ -752,7 +751,7 @@ double Grille::Energie(){
     for(int i=marge;i<Nx+marge;i++){ 
         for(int j=marge;j<Ny+marge;j++){ 
             for(int k=marge;k<Nz+marge;k++){
-							Cellule  c = grille[i][j][k]; 
+							Cellule&  c = grille[i][j][k]; 
                 E += c.rhoE*c.dx*c.dy*c.dz*(1.-c.alpha); 
             }
         } 
@@ -769,7 +768,7 @@ void Grille::melange(const double dt){
 	for(int i=marge;i<Nx+marge;i++){
 		for(int j=marge;j<Ny+marge;j++){
 			for(int k=marge;k<Nz+marge;k++){
-				Cellule c = grille[i][j][k];
+				Cellule& c = grille[i][j][k];
 				if(c.rho<0. && !c.vide){
 					//cout << "densite negative en : " << c.x << " " << c.y << " " << c.z <<" rho " << c.rho << endl;
 					c.rho = c.rho0;
@@ -794,7 +793,7 @@ void Grille::melange(const double dt){
 					c.impz = c.impz0;
 					c.rhoE = c.rhoE0;
 				}
-				grille[i][j][k] = c;
+				//grille[i][j][k] = c;
 
 			}
 		}
@@ -818,8 +817,8 @@ void Grille::solve_fluidx(const double dt){
         for(int j=1;j<Ny+2*marge-1;j++){ 
             for(int k=1;k<Nz+2*marge-1;k++){
                 
-               Cellule c = grille[i][j][k]; 
-               Cellule ci = grille[i-1][j][k];    //Cellule  i-1
+               Cellule& c = grille[i][j][k]; 
+               Cellule& ci = grille[i-1][j][k];    //Cellule  i-1
                 
                 //Stockage de la pression utilise pendant le pas de temps
                 c.pdtx = dt*c.p;
@@ -845,7 +844,7 @@ void Grille::solve_fluidx(const double dt){
 									c.p = 0.; 
 								}
 							 else {c.vide = false;}
-               grille[i][j][k] = c; 
+								//grille[i][j][k] = c; 
             }
         }
     }
@@ -870,8 +869,8 @@ void Grille::solve_fluidy(const double dt){
         for(int j=1;j<Ny+2*marge-1;j++){ 
             for(int k=1;k<Nz+2*marge-1;k++){ 
                 
-							Cellule c = grille[i][j][k]; 
-							Cellule cj = grille[i][j-1][k];    //Cellule j-1
+							Cellule& c = grille[i][j][k]; 
+							Cellule& cj = grille[i][j-1][k];    //Cellule j-1
                 
                 
                 //Stockage de la pression utilise pendant le pas de temps
@@ -900,7 +899,7 @@ void Grille::solve_fluidy(const double dt){
 									c.p = 0.; 
 								}
 								else {c.vide = false;}
-								grille[i][j][k] = c;
+								//grille[i][j][k] = c;
 					}
         }
     }
@@ -926,8 +925,8 @@ void Grille::solve_fluidz(const double dt){
         for(int j=1;j<Ny+2*marge-1;j++){
             for(int k=1;k<Nz+2*marge-1;k++){
                 
-							Cellule c = grille[i][j][k]; 
-							Cellule ck = grille[i][j][k-1];    //Cellule k-1
+							Cellule& c = grille[i][j][k]; 
+							Cellule& ck = grille[i][j][k-1];    //Cellule k-1
                 
                 
                 //Stockage de la pression utilise pendant le pas de temps
@@ -956,7 +955,7 @@ void Grille::solve_fluidz(const double dt){
 											
 								}
 								else {c.vide = false;}
-								grille[i][j][k] = c;
+								//grille[i][j][k] = c;
 								
 								}
 					}
@@ -977,7 +976,7 @@ void Grille::corentx(double sigma){
 	for(int i=0;i<Nx+2*marge;i++){
 	    for(int j=0;j<Ny+2*marge;j++){
             for(int k=0;k<Nz+2*marge;k++){
-							  Cellule cel = grille[i][j][k];
+							  Cellule& cel = grille[i][j][k];
 								if(!cel.vide){ 
 									cel.S = log(cel.p) - gam*log(cel.rho);
 									cel.ve[0] = (1.-gam)/cel.p*cel.rhoE-(cel.S-gam-1.);
@@ -989,7 +988,7 @@ void Grille::corentx(double sigma){
 									cel.fey = -cel.impy*cel.S;
 									cel.fez = -cel.impz*cel.S;
 									cel.Qci[0] = cel.Qci[1] = cel.Qci[2] = cel.Qci[3] = cel.Qci[4] = 0.;
-									grille[i][j][k] = cel;
+									//grille[i][j][k] = cel;
 								}
             }
         }
@@ -1003,8 +1002,8 @@ void Grille::corentx(double sigma){
 	for(int i=0;i<Nx+2*marge-1;i++){
 	    for(int j=0;j<Ny+2*marge;j++){ 
             for(int k=0;k<Nz+2*marge;k++){
-							Cellule c = grille[i][j][k];
-							Cellule cd = grille[i+1][j][k];
+							Cellule& c = grille[i][j][k];
+							Cellule& cd = grille[i+1][j][k];
 							if(!c.vide && !cd.vide){ 
 									double alpha = 0.;
 									//Calcul de pe
@@ -1063,7 +1062,7 @@ void Grille::corentx(double sigma){
 									for(int l=0;l<5;l++){
 											c.fluxi[l] -= c.Qci[l]; //modification flux
 									}
-									grille[i][j][k] = c;
+									//grille[i][j][k] = c;
 							}
             }
         }
@@ -1085,7 +1084,7 @@ void Grille::corenty(double sigma){
 	for(int i=0;i<Nx+2*marge;i++){
         for(int j=0;j<Ny+2*marge;j++){ 
             for(int k=0;k<Nz+2*marge;k++){
-							Cellule cel = grille[i][j][k];
+							Cellule& cel = grille[i][j][k];
 							if(!cel.vide){
                 cel.S = log(cel.p) - gam*log(cel.rho);
                 cel.ve[0] = (1.-gam)/cel.p*cel.rhoE-(cel.S-gam-1.);
@@ -1097,7 +1096,7 @@ void Grille::corenty(double sigma){
                 cel.fey = -cel.impy*cel.S;
                 cel.fez = -cel.impz*cel.S;
                 cel.Qcj[0] = cel.Qcj[1] = cel.Qcj[2] = cel.Qcj[3] = cel.Qcj[4] = 0.;
-                grille[i][j][k] = cel;
+                //grille[i][j][k] = cel;
 							}
             }
         }
@@ -1111,8 +1110,8 @@ void Grille::corenty(double sigma){
 	for(int i=0;i<Nx+2*marge;i++){
         for(int j=0;j<Ny+2*marge-1;j++){ 
             for(int k=0;k<Nz+2*marge;k++){
-							Cellule c = grille[i][j][k];
-							Cellule ch = grille[i][j+1][k];
+							Cellule& c = grille[i][j][k];
+							Cellule& ch = grille[i][j+1][k];
 							if(!c.vide && !ch.vide){
 									double alpha = 0.;
 									//Calcul de pe
@@ -1168,7 +1167,7 @@ void Grille::corenty(double sigma){
 									for(int l=0;l<5;l++){
 											c.fluxj[l] -= c.Qcj[l]; //modification flux
 									}
-									grille[i][j][k] = c;
+									//grille[i][j][k] = c;
 							}
             }
         }
@@ -1189,7 +1188,7 @@ void Grille::corentz(double sigma){
 	for(int i=0;i<Nx+2*marge;i++){
         for(int j=0;j<Ny+2*marge;j++){ 
             for(int k=0;k<Nz+2*marge;k++){
-							  Cellule cel = grille[i][j][k];
+							  Cellule& cel = grille[i][j][k];
 								if(!cel.vide){
 									cel.S = log(cel.p) - gam*log(cel.rho);
 									cel.ve[0] = (1.-gam)/cel.p*cel.rhoE-(cel.S-gam-1.);
@@ -1201,7 +1200,7 @@ void Grille::corentz(double sigma){
 									cel.fey = -cel.impy*cel.S;
 									cel.fez = -cel.impz*cel.S;
 									cel.Qck[0] = cel.Qck[1] = cel.Qck[2] = cel.Qck[3] = cel.Qck[4] = 0.;
-									grille[i][j][k] = cel;
+									//grille[i][j][k] = cel;
 								}
             }
         }
@@ -1215,8 +1214,8 @@ void Grille::corentz(double sigma){
 	for(int i=0;i<Nx+2*marge;i++){
         for(int j=0;j<Ny+2*marge;j++){ 
             for(int k=0;k<Nz+2*marge-1;k++){
-							  Cellule c = grille[i][j][k];
-							  Cellule ch = grille[i][j][k+1];
+							  Cellule& c = grille[i][j][k];
+							  Cellule& ch = grille[i][j][k+1];
 								if(!c.vide && !ch.vide){
 									double alpha = 0.;
 									//Calcul de pe
@@ -1272,7 +1271,7 @@ void Grille::corentz(double sigma){
 									for(int l=0;l<5;l++){
 											c.fluxk[l] -= c.Qck[l]; //Modification des flux
 									}	
-									grille[i][j][k] = c;
+									//grille[i][j][k] = c;
 								}
             }
         }
@@ -1296,8 +1295,8 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
         for(int j=0; j<Ny+2*marge-1; j++){
             for(int k=0; k<Nz+2*marge-1; k++){
 
-							Cellule c = grille[i][j][k];      //Cellule de reference pour le calcul du flux  
-							Cellule ci = grille[i+1][j][k];   //Cellule en i
+							Cellule& c = grille[i][j][k];      //Cellule de reference pour le calcul du flux  
+							Cellule& ci = grille[i+1][j][k];   //Cellule en i
 							if(!c.vide && !ci.vide){  
                 //Calcul d'indicateurs de l'ordre 
                 for(int l=0;l< c.ordre;l++){ 
@@ -1330,7 +1329,7 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
 								 c.fluxi[3] = 0.; 
 								 c.fluxi[4] = 0.; 
 							 }
-             grille[i][j][k] = c;
+							//grille[i][j][k] = c;
             }
         }
     } 
@@ -1341,8 +1340,8 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
             for(int k=0; k<Nz+2*marge-1; k++){
                 //Definition des deux cellules encadrant le flux en i+1/2 : 
                 //la cellule c a gauche (en i) et la cellule cd a droite (en i+1) 
-                Cellule ci = grille[i+1][j][k]; 
-								Cellule c = grille[i][j][k]; 
+                Cellule& ci = grille[i+1][j][k]; 
+		Cellule& c = grille[i][j][k]; 
 								if(!c.vide && !ci.vide){ 
 										//Calcul des variables de Roe 
 										double roe = sqrt(ci.rho/c.rho); 
@@ -1501,7 +1500,7 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
 														c.psid4r[m] += c.psid4[l]*c.vpr[m][l]; 
 												} 
 										} 
-									grille[i][j][k] = c;
+										//grille[i][j][k] = c;
 								}
             }
         }
@@ -1514,11 +1513,11 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
         for(int i=1;i<Nx+2*marge-1;i++){ 
             for(int j=1;j<Ny+2*marge-1;j++){
                 for(int k=1;k<Nz+2*marge-1;k++){
-									Cellule c = grille[i][j][k]; 
-									Cellule cg = grille[i-1][j][k]; 
+									Cellule& c = grille[i][j][k]; 
+									Cellule& cg = grille[i-1][j][k]; 
 									if(!c.vide && !cg.vide){
                     c.am[l] = c.lambda[l]*c.delw[l]-cg.lambda[l]*cg.delw[l]; 
-                    grille[i][j][k] = c; 
+                    //grille[i][j][k] = c; 
 									}
                 }
             }
@@ -1527,8 +1526,8 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
         for(int i=1;i<Nx+2*marge-2;i++){ 
             for(int j=0;j<Ny+2*marge;j++){
                 for(int k=0;k<Nz+2*marge;k++){   
-									Cellule c = grille[i][j][k]; 
-									Cellule cd = grille[i+1][j][k]; 
+									Cellule& c = grille[i][j][k]; 
+									Cellule& cd = grille[i+1][j][k]; 
 									if(!c.vide && !cd.vide){ 
                     double z1 = 4.*c.am[l]-cd.am[l]; 
                     double z2 = 4.*cd.am[l]-c.am[l]; 
@@ -1536,7 +1535,7 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
                     double z4 = cd.am[l]; 
                     c.am1[l] = (sign(z1)+sign(z2))/2.*abs((sign(z1)+sign(z3))/2.)*(sign(z1)
                                + sign(z4))/2.*min(abs(z1),min(abs(z2),min(abs(z3),abs(z4))));
-                    grille[i][j][k] = c; 
+                    //grille[i][j][k] = c; 
 									}
                 }
             }
@@ -1548,23 +1547,23 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
         for(int i=marge;i<Nx+2*marge-4;i++){ 
             for(int j=marge;j<Ny+2*marge-4;j++){ 
                 for(int k=marge;k<Nz+2*marge-4;k++){
-									Cellule c = grille[i][j][k]; 
-									Cellule cd = grille[i+1][j][k]; 
-									Cellule cg = grille[i-1][j][k]; 
+									Cellule& c = grille[i][j][k]; 
+									Cellule& cd = grille[i+1][j][k]; 
+									Cellule& cg = grille[i-1][j][k]; 
 									if(!c.vide && !cd.vide){ 
                     c.rp[l] = sign(c.delw[l])*sign(cg.delw[l])*(abs(cg.delw[l])+eps)/(abs(c.delw[l])+eps); 
                     c.rm[l] = sign(c.delw[l])*sign(cd.delw[l])*(abs(cd.delw[l])+eps)/(abs(c.delw[l])+eps); 
                     //Corrections d'ordre superieur 
-                    Cellule  cg2 = grille[i-2][j][k]; 
-										Cellule cg3 = grille[i-3][j][k]; 
-										Cellule cg4 = grille[i-4][j][k]; 
-										Cellule cg5 = grille[i-5][j][k]; 
-										Cellule cd2 = grille[i+2][j][k]; 
-										Cellule cd3 = grille[i+3][j][k]; 
-										Cellule cd4 = grille[i+4][j][k]; 
+                    Cellule&  cg2 = grille[i-2][j][k]; 
+										Cellule& cg3 = grille[i-3][j][k]; 
+										Cellule& cg4 = grille[i-4][j][k]; 
+										Cellule& cg5 = grille[i-5][j][k]; 
+										Cellule& cd2 = grille[i+2][j][k]; 
+										Cellule& cd3 = grille[i+3][j][k]; 
+										Cellule& cd4 = grille[i+4][j][k]; 
                     c.psid[l] = -c.psid0[l]+cg.psid0[l]+cd.psid1[l]-cg2.psid1[l]-cd2.psid2[l]+cg3.psid2[l]
                                 + cd3.psid3[l]-cg4.psid3[l]-cd4.psid4[l]+cg5.psid4[l]; 
-                    grille[i][j][k] = c; 
+                    //grille[i][j][k] = c; 
 									}
                 }
             }
@@ -1576,16 +1575,16 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
         for(int j=marge-1;j<Ny+marge;j++){ 
             for(int k=marge-1;k<Nz+marge;k++){ 
                 //Cellule de reference 
-                Cellule  c = grille[i][j][k]; 
+                Cellule&  c = grille[i][j][k]; 
                 //Cellules voisines 
-                Cellule cg = grille[i-1][j][k]; 
-								Cellule cg2 = grille[i-2][j][k]; 
-								Cellule cg3 = grille[i-3][j][k]; 
-								Cellule cg4 = grille[i-4][j][k]; 
-								Cellule cd = grille[i+1][j][k]; 
-								Cellule cd2 = grille[i+2][j][k]; 
-								Cellule cd3 = grille[i+3][j][k]; 
-								Cellule cd4 = grille[i+4][j][k]; 
+                Cellule& cg = grille[i-1][j][k]; 
+								Cellule& cg2 = grille[i-2][j][k]; 
+								Cellule& cg3 = grille[i-3][j][k]; 
+								Cellule& cg4 = grille[i-4][j][k]; 
+								Cellule& cd = grille[i+1][j][k]; 
+								Cellule& cd2 = grille[i+2][j][k]; 
+								Cellule& cd3 = grille[i+3][j][k]; 
+								Cellule& cd4 = grille[i+4][j][k]; 
                 
                 //Flux TVD 
                 double tvd[5]; 
@@ -1639,7 +1638,7 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
                         double dabsf = psimax2*c.delwnu[l]/2.; 
                         double dful = psimax1*c.delwnu[l]/2.; 
                         double dfmd = dabsf/2.-c.am1[l]/2.; 
-                        Cellule camont = grille[i-is][j][k];   //Cellule en amont descentre
+                        Cellule& camont = grille[i-is][j][k];   //Cellule en amont descentre
                         double dflc = dful/2.+((1.-xnume)/xnu)*camont.am1[l]/2.; 
                         double dfmin = max(min(0.,min(dabsf,dfmd)),min(0.,min(dful,dflc))); 
                         double dfmax = min(max(0.,max(dabsf,dfmd)),max(0.,max(dful,dflc))); 
@@ -1666,7 +1665,7 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
                     c.fluxi[l] += tvd[l]; 
                 }
                 
-                grille[i][j][k] = c; 
+                //grille[i][j][k] = c; 
 						}
           }
        }
@@ -1683,8 +1682,8 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
             for(int k=0;k<Nz+2*marge;k++){
                 
                 if(BC_x_in ==  1){
-                    Cellule c = grille[marge-1][j][k];
-                    Cellule cp = grille[marge][j][k];
+                    Cellule& c = grille[marge-1][j][k];
+                    Cellule& cp = grille[marge][j][k];
                     double p0 = (gam-1.)*(cp.rhoE0-1./2.*(cp.impx0*cp.impx0 + cp.impy0*cp.impy0 
                                 + cp.impz0*cp.impz0)/cp.rho0);
                     c.fluxi[0] = 0.;
@@ -1693,11 +1692,11 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
                     c.fluxi[3] = 0.;
                     c.fluxi[4] = 0.;
                     
-                    grille[marge-1][j][k] = c;
+                    //grille[marge-1][j][k] = c;
                 }
                 
                 if(BC_x_out ==  1){
-                    Cellule c2 = grille[Nx+marge-1][j][k];	  
+                    Cellule& c2 = grille[Nx+marge-1][j][k];	  
                     double p02 = (gam-1.)*(c2.rhoE0-1./2.*(c2.impx0*c2.impx0 + c2.impy0*c2.impy0 
                                 + c2.impz0*c2.impz0)/c2.rho0);;
                     c2.fluxi[0] = 0.;
@@ -1706,7 +1705,7 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
                     c2.fluxi[3] = 0.;
                     c2.fluxi[4] = 0.;
                     
-                    grille[Nx+marge-1][j][k] = c2;
+                    //grille[Nx+marge-1][j][k] = c2;
                 }
                 
             }
@@ -1735,15 +1734,15 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
       int i=Nx+marge-1;
       for(int j=0;j<Ny+2*marge;j++){
 	for(int k=0;k<Nz+2*marge;k++){
-	  Cellule c = grille[i][j][k];
+	  Cellule& c = grille[i][j][k];
 	  if(c.y>0.2 || c.y<0.1 || c.z<0.09 || c.x>0.1){
 	  if(c.p<eps || c.rho<eps){
 	    cout << "p ou rho negatifs : p " << c.p << " rho " << c.rho;
 	    getchar();
 	  }
 	  double cr = sqrt(gam*c.p/c.rho);
-	  Cellule cg = grille[i-1][j][k];
-	  Cellule cg2 = grille[i-2][j][k];
+	  Cellule& cg = grille[i-1][j][k];
+	  Cellule& cg2 = grille[i-2][j][k];
 	  double drho = (c.rho-cg2.rho)/dx/2.;
 	  double du = (c.u-cg2.u)/dx/2.;
 	  double dv = (c.v-cg2.v)/dx/2.;
@@ -1807,7 +1806,7 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
 	  c.fluxi[3] = cg.fluxi[3]+(c.w*d0+c.rho*d3);
 	  c.fluxi[4] = cg.fluxi[4]+((c.u*c.u+c.v*c.v+c.w*c.w)/2.*d0+c.rho*c.u*d1+c.rho*c.v*d2+c.rho*c.w*d3+d4/(gam-1.));
 		}
-		grille[i][j][k] = c;
+	  //grille[i][j][k] = c;
 	}
       }
     }
@@ -1816,14 +1815,14 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
       int i=marge-1;
       for(int j=0;j<Ny+2*marge;j++){
 	for(int k=0;k<Nz+2*marge;k++){
-	  Cellule c = grille[i][j][k];
+	  Cellule& c = grille[i][j][k];
 	  if(c.y>0.2 || c.y<0.1 || c.z<0.09 || c.x>0.1){
 	  if(c.p<eps || c.rho<eps){
 	    cout << "p ou rho negatifs : p " << c.p << " rho " << c.rho;
 	    getchar();
 	  }
-	  Cellule cd = grille[i+1][j][k];
-	  Cellule cd2 = grille[i+2][j][k];
+	  Cellule& cd = grille[i+1][j][k];
+	  Cellule& cd2 = grille[i+2][j][k];
 	  double cr = sqrt(gam*cd.p/cd.rho);
 	  double drho = (cd2.rho-c.rho)/dx/2.;
 	  double du = (cd2.u-c.u)/dx/2.;
@@ -1888,7 +1887,7 @@ void Grille::fnumx(const double sigma, double t, double tab[marge][3], bool coup
 	  c.fluxi[3] = cd.fluxi[3]-(cd.w*d0+cd.rho*d3);
 	  c.fluxi[4] = cd.fluxi[4]-((cd.u*cd.u+cd.v*cd.v+cd.w*cd.w)/2.*d0+cd.rho*cd.u*d1+cd.rho*cd.v*d2+cd.rho*cd.w*d3+d4/(gam-1.));
 		}
-	  grille[i][j][k] = c;
+	  //grille[i][j][k] = c;
 	}
       }
     }
@@ -1911,8 +1910,8 @@ void Grille::fnumy(const double sigma, double t){
     for(int i=0; i<Nx+2*marge-1; i++){
         for(int j=0; j<Ny+2*marge-1; j++){ 
             for(int k=0; k<Nz+2*marge-1; k++){
-							Cellule c = grille[i][j][k];      //Cellule de reference pour le calcul du flux  
-							Cellule cj = grille[i][j+1][k];   //Cellule en j
+							Cellule& c = grille[i][j][k];      //Cellule de reference pour le calcul du flux  
+							Cellule& cj = grille[i][j+1][k];   //Cellule en j
                 //Calcul d'indicateurs de l'ordre
                 if(!c.vide && !cj.vide){
 									for(int l=0;l< c.ordre;l++){ 
@@ -1946,7 +1945,7 @@ void Grille::fnumy(const double sigma, double t){
 									c.fluxj[3] = 0.;
 									c.fluxj[4] = 0.;
 								}
-								grille[i][j][k] = c;
+		//grille[i][j][k] = c;
             }
         }
     } 
@@ -1957,8 +1956,8 @@ void Grille::fnumy(const double sigma, double t){
         for(int j=0; j<Ny+2*marge-1; j++){
             for(int k=0; k<Nz+2*marge-1; k++){
                 //Definition des deux cellules encadrant le flux en i+1/2 : la cellule c a gauche (en i) et la cellule cd a droite (en i+1) 
-                Cellule cj = grille[i][j+1][k]; 
-								Cellule c = grille[i][j][k]; 
+                Cellule& cj = grille[i][j+1][k]; 
+								Cellule& c = grille[i][j][k]; 
 								if(!c.vide && !cj.vide){ 
 									//Calcul des variables de Roe 
 									double roe = sqrt(cj.rho/c.rho); 
@@ -2118,7 +2117,7 @@ void Grille::fnumy(const double sigma, double t){
 													c.psid4r[m] += c.psid4[l]*c.vpr[m][l]; 
 											} 
 									} 
-									grille[i][j][k] = c; 
+									//grille[i][j][k] = c; 
 								}
             }
         }
@@ -2130,11 +2129,11 @@ void Grille::fnumy(const double sigma, double t){
         for(int i=1;i<Nx+2*marge-1;i++){
             for(int j=1;j<Ny+2*marge-1;j++){ 
                 for(int k=1;k<Nz+2*marge-1;k++){
-									Cellule c = grille[i][j][k]; 
-									Cellule cg = grille[i][j-1][k]; 
+									Cellule& c = grille[i][j][k]; 
+									Cellule& cg = grille[i][j-1][k]; 
 									if(!c.vide && !cg.vide){
                     c.am[l] = c.lambda[l]*c.delw[l]-cg.lambda[l]*cg.delw[l]; 
-                    grille[i][j][k] = c; 
+                    //grille[i][j][k] = c; 
 									}
                 }
             }
@@ -2143,8 +2142,8 @@ void Grille::fnumy(const double sigma, double t){
         for(int i=0;i<Nx+2*marge;i++){
             for(int j=1;j<Ny+2*marge-2;j++){ 
                 for(int k=0;k<Nz+2*marge;k++){   
-									Cellule c = grille[i][j][k]; 
-									Cellule  cd = grille[i][j+1][k]; 
+									Cellule& c = grille[i][j][k]; 
+									Cellule&  cd = grille[i][j+1][k]; 
 									if(!c.vide && !cd.vide){
                     double z1 = 4.*c.am[l]-cd.am[l]; 
                     double z2 = 4.*cd.am[l]-c.am[l]; 
@@ -2152,7 +2151,7 @@ void Grille::fnumy(const double sigma, double t){
                     double z4 = cd.am[l]; 
                     c.am1[l] = (sign(z1)+sign(z2))/2.*abs((sign(z1)+sign(z3))/2.)*(sign(z1)
                                + sign(z4))/2.*min(abs(z1),min(abs(z2),min(abs(z3),abs(z4))));
-                    grille[i][j][k] = c; 
+                    //grille[i][j][k] = c; 
 									}
                 }
             }
@@ -2163,23 +2162,23 @@ void Grille::fnumy(const double sigma, double t){
         for(int i=marge;i<Nx+2*marge-4;i++){ 
             for(int j=marge;j<Ny+2*marge-4;j++){ 
                 for(int k=marge;k<Nz+2*marge-4;k++){
-									Cellule c = grille[i][j][k]; 
-									Cellule cd = grille[i][j+1][k]; 
-									Cellule cg = grille[i][j-1][k]; 
+									Cellule& c = grille[i][j][k]; 
+									Cellule& cd = grille[i][j+1][k]; 
+									Cellule& cg = grille[i][j-1][k]; 
 									if(!c.vide && !cd.vide){ 
                     c.rp[l] = sign(c.delw[l])*sign(cg.delw[l])*(abs(cg.delw[l])+eps)/(abs(c.delw[l])+eps); 
                     c.rm[l] = sign(c.delw[l])*sign(cd.delw[l])*(abs(cd.delw[l])+eps)/(abs(c.delw[l])+eps); 
                     //Corrections d'ordre superieur 
-                    Cellule  cg2 = grille[i][j-2][k]; 
-										Cellule cg3 = grille[i][j-3][k]; 
-										Cellule cg4 = grille[i][j-4][k]; 
-										Cellule cg5 = grille[i][j-5][k]; 
-										Cellule cd2 = grille[i][j+2][k]; 
-										Cellule cd3 = grille[i][j+3][k]; 
-										Cellule cd4 = grille[i][j+4][k]; 
+                    Cellule&  cg2 = grille[i][j-2][k]; 
+		    Cellule& cg3 = grille[i][j-3][k]; 
+										Cellule& cg4 = grille[i][j-4][k]; 
+										Cellule& cg5 = grille[i][j-5][k]; 
+										Cellule& cd2 = grille[i][j+2][k]; 
+										Cellule& cd3 = grille[i][j+3][k]; 
+										Cellule& cd4 = grille[i][j+4][k]; 
                     c.psid[l] = - c.psid0[l]+cg.psid0[l]+cd.psid1[l]-cg2.psid1[l]-cd2.psid2[l]
                     + cg3.psid2[l]+cd3.psid3[l]-cg4.psid3[l]-cd4.psid4[l]+cg5.psid4[l];
-                    grille[i][j][k] = c;
+                    //grille[i][j][k] = c;
 									}
                 }
             }
@@ -2191,16 +2190,16 @@ void Grille::fnumy(const double sigma, double t){
         for(int j=marge-1;j<Ny+marge;j++){ 
             for(int k=marge-1;k<Nz+marge;k++){ 
                 //Cellule de reference 
-                Cellule   c = grille[i][j][k]; 
+                Cellule&   c = grille[i][j][k]; 
                 //Cellules voisines 
-                Cellule  cg = grille[i][j-1][k]; 
-								Cellule cg2 = grille[i][j-2][k]; 
-								Cellule cg3 = grille[i][j-3][k]; 
-								Cellule cg4 = grille[i][j-4][k]; 
-								Cellule cd = grille[i][j+1][k]; 
-								Cellule cd2 = grille[i][j+2][k]; 
-								Cellule cd3 = grille[i][j+3][k]; 
-								Cellule cd4 = grille[i][j+4][k]; 
+                Cellule&  cg = grille[i][j-1][k]; 
+								Cellule& cg2 = grille[i][j-2][k]; 
+								Cellule& cg3 = grille[i][j-3][k]; 
+								Cellule& cg4 = grille[i][j-4][k]; 
+								Cellule& cd = grille[i][j+1][k]; 
+								Cellule& cd2 = grille[i][j+2][k]; 
+								Cellule& cd3 = grille[i][j+3][k]; 
+								Cellule& cd4 = grille[i][j+4][k]; 
                 
                 //Flux TVD 
                 double tvd[5]; 
@@ -2256,7 +2255,7 @@ void Grille::fnumy(const double sigma, double t){
 													double dful = psimax1*c.delwnu[l]/2.; 
 													double dfmd = dabsf/2.-c.am1[l]/2.; 
 													//Cellule camont = grille[i-is][j][k];   //Cellule en amont ddescentre
-													Cellule camont = grille[i][j-is][k];   //Cellule en amont ddescentre
+													Cellule& camont = grille[i][j-is][k];   //Cellule en amont ddescentre
 													double dflc = dful/2.+((1.-xnume)/xnu)*camont.am1[l]/2.; 
 													double dfmin = max(min(0.,min(dabsf,dfmd)),min(0.,min(dful,dflc))); 
 													double dfmax = min(max(0.,max(dabsf,dfmd)),max(0.,max(dful,dflc))); 
@@ -2283,7 +2282,7 @@ void Grille::fnumy(const double sigma, double t){
 											c.fluxj[l] += tvd[l]; 
 									}
 									
-									grille[i][j][k] = c; 
+									//grille[i][j][k] = c; 
 						}
         }
       }
@@ -2298,8 +2297,8 @@ void Grille::fnumy(const double sigma, double t){
             for(int k=0;k<Nz+2*marge;k++){
                 
                 if(BC_y_in ==  1){
-                    Cellule c = grille[i][marge-1][k];
-                    Cellule cp = grille[i][marge][k];
+                    Cellule& c = grille[i][marge-1][k];
+                    Cellule& cp = grille[i][marge][k];
                     double p0 = (gam-1.)*(cp.rhoE0 - 1./2.*(cp.impx0*cp.impx0 + cp.impy0*cp.impy0 
                                 + cp.impz0*cp.impz0)/cp.rho0);
                     // double p = c.p;
@@ -2309,11 +2308,11 @@ void Grille::fnumy(const double sigma, double t){
                     c.fluxj[3] = 0.;
                     c.fluxj[4] = 0.;
                     
-                    grille[i][marge-1][k] = c;
+                    //grille[i][marge-1][k] = c;
                 }
                 
                 if(BC_y_out ==  1){
-                    Cellule c2 = grille[i][Ny+marge-1][k];
+                    Cellule& c2 = grille[i][Ny+marge-1][k];
                     //Cellule cp = grille[Nx+marge-1][j];
                     double p02 = (gam-1.)*(c2.rhoE0-1./2.*(c2.impx0*c2.impx0 + c2.impy0*c2.impy0 
                                  + c2.impz0*c2.impz0)/c2.rho0);
@@ -2324,7 +2323,7 @@ void Grille::fnumy(const double sigma, double t){
                     c2.fluxj[3] = 0.;
                     c2.fluxj[4] = 0.;
                     
-                    grille[i][Ny+marge-1][k] = c2;
+                    //grille[i][Ny+marge-1][k] = c2;
                 }
                 
             }
@@ -2351,14 +2350,14 @@ void Grille::fnumy(const double sigma, double t){
       int j=Ny+marge-1;
       for(int k=0;k<Nz+2*marge;k++){
 	for(int i=0;i<Nx+2*marge;i++){
-	  Cellule c = grille[i][j][k];
+	  Cellule& c = grille[i][j][k];
 	  if(c.p<eps || c.rho<eps){
 	    cout << "p ou rho negatifs : p " << c.p << " rho " << c.rho;
 	    getchar();
 	  }
 	  double cr = sqrt(gam*c.p/c.rho);
-	  Cellule cg = grille[i][j-1][k];
-	  Cellule cg2 = grille[i][j-2][k];
+	  Cellule& cg = grille[i][j-1][k];
+	  Cellule& cg2 = grille[i][j-2][k];
 	  double drho = (c.rho-cg2.rho)/dy/2.;
 	  double du = (c.u-cg2.u)/dy/2.;
 	  double dv = (c.v-cg2.v)/dy/2.;
@@ -2421,7 +2420,7 @@ void Grille::fnumy(const double sigma, double t){
 	  c.fluxj[3] = cg.fluxj[3]+(c.w*d0+c.rho*d2);
 	  c.fluxj[1] = cg.fluxj[1]+(c.u*d0+c.rho*d3);
 	  c.fluxj[4] = cg.fluxj[4]+((c.u*c.u+c.v*c.v+c.w*c.w)/2.*d0+c.rho*c.v*d1+c.rho*c.w*d2+c.rho*c.u*d3+d4/(gam-1.));
-	  grille[i][j][k] = c;
+	  //grille[i][j][k] = c;
 	}
       }
     }
@@ -2430,13 +2429,13 @@ void Grille::fnumy(const double sigma, double t){
       int j=marge-1;
       for(int k=0;k<Nz+2*marge;k++){
 	for(int i=0;i<Nx+2*marge;i++){
-	  Cellule c = grille[i][j][k];
+	  Cellule& c = grille[i][j][k];
 	  if(c.p<eps || c.rho<eps){
 	    cout << "p ou rho negatifs : p " << c.p << " rho " << c.rho;
 	    getchar();
 	  }
-	  Cellule cd = grille[i][j+1][k];
-	  Cellule cd2 = grille[i][j+2][k];
+	  Cellule& cd = grille[i][j+1][k];
+	  Cellule& cd2 = grille[i][j+2][k];
 	  double cr = sqrt(gam*cd.p/cd.rho);
 	  double drho = (cd2.rho-c.rho)/dy/2.;
 	  double du = (cd2.u-c.u)/dy/2.;
@@ -2500,7 +2499,7 @@ void Grille::fnumy(const double sigma, double t){
 	  c.fluxj[3] = cd.fluxj[3]-(cd.w*d0+cd.rho*d2);
 	  c.fluxj[1] = cd.fluxj[1]-(cd.u*d0+cd.rho*d3);
 	  c.fluxj[4] = cd.fluxj[4]-((cd.u*cd.u+cd.v*cd.v+cd.w*cd.w)/2.*d0+cd.rho*cd.v*d1+cd.rho*cd.w*d2+cd.rho*cd.u*d3+d4/(gam-1.));
-	  grille[i][j][k] = c;
+	  //grille[i][j][k] = c;
 	}
       }
     }
@@ -2522,8 +2521,8 @@ void Grille::fnumz(const double sigma, double t){
     for(int i=0; i<Nx+2*marge-1; i++){
         for(int j=0; j<Ny+2*marge-1; j++){
             for(int k=0; k<Nz+2*marge-1; k++){ 
-							Cellule  c = grille[i][j][k];      //Cellule de reference pour le calcul du flux  
-							Cellule  ck = grille[i][j][k+1];   //Cellule en k
+							Cellule&  c = grille[i][j][k];      //Cellule de reference pour le calcul du flux  
+							Cellule&  ck = grille[i][j][k+1];   //Cellule en k
 
 							if(!c.vide && !ck.vide){
                 //Calcul d'indicateurs de l'ordre 
@@ -2557,7 +2556,7 @@ void Grille::fnumz(const double sigma, double t){
 									c.fluxk[3] = 0.; 
 									c.fluxk[4] = 0.; 
 								}
-                grille[i][j][k] = c;
+							//grille[i][j][k] = c;
             }
         }
     } 
@@ -2568,8 +2567,8 @@ void Grille::fnumz(const double sigma, double t){
         for(int j=0; j<Ny+2*marge-1; j++){
             for(int k=0; k<Nz+2*marge-1; k++){
                 //Definition des deux cellules encadrant le flux en i+1/2 : la cellule c a gauche (en i) et la cellule cd a droite (en i+1) 
-                Cellule ck = grille[i][j][k+1]; 
-								Cellule c = grille[i][j][k]; 
+                Cellule& ck = grille[i][j][k+1]; 
+								Cellule& c = grille[i][j][k]; 
 								if(!c.vide && !ck.vide){ 
 									//Calcul des variables de Roe 
 									double roe = sqrt(ck.rho/c.rho); 
@@ -2728,7 +2727,7 @@ void Grille::fnumz(const double sigma, double t){
 													c.psid4r[m] += c.psid4[l]*c.vpr[m][l]; 
 											} 
 									} 
-									grille[i][j][k] = c; 
+									//grille[i][j][k] = c; 
 								}
             }
         }
@@ -2741,11 +2740,11 @@ void Grille::fnumz(const double sigma, double t){
         for(int i=1;i<Nx+2*marge-1;i++){
             for(int j=1;j<Ny+2*marge-1;j++){
                 for(int k=1;k<Nz+2*marge-1;k++){ 
-									Cellule c = grille[i][j][k]; 
-									Cellule cg = grille[i][j][k-1]; 
+									Cellule& c = grille[i][j][k]; 
+									Cellule& cg = grille[i][j][k-1]; 
 									if(!c.vide && !cg.vide){
                     c.am[l] = c.lambda[l]*c.delw[l]-cg.lambda[l]*cg.delw[l]; 
-                    grille[i][j][k] = c; 
+                    //grille[i][j][k] = c; 
 									}
                 }
             }
@@ -2754,8 +2753,8 @@ void Grille::fnumz(const double sigma, double t){
         for(int i=0;i<Nx+2*marge;i++){
             for(int j=0;j<Ny+2*marge;j++){   
                 for(int k=1;k<Nz+2*marge-2;k++){ 
-									Cellule c = grille[i][j][k]; 
-									Cellule cd = grille[i][j][k+1]; 
+									Cellule& c = grille[i][j][k]; 
+									Cellule& cd = grille[i][j][k+1]; 
 									if(!c.vide && !cd.vide){
                     double z1 = 4.*c.am[l]-cd.am[l]; 
                     double z2 = 4.*cd.am[l]-c.am[l]; 
@@ -2763,7 +2762,7 @@ void Grille::fnumz(const double sigma, double t){
                     double z4 = cd.am[l]; 
                     c.am1[l] = (sign(z1)+sign(z2))/2.*abs((sign(z1)+sign(z3))/2.)*(sign(z1)
                                + sign(z4))/2.*min(abs(z1),min(abs(z2),min(abs(z3),abs(z4)))); 
-                    grille[i][j][k] = c; 
+                    //grille[i][j][k] = c; 
 									}
                 }
             }
@@ -2775,23 +2774,23 @@ void Grille::fnumz(const double sigma, double t){
         for(int i=marge;i<Nx+2*marge-4;i++){ 
             for(int j=marge;j<Ny+2*marge-4;j++){
                 for(int k=marge;k<Nz+2*marge-4;k++){ 
-									Cellule c = grille[i][j][k]; 
-									Cellule cd = grille[i][j][k+1]; 
-									Cellule  cg = grille[i][j][k-1];
+									Cellule& c = grille[i][j][k]; 
+									Cellule& cd = grille[i][j][k+1]; 
+									Cellule&  cg = grille[i][j][k-1];
 									if(!c.vide && !cd.vide){ 
                     c.rp[l] = sign(c.delw[l])*sign(cg.delw[l])*(abs(cg.delw[l])+eps)/(abs(c.delw[l])+eps); 
                     c.rm[l] = sign(c.delw[l])*sign(cd.delw[l])*(abs(cd.delw[l])+eps)/(abs(c.delw[l])+eps); 
                     //Corrections d'ordre superieur 
-                    Cellule cg2 = grille[i][j][k-2]; 
-										Cellule cg3 = grille[i][j][k-3]; 
-										Cellule cg4 = grille[i][j][k-4]; 
-										Cellule cg5 = grille[i][j][k-5]; 
-										Cellule cd2 = grille[i][j][k+2]; 
-										Cellule cd3 = grille[i][j][k+3]; 
-										Cellule cd4 = grille[i][j][k+4]; 
+                    Cellule& cg2 = grille[i][j][k-2]; 
+										Cellule& cg3 = grille[i][j][k-3]; 
+										Cellule& cg4 = grille[i][j][k-4]; 
+										Cellule& cg5 = grille[i][j][k-5]; 
+										Cellule& cd2 = grille[i][j][k+2]; 
+										Cellule& cd3 = grille[i][j][k+3]; 
+										Cellule& cd4 = grille[i][j][k+4]; 
                     c.psid[l] = -c.psid0[l]+cg.psid0[l]+cd.psid1[l]-cg2.psid1[l]-cd2.psid2[l]
                     + cg3.psid2[l]+cd3.psid3[l]-cg4.psid3[l]-cd4.psid4[l]+cg5.psid4[l]; 
-                    grille[i][j][k] = c; 
+                    //grille[i][j][k] = c; 
 									}
                 }
             }
@@ -2803,16 +2802,16 @@ void Grille::fnumz(const double sigma, double t){
         for(int j=marge-1;j<Ny+marge;j++){ 
             for(int k=marge-1;k<Nz+marge;k++){ 
                 //Cellule de reference 
-                Cellule c = grille[i][j][k]; 
+                Cellule& c = grille[i][j][k]; 
                 //Cellules voisines 
-                Cellule cg = grille[i][j][k-1]; 
-								Cellule cg2 = grille[i][j][k-2]; 
-								Cellule cg3 = grille[i][j][k-3]; 
-								Cellule cg4 = grille[i][j][k-4]; 
-								Cellule cd = grille[i][j][k+1]; 
-								Cellule cd2 = grille[i][j][k+2]; 
-								Cellule cd3 = grille[i][j][k+3]; 
-								Cellule cd4 = grille[i][j][k+4]; 
+                Cellule& cg = grille[i][j][k-1]; 
+								Cellule& cg2 = grille[i][j][k-2]; 
+								Cellule& cg3 = grille[i][j][k-3]; 
+								Cellule& cg4 = grille[i][j][k-4]; 
+								Cellule& cd = grille[i][j][k+1]; 
+								Cellule& cd2 = grille[i][j][k+2]; 
+								Cellule& cd3 = grille[i][j][k+3]; 
+								Cellule& cd4 = grille[i][j][k+4]; 
 						if(!c.vide && !cd.vide){   
 									//Flux TVD 
 									double tvd[5]; 
@@ -2868,7 +2867,7 @@ void Grille::fnumz(const double sigma, double t){
 													double dful = psimax1*c.delwnu[l]/2.; 
 													double dfmd = dabsf/2.-c.am1[l]/2.; 
 													//Cellule camont = grille[i-is][j][k];   //Cellule en amont ddescentre
-													Cellule camont = grille[i][j][k-is];   //Cellule en amont ddescentre
+													Cellule& camont = grille[i][j][k-is];   //Cellule en amont ddescentre
 													double dflc = dful/2.+((1.-xnume)/xnu)*camont.am1[l]/2.; 
 													double dfmin = max(min(0.,min(dabsf,dfmd)),min(0.,min(dful,dflc))); 
 													double dfmax = min(max(0.,max(dabsf,dfmd)),max(0.,max(dful,dflc))); 
@@ -2895,7 +2894,7 @@ void Grille::fnumz(const double sigma, double t){
 											c.fluxk[l] += tvd[l]; 
 									}
 									
-									grille[i][j][k] = c; 
+									//grille[i][j][k] = c; 
 							}
           }
        }
@@ -2910,8 +2909,8 @@ void Grille::fnumz(const double sigma, double t){
             for(int j=0;j<Ny+2*marge;j++){
                 
                 if(BC_z_in ==  1){
-                    Cellule c = grille[i][j][marge-1];
-                    Cellule cp = grille[i][j][marge];
+                    Cellule& c = grille[i][j][marge-1];
+                    Cellule& cp = grille[i][j][marge];
                     double p0 = (gam-1.)*(cp.rhoE0 - 1./2.*(cp.impx0*cp.impx0 + cp.impy0*cp.impy0 
                                 + cp.impz0*cp.impz0)/cp.rho0);
                     //double p = c.p;
@@ -2921,11 +2920,11 @@ void Grille::fnumz(const double sigma, double t){
                     c.fluxk[3] = p0;
                     c.fluxk[4] = 0.;
                     
-                    grille[i][j][marge-1] = c;
+                    //grille[i][j][marge-1] = c;
                 }
                 
                 if(BC_z_out ==  1){
-                    Cellule c2 = grille[i][j][Nz+marge-1]; 
+                    Cellule& c2 = grille[i][j][Nz+marge-1]; 
                     //Cellule cp = grille[Nx+marge-1][j];
                     double p02 = (gam-1.)*(c2.rhoE0-1./2.*(c2.impx0*c2.impx0 + c2.impy0*c2.impy0 
                                 + c2.impz0*c2.impz0)/c2.rho0);
@@ -2936,7 +2935,7 @@ void Grille::fnumz(const double sigma, double t){
                     c2.fluxk[3] = p02;
                     c2.fluxk[4] = 0.;
                     
-                    grille[i][j][Nz+marge-1] = c2;
+                    //grille[i][j][Nz+marge-1] = c2;
                 }
                 
             } 
@@ -2965,14 +2964,14 @@ void Grille::fnumz(const double sigma, double t){
       int k=Nz+marge-1;
       for(int i=0;i<Nx+2*marge;i++){
 	for(int j=0;j<Ny+2*marge;j++){
-	  Cellule c = grille[i][j][k];
+	  Cellule& c = grille[i][j][k];
 	  if(c.p<eps || c.rho<eps){
 	    cout << "p ou rho negatifs : p " << c.p << " rho " << c.rho;
 	    getchar();
 	  }
 	  double cr = sqrt(gam*c.p/c.rho);
-	  Cellule cg = grille[i][j][k-1];
-	  Cellule cg2 = grille[i][j][k-2];
+	  Cellule& cg = grille[i][j][k-1];
+	  Cellule& cg2 = grille[i][j][k-2];
 	  double drho = (c.rho-cg2.rho)/dz/2.;
 	  double du = (c.u-cg2.u)/dz/2.;
 	  double dv = (c.v-cg2.v)/dz/2.;
@@ -3035,7 +3034,7 @@ void Grille::fnumz(const double sigma, double t){
 	  c.fluxk[1] = cg.fluxk[1]+(c.u*d0+c.rho*d2);
 	  c.fluxk[2] = cg.fluxk[2]+(c.v*d0+c.rho*d3);
 	  c.fluxk[4] = cg.fluxk[4]+((c.u*c.u+c.v*c.v+c.w*c.w)/2.*d0+c.rho*c.w*d1+c.rho*c.u*d2+c.rho*c.v*d3+d4/(gam-1.));
-	  grille[i][j][k] = c;
+	  //grille[i][j][k] = c;
 	}
       }
     }
@@ -3044,13 +3043,13 @@ void Grille::fnumz(const double sigma, double t){
       int k=marge-1;
       for(int i=0;i<Nx+2*marge;i++){
 	for(int j=0;j<Ny+2*marge;j++){
-	  Cellule c = grille[i][j][k];
+	  Cellule& c = grille[i][j][k];
 	  if(c.p<eps || c.rho<eps){
 	    cout << "p ou rho negatifs : p " << c.p << " rho " << c.rho;
 	    getchar();
 	  }
-	  Cellule cd = grille[i][j][k+1];
-	  Cellule cd2 = grille[i][j][k+2];
+	  Cellule& cd = grille[i][j][k+1];
+	  Cellule& cd2 = grille[i][j][k+2];
 	  double cr = sqrt(gam*cd.p/cd.rho);
 	  double drho = (cd2.rho-c.rho)/dz/2.;
 	  double du = (cd2.u-c.u)/dz/2.;
@@ -3114,7 +3113,7 @@ void Grille::fnumz(const double sigma, double t){
 	  c.fluxk[2] = cd.fluxk[2]-(cd.u*d0+cd.rho*d2);
 	  c.fluxk[3] = cd.fluxk[3]-(cd.v*d0+cd.rho*d3);
 	  c.fluxk[4] = cd.fluxk[4]-((cd.u*cd.u+cd.v*cd.v+cd.w*cd.w)/2.*d0+cd.rho*cd.w*d1+cd.rho*cd.u*d2+cd.rho*cd.v*d3+d4/(gam-1.));
-	  grille[i][j][k] = c;
+	  //grille[i][j][k] = c;
 	}
       }
     }
@@ -3135,7 +3134,7 @@ void Grille::BC_couplage(double tab[marge][3], bool couplage1d){
     for(int i=0;i<marge;i++){
       for(int j=0;j<Ny+2*marge;j++){
 	for(int k=0;k<Nz+2*marge;k++){
-	  Cellule c = grille[i][j][k];
+	  Cellule& c = grille[i][j][k];
 	  if(c.y<0.2 && c.y>0.1 && c.z>0.083){
 	    c.rho = tab[i][0];	
 	    c.impx = tab[i][1];
@@ -3148,7 +3147,7 @@ void Grille::BC_couplage(double tab[marge][3], bool couplage1d){
 	    c.v = 0.;
 	    c.w = 0.;
 	  }
-	  grille[i][j][k] = c;
+	  //grille[i][j][k] = c;
 	}
       }
     }
@@ -3162,7 +3161,7 @@ void Grille::BC_couplage_1d(vector< vector < double> > &tab_1d){
 		double count=0.;
 		for(int j=marge;j<Ny+marge;j++){
 			for(int k=marge;k<Nz+marge;k++){
-				Cellule c = grille[i+marge][j][k];
+				Cellule& c = grille[i+marge][j][k];
 				if(c.y<0.2 && c.y>0.1 && c.z>0.083){
 				  rho_moy += (1.-c.alpha)*c.rho;
 				  impx_moy += (1.-c.alpha)*c.impx;
@@ -3183,9 +3182,9 @@ void Grille::BC(){
     for(int i=0;i<marge;i++){
         for(int j=0;j<Ny+2*marge;j++){
             for(int k=0;k<Nz+2*marge;k++){
-							Cellule c = grille[i][j][k];
-							Cellule  cm = grille[2*marge-i-1][j][k];   //Cellule miroir
-							Cellule cp = grille[Nx+i][j][k];          //Cellule periodique
+							Cellule& c = grille[i][j][k];
+							Cellule&  cm = grille[2*marge-i-1][j][k];   //Cellule miroir
+							Cellule& cp = grille[Nx+i][j][k];          //Cellule periodique
                 // cb = grille[marge][j][k];         //Cellule du bord
                 
                 if(BC_x_in ==  1){
@@ -3227,7 +3226,7 @@ void Grille::BC(){
                     c.rhoE= cp.rhoE;
 										c.vide = cp.vide;
                 }
-                grille[i][j][k] = c;
+                //grille[i][j][k] = c;
             }
         }
     }
@@ -3237,9 +3236,9 @@ void Grille::BC(){
     for(int i=Nx+marge;i<Nx+2*marge;i++){
         for(int j=0;j<Ny+2*marge;j++){
             for(int k=0;k<Nz+2*marge;k++){
-							Cellule  c = grille[i][j][k];
-							Cellule  cm = grille[2*Nx+2*marge-i-1][j][k];  //Cellule miroir
-							Cellule  cp = grille[i-Nx][j][k];              //Cellule periodique
+							Cellule&  c = grille[i][j][k];
+							Cellule&  cm = grille[2*Nx+2*marge-i-1][j][k];  //Cellule miroir
+							Cellule&  cp = grille[i-Nx][j][k];              //Cellule periodique
                 //cb = grille[Nx+marge-1][j][k];        //Cellule du bord
                 
                 if(BC_x_out == 1){
@@ -3281,7 +3280,7 @@ void Grille::BC(){
                     c.rhoE= cp.rhoE;
 										c.vide = cp.vide;
                 }
-                grille[i][j][k] = c; 
+                //grille[i][j][k] = c; 
             }
         }
     }
@@ -3294,9 +3293,9 @@ void Grille::BC(){
         for(int j=0;j<marge;j++){
             for(int k=0;k<Nz+2*marge;k++){
                 
-							Cellule c = grille[i][j][k];
-							Cellule cm = grille[i][2*marge-j-1][k];             //Cellule miroir
-							Cellule cp = grille[i][Ny+j][k];                   //Cellule periodique
+							Cellule& c = grille[i][j][k];
+							Cellule& cm = grille[i][2*marge-j-1][k];             //Cellule miroir
+							Cellule& cp = grille[i][Ny+j][k];                   //Cellule periodique
                 //cb = grille[i][marge][k];               //Cellule sur le bord
                 
                 if(BC_y_in == 1){
@@ -3338,7 +3337,7 @@ void Grille::BC(){
                     c.rhoE= cp.rhoE;
 										c.vide = cp.vide;
                 }
-                grille[i][j][k] = c;
+                //grille[i][j][k] = c;
             }
         }
     }
@@ -3350,9 +3349,9 @@ void Grille::BC(){
     for(int i=0;i<Nx+2*marge;i++){
         for(int j=Ny+marge;j<Ny+2*marge;j++){
             for(int k=0;k<Nz+2*marge;k++){
-							Cellule  c = grille[i][j][k];
-							Cellule  cm = grille[i][2*Ny+2*marge-j-1][k];      //Cellule miroir
-							Cellule  cp = grille[i][j-Ny][k];                  //Cellule periodique
+							Cellule&  c = grille[i][j][k];
+							Cellule&  cm = grille[i][2*Ny+2*marge-j-1][k];      //Cellule miroir
+							Cellule&  cp = grille[i][j-Ny][k];                  //Cellule periodique
                 // cb = grille[i][Ny+marge-1][k];        //Cellule sur le bord
                 
                 if(BC_y_out == 1){
@@ -3395,7 +3394,7 @@ void Grille::BC(){
 										c.vide = cp.vide;
                 }
                 
-                grille[i][j][k] = c;
+                //grille[i][j][k] = c;
             }
         }
     }
@@ -3405,9 +3404,9 @@ void Grille::BC(){
     for(int i=0;i<Nx+2*marge;i++){
         for(int j=0;j<Ny+2*marge;j++){
             for(int k=0;k<marge;k++){
-							Cellule  c = grille[i][j][k];
-							Cellule  cm = grille[i][j][2*marge-k-1];             //Cellule miroir
-                Cellule  cp = grille[i][j][Nz+k];                   //Cellule periodique
+							Cellule&  c = grille[i][j][k];
+							Cellule&  cm = grille[i][j][2*marge-k-1];             //Cellule miroir
+                Cellule&  cp = grille[i][j][Nz+k];                   //Cellule periodique
                 //cb = grille[i][j][marge];               //Cellule sur le bord
                 
                 if(BC_z_in == 1){
@@ -3449,7 +3448,7 @@ void Grille::BC(){
                     c.rhoE= cp.rhoE;
 										c.vide = cp.vide;
                 }
-                grille[i][j][k] = c;
+                //grille[i][j][k] = c;
             }
         }
     }
@@ -3461,9 +3460,9 @@ void Grille::BC(){
     for(int i=0;i<Nx+2*marge;i++){
         for(int j=0;j<Ny+2*marge;j++){
             for(int k=Nz+marge;k<Nz+2*marge;k++){
-							Cellule  c = grille[i][j][k];
-							Cellule  cm = grille[i][j][2*Nz+2*marge-k-1];      //Cellule miroir
-							Cellule cp = grille[i][j][k-Nz];                  //Cellule periodique
+							Cellule&  c = grille[i][j][k];
+							Cellule&  cm = grille[i][j][2*Nz+2*marge-k-1];      //Cellule miroir
+							Cellule& cp = grille[i][j][k-Nz];                  //Cellule periodique
                 // cb = grille[i][j][Nz+marge-1];        //Cellule sur le bord
                 
                 if(BC_z_out == 1){
@@ -3506,7 +3505,7 @@ void Grille::BC(){
 										c.vide = cp.vide;
                 }
                 
-                grille[i][j][k] = c;
+                //grille[i][j][k] = c;
             }
         }
     }
@@ -3516,8 +3515,8 @@ void Grille::BC(){
 		for(int i=0;i<Nx+2*marge;i++){
 			for(int j=0;j<Ny+2*marge;j++){
 				for(int k=0;k<marge;k++){
-					Cellule  c = grille[i][j][k];
-					Cellule  cm = grille[i][j][marge]; 
+					Cellule&  c = grille[i][j][k];
+					Cellule&  cm = grille[i][j][marge]; 
 					
 						c.rho = cm.rho;
 						c.u = cm.u;
@@ -3531,7 +3530,7 @@ void Grille::BC(){
 						c.vide = cm.vide;
 
 
-					grille[i][j][k] = c;
+						//grille[i][j][k] = c;
 				}
 			}
 		}
@@ -3542,8 +3541,8 @@ void Grille::BC(){
 		for(int i=0;i<Nx+2*marge;i++){
 			for(int j=0;j<Ny+2*marge;j++){
 				for(int k=Nz+marge;k<Nz+2*marge;k++){
-					Cellule  c = grille[i][j][k];
-					Cellule  cm = grille[i][j][marge];      //Cellule miroir
+					Cellule&  c = grille[i][j][k];
+					Cellule&  cm = grille[i][j][marge];      //Cellule miroir
 
 						c.rho = cm.rho;
 						c.u = cm.u;
@@ -3556,7 +3555,7 @@ void Grille::BC(){
 						c.rhoE= cm.rhoE;
 						c.vide = cm.vide;
 
-					grille[i][j][k] = c;
+						//grille[i][j][k] = c;
 				}
 			}
 		}
@@ -3645,7 +3644,7 @@ void Grille::Impression(int n){
 	for(int i=marge; i<Nx+marge; i++){
         for(int j=marge; j<Ny+marge; j++){ 
             for(int k=marge; k<Nz+marge; k++){
-			  Cellule c = grille[i][j][k]; 
+			  Cellule& c = grille[i][j][k]; 
 			  if(abs(c.alpha-1.)>eps){
                 Nfluides++;
 			  }
@@ -3658,7 +3657,7 @@ void Grille::Impression(int n){
     for(int i=marge; i<Nx+marge; i++){
         for(int j=marge; j<Ny+marge; j++){ 
             for(int k=marge; k<Nz+marge; k++){
-			  Cellule c = grille[i][j][k]; 
+			  Cellule& c = grille[i][j][k]; 
 			  if(abs(c.alpha-1.)>eps){
                 vtk << 8 << " " << (k-marge)+(j-marge)*(Nz+1)+(i-marge)*(Nz+1)*(Ny+1) << " " << ((k-marge)+1)+(j-marge)*(Nz+1)+(i-marge)*(Nz+1)*(Ny+1) << " " << ((k-marge)+1)+((j-marge)+1)*(Nz+1) + (i-marge)*(Nz+1)*(Ny+1) << " "<< (k-marge)+((j-marge)+1)*(Nz+1) + (i-marge)*(Nz+1)*(Ny+1)<< " " <<  (k-marge)+(j-marge)*(Nz+1)+((i-marge)+1)*(Nz+1)*(Ny+1)<< " "<< ((k-marge)+1)+(j-marge)*(Nz+1) + ((i-marge)+1)*(Nz+1)*(Ny+1) << " " <<  ((k-marge)+1)+((j-marge)+1)*(Nz+1)+((i-marge)+1)*(Nz+1)*(Ny+1)<< " " << (k-marge)+((j-marge)+1)*(Nz+1)+((i-marge)+1)*(Nz+1)*(Ny+1)<< endl;
 			  }
@@ -3679,7 +3678,7 @@ void Grille::Impression(int n){
     for(int i=marge; i<Nx+marge; i++){
         for(int j=marge; j<Ny+marge; j++){ 
             for(int k=marge; k<Nz+marge; k++){ 
-							Cellule c = grille[i][j][k]; 
+							Cellule& c = grille[i][j][k]; 
 							if(abs(c.alpha-1.)>eps){ 
 								vtk << grille[i][j][k].p << endl;
 							} else {
@@ -3697,7 +3696,7 @@ void Grille::Impression(int n){
     for(int i=marge; i<Nx+marge; i++){
         for(int j=marge; j<Ny+marge; j++){ 
             for(int k=marge; k<Nz+marge; k++){ 
-							Cellule c = grille[i][j][k]; 
+							Cellule& c = grille[i][j][k]; 
 							if(abs(c.alpha-1.)>eps){ 
 								vtk << grille[i][j][k].rho << endl;
 							} else {
@@ -3715,7 +3714,7 @@ void Grille::Impression(int n){
     for(int i=marge; i<Nx+marge; i++){
         for(int j=marge; j<Ny+marge; j++){ 
             for(int k=marge; k<Nz+marge; k++){ 
-							Cellule c = grille[i][j][k]; 
+							Cellule& c = grille[i][j][k]; 
 							if(abs(c.alpha-1.)>eps){ 
 								vtk << grille[i][j][k].u << endl;
 							} else {
@@ -3732,7 +3731,7 @@ void Grille::Impression(int n){
     for(int i=marge; i<Nx+marge; i++){
         for(int j=marge; j<Ny+marge; j++){ 
             for(int k=marge; k<Nz+marge; k++){ 
-							Cellule c = grille[i][j][k]; 
+							Cellule& c = grille[i][j][k]; 
 							if(abs(c.alpha-1.)>eps){ 
 								vtk << grille[i][j][k].v << endl;
 							} else {
@@ -3749,7 +3748,7 @@ void Grille::Impression(int n){
     for(int i=marge; i<Nx+marge; i++){
         for(int j=marge; j<Ny+marge; j++){ 
             for(int k=marge; k<Nz+marge; k++){ 
-							Cellule c = grille[i][j][k]; 
+							Cellule& c = grille[i][j][k]; 
 							if(abs(c.alpha-1.)>eps){ 
 								vtk << grille[i][j][k].w << endl;
 							} else {

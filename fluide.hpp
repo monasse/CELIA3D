@@ -374,7 +374,7 @@ class Grille
   void Modif_fnum(const double dt);  // Modification du flux
   void Mixage(); // Procedure de mixage pour le cellules avec c.alpha>0.5
   void Fill_cel(Solide& S); // Remplissage de cellules fantomes (c.alpha = 1.)
-  void swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  Particule & P, double & volume_test); // Sous-programme de calcul des quantitees balayees
+  void swap_face(const Triangles& T3d_prev, const Triangles& T3d_n, const double dt,  Particule & P, double & volume_test); // Sous-programme de calcul des quantitees balayees
   void cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,int& kn1, std::vector<Bbox>& box_cells, std::vector<Cellule>& Cells); 
   void Swap_2d(const double dt, Solide& S); // Sous-programme de calcul des quantitees balayees
   void Swap_3d(const double dt, Solide& S); // Sous-programme de calcul des quantitees balayees

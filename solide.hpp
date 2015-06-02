@@ -74,8 +74,8 @@ class Particule
   void Volume_libre();
   void solve_position(double dt);
   void solve_vitesse(double dt);
-  Vector_3 vitesse_parois(Point_3& X_f);  
-  Vector_3 vitesse_parois_prev(Point_3& X_f);  
+  Vector_3 vitesse_parois(const Point_3& X_f);  
+  Vector_3 vitesse_parois_prev(const Point_3& X_f);  
   //double min_x; //!< la plus petite coordonn&eacute;e  de la particule selon x
   //double min_y; //!< la plus petite coordonn&eacute;e  de la particule selon y
   //double min_z; //!< la plus petite coordonn&eacute;e  de la particule selon z

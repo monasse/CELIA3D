@@ -1443,9 +1443,9 @@ double Particule::volume(){
 * \warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 * \return Vector_3
 */
-Vector_3 Particule::vitesse_parois(Point_3& X_f){
+Vector_3 Particule::vitesse_parois(const Point_3& X_f){
 		
-  Vector_3 V_f = u_half + cross_product(omega_half, Vector_3(Point_3(x0.operator[](0) + Dx.operator[](0), x0.operator[](1) + Dx.operator[](1),x0.operator[](2) + Dx.operator[](2)),X_f));
+  Vector_3 V_f = u_half + cross_product(omega_half, Vector_3(x0 + Dx,X_f));
 
 	return V_f;
 }	
@@ -1458,9 +1458,9 @@ Vector_3 Particule::vitesse_parois(Point_3& X_f){
 * \warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 * \return Vector_3
  */
-Vector_3 Particule::vitesse_parois_prev(Point_3& X_f){
+Vector_3 Particule::vitesse_parois_prev(const Point_3& X_f){
 	
-	Vector_3 V_f = u_half + cross_product(omega_half, Vector_3(Point_3(x0.operator[](0) + Dxprev.operator[](0), x0.operator[](1) + Dxprev.operator[](1),x0.operator[](2) + Dxprev.operator[](2)),X_f));
+  Vector_3 V_f = u_half + cross_product(omega_half, Vector_3(x0 + Dxprev,X_f));
 	
 	return V_f;
 }	
