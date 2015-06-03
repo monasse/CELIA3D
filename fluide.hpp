@@ -321,9 +321,9 @@ class Grille
   // Acces a une cellule i,j, k
    Cellule cellule(int i, int j, int k);
   // Acces a la cellule contenant le point p
-   Cellule in_cell(Point_3 p);
+   Cellule in_cell(const Point_3& p);
 	// Acces a la cellule contenant le point p
-   void in_cell(Point_3 p, int &i, int& j, int& k, bool& interieur);
+   void in_cell(const Point_3& p, int &i, int& j, int& k, bool& interieur);
   // Sous-programme de definition des conditions initiales 
   void Init();
 

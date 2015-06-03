@@ -1930,7 +1930,7 @@ void Grille::Mixage_cible(){
 					std::vector<int> poz(3); poz[0]= i; poz[1] = j; poz[2] = k; tab_cible.push_back(poz);
 
 
-          Cellule& cg = cible(grille[i][j][k], tab_cible);
+          Cellule cg = cible(grille[i][j][k], tab_cible);
 
 					cg.cible_alpha += (1.-cp.alpha);
 					cg.cible_rho  += (1.-cp.alpha)*cp.rho;
@@ -1941,7 +1941,7 @@ void Grille::Mixage_cible(){
 					
 					cp.cible_i= cg.i;
 					cp.cible_j = cg.j;
-					cp.cible_k = cg.k;
+					cp.cible_k = cg.k; 
 					
 					//grille[i][j][k] = cp;
 					//grille[cg.i][cg.j][cg.k] = cg;
