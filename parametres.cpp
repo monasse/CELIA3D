@@ -241,10 +241,11 @@ void reprise(){
 
 double Rho(double x,double y, double z){ 
 	double rho;
-	if(x<0.1 && y<0.2 && y>0.1 && z>0.083)  {rho = 1.1845467;}
+	//if(x<0.1 && y<0.2 && y>0.1 && z>0.083)  {rho = 1.1845467;}
 	//{rho = 1.4;}
-	else {rho = 1.1845467;}
-
+	//else {rho = 1.1845467;}
+	rho = 1.4;
+	
 // if(x>0.2 && x<0.6 &&  y>0.41 && y<0.46){rho=0.;}
 // else {rho=1.4;}
 	//En cas de reprise
@@ -260,7 +261,7 @@ double Rho(double x,double y, double z){
 	return rho; 
 } 
 double U(double x,double y, double z){ 
-	double u = 0.;
+	double u = 1.;
 	//En cas de reprise
 	if(rep){
 		int i = (int) ((x)/deltax);
@@ -274,7 +275,7 @@ double U(double x,double y, double z){
 	return u; 
 }
 double V(double x,double y, double z){ 
-	double v = 0.; 
+	double v = 1.; 
 	//En cas de reprise
 	if(rep){
 		int i = (int) ((x)/deltax);
@@ -288,7 +289,7 @@ double V(double x,double y, double z){
 	return v; 
 } 
 double W(double x,double y, double z){ 
-	double w = 0.; 
+	double w = 1.; 
 	//En cas de reprise
 	if(rep){
 		int i = (int) ((x)/deltax);
@@ -304,10 +305,11 @@ double W(double x,double y, double z){
 double P(double x,double y, double z, double dx, double dy, double dz){ 
 	
 	double p;
-	if(x<0.1 && y<0.2 && y>0.1 && z>0.083){p = 101325.;} 
+	//if(x<0.1 && y<0.2 && y>0.1 && z>0.083){p = 101325.;} 
 	//{p = 1.;} 
-	else {p = 101325.;}
-// if(x>0.2 && x<0.6 &&  y>0.41 && y<0.46){p=0.;}
+	//else {p = 101325.;}
+	p=1.;
+	// if(x>0.2 && x<0.6 &&  y>0.41 && y<0.46){p=0.;}
 // else {p=1.;}
 	//En cas de reprise
 	if(rep){

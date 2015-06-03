@@ -501,7 +501,7 @@ void Grille::Parois_particles(Solide& S,double dt) {
 	    //traitement calcul de alpha et kappa pour la cellule=grille[i]!!!!!!
 	    user_time2.reset();
 	    alpha_time.reset();
-	    if(intersection && exterieur && Points_poly.size()>0){
+	    if(intersection && exterieur && Points_poly.size()>3){
 				      
 				      
 	      Polyhedron_3 poly;

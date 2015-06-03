@@ -209,7 +209,7 @@ int main(){
 	  t = temps[numrep];
 	}
 	Solide S;
-	S.Init("maillage.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
+	S.Init("maillage2.dat"); //Initialisation du solide a partir du fichier "maillage.dat"
 	//S.Affiche();
 	Grille Fluide;
 	Fluide.Init();

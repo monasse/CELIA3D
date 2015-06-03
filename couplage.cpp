@@ -1349,73 +1349,73 @@ void Grille::swap_face(const Triangles& T3d_prev, const Triangles& T3d_n, const 
       Point_3 f = centroid(T3d_prev[i].operator[](0),T3d_n[i].operator[](0), T3d_prev[i].operator[](2),T3d_n[i].operator[](2));
       Point_3 g = centroid(T3d_prev[i].operator[](0),T3d_n[i].operator[](0), T3d_prev[i].operator[](1),T3d_n[i].operator[](1));
 
-      Tetrahedron tet0 (T3d_prev[i].operator[](0),T3d_n[i].operator[](0), f, g);
+      Tetrahedron tet0 (T3d_prev[i].operator[](0),T3d_n[i].operator[](0), g, f);
       //if(!tet0.is_degenerate ()){
       if(abs(tet0.volume ())>eps){
 	vect_Tet.push_back(tet0);
 	box_Tet.push_back(tet0.bbox());
       }
 			
-      Tetrahedron tet1 (T3d_prev[i].operator[](1),T3d_n[i].operator[](1), g, e);
+      Tetrahedron tet1 (T3d_prev[i].operator[](1),T3d_n[i].operator[](1), e, g);
       //if(!tet1.is_degenerate ()){
       if(abs(tet1.volume ())>eps){
 	vect_Tet.push_back(tet1);
 	box_Tet.push_back(tet1.bbox());
       }
 
-      Tetrahedron tet2 (T3d_prev[i].operator[](2),T3d_n[i].operator[](2), e, f);
+      Tetrahedron tet2 (T3d_prev[i].operator[](2),T3d_n[i].operator[](2), f, e);
       //if(!tet2.is_degenerate ()){
       if(abs(tet2.volume ())>eps){
 	vect_Tet.push_back(tet2);
 	box_Tet.push_back(tet2.bbox());
       }
 
-      Tetrahedron tet3 (T3d_prev[i].operator[](0),T3d_prev[i].operator[](1), g, T3d_prev[i].operator[](2));
+      Tetrahedron tet3 (T3d_prev[i].operator[](0),T3d_prev[i].operator[](1), T3d_prev[i].operator[](2), g);
       if(abs(tet3.volume ())>eps){
 	vect_Tet.push_back(tet3);
 	box_Tet.push_back(tet3.bbox());
       }
 
-      Tetrahedron tet4 (T3d_prev[i].operator[](0),g, f, T3d_prev[i].operator[](2));
+      Tetrahedron tet4 (T3d_prev[i].operator[](0), f, g, T3d_prev[i].operator[](2));
       // 			if(!tet4.is_degenerate ()){
       if(abs(tet4.volume ())>eps){
 	vect_Tet.push_back(tet4);
 	box_Tet.push_back(tet4.bbox());
       }
-      Tetrahedron tet5 (T3d_prev[i].operator[](1),e, g, T3d_prev[i].operator[](2));
+      Tetrahedron tet5 (T3d_prev[i].operator[](1), g, e, T3d_prev[i].operator[](2));
       //if(!tet5.is_degenerate ()){
       if(abs(tet5.volume ())>eps){
 	vect_Tet.push_back(tet5);
 	box_Tet.push_back(tet5.bbox());
       }
 
-      Tetrahedron tet6 (e,f,g, T3d_prev[i].operator[](2));
+      Tetrahedron tet6 (e,g,f, T3d_prev[i].operator[](2));
       //if(!tet6.is_degenerate ()){
       if(abs(tet6.volume ())>eps){
 	vect_Tet.push_back(tet6);
 	box_Tet.push_back(tet6.bbox());
       }
 
-      Tetrahedron tet7 (e,g,f, T3d_n[i].operator[](2));
+      Tetrahedron tet7 (e,f,g, T3d_n[i].operator[](2));
       //if(!tet7.is_degenerate ()){
       if(abs(tet7.volume ())>eps){
 	vect_Tet.push_back(tet7);
 	box_Tet.push_back(tet7.bbox());
       }
-      Tetrahedron tet8 (e, T3d_n[i].operator[](1),g,T3d_n[i].operator[](2));
+      Tetrahedron tet8 (e, T3d_n[i].operator[](1),T3d_n[i].operator[](2), g);
       //if(!tet8.is_degenerate ()){
       if(abs(tet8.volume ())>eps){
 	vect_Tet.push_back(tet8);
 	box_Tet.push_back(tet8.bbox());
       }
-      Tetrahedron tet9 (T3d_n[i].operator[](0),T3d_n[i].operator[](2),f,g);
+      Tetrahedron tet9 (T3d_n[i].operator[](0),T3d_n[i].operator[](2),g,f);
       //if(!tet9.is_degenerate ()){
       if(abs(tet9.volume ())>eps){
 	vect_Tet.push_back(tet9);
 	box_Tet.push_back(tet9.bbox());
       }
 
-      Tetrahedron tet10 (T3d_n[i].operator[](0),T3d_n[i].operator[](1),T3d_n[i].operator[](2),g);
+      Tetrahedron tet10 (T3d_n[i].operator[](0),T3d_n[i].operator[](1), g, T3d_n[i].operator[](2));
       //if(!tet10.is_degenerate ()){
       if(abs(tet10.volume ())>eps){
 	vect_Tet.push_back(tet10);
