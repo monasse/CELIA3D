@@ -1505,6 +1505,289 @@ void Grille::swap_face(const Triangles& T3d_prev, const Triangles& T3d_n, const 
   } //end boucle sur les prismes
 }	
 
+/*!
+*\fn void Grille::swap_face_inexact(Triangle_3 Tr_prev, Triangle_3 Tr, Triangles& T3d_prev, Triangles& T3d_n, const double dt,  Particule & P)
+*\brief Calcul de la quantit&eacute; balay&eacute;e par un morceau de parois entre t et t-dt. Calcul du flux &agrave; la parois.
+*\details Algorithme:\n
+- Construction du vecteur des Box contenant les prismes ayant comme bases T3d_prev et T3d_n. Boucle sur les prismes ainsi obtenus:
+- On cherche l'index de la cellule qui contient T3d_prev(le triangle est enti&egrave;rement contenu dans une cellule) et celui de la cellule qui contient T3d_n(le triangle est enti&egrave;rement contenu dans une cellule).
+- Si le prisme est contenu dans une seule cellule on calcule le volume du prisme via la fonction volume_prisme(const Triangle_3&,const Triangle_3&) et la quantit&eacute; balay&eacute;e par la face (\a Particule.triangles) est donn&eacute;e par : \f$  volume\_prisme*U^n/volume\_cellule \f$. Sinon,
+ - On liste les cellules fluide intersect&eacute;es par le prisme via la fonction \a cells_intersection_face(int& ,int& ,int& ,int& ,int& ,int& , std::vector<Bbox>& s, std::vector<Cellule>& s).
+ - On d&eacute;coupe le prisme en  t&eacute;tra&egrave;dres: soit  \f$ T1(A_1,B_1,C_1)\f$  et \f$ T2(A_2,B_2,C_2)\f$  les bases du prisme, on d&eacute;finit les points: \f$ A = \frac{1}{4}(B_1 + B_2 + C_1 +C_2) \f$ , \f$ B = \frac{1}{4}(A_1 + A_2 + C_1 +C_2) \f$ et \f$ C = \frac{1}{4}(A_1 + A_2 + B_1 + B_2 ) \f$. Les t&eacute;tra&egrave;dres d&eacute;coupant \f$ A_1,B_1,C_1 A_2,B_2,C_2 \f$ sont: \f$ A_1 A_2 C B \f$, \f$ B_1 B_2 A C \f$, \f$ C_1 C_2 B A \f$, \f$ A_1 C C_1 B \f$, \f$ B_1 A C_1 C \f$, \f$ A C B C_1 \f$, \f$ A B C C_2 \f$, \f$ A B_2 C_2 C \f$, \f$ A_1 B_1 C_1 C \f$, \f$ A_2 C_2 C B \f$, \f$ A_2 B_2 C C_2. \f$
+ - Intersections de ces  t&eacute;tra&egrave;dres avec les cellules fluide intersect&eacute;es par le prisme via la fonction intersect_cube_tetrahedron(Bbox&, Tetrahedron&). La quantité balayée par la face est donnée par la somme des: \f$  volume\_{intersection\_cellule\_tetrahedre}*U^n/volume\_cellule. \f$ \n
+
+Calcul du flux &agrave; la parois: soit \a f un morceau d'interface, le flux &agrave; la parois est donné par :
+\f{eqnarray*}{
+	\Phi_f  =  \left(0,  p^x \, A_f n^{x}_f, \, p^y \,A_f n^{y}_f, \, p^z \,A_f n^{z}_f, V_f \cdot \left( p^x \, A_f n^{x}_f,p^y \,A_f n^{y}_f,p^z \,A_f n^{z}_f \right)^t \right)^t
+	\f} \n
+	o&ugrave; \f$ A_f \f$ l'aire de l'interface f,  \f$ n_f \f$ la normale sortante &agrave; l'interface f, \f$ V_f \f$ la vitesse au centre de la parois calculée via la fonction \a vitesse_parois(Point_3& ) et \f$ p^x, p^y, p^z \f$ les pressions efficaces selon les directions x, y et z pendant le pas de temps (\a Cellule.pdtx, \a  Cellule.pdty et \a Cellule.pdtz).
+
+*\param T3d_prev Triangles_3 (triangles d'interface au temps t: \a Particule.Triangles_interface)
+*\param T3d_n    Triangles_3 (triangles d'interface au temps t-dt: \a Particule.Triangles_interface_prev)
+*\param dt pas de temps
+*\param P Particule 
+*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
+*\return void
+*/
+void Grille::swap_face_inexact(const Triangle_3& Tr_prev, const Triangle_3& Tr, const Triangles& T3d_prev, const Triangles& T3d_n, const double dt, Particule & P, double & volume_test){
+  //cout << "debut swap inexact" << endl;
+  //CGAL::Timer user_time, user_time2;
+  //double time=0.;
+  CGAL::Timer delta_time,total_time,boucle1_time,boucle2_time;
+  delta_time.start();total_time.start();boucle1_time.start();boucle2_time.start();
+  double temps_delta=0.,temps_total=0.,temps_boucle1=0.,temps_boucle2=0.;
+  delta_time.reset();
+  Bbox box_prisme = Tr_prev.bbox()+Tr.bbox();
+
+  //definition Tetraedres 
+  Tetrahedron Tet[11];
+  Point_3 e = centroid(Tr_prev.operator[](1),Tr.operator[](1), Tr_prev.operator[](2),Tr.operator[](2));
+  Point_3 f = centroid(Tr_prev.operator[](0),Tr.operator[](0), Tr_prev.operator[](2),Tr.operator[](2));
+  Point_3 g = centroid(Tr_prev.operator[](0),Tr.operator[](0), Tr_prev.operator[](1),Tr.operator[](1));
+  
+  Tet[0] = Tetrahedron(Tr_prev.operator[](0),Tr.operator[](0), g, f);
+  Tet[1] = Tetrahedron(Tr_prev.operator[](1),Tr.operator[](1), e, g);
+  Tet[2] = Tetrahedron(Tr_prev.operator[](2),Tr.operator[](2), f, e);
+  Tet[3] = Tetrahedron(Tr_prev.operator[](0),Tr_prev.operator[](1), Tr_prev.operator[](2), g);
+  Tet[4] = Tetrahedron(Tr_prev.operator[](0), f, g, Tr_prev.operator[](2));
+  Tet[5] = Tetrahedron(Tr_prev.operator[](1), g, e, Tr_prev.operator[](2));
+  Tet[6] = Tetrahedron(e,g,f, Tr_prev.operator[](2));
+  Tet[7] = Tetrahedron(e,f,g, Tr.operator[](2));
+  Tet[8] = Tetrahedron(e, Tr.operator[](1),Tr.operator[](2), g);
+  Tet[9] = Tetrahedron(Tr.operator[](0),Tr.operator[](2),g,f);
+  Tet[10]= Tetrahedron(Tr.operator[](0),Tr.operator[](1), g, Tr.operator[](2));
+
+  double test=volume_prisme(Tr_prev,Tr);
+  double test2=0.;
+  for(int l=0;l<11;l++){
+    test2 += CGAL::to_double(Tet[l].volume());
+  }
+  //cout << "volume_prisme=" << test << " volume_tetras=" << test2 << endl;
+  //getchar();
+  
+  double delta_w_tot[5];
+  delta_w_tot[0] = delta_w_tot[1] = delta_w_tot[2] = delta_w_tot[3] = delta_w_tot[4] =0.;
+  double volume_tot = 0.;
+  //Calcul de la quantite balayee par la face
+  for(int t=0;t<11;t++){
+    double volume_tet = 0.;
+    for(int i=0;i<Nx+2*marge;i++){
+      for(int j=0;j<Ny+2*marge;j++){
+	for(int k=0;k<Nz+2*marge;k++){
+	  Cellule& c= grille[i][j][k];
+	  //double volume_cel = c.dx*c.dy*c.dz;  
+	  Bbox box_cell(c.x -c.dx/2.,c.y -c.dy/2.,c.z -c.dz/2.,c.x +c.dx/2.,c.y +c.dy/2.,c.z + c.dz/2.);
+	  
+	  if (CGAL::do_overlap(box_prisme, box_cell) ) {
+	    if(CGAL::do_overlap(Tet[t].bbox(), box_cell)){
+	      double volume = (intersect_cube_tetrahedron(box_cell, Tet[t]) * sign(Tet[t].volume()) );
+	      volume_test += volume;
+	      volume_tot += volume;
+	      volume_tet += volume;
+	      delta_w_tot[0] += volume*c.rho0; 
+	      delta_w_tot[1] += volume*c.impx0;
+	      delta_w_tot[2] += volume*c.impy0; 
+	      delta_w_tot[3] += volume*c.impz0; 
+	      delta_w_tot[4] += volume*c.rhoE0;
+	    }
+	  }//if inter box_cell inter box_prisme
+	  
+	  //volume_test += volume_swept;
+	} // boucle sur les box_cells
+      }//end else 
+    }
+    //cout << "volume tet=" << volume_tet << " vrai volume=" << Tet[t].volume() << endl;
+    //getchar();
+  }
+  temps_delta += delta_time.time();
+  //cout << "volume_tot=" << volume_tot << " rho=" << delta_w_tot[0] << " impx=" << delta_w_tot[1] << " impy=" << delta_w_tot[2] << " impz="<< delta_w_tot[3] << " rhoE=" << delta_w_tot[4] << endl;
+  
+  //Boucle preliminaire sur les morceaux de paroi
+  //Evaluation grossiere de la quantite balayee par chaque morceau de paroi
+  //cout << "debut boucle preliminaire" << endl;
+  boucle1_time.reset();
+  double volume_eval = 0.;
+  std::vector<Bbox> box_prismes(T3d_prev.size());
+  for (int i=0; i< T3d_prev.size(); i++){
+    const Bbox& box_triangles_prev = T3d_prev[i].bbox();
+    const Bbox& box_triangles_n = T3d_n[i].bbox();
+    box_prismes[i]= box_triangles_prev + box_triangles_n;
+  } 
+  for (int i=0; i< box_prismes.size(); i++){
+    //double vol_test=0.; 
+    int in=0, jn=0, kn=0, in1=0, jn1=0, kn1=0;
+    bool interieur = true;
+    const Point_3& center_prev= centroid(T3d_prev[i].operator[](0),T3d_prev[i].operator[](1),T3d_prev[i].operator[](2));
+    const Point_3& center_n= centroid(T3d_n[i].operator[](0),T3d_n[i].operator[](1),T3d_n[i].operator[](2));
+    in_cell(center_prev, in, jn, kn, interieur);
+    in_cell(center_n, in1, jn1, kn1, interieur);
+		
+    //Cellule c_cur= grille[in1][jn1][kn1];
+    if((std::abs(grille[in1][jn1][kn1].alpha -1.)<eps)  && (interieur==true)){
+      double x= CGAL::to_double(center_n.operator[](0));
+      double y= CGAL::to_double(center_n.operator[](1));
+      double z= CGAL::to_double(center_n.operator[](2));
+      Cellule& cd= grille[in1+1][jn1][kn1];
+      if (cd.is_in_cell(x,y,z) ) {in1=in1+1;}
+      else{
+	Cellule& cg= grille[in1-1][jn1][kn1];
+	if (cg.is_in_cell(x,y,z)) {in1=in1-1;}
+	else{
+	  Cellule& ch= grille[in1][jn1+1][kn1];
+	  if (ch.is_in_cell(x,y,z)) {jn1=jn1+1;}
+	  else{
+	    Cellule& cb= grille[in1][jn1-1][kn1];
+	    if (cb.is_in_cell(x,y,z)) {jn1=jn1-1;}
+	    else{
+	      Cellule& cd= grille[in1][jn1][kn1+1];
+	      if (cd.is_in_cell(x,y,z)) {kn1=kn1+1;}
+	      else{
+		Cellule& cder= grille[in1][jn1][kn1-1];
+		if (cder.is_in_cell(x,y,z)) {kn1=kn1-1;}
+	      }
+	    }
+	  }
+	}
+      }
+    } // end if alpha==1
+		  
+    Cellule& c= grille[in1][jn1][kn1];
+    Cellule& c_prev= grille[in][jn][kn];
+    double volume_cel = c.dx*c.dy*c.dz;  
+    if ((interieur==true)){ 
+      double volume_p=volume_prisme(T3d_prev[i],T3d_n[i]);
+      //Evaluation de la quantite balayee comme le produit du volume du prisme par la valeur dans la cellule
+      if( (std::abs(volume_p)>eps) && (std::abs(1.-c.alpha)>eps)){
+	c.delta_w[0] += volume_p*c_prev.rho0/volume_cel; 
+	c.delta_w[1] += volume_p*c_prev.impx0/volume_cel;
+	c.delta_w[2] += volume_p*c_prev.impy0/volume_cel; 
+	c.delta_w[3] += volume_p*c_prev.impz0/volume_cel; 
+	c.delta_w[4] += volume_p*c_prev.rhoE0/volume_cel;
+	volume_eval += abs(volume_p);
+	delta_w_tot[0] -= volume_p*c_prev.rho0; 
+	delta_w_tot[1] -= volume_p*c_prev.impx0;
+	delta_w_tot[2] -= volume_p*c_prev.impy0; 
+	delta_w_tot[3] -= volume_p*c_prev.impz0; 
+	delta_w_tot[4] -= volume_p*c_prev.rhoE0;
+	//grille[in1][jn1][kn1] = c;
+      }
+    }
+
+    if (explicite){//explicit algo
+    Vector_3 norm_prev= orthogonal_vector(T3d_prev[i].operator[](0),T3d_prev[i].operator[](1),T3d_prev[i].operator[](2));
+    double norm2_prev= sqrt(CGAL::to_double(norm_prev*norm_prev));
+    if(norm2_prev>eps){ 
+      //Cellule c_prev= grille[in][jn][kn];
+	Vector_3 n_prev = norm_prev/norm2_prev;
+	double aire_prev = sqrt(CGAL::to_double(T3d_prev[i].squared_area()));
+	c.phi_x += c_prev.pdtx * aire_prev *( CGAL::to_double(n_prev.x()))/volume_cel;
+	c.phi_y += c_prev.pdty * aire_prev *( CGAL::to_double(n_prev.y()))/volume_cel;
+	c.phi_z += c_prev.pdtz * aire_prev *( CGAL::to_double(n_prev.z()))/volume_cel;
+			
+	Vector_3 V_f = P.vitesse_parois_prev(center_prev);
+	c.phi_v += aire_prev * (CGAL::to_double(c.pdtx*n_prev.x()*V_f.x()  + c.pdty*n_prev.y()*V_f.y()+
+						c.pdtz*n_prev.z()*V_f.z()))/volume_cel;
+	//test 11 octobre 2013
+	// 				if (abs(c.phi_x)<=eps) {c.phi_x = 0.;} 
+	// 				if (abs(c.phi_y)<=eps) {c.phi_y = 0.;} 
+	// 				if (abs(c.phi_z)<=eps) {c.phi_z = 0.;} 
+	// 				if (abs(c.phi_v)<=eps) {c.phi_v = 0.;} 
+	//fin test 11 octobre 2013
+	//grille[in1][jn1][kn1] = c;
+      }
+    }//explicit algo
+    else {//semi_implicit algo
+      Vector_3 norm= orthogonal_vector(T3d_n[i].operator[](0),T3d_n[i].operator[](1),T3d_n[i].operator[](2));
+      double norm2= sqrt(CGAL::to_double(norm*norm));
+      if(norm2>eps){ 
+	Vector_3 n = norm/norm2;
+	double aire = sqrt(CGAL::to_double(T3d_n[i].squared_area()));
+	c.phi_x += c.pdtx * aire *( CGAL::to_double(n.x()))/(c.dx*c.dy*c.dz);
+	c.phi_y += c.pdty * aire *( CGAL::to_double(n.y()))/(c.dx*c.dy*c.dz);
+	c.phi_z += c.pdtz * aire *( CGAL::to_double(n.z()))/(c.dx*c.dy*c.dz);
+	Vector_3 V_f = P.vitesse_parois(center_n);
+	c.phi_v += aire * (CGAL::to_double(c.pdtx*n.x()*V_f.x()  + c.pdty*n.y()*V_f.y() + c.pdtz*n.z()*V_f.z()))/(c.dx*c.dy*c.dz);
+	//test 11 octobre 2013
+	// 				if (abs(c.phi_x)<=eps) {c.phi_x = 0.;} 
+	// 				if (abs(c.phi_y)<=eps) {c.phi_y = 0.;} 
+	// 				if (abs(c.phi_z)<=eps) {c.phi_z = 0.;} 
+	// 				if (abs(c.phi_v)<=eps) {c.phi_v = 0.;} 
+	// test 11 octobre 2013
+	//grille[in1][jn1][kn1] = c;
+      }
+    } //semi_implicit algo
+  }
+  temps_boucle1 += boucle1_time.time();
+
+  //cout << "volume_eval=" << volume_eval << " rho=" << delta_w_tot[0] << " impx=" << delta_w_tot[1] << " impy=" << delta_w_tot[2] << " impz="<< delta_w_tot[3] << " rhoE=" << delta_w_tot[4] << endl;
+  //getchar();
+  
+  //Deuxieme boucle sur les parois : repartit l'erreur sur la quantite balayee sur les cellules par importance du volume
+  //cout << "debut deuxieme boucle" << endl;
+  boucle2_time.reset();
+  for (int i=0; i< box_prismes.size(); i++){
+    //double vol_test=0.; 
+    int in=0, jn=0, kn=0, in1=0, jn1=0, kn1=0;
+    bool interieur = true;
+    const Point_3& center_prev= centroid(T3d_prev[i].operator[](0),T3d_prev[i].operator[](1),T3d_prev[i].operator[](2));
+    const Point_3& center_n= centroid(T3d_n[i].operator[](0),T3d_n[i].operator[](1),T3d_n[i].operator[](2));
+    in_cell(center_prev, in, jn, kn, interieur);
+    in_cell(center_n, in1, jn1, kn1, interieur);
+		
+    //Cellule c_cur= grille[in1][jn1][kn1];
+    if((std::abs(grille[in1][jn1][kn1].alpha -1.)<eps)  && (interieur==true)){
+      double x= CGAL::to_double(center_n.operator[](0));
+      double y= CGAL::to_double(center_n.operator[](1));
+      double z= CGAL::to_double(center_n.operator[](2));
+      Cellule& cd= grille[in1+1][jn1][kn1];
+      if (cd.is_in_cell(x,y,z) ) {in1=in1+1;}
+      else{
+	Cellule& cg= grille[in1-1][jn1][kn1];
+	if (cg.is_in_cell(x,y,z)) {in1=in1-1;}
+	else{
+	  Cellule& ch= grille[in1][jn1+1][kn1];
+	  if (ch.is_in_cell(x,y,z)) {jn1=jn1+1;}
+	  else{
+	    Cellule& cb= grille[in1][jn1-1][kn1];
+	    if (cb.is_in_cell(x,y,z)) {jn1=jn1-1;}
+	    else{
+	      Cellule& cd= grille[in1][jn1][kn1+1];
+	      if (cd.is_in_cell(x,y,z)) {kn1=kn1+1;}
+	      else{
+		Cellule& cder= grille[in1][jn1][kn1-1];
+		if (cder.is_in_cell(x,y,z)) {kn1=kn1-1;}
+	      }
+	    }
+	  }
+	}
+      }
+    } // end if alpha==1
+		  
+    Cellule& c= grille[in1][jn1][kn1];
+    double volume_cel = c.dx*c.dy*c.dz;  
+    if ((interieur==true)){ 
+      double volume_p=volume_prisme(T3d_prev[i],T3d_n[i]);
+      //Evaluation de la quantite balayee comme le produit du volume du prisme par la valeur dans la cellule
+      if( (std::abs(volume_p)>eps) && (std::abs(1.-c.alpha)>eps)){
+	for(int l=0;l<5;l++){
+	  c.delta_w[l] += abs(volume_p)/volume_eval*delta_w_tot[l]/volume_cel;
+	}
+      }
+    }
+  }
+  temps_boucle2 += boucle2_time.time();
+  
+  temps_total += total_time.time();
+  /*cout << "################# COUT SWAP INEXACT ##############" << endl;
+  cout << "temps_total=" << temps_total << "s" << endl;
+  cout << "delta=" << 100*temps_delta/temps_total << "%" << endl;
+  cout << "boucle1=" << 100*temps_boucle1/temps_total << "%" << endl;
+  cout << "boucle2=" << 100*temps_boucle2/temps_total << "%" << endl;
+  cout << "##########################################" << endl;
+  cout<<"volume balayee = "<< volume_test<<endl;
+  getchar();*/
+}	
+
 /**
 \fn void Sous_Maillage_2d(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2& tri2)
 \brief Construction sous-maillage 2d d'une face 2d du Solide.
@@ -1689,7 +1972,13 @@ void Grille::Swap_2d(const double dt, Solide& S){
 	//user_time.reset();
 	//user_time2.start();
 	swap_face_time.reset();
-	swap_face(T3d_n,T3d_n1,dt, S.solide[i],volume_test );
+	if(exact_swap){
+	  //Swap exact
+	  swap_face(T3d_n,T3d_n1,dt, S.solide[i],volume_test );
+	} else {
+	  //Swap inexact: calcul de la quantite balayee pour la face et repartition sur les morceaux de paroi
+	  swap_face_inexact(S.solide[i].triangles_prev[j],S.solide[i].triangles[j],T3d_n,T3d_n1,dt,S.solide[i],volume_test);
+	}
 	temps_swap_face += swap_face_time.time();
 	//time_2+=CGAL::to_double(user_time2.time());
 	//user_time2.reset();

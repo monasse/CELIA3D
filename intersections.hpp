@@ -226,5 +226,18 @@ std::vector<Point_3> redondances(const std::vector<Point_3>::iterator& begin, co
   return result;
 }
 
+bool inside_tetra(const Tetrahedron &tetra, const Point_3& P){
+	
+  //bool in = false;
+  //in=tetra.has_on_negative_side(P);
+	
+  //return in;
+  /*if(tetra.volume()>0.){
+    return tetra.has_on_positive_side(P);
+  } else {
+    return tetra.has_on_negative_side(P);
+    }*/
+  return tetra.has_on_bounded_side(P);
+}
 
 #endif

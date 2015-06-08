@@ -31,6 +31,7 @@ bool explicite = true;
 
 bool flag_2d = false;
 bool couplage1d=false;
+const bool exact_swap=false;
 
 //Parametres pour le fluide
 const double gam = 1.4;                   //constante des gaz parfaits 

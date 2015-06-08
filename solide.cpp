@@ -2682,14 +2682,7 @@ bool inside_convex_polygon(const Particule& S, const Point_3& P){
 	return in;
 }	
 
-bool inside_tetra(const Tetrahedron &tetra, const Point_3& P){
-	
-  //bool in = false;
-  //in=tetra.has_on_negative_side(P);
-	
-  //return in;
-  return tetra.has_on_negative_side(P);
-}
+
 
 /*!
 *\fn bool box_inside_convex_polygon(const Particule& S, const Bbox& cell)
