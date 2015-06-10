@@ -15,6 +15,7 @@
 #include <cassert>
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/intersections.h>
 #include <CGAL/Bbox_3.h>
 #include <CGAL/Bbox_2.h>
@@ -35,24 +36,43 @@
 #include <CGAL/Constrained_triangulation_plus_2.h>
 
 typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
+typedef CGAL::Exact_predicates_inexact_constructions_kernel   IK;
+typedef CGAL::Cartesian_converter<Kernel,IK> Exact_to_Inexact;
+typedef CGAL::Cartesian_converter<IK,Kernel> Inexact_to_Exact;
 typedef Kernel::Point_3                  Point_3;
+typedef IK::Point_3                      InexactPoint_3;
 typedef Kernel::Vector_3                 Vector_3;
 typedef Kernel::Line_3                   Line_3;
 typedef Kernel::Plane_3                  Plane_3;
 typedef CGAL::Triangle_3<Kernel>         Triangle_3;
+typedef CGAL::Triangle_3<IK>             InexactTriangle_3;
 typedef CGAL::Plane_3<Kernel>            Plane_3;
 typedef std::vector<Triangle_3>          Triangles;
 typedef CGAL::Tetrahedron_3<Kernel>      Tetrahedron;
+typedef CGAL::Tetrahedron_3<IK>          InexactTetrahedron;
 typedef std::vector<Point_3>             Points;
 typedef Kernel::Segment_3                Segment_3;
 typedef CGAL::Bbox_3                     Bbox;
+typedef CGAL::Polyhedron_3<IK>           InexactPolyhedron_3;
 typedef CGAL::Polyhedron_3<Kernel>       Polyhedron_3;
-typedef CGAL::Triangulation_3<Kernel>    Triangulation;
+typedef CGAL::Triangulation_3<Kernel>    ExactTriangulation;
+typedef CGAL::Triangulation_3<IK>        InexactTriangulation;
 typedef CGAL::Aff_transformation_3<Kernel>  Aff_transformation_3;
 
-typedef Triangulation::Finite_facets_iterator Finite_faces_iterator;
-typedef Triangulation::Finite_cells_iterator Finite_cells_iterator;
+typedef ExactTriangulation::Finite_facets_iterator ExactFinite_faces_iterator;
+typedef ExactTriangulation::Finite_cells_iterator ExactFinite_cells_iterator;
+typedef InexactTriangulation::Finite_facets_iterator InexactFinite_faces_iterator;
+typedef InexactTriangulation::Finite_cells_iterator InexactFinite_cells_iterator;
+typedef Polyhedron_3::Facet   Facet;
 typedef Polyhedron_3::Facet_iterator   Facet_iterator;
+typedef Polyhedron_3::Vertex_iterator   Vertex_iterator;
+typedef Polyhedron_3::Plane_iterator   Plane_iterator;
+typedef Polyhedron_3::Halfedge_around_vertex_circulator   Halfedge_around_vertex_circulator;
+typedef InexactPolyhedron_3::Facet   InexactFacet;
+typedef InexactPolyhedron_3::Facet_iterator   InexactFacet_iterator;
+typedef InexactPolyhedron_3::Vertex_iterator   InexactVertex_iterator;
+typedef InexactPolyhedron_3::Plane_iterator   InexactPlane_iterator;
+typedef InexactPolyhedron_3::Halfedge_around_vertex_circulator   InexactHalfedge_around_vertex_circulator;
 typedef Triangles::iterator            Triangle3_iterator;
 
 
@@ -207,25 +227,6 @@ std::vector<Point_3> intersection_bis(const Triangle_3& t1, const Triangle_3& t2
   return result;
 }
 
-//Nettoyage des redondances de Points_poly avant calcul du convex hull
-std::vector<Point_3> redondances(const std::vector<Point_3>::iterator& begin, const std::vector<Point_3>::iterator& end)
-{
-  const double eps_relat = std::numeric_limits<double>::epsilon( );
-  std::vector<Point_3> result;
-  for(std::vector<Point_3>::iterator it=begin;it!=end;it++){
-    bool test = true;
-    for(std::vector<Point_3>::iterator iter=result.begin();iter!=result.end() && test;iter++){
-      test = ((abs((*it).operator[](0) - (*iter).operator[](0))>eps_relat) || (abs((*it).operator[](1) - (*iter).operator[](1))>eps_relat) || (abs((*it).operator[](2) - (*iter).operator[](2))>eps_relat));
-    }
-    if(test){
-      result.push_back(*it);
-      //std::cout << (*it).x() << " " << (*it).y() << " " << (*it).z() << std::endl;
-      //std::getchar();
-    }
-  }
-  return result;
-}
-
 bool inside_tetra(const Tetrahedron &tetra, const Point_3& P){
 	
   //bool in = false;
@@ -239,5 +240,42 @@ bool inside_tetra(const Tetrahedron &tetra, const Point_3& P){
     }*/
   return tetra.has_on_bounded_side(P);
 }
+
+bool coplanar(std::vector<Point_3>::iterator begin, std::vector<Point_3>::iterator end)
+{
+  bool test=true;
+
+  bool test_confondus=true;
+  Point_3 P1,P2;
+  P1 = *begin;
+  std::vector<Point_3>::iterator it;
+  for(it=begin;it!=end && test_confondus;it++){
+    P2 = *it;
+    test_confondus = (P1==P2);
+  }
+  if(test_confondus){
+    return true;
+  } else {
+    bool test_collinear=true;
+    Point_3 P3;
+    std::vector<Point_3>::iterator iter;
+    for(iter=it;iter!=end && test_collinear;iter++){
+      P3 = *iter;
+      test_collinear = CGAL::collinear(P1,P2,P3);
+    }
+    if(test_collinear){
+      return true;
+    } else {
+      Point_3 P4;
+      for(std::vector<Point_3>::iterator iterat=iter;iterat!=end && test;iterat++){
+	P4 = *iterat;
+	test = CGAL::coplanar(P1,P2,P3,P4);
+      }
+    }
+  }
+  
+  return test;
+}
+
 
 #endif

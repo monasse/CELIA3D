@@ -1438,7 +1438,8 @@ void Grille::swap_face(const Triangles& T3d_prev, const Triangles& T3d_n, const 
 	      else {
 		//calcul volume intersection
 		//user_time.start();
-		volume += (intersect_cube_tetrahedron(box_cells[iter], vect_Tet[it]) * sign(volume_tetra(vect_Tet[it])) );
+		double temps_intersections=0.,temps_triangulation=0.;
+		volume += (intersect_cube_tetrahedron_bis(box_cells[iter], vect_Tet[it],temps_intersections,temps_triangulation) * sign(volume_tetra(vect_Tet[it])) );
 		//time+=user_time.time();
 		//user_time.reset();
 	      }
@@ -1535,7 +1536,7 @@ void Grille::swap_face_inexact(const Triangle_3& Tr_prev, const Triangle_3& Tr, 
   //double time=0.;
   CGAL::Timer delta_time,total_time,boucle1_time,boucle2_time;
   delta_time.start();total_time.start();boucle1_time.start();boucle2_time.start();
-  double temps_delta=0.,temps_total=0.,temps_boucle1=0.,temps_boucle2=0.;
+  double temps_delta=0.,temps_total=0.,temps_boucle1=0.,temps_boucle2=0.,temps_intersections=0.,temps_triangulation=0.;
   delta_time.reset();
   Bbox box_prisme = Tr_prev.bbox()+Tr.bbox();
 
@@ -1580,7 +1581,13 @@ void Grille::swap_face_inexact(const Triangle_3& Tr_prev, const Triangle_3& Tr, 
 	  
 	  if (CGAL::do_overlap(box_prisme, box_cell) ) {
 	    if(CGAL::do_overlap(Tet[t].bbox(), box_cell)){
-	      double volume = (intersect_cube_tetrahedron(box_cell, Tet[t]) * sign(Tet[t].volume()) );
+	      //double volume_bis = (intersect_cube_tetrahedron_bis(box_cell, Tet[t],temps_intersections,temps_triangulation) * sign(Tet[t].volume()) );
+	      double volume = (intersect_cube_tetrahedron(box_cell, Tet[t],temps_intersections,temps_triangulation) * sign(Tet[t].volume()) );
+	      /*if(volume!=volume_bis){
+		cout << "volume=" << volume << " volume_bis=" << volume_bis << endl;
+		getchar();
+		}*/
+	      
 	      volume_test += volume;
 	      volume_tot += volume;
 	      volume_tet += volume;
@@ -1777,15 +1784,17 @@ void Grille::swap_face_inexact(const Triangle_3& Tr_prev, const Triangle_3& Tr, 
   }
   temps_boucle2 += boucle2_time.time();
   
-  temps_total += total_time.time();
-  /*cout << "################# COUT SWAP INEXACT ##############" << endl;
+  /*temps_total += total_time.time();
+  cout << "################# COUT SWAP INEXACT ##############" << endl;
   cout << "temps_total=" << temps_total << "s" << endl;
   cout << "delta=" << 100*temps_delta/temps_total << "%" << endl;
+  cout << "   intersections=" << 100*temps_intersections/temps_total << "%" << endl;
+  cout << "   triangulation=" << 100*temps_triangulation/temps_total << "%" << endl;
   cout << "boucle1=" << 100*temps_boucle1/temps_total << "%" << endl;
   cout << "boucle2=" << 100*temps_boucle2/temps_total << "%" << endl;
   cout << "##########################################" << endl;
   cout<<"volume balayee = "<< volume_test<<endl;
-  getchar();*/
+  getchar();//*/
 }	
 
 /**

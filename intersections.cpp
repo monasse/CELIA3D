@@ -42,12 +42,15 @@ Le volume d'un t&eacute;tra&egrave;dre est calcul&eacute; via la fonction \b CGA
 *\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
 *\return double
 */
-double intersect_cube_tetrahedron(Bbox& cube, Tetrahedron& Tet){
+double intersect_cube_tetrahedron(const Bbox& cube, const Tetrahedron& Tet, double& temps_intersections, double& temps_triangulation){
 	
   double volume=0.,volume2=0.;
-	
-	if(abs(Tet.volume())>eps){
-		
+  CGAL::Timer intersections_time,triangulation_time;
+  intersections_time.start();
+  
+
+  if(abs(Tet.volume())>eps){
+    
 	  Triangles triangCube;
 	  triang_cellule(cube , triangCube); 
 	  Triangle_3 triangTet[4];
@@ -205,35 +208,64 @@ double intersect_cube_tetrahedron(Bbox& cube, Tetrahedron& Tet){
 	  triang_cellule(cube,trianglesB);
 	  for(int a=0;a<6;a++){
 	    for(int t=0;t<trianglesB.size();t++){
-	      if(CGAL::do_intersect(areteTet[a],trianglesB[t])){
-		Point_3 P;
-		Segment_3 seg;
-		CGAL::Object result = CGAL::intersection(areteTet[a],trianglesB[t]);
-		if(assign(P,result)){
-		  Points_intersect.push_back(P);
-		}
-		else if(assign(seg,result)){
-		  Points_intersect.push_back(seg.vertex(0));
-		  Points_intersect.push_back(seg.vertex(1));
-		} else {
-		  cout << "probleme intersection segment triangle" << endl;
-		  getchar();
+	      if(CGAL::do_overlap(areteTet[a].bbox(),trianglesB[t].bbox())){
+		if(CGAL::do_intersect(areteTet[a],trianglesB[t])){
+		  Point_3 P;
+		  Segment_3 seg;
+		  CGAL::Object result = CGAL::intersection(areteTet[a],trianglesB[t]);
+		  if(assign(P,result)){
+		    Points_intersect.push_back(P);
+		  }
+		  else if(assign(seg,result)){
+		    Points_intersect.push_back(seg.vertex(0));
+		    Points_intersect.push_back(seg.vertex(1));
+		  } else {
+		    cout << "probleme intersection segment triangle" << endl;
+		    getchar();
+		  }
 		}
 	      }
 	    }
 	  }
+	  temps_intersections += intersections_time.time();
 	  
-	  
+	  triangulation_time.start();
+	  	  
 	  //Triangulation de l'intersection
 	  if( Points_intersect.size() >=4 ){
-	    Triangulation T(Points_intersect.begin(), Points_intersect.end());
-	    if(T.is_valid()){
-	      Finite_cells_iterator cit;
-	      for (cit = T.finite_cells_begin(); cit!= T.finite_cells_end(); cit++){
-		volume+= CGAL::to_double(T.tetrahedron( cit).volume());
+	    Exact_to_Inexact to_inexact;
+	    std::vector<InexactPoint_3> Points_intersect3;
+	    for(std::vector<Point_3>::iterator it = Points_intersect.begin();it!=Points_intersect.end();it++){
+	      Points_intersect3.push_back(to_inexact(*it));
+	    }
+	    //std::vector<IK::Point_3> Points_intersect4 = redondances(Points_intersect3.begin(),Points_intersect3.end());
+	    /*if(Points_intersect3.size()!=Points_intersect.size()){
+	      cout << "size=" << Points_intersect.size() << " sans redondance=" << Points_intersect3.size() << endl;
+	      getchar();
+	      }*/
+	    if(Points_intersect3.size()>=4){
+	    //if(true){
+	      //for(int i=0;i<Points_intersect3.size();i++){
+	      //cout << "Sommet=" << Points_intersect3[i] << endl;
+	      //}
+	      /*CGAL::Polyhedron_3<IK> poly;
+	      CGAL::convex_hull_3(Points_intersect3.begin(), Points_intersect3.end(),poly);
+	      IK::Point_3 poly.vertices_begin()->point();
+	      for(CGAL::Polyhedron_3<IK>::Facets_iterator f=poly.facets_begin();f!=poly.facets_end();f++){
+		
+	      }*/
+	      
+	      InexactTriangulation T(Points_intersect3.begin(), Points_intersect3.end());
+	      if(T.is_valid()){
+		InexactFinite_cells_iterator cit;
+		for (cit = T.finite_cells_begin(); cit!= T.finite_cells_end(); cit++){
+		  volume+= std::abs(CGAL::to_double(T.tetrahedron( cit).volume()));
+		}
 	      }
 	    }
 	  }
+	  temps_triangulation += triangulation_time.time();
+	  
 	  /*Triangulation de l'intersection
 	  if( Points_intersect2.size() >=4 ){
 	    Triangulation T(Points_intersect2.begin(), Points_intersect2.end());
@@ -258,90 +290,195 @@ double intersect_cube_tetrahedron(Bbox& cube, Tetrahedron& Tet){
 	      getchar();
 	    }
 	    }*/
-	}
+	  
+	  return std::abs(volume);
+  } else {
+    return 0.;
+  }
+  
 	
-	
-	return std::abs(volume);
 }	
 
-double intersect_cube_prisme(const Bbox& cube, const Point_3& a, const Point_3& b, const Point_3& c, const Point_3& a1, const Point_3& b1, const Point_3& c1)
-{
+double intersect_cube_tetrahedron_bis(const Bbox& cube, const Tetrahedron& Tet, double& temps_intersections, double& temps_triangulation){
   double volume = 0.;
-  Bbox box_prisme = a.bbox()+b.bbox()+c.bbox()+a1.bbox()+b1.bbox()+c1.bbox();
-  
-  if(CGAL::do_overlap(box_prisme,cube)){
-    Point_3 e = centroid(b1,b,c,c1);
-    Point_3 f = centroid(a1,a,c,c1);
-    Point_3 g = centroid(a1,a,b,b1);
-    
-    Tetrahedron Tet[11];
-    Tet[0] = Tetrahedron(a1, a, g, f);
-    Tet[1] = Tetrahedron(b1, b, e, g);
-    Tet[2] = Tetrahedron(c1, c, f, e);
-    Tet[3] = Tetrahedron(a1, b1, c1, g);
-    Tet[4] = Tetrahedron(a1, f, g, c1);
-    Tet[5] = Tetrahedron(b1, g, e, c1);
-    Tet[6] = Tetrahedron(e, g, f, c1);
-    Tet[7] = Tetrahedron(e, f, g, c);
-    Tet[8] = Tetrahedron(e, b, c, g);
-    Tet[9] = Tetrahedron(a, c, g, f);
-    Tet[10]= Tetrahedron(a, b, g, c);
-    
-    Segment_3 arete[26];
-    arete[0] = Segment_3(a,a1);
-    arete[1] = Segment_3(b,b1);
-    arete[2] = Segment_3(c,c1);
-    arete[3] = Segment_3(a,b);
-    arete[4] = Segment_3(b,c);
-    arete[5] = Segment_3(a,c);
-    arete[6] = Segment_3(a1,b1);
-    arete[7] = Segment_3(b1,c1);
-    arete[8] = Segment_3(a1,c1);
-    arete[9] = Segment_3(a,f);
-    arete[10] = Segment_3(a,g);
-    arete[11] = Segment_3(a1,f);
-    arete[12] = Segment_3(a1,g);
-    arete[13] = Segment_3(b,e);
-    arete[14] = Segment_3(b,g);
-    arete[15] = Segment_3(b1,e);
-    arete[16] = Segment_3(b1,g);
-    arete[17] = Segment_3(c,e);
-    arete[18] = Segment_3(c,f);
-    arete[19] = Segment_3(c,g);
-    arete[20] = Segment_3(c1,e);
-    arete[21] = Segment_3(c1,f);
-    arete[22] = Segment_3(c1,g);
-    arete[23] = Segment_3(e,f);
-    arete[24] = Segment_3(f,g);
-    arete[25] = Segment_3(e,g);
-  
-  
-
-    //Intersections des 11 tetras avec le cube
-    std::vector<Point_3> intersec[11];
-  
-    //Intersections des sommets et des aretes du cube avec les tetras
-    for(int kx=0;kx<2;kx++){
-      for(int ky=0;ky<2;ky++){
-	for(int kz=0;kz<2;kz++){
+  if(abs(Tet.volume())>eps){
+    //Test de l'intersection
+    bool intersect=false;
+    //Test sur les coins du tetraedre
+    for(int i=0; i<4 && !intersect; i++){
+      if (CGAL::do_overlap(cube, Tet.vertex(i).bbox()) ){
+	intersect = true;
+      }
+    }
+    //Test sur les coins du cube
+    for(int kx=0;kx<2 && !intersect;kx++){
+      for(int ky=0;ky<2 && !intersect;ky++){
+	for(int kz=0;kz<2 && !intersect;kz++){
 	  Point_3 s1(cube.xmin()+kx*(cube.xmax()-cube.xmin()),cube.ymin()+ky*(cube.ymax()-cube.ymin()),cube.zmin()+kz*(cube.zmax()-cube.zmin()));
 	  //Sommets du cube
-	  for(int i=0;i<11;i++){
-	    if(CGAL::do_overlap(s1.bbox(),Tet[i].bbox())){
-	      intersec[i].push_back(s1);
+	  if(CGAL::do_overlap(s1.bbox(),Tet.bbox())){
+	    if(inside_tetra(Tet,s1)){
+	      intersect = true;
+	    }
+	  }
+	}
+      }
+    }
+    //Test sur les aretes du cube
+    if(!intersect){
+      Triangle_3 triangTet[4];
+      triangTet[0]= Triangle_3(Tet.vertex(0), Tet.vertex(1), Tet.vertex(2));
+      triangTet[1]= Triangle_3(Tet.vertex(0), Tet.vertex(2), Tet.vertex(3));
+      triangTet[2]= Triangle_3(Tet.vertex(0), Tet.vertex(1), Tet.vertex(3));
+      triangTet[3]= Triangle_3(Tet.vertex(1), Tet.vertex(2), Tet.vertex(3));
+      for(int kx=0;kx<2 && !intersect;kx++){
+	for(int ky=0;ky<2 && !intersect;ky++){
+	  for(int kz=0;kz<2 && !intersect;kz++){
+	    Point_3 s1(cube.xmin()+kx*(cube.xmax()-cube.xmin()),cube.ymin()+ky*(cube.ymax()-cube.ymin()),cube.zmin()+kz*(cube.zmax()-cube.zmin()));
+	    if(kx==0){
+	      Point_3 s2(cube.xmax(),s1.y(),s1.z());
+	      Segment_3 seg(s1,s2);
+	      if(CGAL::do_overlap(seg.bbox(),Tet.bbox())){
+		for(int f=0;f<4;f++){
+		  if(CGAL::do_intersect(seg,triangTet[f])){
+		    intersect = true;
+		  }
+		}
+	      }
+	    }
+	    if(ky==0){
+	      Point_3 s2(s1.x(),cube.ymax(),s1.z());
+	      Segment_3 seg(s1,s2);
+	      if(CGAL::do_overlap(seg.bbox(),Tet.bbox())){
+		for(int f=0;f<4;f++){
+		  if(CGAL::do_intersect(seg,triangTet[f])){
+		    intersect = true;
+		  }
+		}
+	      }
+	    }
+	    if(kz==0){
+	      Point_3 s2(s1.x(),s1.y(),cube.zmax());
+	      Segment_3 seg(s1,s2);
+	      if(CGAL::do_overlap(seg.bbox(),Tet.bbox())){
+		for(int f=0;f<4;f++){
+		  if(CGAL::do_intersect(seg,triangTet[f])){
+		    intersect = true;
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    //Test intersections des aretes du tetraedre avec les faces du cube
+    if(!intersect){
+      Segment_3 areteTet[6];
+      areteTet[0] = Segment_3(Tet.vertex(0),Tet.vertex(1));
+      areteTet[1] = Segment_3(Tet.vertex(0),Tet.vertex(2));
+      areteTet[2] = Segment_3(Tet.vertex(0),Tet.vertex(3));
+      areteTet[3] = Segment_3(Tet.vertex(1),Tet.vertex(2));
+      areteTet[4] = Segment_3(Tet.vertex(1),Tet.vertex(3));
+      areteTet[5] = Segment_3(Tet.vertex(2),Tet.vertex(3));
+      
+      Triangles trianglesB;
+      triang_cellule(cube,trianglesB);
+      for(int a=0;a<6 && !intersect;a++){
+	for(int t=0;t<trianglesB.size() && !intersect;t++){
+	  if(CGAL::do_overlap(areteTet[a].bbox(),trianglesB[t].bbox())){
+	    if(CGAL::do_intersect(areteTet[a],trianglesB[t])){
+	      intersect = true;
 	    }
 	  }
 	}
       }
     }
     
+    //En cas d'intersection
+    if(intersect){
+      //Translation par rapport au centre du tetraedre
+      Point_3 centre = CGAL::centroid(Tet.vertex(0), Tet.vertex(1), Tet.vertex(2),Tet.vertex(3));
+      if(!CGAL::do_overlap(centre.bbox(),cube)){
+	//A FAIRE !
+      }
+      Vector_3 vec(centre,Point_3(0,0,0));
+      //Transformation  projective des plans
+      Plane_3 plan[10];
+      //Plans du tetraedre
+      plan[0]= Plane_3(Tet.vertex(0)+vec, Tet.vertex(1)+vec, Tet.vertex(2)+vec);
+      plan[1]= Plane_3(Tet.vertex(0)+vec, Tet.vertex(2)+vec, Tet.vertex(3)+vec);
+      plan[2]= Plane_3(Tet.vertex(0)+vec, Tet.vertex(1)+vec, Tet.vertex(3)+vec);
+      plan[3]= Plane_3(Tet.vertex(1)+vec, Tet.vertex(2)+vec, Tet.vertex(3)+vec);
+      //Plans du cube
+      plan[4] = Plane_3(1,0,0,-cube.xmin()-vec.x());
+      plan[5] = Plane_3(1,0,0,-cube.xmax()-vec.x());
+      plan[6] = Plane_3(0,1,0,-cube.ymin()-vec.y());
+      plan[7] = Plane_3(0,1,0,-cube.ymax()-vec.y());
+      plan[8] = Plane_3(0,0,1,-cube.zmin()-vec.z());
+      plan[9] = Plane_3(0,0,1,-cube.zmax()-vec.z());
+      //Transformation projective
+      std::vector<Point_3> dual;
+      for(int i=0;i<10;i++){
+	if(plan[i].d()==0){
+	  cout << "Probleme construction dual d()=" << plan[i].d() << " i=" << i << endl;
+	  getchar();
+	}
+	//cout << "plan[" << i << "]=" << plan[i].a() << " " << plan[i].b() << " " << plan[i].c() << " " << plan[i].d() << endl;
+	dual.push_back(Point_3(plan[i].a(),plan[i].b(),plan[i].c(),plan[i].d()));
+	//cout << "Plan primal=" << plan[i] << endl;
+	//cout << "Point dual =" << dual[i] << endl;
+      }	
+      //Construction du convex_hull du dual
+      if(!coplanar(dual.begin(),dual.end())){
+	Polyhedron_3 poly_dual;
+	CGAL::convex_hull_3(dual.begin(), dual.end(), poly_dual);
+	//cout << "poly_dual vertices=" << poly_dual.size_of_vertices() << " facets=" << poly_dual.size_of_facets() <<  " halfedges=" << poly_dual.size_of_halfedges() << endl;
+	
+	//Calcul du volume
+	//Parcours des faces du primal (sommets du dual)
+	Plane_3 plane_0(poly_dual.vertices_begin()->vertex_begin()->vertex()->point(),poly_dual.vertices_begin()->vertex_begin()->next()->vertex()->point(),poly_dual.vertices_begin()->vertex_begin()->opposite()->vertex()->point());
+	//cout << "plane_0=" << plane_0 << endl;
+	Point_3 P0(plane_0.a(),plane_0.b(),plane_0.c(),plane_0.d());
+	for(Vertex_iterator v=poly_dual.vertices_begin();v!=poly_dual.vertices_end();v++){
+	  Point_3 P_dual = v->point();
+	  //Parcours des vertex de la face du primal (des faces entourant le vertex du dual) et stockage dans sommets
+	  std::vector<Point_3> sommets;
+	  //for(Halfedge_around_vertex_circulator he=(*v).vertex_begin();he!=(*v).vertex_begin() || !test_entre; he++){
+	  Halfedge_around_vertex_circulator he=(*v).vertex_begin(), done(he);
+	  do 
+	  {
+	    Plane_3 plane_dual(he->vertex()->point(),he->opposite()->vertex()->point(),he->next()->vertex()->point());
+	    //cout << "Point1=" << he->vertex()->point() << " Point2=" << he->opposite()->vertex()->point() << " Point_3=" << he->next()->vertex()->point() << endl;
+	    //getchar();
+	    //cout << "plane_dual=" << plane_dual.a() << " " << plane_dual.b() << " " << plane_dual.c() << " " << plane_dual.d() << endl;
+	    if(plane_dual.d()==0){
+	      cout << "Probleme reconversion primal d()=" << plane_dual.d() << endl;
+	      getchar();
+	    }
+	    sommets.push_back(Point_3(plane_dual.a(),plane_dual.b(),plane_dual.c(),plane_dual.d()));
+	    Point_3 Pt(plane_dual.a(),plane_dual.b(),plane_dual.c(),plane_dual.d());
+	    //cout << "Sommet=" << Pt.hx() << " " << Pt.hy() << " " << Pt.hz() << " " << Pt.hw() << endl;
+	    //getchar();
+	  } while(++he != done);
+	  for(int i=0;i<sommets.size();i++){
+	    cout << "Sommet_bis=" << sommets[i]-vec << endl;
+	  }
+	  for(int i=1;i<sommets.size()-1;i++){
+	    Tetrahedron T(P0,sommets[0],sommets[i],sommets[i+1]);
+	    volume += std::abs(CGAL::to_double(T.volume()));
+	  }
+	}
+      }
+    }
     
-  
-  }//Fin do_overlap
-  
-  
+  }
   return volume;
+  
 }
+
+
+
 
 
 /*!
@@ -701,20 +838,23 @@ void Grille::Parois_particles(Solide& S,double dt) {
 	    user_time2.reset();
 	    alpha_time.reset();
 	    if(intersection && exterieur && Points_poly.size()>3){
-				      
-				      
-	      Polyhedron_3 poly;
+	      Exact_to_Inexact to_inexact;
+	      std::vector<InexactPoint_3> Points_poly2;
+	      for(std::vector<Point_3>::iterator it = Points_poly.begin();it!=Points_poly.end();it++){
+		Points_poly2.push_back(to_inexact(*it));
+	      }
+	      InexactPolyhedron_3 poly;
 	      convex_hull_time.reset();
-	      CGAL::convex_hull_3(Points_poly.begin(), Points_poly.end(), poly);
+	      CGAL::convex_hull_3(Points_poly2.begin(), Points_poly2.end(), poly);
 		
 	      nb_convex_hull += 1.;
 	      temps_convex_hull += CGAL::to_double(convex_hull_time.time());
 	      //convex_hull_time.stop();convex_hull_time.reset();
 	      volume_time.reset();
-	      Point_3 P = (*(poly.facets_begin())).halfedge()->vertex()->point();
-	      Facet_iterator fiter;
+	      InexactPoint_3 P = (*(poly.facets_begin())).halfedge()->vertex()->point();
+	      InexactFacet_iterator fiter;
 	      for (fiter = poly.facets_begin(); fiter!= poly.facets_end(); fiter++){
-		Tetrahedron T(P,(*fiter).halfedge()->vertex()->point(),(*fiter).halfedge()->next()->vertex()->point(), (*fiter).halfedge()->opposite()->vertex()->point());
+		InexactTetrahedron T(P,(*fiter).halfedge()->vertex()->point(),(*fiter).halfedge()->next()->vertex()->point(), (*fiter).halfedge()->opposite()->vertex()->point());
 		alpha+= CGAL::to_double(T.volume());
 	      }
 					
@@ -725,7 +865,7 @@ void Grille::Parois_particles(Solide& S,double dt) {
 	      kappa_time1.reset();
 	      for (fiter = poly.facets_begin(); fiter!= poly.facets_end(); fiter++){
 		nb_kappa1 +=1.;
-		Triangle_3 K((*fiter).halfedge()->vertex()->point(),(*fiter).halfedge()->next()->vertex()->point(),
+		InexactTriangle_3 K((*fiter).halfedge()->vertex()->point(),(*fiter).halfedge()->next()->vertex()->point(),
 			     (*fiter).halfedge()->opposite()->vertex()->point());
 														 
 		if (abs(trianglesB[0].operator[](0).operator[](2) -  K.operator[](0).operator[](2))<=eps_relat && abs(trianglesB[0].operator[](0).operator[](2) - K.operator[](1).operator[](2))<=eps_relat && abs(trianglesB[0].operator[](0).operator[](2) -  K.operator[](2).operator[](2))<=eps_relat )
@@ -807,14 +947,14 @@ void Grille::Parois_particles(Solide& S,double dt) {
 				
 	//triangularisation de l'interface face par face
 	triangularisation_time.reset();
-	Finite_faces_iterator iter;
+	ExactFinite_faces_iterator iter;
 	for(int count=0; count<nb_particules;count++){//boucle sur les Particules
 	  for(int it=0; it<S.solide[count].triangles.size(); it++){ //boucle sur les Particules.triangles
 			
 				    
 	    if(Points_interface[count][it].size()>2){ 
 	      triangulation_time2.reset();
-	      Triangulation T(Points_interface[count][it].begin(), Points_interface[count][it].end());
+	      ExactTriangulation T(Points_interface[count][it].begin(), Points_interface[count][it].end());
 	      temps_triangulation2 += triangulation_time2.time();
 	      assert(T.is_valid());
 	      if(T.dimension()==2){
