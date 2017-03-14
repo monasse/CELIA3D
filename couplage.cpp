@@ -1,909 +1,833 @@
 /*!
-   \file couplage.cpp
-   \brief D&eacute;finitions des fonctions sp&eacute;cifiques au couplage.
-   \details Calcul des forces et moments fluides exerc&eacute;s sur le solide, modifications flux fluide, remplissage de cellules fant&ocirc;mes, calcul de la quantit&eacute; balay&eacute;e.
-   \warning  <b> Proc&eacute;dures sp&eacute;cifique au couplage! </b>
- */
+  \file
+  \authors Maria Adela Puscas and Laurent Monasse
+  \brief Definition of specific coupling functions.
+  \details Computation of fluid forces and torques acting on the solid, modifications of the fluid fluxes, filling of ghost cells, computation of the swept quantity.
+  \warning  <b> Specific coupling procedures ! </b>
+*/
 
 
 #include "fluide.hpp"
 #include "intersections.cpp"
 
-/*!
-* \fn void Grille::Forces_fluide(Solide& S, const double dt)
-* \brief Calcul des Forces (\a Particule.Ff) et Moments fluides (\a Particule.Mf) exerc&eacute;s sur le Solide.
-* \details Soit \a f un morceau d'interface, la force de pression exerc&eacute;e par le fluide sur l'interface \a f est donn&eacute;e par :
-\f{eqnarray*}{
-	F_f  =  (- p^x \, A_f n^{x}_f, \,- p^y \,A_f n^{y}_f, \,- p^z \,A_f n^{z}_f )^t
-\f} \n
-o&ugrave;  \f$ A_f \f$ l'aire de l'interface f,  \f$ n_f \f$ la normale sortante &agrave; l'interface f, et \f$ p^x, p^y, p^z \f$ les pressions efficaces selon les directions x, y et z pendant le pas de temps (\a Cellule.pdtx, 
-\a  Cellule.pdty et \a Cellule.pdtz).
-Le moment fluide exerc&eacute; sur f est donn&eacute; par :
-\f{eqnarray*}{
-	M_f = F_f  \wedge (X_f - X_I),
-\f}
-o&ugrave; \f$ X_f \f$ centre de l'interface f et \f$  X_I \f$ centre de la particule qui contient f.
-Ces forces vont &ecirc;tre transmises au Solide comme des forces exerc&eacute;es par le fluide sur le solide pendant le pas de temps.
-* \param S Solide
-* \param dt pas de temps
-* \warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-* \return void
-*/
+/*!\brief Computation of fluid forces (\a Particule.Ff) and torques (\a Particule.Mf) applied on the \a Solide.
+  \details Let \a f an interface element, the pressure force exerted by the fluid on interface \a f is given by:
+ \f{eqnarray*}{
+ F_f  =  (- p^x \, A_f n^{x}_f, \,- p^y \,A_f n^{y}_f, \,- p^z \,A_f n^{z}_f )^t
+ \f} \n
+ where  \f$ A_f \f$ is the area of interface f,  \f$ n_f \f$  the exterior normal to f, and \f$ p^x, p^y, p^z \f$ are the effective pressures in the x, y and z directions during the time-step (\a Cellule.pdtx, \a  Cellule.pdty and \a Cellule.pdtz).
+ The fluid torque exerted on f is given by:
+ \f{eqnarray*}{
+ M_f = F_f  \wedge (X_f - X_I),
+ \f}
+ where \f$ X_f \f$ is the center of interface f and \f$  X_I \f$ is the center of the particle containing f.
+ These forces are transmitted to the solid as being constant during the time-step.
+  \param S Solid
+  \param dt Time-step
+  \warning <b> Specific coupling procedure ! </b>
+  \return void
+ */
 void Grille::Forces_fluide(Solide& S, const double dt){
 	
-	Vector_3 Ffluide(0.,0.,0.);
-	//Mise &agrave; jour des Forces fluides et Moments fluides exerces sur le solide 
-	for(int iter_s=0; iter_s<S.size(); iter_s++){ 
+  Vector_3 Ffluide(0.,0.,0.);
+  //Update of fluid forces and torques on the solid
+  for(int iter_s=0; iter_s<S.size(); iter_s++){ 
 		
-		S.solide[iter_s].Ffprev = S.solide[iter_s].Ff;
-		S.solide[iter_s].Mfprev = S.solide[iter_s].Mf;
-		Point_3 Xn = S.solide[iter_s].x0 + S.solide[iter_s].Dx;
+    S.solide[iter_s].Ffprev = S.solide[iter_s].Ff;
+    S.solide[iter_s].Mfprev = S.solide[iter_s].Mf;
+    Point_3 Xn = S.solide[iter_s].x0 + S.solide[iter_s].Dx;
     double fx=0.; double fy=0.; double fz=0.;
     Kernel::FT mx = 0.,my = 0. ,mz = 0.;
 		
-		for(int it=0; it<S.solide[iter_s].triangles.size(); it++){
-			//if(S.solide[iter_s].fluide[it] && !S.solide[iter_s].vide[it]){
-				for(int iter=0; iter<S.solide[iter_s].Position_Triangles_interface[it].size(); iter++)
-				{  
-					double aire= std::sqrt(CGAL::to_double(S.solide[iter_s].Triangles_interface[it][iter].squared_area()));
-					if(dt>eps){	
-						int i= S.solide[iter_s].Position_Triangles_interface[it][iter][0]; 
-						int j= S.solide[iter_s].Position_Triangles_interface[it][iter][1]; 
-						int k= S.solide[iter_s].Position_Triangles_interface[it][iter][2]; 
-						if(i>=marge && i<Nx+marge && j>=marge && j<Ny+marge && k>=marge && k<Nz+marge){
-							double tempx = (grille[i][j][k].pdtx/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].x()));
-							double tempy = (grille[i][j][k].pdty/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].y()));
-							double tempz = (grille[i][j][k].pdtz/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].z()));
-							//cout<<"tag tag "<<iter<<" "<<grille[i][j][k].pdtx<<" "<<grille[i][j][k].y<<endl;
-							Vector_3 temp_Mf = cross_product(Vector_3(Xn,Point_3(centroid(S.solide[iter_s].Triangles_interface[it][iter].operator[](0),
-																							S.solide[iter_s].Triangles_interface[it][iter].operator[](1),
-																							S.solide[iter_s].Triangles_interface[it][iter].operator[](2)))), 
-																							Vector_3(-tempx,-tempy,-tempz));
-						fx-= tempx; fy-= tempy; fz-= tempz;
-						mx+= temp_Mf.x(); my+= temp_Mf.y(); mz+= temp_Mf.z();
-					  }
-					}
-			   }
-		//}
+    for(int it=0; it<S.solide[iter_s].triangles.size(); it++){
+      for(int iter=0; iter<S.solide[iter_s].Position_Triangles_interface[it].size(); iter++)
+      {  
+	double aire= std::sqrt(CGAL::to_double(S.solide[iter_s].Triangles_interface[it][iter].squared_area()));
+	if(dt>eps){	
+	  int i= S.solide[iter_s].Position_Triangles_interface[it][iter][0]; 
+	  int j= S.solide[iter_s].Position_Triangles_interface[it][iter][1]; 
+	  int k= S.solide[iter_s].Position_Triangles_interface[it][iter][2]; 
+	  if(i>=marge && i<Nx+marge && j>=marge && j<Ny+marge && k>=marge && k<Nz+marge){
+	    double tempx = (grille[i][j][k].pdtx/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].x()));
+	    double tempy = (grille[i][j][k].pdty/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].y()));
+	    double tempz = (grille[i][j][k].pdtz/dt) * aire * (CGAL::to_double(S.solide[iter_s].normales[it].z()));
+	    Vector_3 temp_Mf = cross_product(Vector_3(Xn,Point_3(centroid(S.solide[iter_s].Triangles_interface[it][iter].operator[](0),
+									  S.solide[iter_s].Triangles_interface[it][iter].operator[](1),
+									  S.solide[iter_s].Triangles_interface[it][iter].operator[](2)))), 
+					     Vector_3(-tempx,-tempy,-tempz));
+	    fx-= tempx; fy-= tempy; fz-= tempz;
+	    mx+= temp_Mf.x(); my+= temp_Mf.y(); mz+= temp_Mf.z();
+	  }
 	}
-		S.solide[iter_s].Ff = Vector_3(fx,fy,fz);
-		S.solide[iter_s].Mf = Vector_3(CGAL::to_double(mx),CGAL::to_double(my),CGAL::to_double(mz)); 
-		Ffluide = Ffluide + S.solide[iter_s].Ff;
-	} //fin boucle sur les particules
-	  cout<<"forces fluide "<<Ffluide<<endl;
-		for(int it=0; it<S.solide.size(); it++){
-			for(int i=0; i<S.solide[it].faces.size(); i++){
-				if(S.solide[it].faces[i].voisin == -2){
-					S.solide[it].faces[i].voisin = -1;
-				}
-			}
-		}
+      }
+    }
+    S.solide[iter_s].Ff = Vector_3(fx,fy,fz);
+    S.solide[iter_s].Mf = Vector_3(CGAL::to_double(mx),CGAL::to_double(my),CGAL::to_double(mz)); 
+    Ffluide = Ffluide + S.solide[iter_s].Ff;
+  }
+  cout<<"Fluid forces "<<Ffluide<<endl;
+  for(int it=0; it<S.solide.size(); it++){
+    for(int i=0; i<S.solide[it].faces.size(); i++){
+      if(S.solide[it].faces[i].voisin == -2){
+	S.solide[it].faces[i].voisin = -1;
+      }
+    }
+  }
 }	
 
-/*!
-* \fn void Grille::Modif_fnum(const double dt)
-*  \brief Modification des flux fluide et bilan discret sur la cellule (m&eacute;thode de fronti&egrave;res immerg&eacute;es).
-*  \details C'est &agrave; cette &eacute;tape que le fluide "voie" la pr&eacute;sence du solide. On calcule la valeur finale de l'&eacute;tat \f$ U^{n+1}_{i, j, k}\f$  dans la cellule en utilisant:
-\f{eqnarray*}{
-	\left( 1-  \Lambda_{i,j,k}^{n+1} \right) U^{n+1}_{i,j,k}   = \left( 1-  \Lambda_{i,j,k} ^{n+1}\right) U^n_{i,j,k}  + \Delta t \, \left(   \frac{(1-\lambda_{i-1/2,j,k}^{n+1} )}{\Delta x_{ i,j,k}} F_{i-1/2, j, k}^{n+1/2} -\frac{(1-\lambda_{i+1/2,j,k}^{n+1} )}{\Delta x_{ i,j,k}} F_{i+1/2, j, k}^{n+1/2}  + ...\right)	\f}
-	\f{eqnarray*}{+  \frac{\Delta t}{V_{i,j,k}} \sum_{f \in C_{i,j,k}}{A_{f}} {\phi}_{f_{ i,j,k}}  +   \sum_{f \in C_{i,j,k}} \Delta U^{n, n+1}_{f_{ i,j,k}}  .
-	\f}
-	o&ugrave;	\f$ \Lambda_{i,j,k}^{n+1} \f$: \a Cellule.alpha (fraction occup&eacute;e par du solide dans la cellule(i,j,k)),\n
-	\f$ \lambda_{i+1/2,j,k}^{n+1} \f$: \a Cellule.kappai (fraction occup&eacute;e par du solide sur les faces de la cellule(i,j,k)),\n
-	\f$ F_{i+1/2, j, k}^{n+1/2} \f$:   \a  Cellule.fluxi (flux &agrave; droite dans la cellule(i,j,k)), \n
-	\f$ V_{i,j,k} \f$: volume de la cellule(i,j,k), \n
-	\f{eqnarray*}{ \phi_{f_{ i,j,k}} = (0, \Pi_x, \Pi_y,\Pi_z, \Pi_v)^t. 	\f}
-	\f$ \Pi_x, \Pi_y,\Pi_z, \Pi_v\f$: \a Cellule.phi_x, \a Cellule.phi_y, Cellule.phi_z, \a Cellule.phi_v (les flux &agrave; la parois),\n
-	\f$ \Delta U^{n, n+1}_{f_{ i,j,k}} 	\f$:  \a Cellule.delta_w (quantit&eacute;e balay&eacute;e).
-*	\param dt pas de temps
-*	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-*	\return void
-*/
+/*!\brief Modification of fluid fluxes and discrete balance on a cell (cut-cell method).
+   \details The fluid sees the presence of the solid through this function. The final value of the state \f$ U^{n+1}_{i, j, k}\f$ in the cell is computed using:
+ \f{eqnarray*}{
+ \left( 1-  \Lambda_{i,j,k}^{n+1} \right) U^{n+1}_{i,j,k}   = \left( 1-  \Lambda_{i,j,k} ^{n+1}\right) U^n_{i,j,k}  + \Delta t \, \left(   \frac{(1-\lambda_{i-1/2,j,k}^{n+1} )}{\Delta x_{ i,j,k}} F_{i-1/2, j, k}^{n+1/2} -\frac{(1-\lambda_{i+1/2,j,k}^{n+1} )}{\Delta x_{ i,j,k}} F_{i+1/2, j, k}^{n+1/2}  + ...\right)	\f}
+ \f{eqnarray*}{+  \frac{\Delta t}{V_{i,j,k}} \sum_{f \in C_{i,j,k}}{A_{f}} {\phi}_{f_{ i,j,k}}  +   \sum_{f \in C_{i,j,k}} \Delta U^{n, n+1}_{f_{ i,j,k}}  .
+ \f}
+ where \f$ \Lambda_{i,j,k}^{n+1} \f$: \a Cellule.alpha (solid occupancy ratio in cell (i,j,k)),\n
+ \f$ \lambda_{i+1/2,j,k}^{n+1} \f$: \a Cellule.kappai (solid occupancy ratio on the faces of cell (i,j,k)),\n
+ \f$ F_{i+1/2, j, k}^{n+1/2} \f$:   \a  Cellule.fluxi (flux to the right of cell (i,j,k)), \n
+ \f$ V_{i,j,k} \f$: volume of cell (i,j,k), \n
+ \f{eqnarray*}{ \phi_{f_{ i,j,k}} = (0, \Pi_x, \Pi_y,\Pi_z, \Pi_v)^t. 	\f}
+ \f$ \Pi_x, \Pi_y,\Pi_z, \Pi_v\f$: \a Cellule.phi_x, \a Cellule.phi_y, Cellule.phi_z, \a Cellule.phi_v (boundary fluxes),\n
+ \f$ \Delta U^{n, n+1}_{f_{ i,j,k}} 	\f$:  \a Cellule.delta_w (swept quantity).
+ 	\param dt Time-step
+ 	\warning <b> Specific coupling procedure ! </b>
+ 	\return void
+ */
 void Grille::Modif_fnum(const double dt){
 	
-	double phi_x=0., phi_y=0., phi_z=0.;
-	double vol=deltax*deltay*deltaz;
-	for(int i=marge;i<Nx+marge;i++){
-		for(int j=marge;j<Ny+marge;j++){ 
-			for(int k=marge;k<Nz+marge;k++){
-			  Cellule& c = grille[i][j][k];
-				if(std::abs(c.alpha-1.)>eps && !c.vide){
-				  Cellule& ci = grille[i-1][j][k];    //Cellule  i-1
-				  Cellule& cj = grille[i][j-1][k];    //Cellule  j-1
-				  Cellule& ck = grille[i][j][k-1];    //Cellule  k-1
+  double phi_x=0., phi_y=0., phi_z=0.;
+  double vol=deltax*deltay*deltaz;
+  for(int i=marge;i<Nx+marge;i++){
+    for(int j=marge;j<Ny+marge;j++){ 
+      for(int k=marge;k<Nz+marge;k++){
+	Cellule& c = grille[i][j][k];
+	if(std::abs(c.alpha-1.)>eps && !c.vide){
+	  Cellule& ci = grille[i-1][j][k];   
+	  Cellule& cj = grille[i][j-1][k];   
+	  Cellule& ck = grille[i][j][k-1];   
            
-					c.flux_modif[0] = 0.;
-					c.flux_modif[1] = c.phi_x;
-					c.flux_modif[2] = c.phi_y;
-					c.flux_modif[3] = c.phi_z;
-					c.flux_modif[4] = c.phi_v;
-					for(int l=0.; l<5; l++){  
-						c.flux_modif[l] -= (1.-c.kappai)*c.dtfxi[l] - (1.-ci.kappai)*ci.dtfxi[l]
-						+ (1.-c.kappaj)*c.dtfyj[l] - (1.-cj.kappaj)*cj.dtfyj[l]
-						+ (1.-c.kappak)*c.dtfzk[l] - (1.-ck.kappak)*ck.dtfzk[l] - c.delta_w[l];
-						c.flux_modif[l] /= (1.-c.alpha);
-					}
-					//Mise a jour des valeurs dans les cellules
-					c.rho = c.rho0  +  c.flux_modif[0];
-					c.impx = c.impx0 + c.flux_modif[1];
-					c.impy = c.impy0 + c.flux_modif[2];
-					c.impz = c.impz0 + c.flux_modif[3];
-					c.rhoE = c.rhoE0 + c.flux_modif[4];
-					if(std::abs(c.rho) > eps_vide){
-						c.u = c.impx/c.rho;
-						c.v = c.impy/c.rho;
-						c.w = c.impz/c.rho;
-						c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2. - c.rho*c.w*c.w/2.);
-						if(std::abs(c.p) > eps_vide){
-						c.vide = false;
-						}
-						phi_x+=c.phi_x*vol/dt; phi_y+=c.phi_y*vol/dt; phi_z+=c.phi_z*vol/dt;
-					}
-					//if( (c.rho <= eps && c.rho >= 0.) || (c.p <= eps && c.p >= 0.)){
-					if( (abs(c.rho) <= eps_vide) || (abs(c.p) <= eps_vide)){
-						c.u = 0.; c.v = 0.; c.w = 0.; c.p = 0.;
-						c.impx=0.; c.impy=0.; c.impz=0.; c.rhoE=0.;
-						c.vide = true;
-					}
-					else{c.vide = false;}
-				}
-				//grille[i][j][k] = c;      
-			}
-		}
-	}
-	Vector_3 Phi(phi_x, phi_y, phi_z); cout<<" Flux a la parois "<<Phi<<endl;
+	  c.flux_modif[0] = 0.;
+	  c.flux_modif[1] = c.phi_x;
+	  c.flux_modif[2] = c.phi_y;
+	  c.flux_modif[3] = c.phi_z;
+	  c.flux_modif[4] = c.phi_v;
+	  for(int l=0.; l<5; l++){  
+	    c.flux_modif[l] -= (1.-c.kappai)*c.dtfxi[l] - (1.-ci.kappai)*ci.dtfxi[l]
+	      + (1.-c.kappaj)*c.dtfyj[l] - (1.-cj.kappaj)*cj.dtfyj[l]
+	      + (1.-c.kappak)*c.dtfzk[l] - (1.-ck.kappak)*ck.dtfzk[l] - c.delta_w[l];
+	    c.flux_modif[l] /= (1.-c.alpha);
+	  }
+	  //Update of the cell state
+	  c.rho = c.rho0  +  c.flux_modif[0];
+	  c.impx = c.impx0 + c.flux_modif[1];
+	  c.impy = c.impy0 + c.flux_modif[2];
+	  c.impz = c.impz0 + c.flux_modif[3];
+	  c.rhoE = c.rhoE0 + c.flux_modif[4];
+	  if(std::abs(c.rho) > eps_vide){
+	    c.u = c.impx/c.rho;
+	    c.v = c.impy/c.rho;
+	    c.w = c.impz/c.rho;
+	    c.p = (gam-1.)*(c.rhoE-c.rho*c.u*c.u/2.-c.rho*c.v*c.v/2. - c.rho*c.w*c.w/2.);
+	    if(std::abs(c.p) > eps_vide){
+	      c.vide = false;
+	    }
+	    phi_x+=c.phi_x*vol/dt; phi_y+=c.phi_y*vol/dt; phi_z+=c.phi_z*vol/dt;
+	  }
+	  if( (abs(c.rho) <= eps_vide) || (abs(c.p) <= eps_vide)){
+	    c.u = 0.; c.v = 0.; c.w = 0.; c.p = 0.;
+	    c.impx=0.; c.impy=0.; c.impz=0.; c.rhoE=0.;
+	    c.vide = true;
+	  }
+	  else{c.vide = false;}
+	}      
+      }
+    }
+  }
+  Vector_3 Phi(phi_x, phi_y, phi_z); cout<<" Boundary flux "<<Phi<<endl;
 }
 
-/*!
-* \fn void Grille:: Mixage()
-*  \brief M&eacute;lange conservatif de petites cellules coup&eacute;es.
-*  \details On d&eacute;finit une petite cellule tel que \f$ alpha > epsa \f$ (\a Cellule.alpha fraction occup&eacute;e par du solide dans la cellule, et \a epsa: fraction de cellule coup&eacute;e d&eacute;finit dans parametres.hpp ). Afin ne pas modifier le pas de temps tout en garantissant la condition de CFL, les petites cellules sont fusionn&eacute;es avec leurs voisines. On note \a p une petite cellule et \a g une cellule voisine avec \a p compl&egrave;tement fluide~(\f$ alpha_g = 0 \f$ ). On d&eacute;finit les termes d'&eacute;change suivants :
-\f{eqnarray*}{ E_{pg} = \frac{1}{2 - alpha_p} (U_g - U_{p}), \quad  E_{gp} = \frac{1-  alpha_p}{2 - alpha_p} (U_p - U_{g}) \f}
-et on pose:
-\f{eqnarray*}{
-U_p = U_{p} + E_{pg}, \quad  \quad U_g = U_{g} + E_{gp} \f}
-*	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-*	\return void
-*/
+/*!\brief Conservative mixing of small cut-cells.
+   \details We define a small cut-cell as a cell such that \f$ alpha > epsa \f$ (\a Cellule.alpha solid occupancy ratio, and \a epsa: limit ratio for small cut-cells defined in parametres.hpp). In order not to modify the time-step which ensuring the CFL condition, the small cut-cells are merged with their neighbours. Denote \a p a small cut-cell and \a g a neighbouring cell such that \a g is totally fluid~(\f$ alpha_g = 0 \f$ ). Define the following exchange terms:
+ \f{eqnarray*}{ E_{pg} = \frac{1}{2 - alpha_p} (U_g - U_{p}), \quad  E_{gp} = \frac{1-  alpha_p}{2 - alpha_p} (U_p - U_{g}) \f}
+ and set:
+ \f{eqnarray*}{
+ U_p = U_{p} + E_{pg}, \quad  \quad U_g = U_{g} + E_{gp} \f}
+ 	\warning <b> Specific coupling procedure ! </b>
+ 	\return void
+ */
 void Grille::Mixage(){
 	
 	
-	bool test_fini = true;
+  bool test_fini = true;
 	
-	for(int i=marge;i<Nx+marge;i++){
-		for(int j=marge;j<Ny+marge;j++){ 
-		  for(int k=marge;k<Nz+marge;k++){
-		    Cellule& cp = grille[i][j][k];
-				bool test=true;
-				if( (cp.alpha>epsa ||cp.p <0. || cp.rho<0.) && abs(cp.alpha-1.)>eps && !cp.vide){
+  for(int i=marge;i<Nx+marge;i++){
+    for(int j=marge;j<Ny+marge;j++){ 
+      for(int k=marge;k<Nz+marge;k++){
+	Cellule& cp = grille[i][j][k];
+	bool test=true;
+	if( (cp.alpha>epsa ||cp.p <0. || cp.rho<0.) && abs(cp.alpha-1.)>eps && !cp.vide){
 					
-					for(int ii=-1; ii<=1 && test; ii++){
-						for(int jj=-1; jj<=1 && test; jj++){
-							for(int kk=-1; kk<=1 && test; kk++){
-								if (grille[i+ii][j+jj][k+kk].alpha <eps && grille[i+ii][j+jj][k+kk].p>0. && grille[i+ii][j+jj][k+kk].rho>0. && i+ii>=marge && i+ii<Nx+marge && j+jj>=marge && j+jj<Ny+marge && k+kk>=marge && k+kk<Nz+marge && !grille[i+ii][j+jj][k+kk].vide)
-								{
-									test=false;
-									Cellule& cg = grille[i+ii][j+jj][k+kk];
-									double temp_rhop= cp.rho;
-									double temp_rhog=cg.rho;
-									cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
-									cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-									cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-									cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-									cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
+	  for(int ii=-1; ii<=1 && test; ii++){
+	    for(int jj=-1; jj<=1 && test; jj++){
+	      for(int kk=-1; kk<=1 && test; kk++){
+		if (grille[i+ii][j+jj][k+kk].alpha <eps && grille[i+ii][j+jj][k+kk].p>0. && grille[i+ii][j+jj][k+kk].rho>0. && i+ii>=marge && i+ii<Nx+marge && j+jj>=marge && j+jj<Ny+marge && k+kk>=marge && k+kk<Nz+marge && !grille[i+ii][j+jj][k+kk].vide)
+		{
+		  test=false;
+		  Cellule& cg = grille[i+ii][j+jj][k+kk];
+		  double temp_rhop= cp.rho;
+		  double temp_rhog=cg.rho;
+		  cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
+		  cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
+		  cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
+		  cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
+		  cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
 									
-									cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-									cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-									cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-									cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-									cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
+		  cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
+		  cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
+		  cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
+		  cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
+		  cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
 									
 									
-									cp.rho += cp.Mrho;
-									cp.impx += cp.Mimpx;
-									cp.impy += cp.Mimpy;
-									cp.impz += cp.Mimpz;
-									cp.rhoE += cp.MrhoE;
-									cp.u = cp.impx/cp.rho;
-									cp.v = cp.impy/cp.rho;
-									cp.w = cp.impz/cp.rho;
-									cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
+		  cp.rho += cp.Mrho;
+		  cp.impx += cp.Mimpx;
+		  cp.impy += cp.Mimpy;
+		  cp.impz += cp.Mimpz;
+		  cp.rhoE += cp.MrhoE;
+		  cp.u = cp.impx/cp.rho;
+		  cp.v = cp.impy/cp.rho;
+		  cp.w = cp.impz/cp.rho;
+		  cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
 									
-									cg.rho += cg.Mrho;
-									cg.impx += cg.Mimpx;
-									cg.impy += cg.Mimpy;
-									cg.impz += cg.Mimpz;
-									cg.rhoE += cg.MrhoE;
-									cg.u = cg.impx/cg.rho;
-									cg.v = cg.impy/cg.rho;
-									cg.w = cg.impz/cg.rho;
-									cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-									
-									//grille[i][j][k] = cp;
-									//grille[i+ii][j+jj][k+kk] = cg;
-									
-// 									if( std::abs((1.-cp.alpha)*cp.Mrho + (1.-cg.alpha)*cg.Mrho)>eps){
-// 										cout<<" rho p initial "<<temp_rhop<<" rho g initial "<<temp_rhog<<endl;
-// 										cout<<" Mrho p "<<cp.Mrho<<" Mrho g  "<<cg.Mrho<<endl;
-// 										std::cout<<"Probleme mixage"<< ((1-cp.alpha)*cp.Mrho + (1-cg.alpha)*cg.Mrho)<<std::endl; 
-// 										std::cout<< "position du centre de la cellule : "<<cp.x << " "<<cp.y << " "<<cp.z << " "<< " rho "<<cp.rho  << " p "<<cp.p <<" alpha " << cp.alpha<<std::endl;
-// 										std::cout<< "position du centre de la cellule de mixage: "<<cg.x << " "<<cg.y << " "<<cg.z << " "<< " rho "<<cg.rho  << " p "<<cg.p <<" alpha " << cg.alpha<<std::endl;
-// 									}
-								} //if cg.alpha==0
-								
-							}
-						}
-					}
+		  cg.rho += cg.Mrho;
+		  cg.impx += cg.Mimpx;
+		  cg.impy += cg.Mimpy;
+		  cg.impz += cg.Mimpz;
+		  cg.rhoE += cg.MrhoE;
+		  cg.u = cg.impx/cg.rho;
+		  cg.v = cg.impy/cg.rho;
+		  cg.w = cg.impz/cg.rho;
+		  cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
+		}						
+	      }
+	    }
+	  }
 					
-					if(test){
+	  if(test){
 						
-						if (grille[i-2][j][k].alpha == 0. && grille[i-2][j][k].p>0. && grille[i-2][j][k].rho>0. && i-2>=marge && !grille[i-2][j][k].vide)
-						{
-							Cellule& cg = grille[i-2][j][k];
+	    if (grille[i-2][j][k].alpha == 0. && grille[i-2][j][k].p>0. && grille[i-2][j][k].rho>0. && i-2>=marge && !grille[i-2][j][k].vide)
+	    {
+	      Cellule& cg = grille[i-2][j][k];
 							
-							cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
-							cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-							cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-							cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-							cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
+	      cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
+	      cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
+	      cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
+	      cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
+	      cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
 							
-							cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-							cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-							cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-							cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-							cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
+	      cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
+	      cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
+	      cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
+	      cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
+	      cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
 							
 							
-							cp.rho += cp.Mrho;
-							cp.impx += cp.Mimpx;
-							cp.impy += cp.Mimpy;
-							cp.impz += cp.Mimpz;
-							cp.rhoE += cp.MrhoE;
-							cp.u = cp.impx/cp.rho;
-							cp.v = cp.impy/cp.rho;
-							cp.w = cp.impz/cp.rho;
-							cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
+	      cp.rho += cp.Mrho;
+	      cp.impx += cp.Mimpx;
+	      cp.impy += cp.Mimpy;
+	      cp.impz += cp.Mimpz;
+	      cp.rhoE += cp.MrhoE;
+	      cp.u = cp.impx/cp.rho;
+	      cp.v = cp.impy/cp.rho;
+	      cp.w = cp.impz/cp.rho;
+	      cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
 							
-							cg.rho += cg.Mrho;
-							cg.impx += cg.Mimpx;
-							cg.impy += cg.Mimpy;
-							cg.impz += cg.Mimpz;
-							cg.rhoE += cg.MrhoE;
-							cg.u = cg.impx/cg.rho;
-							cg.v = cg.impy/cg.rho;
-							cg.w = cg.impz/cg.rho;
-							cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
+	      cg.rho += cg.Mrho;
+	      cg.impx += cg.Mimpx;
+	      cg.impy += cg.Mimpy;
+	      cg.impz += cg.Mimpz;
+	      cg.rhoE += cg.MrhoE;
+	      cg.u = cg.impx/cg.rho;
+	      cg.v = cg.impy/cg.rho;
+	      cg.w = cg.impz/cg.rho;
+	      cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
+		
+	      test = false;
+	    }
+	    else if (grille[i+2][j][k].alpha == 0. && grille[i+2][j][k].p>0. && grille[i+2][j][k].rho>0. &&  i+2<Nx+marge && !grille[i+2][j][k].vide)
+	    {
+	      Cellule& cg = grille[i+2][j][k];
 							
-							//grille[i][j][k] = cp;
-							//grille[i-2][j][k] = cg;
-							test = false;
-						}
-						else if (grille[i+2][j][k].alpha == 0. && grille[i+2][j][k].p>0. && grille[i+2][j][k].rho>0. &&  i+2<Nx+marge && !grille[i+2][j][k].vide)
-						{
-							Cellule& cg = grille[i+2][j][k];
+	      cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
+	      cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
+	      cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
+	      cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
+	      cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
 							
-							cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
-							cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-							cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-							cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-							cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
+	      cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
+	      cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
+	      cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
+	      cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
+	      cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
 							
-							cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-							cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-							cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-							cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-							cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
+	      cp.rho += cp.Mrho;
+	      cp.impx += cp.Mimpx;
+	      cp.impy += cp.Mimpy;
+	      cp.impz += cp.Mimpz;
+	      cp.rhoE += cp.MrhoE;
+	      cp.u = cp.impx/cp.rho;
+	      cp.v = cp.impy/cp.rho;
+	      cp.w = cp.impz/cp.rho;
+	      cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
 							
-							cp.rho += cp.Mrho;
-							cp.impx += cp.Mimpx;
-							cp.impy += cp.Mimpy;
-							cp.impz += cp.Mimpz;
-							cp.rhoE += cp.MrhoE;
-							cp.u = cp.impx/cp.rho;
-							cp.v = cp.impy/cp.rho;
-							cp.w = cp.impz/cp.rho;
-							cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-							
-							cg.rho += cg.Mrho;
-							cg.impx += cg.Mimpx;
-							cg.impy += cg.Mimpy;
-							cg.impz += cg.Mimpz;
-							cg.rhoE += cg.MrhoE;
-							cg.u = cg.impx/cg.rho;
-							cg.v = cg.impy/cg.rho;
-							cg.w = cg.impz/cg.rho;
-							cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-							
-							//grille[i][j][k] = cp;
-							//grille[i+2][j][k] = cg;
-							test = false;
-						}
+	      cg.rho += cg.Mrho;
+	      cg.impx += cg.Mimpx;
+	      cg.impy += cg.Mimpy;
+	      cg.impz += cg.Mimpz;
+	      cg.rhoE += cg.MrhoE;
+	      cg.u = cg.impx/cg.rho;
+	      cg.v = cg.impy/cg.rho;
+	      cg.w = cg.impz/cg.rho;
+	      cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
+		
+	      test = false;
+	    }
 						
-						else if (grille[i][j-2][k].alpha == 0. && grille[i][j-2][k].p>0. && grille[i][j-2][k].rho>0. && j-2>=marge && !grille[i][j-2][k].vide)
-						{
-							Cellule& cg = grille[i][j-2][k];
+	    else if (grille[i][j-2][k].alpha == 0. && grille[i][j-2][k].p>0. && grille[i][j-2][k].rho>0. && j-2>=marge && !grille[i][j-2][k].vide)
+	    {
+	      Cellule& cg = grille[i][j-2][k];
 							
-							cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
-							cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-							cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-							cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-							cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
+	      cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
+	      cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
+	      cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
+	      cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
+	      cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
 							
-							cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-							cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-							cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-							cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-							cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-							
-							
-							cp.rho += cp.Mrho;
-							cp.impx += cp.Mimpx;
-							cp.impy += cp.Mimpy;
-							cp.impz += cp.Mimpz;
-							cp.rhoE += cp.MrhoE;
-							cp.u = cp.impx/cp.rho;
-							cp.v = cp.impy/cp.rho;
-							cp.w = cp.impz/cp.rho;
-							cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-							
-							cg.rho += cg.Mrho;
-							cg.impx += cg.Mimpx;
-							cg.impy += cg.Mimpy;
-							cg.impz += cg.Mimpz;
-							cg.rhoE += cg.MrhoE;
-							cg.u = cg.impx/cg.rho;
-							cg.v = cg.impy/cg.rho;
-							cg.w = cg.impz/cg.rho;
-							cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-							
-							//grille[i][j][k] = cp;
-							//grille[i][j-2][k] = cg;
-							test = false;
-							
-						}
-						else if (grille[i][j+2][k].alpha == 0. && grille[i][j+2][k].p>0. && grille[i][j+2][k].rho>0.&& j+2<Ny+marge && !grille[i][j+2][k].vide)
-						{
-							Cellule& cg = grille[i][j+2][k];
-							
-							cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
-							cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-							cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-							cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-							cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
-							
-							cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-							cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-							cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-							cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-							cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
-							
-							cp.rho += cp.Mrho;
-							cp.impx += cp.Mimpx;
-							cp.impy += cp.Mimpy;
-							cp.impz += cp.Mimpz;
-							cp.rhoE += cp.MrhoE;
-							cp.u = cp.impx/cp.rho;
-							cp.v = cp.impy/cp.rho;
-							cp.w = cp.impz/cp.rho;
-							cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-							
-							cg.rho += cg.Mrho;
-							cg.impx += cg.Mimpx;
-							cg.impy += cg.Mimpy;
-							cg.impz += cg.Mimpz;
-							cg.rhoE += cg.MrhoE;
-							cg.u = cg.impx/cg.rho;
-							cg.v = cg.impy/cg.rho;
-							cg.w = cg.impz/cg.rho;
-							cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
-							
-							//grille[i][j][k] = cp;
-							//grille[i][j+2][k] = cg;
-							test = false;
-						}
-						else if (grille[i][j][k-2].alpha == 0. && grille[i][j][k-2].p>0. && grille[i][j][k-2].rho>0.&& k-2>=marge && !grille[i][j][k-2].vide)
-						{
-							Cellule& cg = grille[i][j][k-2];
-							
-							cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
-							cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-							cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-							cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-							cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
-							
-							cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-							cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-							cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-							cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-							cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
+	      cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
+	      cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
+	      cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
+	      cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
+	      cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
 							
 							
-							cp.rho += cp.Mrho;
-							cp.impx += cp.Mimpx;
-							cp.impy += cp.Mimpy;
-							cp.impz += cp.Mimpz;
-							cp.rhoE += cp.MrhoE;
-							cp.u = cp.impx/cp.rho;
-							cp.v = cp.impy/cp.rho;
-							cp.w = cp.impz/cp.rho;
-							cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
+	      cp.rho += cp.Mrho;
+	      cp.impx += cp.Mimpx;
+	      cp.impy += cp.Mimpy;
+	      cp.impz += cp.Mimpz;
+	      cp.rhoE += cp.MrhoE;
+	      cp.u = cp.impx/cp.rho;
+	      cp.v = cp.impy/cp.rho;
+	      cp.w = cp.impz/cp.rho;
+	      cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
 							
-							cg.rho += cg.Mrho;
-							cg.impx += cg.Mimpx;
-							cg.impy += cg.Mimpy;
-							cg.impz += cg.Mimpz;
-							cg.rhoE += cg.MrhoE;
-							cg.u = cg.impx/cg.rho;
-							cg.v = cg.impy/cg.rho;
-							cg.w = cg.impz/cg.rho;
-							cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
+	      cg.rho += cg.Mrho;
+	      cg.impx += cg.Mimpx;
+	      cg.impy += cg.Mimpy;
+	      cg.impz += cg.Mimpz;
+	      cg.rhoE += cg.MrhoE;
+	      cg.u = cg.impx/cg.rho;
+	      cg.v = cg.impy/cg.rho;
+	      cg.w = cg.impz/cg.rho;
+	      cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
+		
+	      test = false;
 							
-							//grille[i][j][k] = cp;
-							//grille[i][j][k-2] = cg;
-							test = false;
-						}
-						else if(grille[i][j][k+2].alpha == 0. && grille[i][j][k+2].p>0. && grille[i][j][k+2].rho>0. && k+2 < Nz+marge && !grille[i][j][k+2].vide)
-						{
-							Cellule& cg = grille[i][j][k+2];
+	    }
+	    else if (grille[i][j+2][k].alpha == 0. && grille[i][j+2][k].p>0. && grille[i][j+2][k].rho>0.&& j+2<Ny+marge && !grille[i][j+2][k].vide)
+	    {
+	      Cellule& cg = grille[i][j+2][k];
 							
-							cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
-							cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
-							cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
-							cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
-							cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
+	      cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
+	      cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
+	      cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
+	      cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
+	      cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
 							
-							cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
-							cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
-							cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
-							cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
-							cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
+	      cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
+	      cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
+	      cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
+	      cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
+	      cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
+							
+	      cp.rho += cp.Mrho;
+	      cp.impx += cp.Mimpx;
+	      cp.impy += cp.Mimpy;
+	      cp.impz += cp.Mimpz;
+	      cp.rhoE += cp.MrhoE;
+	      cp.u = cp.impx/cp.rho;
+	      cp.v = cp.impy/cp.rho;
+	      cp.w = cp.impz/cp.rho;
+	      cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
+							
+	      cg.rho += cg.Mrho;
+	      cg.impx += cg.Mimpx;
+	      cg.impy += cg.Mimpy;
+	      cg.impz += cg.Mimpz;
+	      cg.rhoE += cg.MrhoE;
+	      cg.u = cg.impx/cg.rho;
+	      cg.v = cg.impy/cg.rho;
+	      cg.w = cg.impz/cg.rho;
+	      cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
+		
+	      test = false;
+	    }
+	    else if (grille[i][j][k-2].alpha == 0. && grille[i][j][k-2].p>0. && grille[i][j][k-2].rho>0.&& k-2>=marge && !grille[i][j][k-2].vide)
+	    {
+	      Cellule& cg = grille[i][j][k-2];
+							
+	      cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
+	      cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
+	      cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
+	      cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
+	      cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
+							
+	      cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
+	      cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
+	      cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
+	      cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
+	      cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
 							
 							
-							cp.rho += cp.Mrho;
-							cp.impx += cp.Mimpx;
-							cp.impy += cp.Mimpy;
-							cp.impz += cp.Mimpz;
-							cp.rhoE += cp.MrhoE;
-							cp.u = cp.impx/cp.rho;
-							cp.v = cp.impy/cp.rho;
-							cp.w = cp.impz/cp.rho;
-							cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
+	      cp.rho += cp.Mrho;
+	      cp.impx += cp.Mimpx;
+	      cp.impy += cp.Mimpy;
+	      cp.impz += cp.Mimpz;
+	      cp.rhoE += cp.MrhoE;
+	      cp.u = cp.impx/cp.rho;
+	      cp.v = cp.impy/cp.rho;
+	      cp.w = cp.impz/cp.rho;
+	      cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
 							
-							cg.rho += cg.Mrho;
-							cg.impx += cg.Mimpx;
-							cg.impy += cg.Mimpy;
-							cg.impz += cg.Mimpz;
-							cg.rhoE += cg.MrhoE;
-							cg.u = cg.impx/cg.rho;
-							cg.v = cg.impy/cg.rho;
-							cg.w = cg.impz/cg.rho;
-							cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
+	      cg.rho += cg.Mrho;
+	      cg.impx += cg.Mimpx;
+	      cg.impy += cg.Mimpy;
+	      cg.impz += cg.Mimpz;
+	      cg.rhoE += cg.MrhoE;
+	      cg.u = cg.impx/cg.rho;
+	      cg.v = cg.impy/cg.rho;
+	      cg.w = cg.impz/cg.rho;
+	      cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
+		
+	      test = false;
+	    }
+	    else if(grille[i][j][k+2].alpha == 0. && grille[i][j][k+2].p>0. && grille[i][j][k+2].rho>0. && k+2 < Nz+marge && !grille[i][j][k+2].vide)
+	    {
+	      Cellule& cg = grille[i][j][k+2];
 							
-							//grille[i][j][k] = cp;
-							//grille[i][j][k+2] = cg;
-							test = false;
-						}
+	      cp.Mrho =  (cg.rho - cp.rho)/(2. - cp.alpha) ;
+	      cp.Mimpx = (cg.impx - cp.impx)/(2. - cp.alpha);
+	      cp.Mimpy = (cg.impy - cp.impy)/(2. - cp.alpha);
+	      cp.Mimpz = (cg.impz - cp.impz)/(2. - cp.alpha);
+	      cp.MrhoE = (cg.rhoE - cp.rhoE)/(2. - cp.alpha);
+							
+	      cg.Mrho = (1.-cp.alpha)*(cp.rho - cg.rho)/(2. - cp.alpha) ;
+	      cg.Mimpx = (1.-cp.alpha)*(cp.impx - cg.impx)/(2. - cp.alpha);
+	      cg.Mimpy = (1.-cp.alpha)*(cp.impy - cg.impy)/(2. - cp.alpha);
+	      cg.Mimpz = (1.-cp.alpha)*(cp.impz - cg.impz)/(2. - cp.alpha);
+	      cg.MrhoE = (1.-cp.alpha)*(cp.rhoE - cg.rhoE)/(2. - cp.alpha);
+							
+							
+	      cp.rho += cp.Mrho;
+	      cp.impx += cp.Mimpx;
+	      cp.impy += cp.Mimpy;
+	      cp.impz += cp.Mimpz;
+	      cp.rhoE += cp.MrhoE;
+	      cp.u = cp.impx/cp.rho;
+	      cp.v = cp.impy/cp.rho;
+	      cp.w = cp.impz/cp.rho;
+	      cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
+							
+	      cg.rho += cg.Mrho;
+	      cg.impx += cg.Mimpx;
+	      cg.impy += cg.Mimpy;
+	      cg.impz += cg.Mimpz;
+	      cg.rhoE += cg.MrhoE;
+	      cg.u = cg.impx/cg.rho;
+	      cg.v = cg.impy/cg.rho;
+	      cg.w = cg.impz/cg.rho;
+	      cg.p = (gam-1.)*(cg.rhoE-cg.rho*cg.u*cg.u/2.-cg.rho*cg.v*cg.v/2. - cg.rho*cg.w*cg.w/2.);
+		
+	      test = false;
+	    }
 						
-					}//fin if(test)
-					else if(test){
-						std::cout<<"Pas de cellule cible pour le mixage"<<std::endl; 
-						std::cout<< "position du centre de la cellule : "<<grille[i][j][k].x << " "<<grille[i][j][k].y << " "<<grille[i][j][k].z << " "<< " rho "<<grille[i][j][k].rho  << " p "<<grille[i][j][k].p <<" alpha " << grille[i][j][k].alpha<<std::endl;
-						std::cout<<"cellules voisines : "<<std::endl;
-						for(int ii=-1; ii<=1 && test; ii++){
-							for(int jj=-1; jj<=1 && test; jj++){
-								for(int kk=-1; kk<=1 && test; kk++){
-									std::cout<<"alpha "<<grille[i+ii][j+jj][k+kk].alpha<< "  "<< " rho "<<grille[i+ii][j+jj][k+kk].rho << "p "<< grille[i+ii][j+jj][k+kk].p<<std::endl; 
-								}
-							}
-						}
-					} //fin else if(test)
-					if(grille[i][j][k].p<0. || grille[i][j][k].rho<0.){
-						test_fini = false;
-					}
-				}// 0.5<c.alpha<1.
-			} //fin boucle sur la grille
+	  }
+	  else if(test){
+	    std::cout<<"No mixing target cell"<<std::endl; 
+	    std::cout<< "Position of the cell center: "<<grille[i][j][k].x << " "<<grille[i][j][k].y << " "<<grille[i][j][k].z << " "<< " rho "<<grille[i][j][k].rho  << " p "<<grille[i][j][k].p <<" alpha " << grille[i][j][k].alpha<<std::endl;
+	    std::cout<<"Neighbouring cells: "<<std::endl;
+	    for(int ii=-1; ii<=1 && test; ii++){
+	      for(int jj=-1; jj<=1 && test; jj++){
+		for(int kk=-1; kk<=1 && test; kk++){
+		  std::cout<<"alpha "<<grille[i+ii][j+jj][k+kk].alpha<< "  "<< " rho "<<grille[i+ii][j+jj][k+kk].rho << "p "<< grille[i+ii][j+jj][k+kk].p<<std::endl; 
 		}
+	      }
+	    }
+	  }
+	  if(grille[i][j][k].p<0. || grille[i][j][k].rho<0.){
+	    test_fini = false;
+	  }
 	}
+      } 
+    }
+  }
 	
-	if(!test_fini){
-		cout<<" non test_fini "<<endl;
-		Mixage();
-	}
+  if(!test_fini){
+    cout<<" Mixing did not complete "<<endl;
+    Mixage();
+  }
 }
 
-/**
- \fn void Grille::Solve(const double dt, double t, double tab[marge][3], bool couplage1d, int n)
- \brief R&eacute;solution des &eacute;quations fluide.
- \details Alternance directionnelle &agrave; chaque pas de temps.
- \param t temps curent de simulation
- \param dt pas de temps 
- \param n  num&eacute;ro des iterations en temps
- \return void
- */
-void Grille::Solve(const double dt, double t, int n, double tab[marge][3], bool couplage1d, Solide& S){
+/*!\brief Resolution of the fluid equations.
+   \details Directional (Strang) splitting at each time-step.
+   \param t Current simulation time
+   \param dt Time-step
+   \param n  index of the time iterations
+   \return void
+*/
+void Grille::Solve(const double dt, double t, int n, Solide& S){
     
-    //Cellule c;   
-    for(int i=0;i<Nx+2*marge;i++){
-        for(int j=0;j<Ny+2*marge;j++){
-            for(int k=0;k<Nz+2*marge;k++){
-				        Cellule  c = grille[i][j][k];
-                c.rho0 = c.rho;
-                c.impx0 = c.impx;
-                c.impy0 = c.impy;
-                c.impz0 = c.impz;
-                c.rhoE0 = c.rhoE;
-		c.p1=c.p;
-		c.alpha0=c.alpha;
-		c.kappai0 = c.kappai; c.kappaj0 = c.kappaj; c.kappak0 = c.kappak;
-                grille[i][j][k] = c;
-            }
-        }
+  for(int i=0;i<Nx+2*marge;i++){
+    for(int j=0;j<Ny+2*marge;j++){
+      for(int k=0;k<Nz+2*marge;k++){
+	Cellule  c = grille[i][j][k];
+	c.rho0 = c.rho;
+	c.impx0 = c.impx;
+	c.impy0 = c.impy;
+	c.impz0 = c.impz;
+	c.rhoE0 = c.rhoE;
+	c.p1=c.p;
+	c.alpha0=c.alpha;
+	c.kappai0 = c.kappai; c.kappaj0 = c.kappaj; c.kappak0 = c.kappak;
+	grille[i][j][k] = c;
+      }
     }
+  }
    
-    //alternance directionnelle a chaque pas de temps
+  //Directional splitting
 	
-    if(n%6==0){
+  if(n%6==0){
 
-      fnumx(dt/dx,t,tab,couplage1d);     //Calcul des flux numeriques pour le fluide seul selon x
-      //cout<<"Masse x: "<<"  "<< Masse() <<endl;
-      solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
-      //cout<<"Masse x: "<<"  "<< Masse() <<endl;
-      BC();           //Imposition des conditions aux limites pour le fluide
-      Fill_cel(S);
-      BC_couplage(tab,couplage1d);
+    fnumx(dt/dx,t);     
+    solve_fluidx(dt);  
+    BC();           
+    Fill_cel(S);
       
-      fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
-      //cout<<"Masse y: "<<"  "<< Masse() <<endl;
-      solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
-				//cout<<"Masse y: "<<"  "<< Masse() <<endl;
-      BC();           //Imposition des conditions aux limites pour le fluide
-      Fill_cel(S);
-      BC_couplage(tab,couplage1d);
+    fnumy(dt/dy,t);     
+    solve_fluidy(dt);  
+    BC();           
+    Fill_cel(S);
       
-      fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
-      //cout<<"Masse z: "<<"  "<< Masse() <<endl;
-      solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
-      //cout<<"Masse : z"<<"  "<< Masse() <<endl;
-      BC();           //Imposition des conditions aux limites pour le fluide
-      Fill_cel(S);
-      BC_couplage(tab,couplage1d);
-    } 
-    else if(n%6==2){
-      fnumx(dt/dx,t,tab,couplage1d);     //Calcul des flux numeriques pour le fluide seul selon x
-      solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
-      BC();           //Imposition des conditions aux limites pour le fluide
-      Fill_cel(S);
-      BC_couplage(tab,couplage1d);
-      fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
-      solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
-      BC();           //Imposition des conditions aux limites pour le fluide
-      Fill_cel(S);
-      BC_couplage(tab,couplage1d);   
-      fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
-      solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
-      BC();           //Imposition des conditions aux limites pour le fluide
-      Fill_cel(S);
-      BC_couplage(tab,couplage1d);    
-    } 
+      
+    fnumz(dt/dz,t);     
+    solve_fluidz(dt);  
+    BC();           
+    Fill_cel(S);
+      
+  } 
+  else if(n%6==2){
+    fnumx(dt/dx,t);     
+    solve_fluidx(dt);  
+    BC();           
+    Fill_cel(S);
+      
+    fnumz(dt/dz,t);     
+    solve_fluidz(dt);  
+    BC();           
+    Fill_cel(S);
+         
+    fnumy(dt/dy,t);     
+    solve_fluidy(dt);  
+    BC();           
+    Fill_cel(S);
+          
+  } 
     
-    else if(n%6==1){
+  else if(n%6==1){
       
-      fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
-      solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
-      BC();           //Imposition des conditions aux limites pour le fluide
-      Fill_cel(S);
-      BC_couplage(tab,couplage1d);    
-      fnumx(dt/dx,t,tab,couplage1d);     //Calcul des flux numeriques pour le fluide seul selon x
-        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
-		BC();           //Imposition des conditions aux limites pour le fluide
-		Fill_cel(S);
-	BC_couplage(tab,couplage1d);    
-        fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
-        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
-        BC();           //Imposition des conditions aux limites pour le fluide
-	Fill_cel(S);
-	BC_couplage(tab,couplage1d);
-    } 
+    fnumy(dt/dy,t);     
+    solve_fluidy(dt);  
+    BC();           
+    Fill_cel(S);
+          
+    fnumx(dt/dx,t);     
+    solve_fluidx(dt);  
+    BC();           
+    Fill_cel(S);
+	    
+    fnumz(dt/dz,t);     
+    solve_fluidz(dt);  
+    BC();           
+    Fill_cel(S);
+	
+  } 
     
-    else if(n%6==3){
+  else if(n%6==3){
         
-        fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
-        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
-		BC();           //Imposition des conditions aux limites pour le fluide
-		Fill_cel(S);
-		BC_couplage(tab,couplage1d);      
-        fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
-        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
-		BC();           //Imposition des conditions aux limites pour le fluide
-		Fill_cel(S);
-		BC_couplage(tab,couplage1d);      
-         fnumx(dt/dx,t,tab,couplage1d);     //Calcul des flux numeriques pour le fluide seul selon x
-        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
-		BC();           //Imposition des conditions aux limites pour le fluide
-		Fill_cel(S);
-		BC_couplage(tab,couplage1d);      
-    }
-    else if(n%6==4){
+    fnumy(dt/dy,t);     
+    solve_fluidy(dt);  
+    BC();           
+    Fill_cel(S);
+		      
+    fnumz(dt/dz,t);     
+    solve_fluidz(dt);  
+    BC();           
+    Fill_cel(S);
+		      
+    fnumx(dt/dx,t);     
+    solve_fluidx(dt);  
+    BC();           
+    Fill_cel(S);
+		      
+  }
+  else if(n%6==4){
         
-        fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
-        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
-		BC();           //Imposition des conditions aux limites pour le fluide
-		Fill_cel(S);
-		BC_couplage(tab,couplage1d);      
-         fnumx(dt/dx,t,tab,couplage1d);     //Calcul des flux numeriques pour le fluide seul selon x
-        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
-		BC();           //Imposition des conditions aux limites pour le fluide
-		Fill_cel(S);
-		BC_couplage(tab,couplage1d);      
-        fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
-        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y 
-        BC();           //Imposition des conditions aux limites pour le fluide
-	Fill_cel(S);
-	BC_couplage(tab,couplage1d);   
+    fnumz(dt/dz,t);     
+    solve_fluidz(dt);  
+    BC();           
+    Fill_cel(S);
+		      
+    fnumx(dt/dx,t);     
+    solve_fluidx(dt);  
+    BC();           
+    Fill_cel(S);
+		      
+    fnumy(dt/dy,t);     
+    solve_fluidy(dt);  
+    BC();           
+    Fill_cel(S);
+	   
         
-    }
-    else if(n%6==5){
+  }
+  else if(n%6==5){
         
-        fnumz(dt/dz,t);     //Calcul des flux numeriques pour le fluide seul selon z
-        solve_fluidz(dt);  //Resolution du fluide : 1er demi-pas de temps selon z
-		BC();           //Imposition des conditions aux limites pour le fluide
-		Fill_cel(S);
-		BC_couplage(tab,couplage1d);     
-        fnumy(dt/dy,t);     //Calcul des flux numeriques pour le fluide seul selon y
-        solve_fluidy(dt);  //Resolution du fluide : 1er demi-pas de temps selon y
-		BC();           //Imposition des conditions aux limites pour le fluide
-		Fill_cel(S);
-		BC_couplage(tab,couplage1d);      
-         fnumx(dt/dx,t,tab,couplage1d);     //Calcul des flux numeriques pour le fluide seul selon x
-        solve_fluidx(dt);  //Resolution du fluide : 1er demi-pas de temps selon x
-		BC();           //Imposition des conditions aux limites pour le fluide
-		Fill_cel(S);
-		BC_couplage(tab,couplage1d);      
-    }
+    fnumz(dt/dz,t);     
+    solve_fluidz(dt);  
+    BC();           
+    Fill_cel(S);
+		     
+    fnumy(dt/dy,t);     
+    solve_fluidy(dt);  
+    BC();           
+    Fill_cel(S);
+		      
+    fnumx(dt/dx,t);     
+    solve_fluidx(dt);  
+    BC();           
+    Fill_cel(S);
+		      
+  }
   
     
 }
 
 
-/*!
-* \fn void Grille::Fill_cel(Solide& S)
-*  \brief Remplissage des cellules fictives (\a alpha = 1)
-*  \details Afin de calculer les flux pr&egrave;s de l'interface solide-fluide, on d&eacute;finit dans les Cellule compl&egrave;tement occup&eacute;es par le Solide (\a alpha = 1) un &eacute;tat fictif qui sera &eacute;gal &agrave; la valeur de l'&eacute;tat de la maille miroir par rapport &agrave; l'interface. \n
-Algo: on cherche l'interface la plus proche du centre de la cellule (boucle sur toutes les faces du Solide) et on calcule la projection du centre de la cellule par rapport &agrave; cette interface via la fonction <b> CGAL::projection(Point_3) </b>.
-*	\param S  Solide 
-*	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-*	\return void
-*/
+/*!\brief Filling of the ghost cells (\a alpha = 1)
+   \details In order to compute the fluxes at the fluid-solid interface, we define a fictitious state in the cells fully occupied by solid (\a alpha = 1), which is taken equal to the state in the mirror cell with regards to the boundary. \n
+ Algorithm: search for the interface closest to the center of the cell (loop on all solid faces) and compute the projection of the cell center on this interface using function <b> CGAL::projection(Point_3) </b>.
+ 	\param S  Solid 
+ 	\warning <b> Specific coupling procedure ! </b>
+ 	\return void
+ */
 
 void Grille::Fill_cel(Solide& S){
 	
-	int nb_part = S.size();
-	double dist[6*nb_part];
-	double dist_min = 100;
-	int poz=0;
-	double x_min=0., y_min=0., z_min = 0., x_max = 0., y_max=0., z_max=0.;
-	Bbox Fluide(X0,Y0,Z0,X0+domainex,Y0+domainey,Z0+domainez);
+  int nb_part = S.size();
+  double dist[6*nb_part];
+  double dist_min = 100;
+  int poz=0;
+  double x_min=0., y_min=0., z_min = 0., x_max = 0., y_max=0., z_max=0.;
+  Bbox Fluide(X0,Y0,Z0,X0+domainex,Y0+domainey,Z0+domainez);
 
-	//std::cout<<"center faces number: " <<count<<std::endl;
-	for(int i=marge;i<Nx+marge;i++){
-	  for(int j=marge;j<Ny+marge;j++){
-	    for(int k=marge;k<Nz+marge;k++){
-	      Triangle_3 Tri;
-	      Cellule& c = grille[i][j][k];
-	      if((std::abs(c.alpha-1.)<eps) ){
-		Point_3 center_cell(c.x, c.y, c.z);
-		int nbx=0, nby=0,nbz=0;
-		Point_3 projete(0.,0.,0.); //Projete sur la face la plus proche
-		Vector_3 V_f(0.,0.,0.); //Vitesse de la paroi au point projete
-		double dist_min = 10000000.;
-		bool fluide = false;
-		int cas = 0;
-		Point_3 triangle1;
-		Point_3 triangle2;
-		Point_3 triangle3;
-		for(int iter=0; iter<nb_part; iter++){
-		  for(int it=0;it<S.solide[iter].triangles.size();it++){
-		    if(S.solide[iter].fluide[it]){
-		      Plane_3 P(S.solide[iter].triangles[it].operator[](0),S.solide[iter].triangles[it].operator[](1),S.solide[iter].triangles[it].operator[](2));
-		      /*for(int k=3;k<S.solide[iter].triangles.size() && P.is_degenerate();k++){//Test si le plan est degenere
-			P = Plane_3(S.solide[iter].triangles[it].operator[](0),S.solide[iter].triangles[it].operator[](1),S.solide[iter].triangles[it].operator[](k));
-			}*/
-		      Point_3 xP = P.projection(center_cell);
-		      //Test pour savoir si le projete est dans la face
-		      bool test = true;
-		      for(int k=0;k<3 && test;k++){
-			int kp = (k+1)%3;
-			Point_3 x1 = S.solide[iter].triangles[it].operator[](k);
-			Point_3 x2 = S.solide[iter].triangles[it].operator[](kp);
-			Vector_3 vect1(xP,x1);
-			Vector_3 vect2(xP,x2);
-			if(CGAL::to_double(CGAL::cross_product(vect1,vect2)*S.solide[iter].normales[it])<0.){
-			  test = false;
-			}
+  for(int i=marge;i<Nx+marge;i++){
+    for(int j=marge;j<Ny+marge;j++){
+      for(int k=marge;k<Nz+marge;k++){
+	Triangle_3 Tri;
+	Cellule& c = grille[i][j][k];
+	if((std::abs(c.alpha-1.)<eps) ){
+	  Point_3 center_cell(c.x, c.y, c.z);
+	  int nbx=0, nby=0,nbz=0;
+	  Point_3 projete(0.,0.,0.); //Projection on the closest face
+	  Vector_3 V_f(0.,0.,0.); //Velocity of the solid boundary at the projected point
+	  double dist_min = 10000000.;
+	  bool fluide = false;
+	  int cas = 0;
+	  Point_3 triangle1;
+	  Point_3 triangle2;
+	  Point_3 triangle3;
+	  for(int iter=0; iter<nb_part; iter++){
+	    for(int it=0;it<S.solide[iter].triangles.size();it++){
+	      if(S.solide[iter].fluide[it]){
+		Plane_3 P(S.solide[iter].triangles[it].operator[](0),S.solide[iter].triangles[it].operator[](1),S.solide[iter].triangles[it].operator[](2));
+		Point_3 xP = P.projection(center_cell);
+		//Test whether the projection is on the face
+		bool test = true;
+		for(int k=0;k<3 && test;k++){
+		  int kp = (k+1)%3;
+		  Point_3 x1 = S.solide[iter].triangles[it].operator[](k);
+		  Point_3 x2 = S.solide[iter].triangles[it].operator[](kp);
+		  Vector_3 vect1(xP,x1);
+		  Vector_3 vect2(xP,x2);
+		  if(CGAL::to_double(CGAL::cross_product(vect1,vect2)*S.solide[iter].normales[it])<0.){
+		    test = false;
+		  }
+		}
+		//First case: the point is on the face
+		if(test){
+		  double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,xP)));
+		  if(d<dist_min && inside_box(Fluide,xP)){
+		    dist_min = d;
+		    projete = xP;
+		    V_f = S.solide[iter].vitesse_parois(xP);
+		    fluide = S.solide[iter].fluide[it];
+		    cas = 1;
+		    triangle1=S.solide[iter].triangles[it].operator[](0);
+		    triangle2=S.solide[iter].triangles[it].operator[](1);
+		    triangle3=S.solide[iter].triangles[it].operator[](2);
+		  }
+		}
+		//Second case: the point is out of the face
+		else{
+		  //Search for the closest point on all edges
+		  for(int k=0;k<3;k++){
+		    int kp = (k+1)%3;
+		    Point_3 x1 = S.solide[iter].triangles[it].operator[](k);
+		    Point_3 x2 = S.solide[iter].triangles[it].operator[](kp);
+		    double d1 = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,x1)));
+		    double d2 = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,x2)));
+		    double d12 = sqrt(CGAL::to_double(CGAL::squared_distance(x1,x2)));
+		    //First subcase: the closest point is x1
+		    if(d1*d1+d12*d12<d2*d2){
+		      if(d1<dist_min && inside_box(Fluide,x1)){
+			dist_min = d1;
+			projete = x1;
+			V_f = S.solide[iter].vitesse_parois(x1);
+			fluide = S.solide[iter].fluide[it];
+			cas = 2;
 		      }
-		      //1er cas : on est dans la face
-		      if(test){
-			double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,xP)));
-			if(d<dist_min && inside_box(Fluide,xP)){
-			  dist_min = d;
-			  projete = xP;
-			  V_f = S.solide[iter].vitesse_parois(xP);
-			  fluide = S.solide[iter].fluide[it];
-			  cas = 1;
-			  triangle1=S.solide[iter].triangles[it].operator[](0);
-			  triangle2=S.solide[iter].triangles[it].operator[](1);
-			  triangle3=S.solide[iter].triangles[it].operator[](2);
-			}
+		    }
+		    //Second subcase: the closest point is x2
+		    else if(d2*d2+d12*d12<d1*d1){
+		      if(d2<dist_min && inside_box(Fluide,x2)){
+			dist_min = d2;
+			projete = x2;
+			V_f = S.solide[iter].vitesse_parois(x2);
+			fluide = S.solide[iter].fluide[it];
+			cas = 3;
 		      }
-		      //2eme cas : on est hors de la face
-		      else{
-			//Recherche du point le plus proche sur toutes les aretes
-			for(int k=0;k<3;k++){
-			  int kp = (k+1)%3;
-			  Point_3 x1 = S.solide[iter].triangles[it].operator[](k);
-			  Point_3 x2 = S.solide[iter].triangles[it].operator[](kp);
-			  double d1 = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,x1)));
-			  double d2 = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,x2)));
-			  double d12 = sqrt(CGAL::to_double(CGAL::squared_distance(x1,x2)));
-			  //1er sous-cas : on est plus proche du point x1
-			  if(d1*d1+d12*d12<d2*d2){
-			    if(d1<dist_min && inside_box(Fluide,x1)){
-			      dist_min = d1;
-			      projete = x1;
-			      V_f = S.solide[iter].vitesse_parois(x1);
-			      fluide = S.solide[iter].fluide[it];
-			      cas = 2;
-			    }
-			  }
-			  //2eme sous-cas : on est plus proche du point x2
-			  else if(d2*d2+d12*d12<d1*d1){
-			    if(d2<dist_min && inside_box(Fluide,x2)){
-			      dist_min = d2;
-			      projete = x2;
-			      V_f = S.solide[iter].vitesse_parois(x2);
-			      fluide = S.solide[iter].fluide[it];
-			      cas = 3;
-			    }
-			  }
-			  //3eme sous-cas : on prend le projete sur (x1,x2)
-			  else {
-			    Line_3 L(x1,x2);
-			    double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,L)));
-			    Point_3 proj = L.projection(center_cell);
-			    if(d<dist_min && inside_box(Fluide,proj)){
-			      dist_min = d;
-			      projete = proj;
-			      V_f = S.solide[iter].vitesse_parois(proj);
-			      fluide = S.solide[iter].fluide[it];
-			      cas = 4;
-			    }
-			  }
-			}//Recherche du point le plus proche sur toutes les aretes
+		    }
+		    //Third subcase: take the projection on (x1,x2)
+		    else {
+		      Line_3 L(x1,x2);
+		      double d = sqrt(CGAL::to_double(CGAL::squared_distance(center_cell,L)));
+		      Point_3 proj = L.projection(center_cell);
+		      if(d<dist_min && inside_box(Fluide,proj)){
+			dist_min = d;
+			projete = proj;
+			V_f = S.solide[iter].vitesse_parois(proj);
+			fluide = S.solide[iter].fluide[it];
+			cas = 4;
 		      }
 		    }
 		  }
 		}
-		//Calcul du symetrique par rapport au plan defini par centre_face et normale_face
-		Point_3 symm_center = center_cell + Vector_3(center_cell,projete)*2;
-		Vector_3 normale(center_cell,projete);
-		double norme = sqrt(CGAL::to_double(normale.squared_length()));
-		assert(norme!= 0.);
-		normale = normale*1./norme;
-		const Cellule& cm = in_cell(symm_center);
-		Vector_3 vit_m(cm.u,cm.v,cm.w); //Vitesse au point miroir
-		Vector_3 vit = vit_m - normale*2.*((vit_m-V_f)*normale);
-		if(abs(cm.alpha-1.)<eps){
-		  cout << "cellule cible solide: originel=" << c.x << " " << c.y << " " << c.z << " cible=" << cm.x << " " << cm.y << " " << cm.z << " projete=" << projete.x() << " " << projete.y() << " " << projete.z() << " fluide=" << fluide << " cas=" <<  cas << " triangle=" << triangle1.x() << " " << triangle1.y() << " " << triangle1.z() << " " << triangle2.x() << " " << triangle2.y() << " " << triangle2.z() << " " << triangle3.x() << " " << triangle3.y() << " " << triangle3.z() << " " << endl;
-		  //getchar();
-		}
+	      }
+	    }
+	  }
+	  //Computation of the symmetric point with regards to the plan defined by centre_face and normale_face
+	  Point_3 symm_center = center_cell + Vector_3(center_cell,projete)*2;
+	  Vector_3 normale(center_cell,projete);
+	  double norme = sqrt(CGAL::to_double(normale.squared_length()));
+	  assert(norme!= 0.);
+	  normale = normale*1./norme;
+	  const Cellule& cm = in_cell(symm_center);
+	  Vector_3 vit_m(cm.u,cm.v,cm.w); //Velocity at the mirror point
+	  Vector_3 vit = vit_m - normale*2.*((vit_m-V_f)*normale);
+	  if(abs(cm.alpha-1.)<eps){
+	    cout << "solid target cell: original=" << c.x << " " << c.y << " " << c.z << " target=" << cm.x << " " << cm.y << " " << cm.z << " projection=" << projete.x() << " " << projete.y() << " " << projete.z() << " fluid=" << fluide << " case=" <<  cas << " triangle=" << triangle1.x() << " " << triangle1.y() << " " << triangle1.z() << " " << triangle2.x() << " " << triangle2.y() << " " << triangle2.z() << " " << triangle3.x() << " " << triangle3.y() << " " << triangle3.z() << " " << endl;
+	  }
 		
-		c.rho = cm.rho;
-				  c.u = CGAL::to_double(vit.operator[](0));
-				  c.v = CGAL::to_double(vit.operator[](1));
-				  c.w = CGAL::to_double(vit.operator[](2));
-				  c.p = cm.p;
-				  c.impx = c.rho*c.u;
-				  c.impy = c.rho*c.v;
-				  c.impz = c.rho*c.w;
-					if(std::abs(2.*(c.u*c.u+c.v*c.v+c.w*c.w)+c.p/(gam-1.)) > eps_vide){
-				  c.rhoE = c.rho/2.*(c.u*c.u+c.v*c.v+c.w*c.w)+c.p/(gam-1.);
-					}
-					if( (std::abs(c.rho) <= eps_vide ) || (std::abs(c.p)<= eps_vide) ){
-						c.vide = true;
-					}
-					else{c.vide = false;}
-					//grille[i][j][k] = c;
-				}
-			}
-		}
+	  c.rho = cm.rho;
+	  c.u = CGAL::to_double(vit.operator[](0));
+	  c.v = CGAL::to_double(vit.operator[](1));
+	  c.w = CGAL::to_double(vit.operator[](2));
+	  c.p = cm.p;
+	  c.impx = c.rho*c.u;
+	  c.impy = c.rho*c.v;
+	  c.impz = c.rho*c.w;
+	  if(std::abs(2.*(c.u*c.u+c.v*c.v+c.w*c.w)+c.p/(gam-1.)) > eps_vide){
+	    c.rhoE = c.rho/2.*(c.u*c.u+c.v*c.v+c.w*c.w)+c.p/(gam-1.);
+	  }
+	  if( (std::abs(c.rho) <= eps_vide ) || (std::abs(c.p)<= eps_vide) ){
+	    c.vide = true;
+	  }
+	  else{c.vide = false;}
 	}
+      }
+    }
+  }
 }
 
-/*!
-* \fn double volume_prisme(const Triangle_3& T1,const Triangle_3& T2)
-*  \brief Calcul de volume sign&eacute; d'un prisme.
-* \details Le volume sign&eacute; du prisme ayant comme basses les triangles \f$ T1(A_1,B_1,C_1)  \f$ et \f$ T2(A_2,B_2,C_2) \f$ est donn&eacute; par: \n
-\f{eqnarray*}{
-	{\Vert A_1 B_1 C_1 A_2 B_2 C_2 \Vert}_P  = \frac{1}{36}  \left( 2 \vec{A_1 B_1} \wedge \vec{A_1 C_1} + 2 \vec{A_2 B_2} \wedge \vec{A_2 C_2} +  \vec{A_1 B_1}\wedge \vec{A_2 C_2}  +  \vec{A_2 B_2}\wedge \vec{A_1 C_1} \right) \cdot
-	\f} 
-	\f{eqnarray*}{  \left( \vec{A_1 A_2}  + \vec{B_1 B_2} + \vec{C_1 C_2}\right)\f}
-	*	\param T1 Triangle_3  base du prisme
-	*	\param T2 Triangle_3  base du prisme
-	*	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-	*	\return double
-	*/
+/*!\brief Computation of the signed volume of a prism.
+  \details The signed volume of the prism with bases the triangles \f$ T1(A_1,B_1,C_1)  \f$ and \f$ T2(A_2,B_2,C_2) \f$ is given by: \n
+ \f{eqnarray*}{
+ {\Vert A_1 B_1 C_1 A_2 B_2 C_2 \Vert}_P  = \frac{1}{36}  \left( 2 \vec{A_1 B_1} \wedge \vec{A_1 C_1} + 2 \vec{A_2 B_2} \wedge \vec{A_2 C_2} +  \vec{A_1 B_1}\wedge \vec{A_2 C_2}  +  \vec{A_2 B_2}\wedge \vec{A_1 C_1} \right) \cdot
+ \f} 
+ \f{eqnarray*}{  \left( \vec{A_1 A_2}  + \vec{B_1 B_2} + \vec{C_1 C_2}\right)\f}
+ 	\param T1 Triangle_3  basis of the prism
+ 	\param T2 Triangle_3  basis of prism
+ 	\warning <b> Specific coupling procedure ! </b>
+ 	\return double
+ */
 double volume_prisme(const Triangle_3& T1,const Triangle_3& T2){
 	
-	double volume=0.;
+  double volume=0.;
 	
-	Vector_3 V = 2.*cross_product( Vector_3(T1.operator[](0),T1.operator[](1)), Vector_3(T1.operator[](0),T1.operator[](2)) )
-	+ 2*cross_product( Vector_3(T2.operator[](0),T2.operator[](1)), Vector_3(T2.operator[](0),T2.operator[](2)) )
-	+ cross_product( Vector_3(T1.operator[](0),T1.operator[](1)), Vector_3(T2.operator[](0),T2.operator[](2)) )
-	+ cross_product( Vector_3(T2.operator[](0),T2.operator[](1)), Vector_3(T1.operator[](0),T1.operator[](2)) );
+  Vector_3 V = 2.*cross_product( Vector_3(T1.operator[](0),T1.operator[](1)), Vector_3(T1.operator[](0),T1.operator[](2)) )
+    + 2*cross_product( Vector_3(T2.operator[](0),T2.operator[](1)), Vector_3(T2.operator[](0),T2.operator[](2)) )
+    + cross_product( Vector_3(T1.operator[](0),T1.operator[](1)), Vector_3(T2.operator[](0),T2.operator[](2)) )
+    + cross_product( Vector_3(T2.operator[](0),T2.operator[](1)), Vector_3(T1.operator[](0),T1.operator[](2)) );
 	
-	volume = CGAL::to_double((Vector_3(T1.operator[](0),T2.operator[](0)) + Vector_3(T1.operator[](1),T2.operator[](1)) + 
-	Vector_3(T1.operator[](2),T2.operator[](2)))*V);
+  volume = CGAL::to_double((Vector_3(T1.operator[](0),T2.operator[](0)) + Vector_3(T1.operator[](1),T2.operator[](1)) + 
+			    Vector_3(T1.operator[](2),T2.operator[](2)))*V);
 	
-	volume /=36;
-	return volume;
+  volume /=36;
+  return volume;
 }
 
-/*!
-* \fn double volume_tetra(const Tetrahedron& Tet)
-*  \brief Calcul de volume sign&eacute; d'un t&eacute;tra&egrave;dre.
-* \details Le volume sign&eacute; du t&eacute;tra&egrave;dre \f$ T(A,B,C,D)  \f$ est donn&eacute; par: \n
-\f{eqnarray*}{
-	{\Vert A B C D \Vert}_{sign} = \frac{1}{6} \vec{A D} \cdot \left(  \vec{A B} \wedge \vec{A C}  \right) 
-	\f}
-	*	\param Tet Tetrahedron
-	*	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-	*	\return double
-	*/
+/*!\brief Computation of the signed colume of a tetrahedron.
+  \details The signed volume of a tetrahedron \f$ T(A,B,C,D)  \f$ is given by: \n
+ \f{eqnarray*}{
+ {\Vert A B C D \Vert}_{sign} = \frac{1}{6} \vec{A D} \cdot \left(  \vec{A B} \wedge \vec{A C}  \right) 
+ \f}
+ 	\param Tet Tetrahedron
+ 	\warning <b> Specific coupling procedure ! </b>
+ 	\return double
+ */
 double volume_tetra(const Tetrahedron& Tet){
-	
-  /*double volume=0.;
-	
-	Vector_3 V = cross_product( Vector_3(Tet.operator[](0),Tet.operator[](1)), Vector_3(Tet.operator[](0),Tet.operator[](2)) );
-	
-	
-	volume = CGAL::to_double( (Vector_3(Tet.operator[](0),Tet.operator[](3)) *V) );
-	volume /= 6.;
-	
-	return volume;*/
   return CGAL::to_double(Tet.volume());
 }
 
-/*!
-* \fn Point_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn)
-*  \brief Transformation barycentrique du point Xn.
-* \details Soit Xn un point appartenant au triangle Tn(A_1,B_1,C_1). Le transform&eacute; barycentrique du Xn est le point Xn1(appartenant au triangle Tn1(A_2,B_2,C_2) ) donn&eacute; par: 
-\f{eqnarray*}{
-	\lambda = \frac{\Vert  \vec{C_1 Xn} \wedge \vec{C_1 B_1}  \Vert }{\Vert  \vec{C_1 A_1} \wedge \vec{C_1 B_1}  \Vert} 
-	\f}
-	\f{eqnarray*}{
-		\mu = \frac{\Vert  \vec{C_1 Xn} \wedge \vec{C_1 A_1}  \Vert }{\Vert  \vec{C_1 B_1} \wedge \vec{C_1 A_1}  \Vert} 
-		\f}
-		\f{eqnarray*}{
-			Xn1 = \lambda A_2 + \mu B_2 + (1-\lambda -\mu)C_2 
-			\f}
-	*	\param Tn Triangle_3
-	*\param Tn1 Triangle_3 
-	*\param Xn  Point_3
-	*	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-	*	\return Point_3
-	*/
+/*!\brief Barycentric transformation of point Xn.
+  \details Let Xn a point belonging to triangle Tn(A_1,B_1,C_1). The barycentric transform of Xn is the point Xn1 (belonging to triangle Tn1(A_2,B_2,C_2) ) given by: 
+ \f{eqnarray*}{
+ \lambda = \frac{\Vert  \vec{C_1 Xn} \wedge \vec{C_1 B_1}  \Vert }{\Vert  \vec{C_1 A_1} \wedge \vec{C_1 B_1}  \Vert} 
+ \f}
+ \f{eqnarray*}{
+ \mu = \frac{\Vert  \vec{C_1 Xn} \wedge \vec{C_1 A_1}  \Vert }{\Vert  \vec{C_1 B_1} \wedge \vec{C_1 A_1}  \Vert} 
+ \f}
+ \f{eqnarray*}{
+ Xn1 = \lambda A_2 + \mu B_2 + (1-\lambda -\mu)C_2 
+ \f}
+ 	\param Tn Triangle_3
+ \param Tn1 Triangle_3 
+ \param Xn  Point_3
+ 	\warning <b> Specific coupling procedure ! </b>
+ 	\return Point_3
+ */
 Point_3 tr(const Triangle_3& Tn, const Triangle_3& Tn1, const Point_3& Xn){
   
   
   double lambda = 0., mu = 0.;
 	
-  /*double dom = std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
-						       Vector_3(Tn.operator[](2),Tn.operator[](1))).squared_length() ));
-  double num1 = std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Xn),
-							Vector_3(Tn.operator[](2),Tn.operator[](1))).squared_length() ));
-  double num2 = std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
-  Vector_3(Tn.operator[](2),Xn)).squared_length() )); */
-  
   double AC2 = CGAL::to_double(Vector_3(Tn.vertex(0),Tn.vertex(2)).squared_length());
   double BC2 = CGAL::to_double(Vector_3(Tn.vertex(1),Tn.vertex(2)).squared_length());
   double AC_BC = CGAL::to_double(Vector_3(Tn.vertex(0),Tn.vertex(2))*Vector_3(Tn.vertex(1),Tn.vertex(2)));
@@ -929,16 +853,14 @@ Point_3 tr(const Triangle_3& Tn, const Triangle_3& Tn1, const Point_3& Xn){
   return Point_3(x, y, z);
 }
 
-/*!
-*\fn Triangle_3 tr(Triangle_3 Tn, Triangle_3 Tn1, Triangle_3 T)
-*\brief Transformation barycentrique du Triangle T.
-*\details Appel &agrave; la fonction tr(Triangle_3, Triangle_3, Point_3) pour chaque somment du triangle.
-*\param Tn Triangle_3
-*\param Tn1 Triangle_3 
-*\param T  Triangle_3 
-*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-*\return Triangle_3 
-*/
+/*!\brief Barycentric transformation of Triangle T.
+ \details Calls function \a tr(Triangle_3, Triangle_3, Point_3) for each triangle vertex.
+ \param Tn Triangle_3
+ \param Tn1 Triangle_3 
+ \param T  Triangle_3 
+ \warning <b> Specific coupling procedure ! </b>
+ \return Triangle_3 
+ */
 Triangle_3 tr(const Triangle_3& Tn, const Triangle_3& Tn1, const Triangle_3& T){
 	
   const Point_3& s = tr( Tn,Tn1, T.operator[](0) );
@@ -947,35 +869,29 @@ Triangle_3 tr(const Triangle_3& Tn, const Triangle_3& Tn1, const Triangle_3& T){
   
   return Triangle_3(s, r, v);
 }
-//transformation inverse tr(Tn1,Tn, tr(Tn,Tn1,T))
 
 
-/*!
-* \fn Point_2 tr(Triangle_3 Tn1, Point_3 Xn)
-*  \brief Transformation d'un Point_3 en Point_2.
-* \details  Soit le triangle Tn1(A,B,C), le transform&eacute; du Point 3d Xn (appartenant &agrave; Tn1) en un point 2d est donn&eacute; par: 
+/*!\brief Transformation of a Point_3 into a Point_2.
+  \details Let Triangle Tn1(A,B,C), the barycentric transform of Point_3 Xn (belonging to Tn1) into a Point_2 is given by: 
 
-\f{eqnarray*}{
-	\lambda = \frac{\Vert  \vec{C Xn} \wedge \vec{C B}  \Vert }{\Vert  \vec{C A} \wedge \vec{C B}  \Vert} 
-	\f}
-	\f{eqnarray*}{
-		\mu = \frac{\Vert  \vec{C A} \wedge \vec{C Xn}  \Vert }{\Vert  \vec{C A} \wedge \vec{C B}  \Vert} 
-		\f}
-		\f{eqnarray*}{
-			X_{2d} = (\mu, (1-\lambda-\mu))
-			\f}
-*\param Tn1 Triangle_3 
-*\param Xn  Point_3
-*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-*\return Point_2
-*/
+ \f{eqnarray*}{
+ \lambda = \frac{\Vert  \vec{C Xn} \wedge \vec{C B}  \Vert }{\Vert  \vec{C A} \wedge \vec{C B}  \Vert} 
+ \f}
+ \f{eqnarray*}{
+ \mu = \frac{\Vert  \vec{C A} \wedge \vec{C Xn}  \Vert }{\Vert  \vec{C A} \wedge \vec{C B}  \Vert} 
+ \f}
+ \f{eqnarray*}{
+ X_{2d} = (\mu, (1-\lambda-\mu))
+ \f}
+ \param Tn1 Triangle_3 
+ \param Xn  Point_3
+ \warning <b> Specific coupling procedure ! </b>
+ \return Point_2
+ */
 Point_2 tr(const Triangle_3& Tn1, const Point_3& Xn){
 		
   double lambda = 0., mu = 0.;
 
-/*  double dom =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Tn1.operator[](0)), Vector_3(Tn1.operator[](2),Tn1.operator[](1))).squared_length() ));
-  double num1 =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Xn), Vector_3(Tn1.operator[](2),Tn1.operator[](1))).squared_length() ));
-  double num2 =std::sqrt(CGAL::to_double(cross_product(Vector_3(Tn1.operator[](2),Tn1.operator[](0)), Vector_3(Tn1.operator[](2),Xn)).squared_length() )); */
   double AC2 = CGAL::to_double(Vector_3(Tn1.vertex(0),Tn1.vertex(2)).squared_length());
   double BC2 = CGAL::to_double(Vector_3(Tn1.vertex(1),Tn1.vertex(2)).squared_length());
   double AC_BC = CGAL::to_double(Vector_3(Tn1.vertex(0),Tn1.vertex(2))*Vector_3(Tn1.vertex(1),Tn1.vertex(2)));
@@ -995,44 +911,39 @@ Point_2 tr(const Triangle_3& Tn1, const Point_3& Xn){
   return M;
 }	
 
-/*!
-*\fn Triangle_2 tr(Triangle_3 Tn1, Triangle_3 T)
-*\brief Transformation d'un Triangle_3 en Triangle_2 
-	*\details Appel &agrave; la fonction tr(Triangle_3, Point_3) pour chaque sommet du triangle.
-	*\param Tn1 Triangle_3 
-	*\param T  Triangle_3 
-	*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-	*\return Triangle_2 
-	*/
+/*!\brief Transformation of a Triangle_3 into a Triangle_2 
+ \details Calls function \a tr(Triangle_3, Point_3) for each triangle vertex.
+ \param Tn1 Triangle_3 
+ \param T  Triangle_3 
+ \warning <b> Specific coupling procedure ! </b>
+ \return Triangle_2 
+ */
 Triangle_2 tr(const Triangle_3& Tn1, const Triangle_3& T){
 	
-	const Point_2& s = tr( Tn1, T.operator[](0) );
-	const Point_2& r = tr( Tn1, T.operator[](1) );
-	const Point_2& v = tr( Tn1, T.operator[](2) );
+  const Point_2& s = tr( Tn1, T.operator[](0) );
+  const Point_2& r = tr( Tn1, T.operator[](1) );
+  const Point_2& v = tr( Tn1, T.operator[](2) );
 	
-	return Triangle_2(s, r, v);
+  return Triangle_2(s, r, v);
 }
 
 
-/*!
-* \fn Point_3 tr(Triangle_3 Tn1, Point_2 Xn)
-*  \brief Transformation d'un Point_2 en Point_3.
-* \details  Soit le triangle Tn1(A,B,C), le transform&eacute; du Point 2d Xn(X,Y) en un point 3d (appartenant &agrave; Tn1) est donn&eacute; par: 
-
-\f{eqnarray*}{
-\lambda = 1- X - Y
-\f}
-\f{eqnarray*}{
-\mu = X
-\f}
-\f{eqnarray*}{
-	X_{3d} = \lambda A + \mu B + (1-\lambda -\mu)C 
-	\f}
-*\param Tn1 Triangle_3 
-*\param Xn  Point_2
-*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-*\return Point_3
-*/
+/*!\brief Barycentric transformation of a Point_2 into a Point_3.
+  \details  Let triangle Tn1(A,B,C), the transform of Point_2 Xn(X,Y) into a point_3 (belonging to Tn1) is given by: 
+ \f{eqnarray*}{
+ \lambda = 1- X - Y
+ \f}
+ \f{eqnarray*}{
+ \mu = X
+ \f}
+ \f{eqnarray*}{
+ X_{3d} = \lambda A + \mu B + (1-\lambda -\mu)C 
+ \f}
+ \param Tn1 Triangle_3 
+ \param Xn  Point_2
+ \warning <b> Specific coupling procedure ! </b>
+ \return Point_3
+ */
 Point_3 tr(const Triangle_3& Tn1, const Point_2& Xn){
   
   double lambda = CGAL::to_double(1.- Xn.operator[](0) -  Xn.operator[](1));
@@ -1049,15 +960,13 @@ Point_3 tr(const Triangle_3& Tn1, const Point_2& Xn){
   
   return Point_3(x,y,z);
 }	
-/*!
-*\fn Triangle_3 tr(Triangle_3 Tn1, Triangle_2 T)
-*\brief  Transformation d'un Triangle_2 en Triangle_3
-*\details Appel &agrave; la fonction tr(Triangle_3, Point_2) pour chaque sommet du triangle.
-*\param Tn1 Triangle_3 
-*\param T  Triangle_2 
-*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-*\return Triangle_3 
-*/
+/*!\brief  Barycentric transformation of a Triangle_2 into a Triangle_3
+ \details Calls function tr(Triangle_3, Point_2) for each triangle vertex.
+ \param Tn1 Triangle_3 
+ \param T  Triangle_2 
+ \warning <b> Specific coupling procedure ! </b>
+ \return Triangle_3 
+ */
 Triangle_3 tr(const Triangle_3& Tn1, const Triangle_2& T){
   
   const Point_3& s = tr( Tn1, T.operator[](0) );
@@ -1068,214 +977,152 @@ Triangle_3 tr(const Triangle_3& Tn1, const Triangle_2& T){
 }
 
 
-/* 
-//Transformation barycentrique du point Xn
-Point_3 tr2(Triangle_3 Tn, Triangle_3 Tn1, Point_3 Xn){
-	
-	
-	double lambda = 0., mu = 0.;
-	
-	double dom =CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),Vector_3(Tn.operator[](2),
-	Tn.operator[](1))).operator[](0));
-	double num1 =CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Xn),Vector_3(Tn.operator[](2),
-	Tn.operator[](1))).operator[](0));
-	double num2 =CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
-	Vector_3(Tn.operator[](2),Xn)).operator[](0));
-	if(std::abs(dom)<eps){
-		dom =CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),Vector_3(Tn.operator[](2),
-		Tn.operator[](1))).operator[](1));
-		num1 =CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Xn),Vector_3(Tn.operator[](2),
-		Tn.operator[](1))).operator[](1));
-		num2 =CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
-		Vector_3(Tn.operator[](2),Xn)).operator[](1));
-		
-		if(std::abs(dom)<eps){
-			dom =CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),Vector_3(Tn.operator[](2),
-			Tn.operator[](1))).operator[](2));
-			num1 =CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Xn),Vector_3(Tn.operator[](2),
-			Tn.operator[](1))).operator[](2));
-			num2 =CGAL::to_double(cross_product(Vector_3(Tn.operator[](2),Tn.operator[](0)),
-			Vector_3(Tn.operator[](2),Xn)).operator[](2));
-			}
-			}
-			
-			lambda =  num1/dom;
-			mu = num2/dom;
-			
-			
-			double x =CGAL::to_double( lambda * Tn1.operator[](0).operator[](0) + mu*Tn1.operator[](1).operator[](0) 
-			+ (1- lambda- mu)*Tn1.operator[](2).operator[](0));
-			
-			double y = CGAL::to_double(lambda * Tn1.operator[](0).operator[](1) + mu*Tn1.operator[](1).operator[](1) 
-			+ (1- lambda- mu)*Tn1.operator[](2).operator[](1));
-			double z = CGAL::to_double(lambda * Tn1.operator[](0).operator[](2) + mu*Tn1.operator[](1).operator[](2) 
-			+ (1- lambda- mu)*Tn1.operator[](2).operator[](2));		
-			
-			
-			return Point_3(x, y, z);
-			}
-			
-			// Transformation barycentrique du Triangle T 
-			Triangle_3 tr2(Triangle_3 Tn, Triangle_3 Tn1, Triangle_3 T){
-				
-				Point_3 s = tr2( Tn,Tn1, T.operator[](0) );
-				Point_3 r = tr2( Tn,Tn1, T.operator[](1) );
-				Point_3 v = tr2( Tn,Tn1, T.operator[](2) );
-				
-				return Triangle_3(s, r, v);
-			}*/
 
-/*!
-*\fn void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,int& kn1, std::vector<Bbox>& box_cells, std::vector<Cellule>& Cells)
-*\brief Liste de cellules fluide intersect&eacute;es par un triangle d'interface entre t et t-dt
-*\details Soit
-\f$ C_1= grille[in][jn][kn]\f$ la cellule o&ugrave; se trouve le triangle d'interface au temps t et \f$ C_2= grille[in1][jn1][kn1]\f$ la cellule o&ugrave; se trouve le triangle d'interface au temps t-dt. \n
-Par CFL, \f$ max(|in-in1 |, |jn-jn1 |, |kn-kn1 |)<=1 \f$ . 
-On aura au plus 8 cellules intersect&eacute;es pas &quot;le prisme r&eacute;gl&eacute;&quot;(prisme ayant comme bases le triangle d'interface aux temps t-dt (\a Particule.triangles_prev)  et t (\a Particule.triangles) ):\n
--\f$ grille[in][jn][kn]\f$ \n
--\f$ grille[in1][jn][kn]\f$ \n
--\f$ grille[in][jn1][kn]\f$ \n
--\f$ grille[in][jn1][kn1]\f$ \n
--\f$ grille[in1][jn1][kn]\f$ \n
--\f$ grille[in1][jn][kn1]\f$ \n
--\f$ grille[in][jn1][kn1]\f$ \n
--\f$ grille[in1][jn1][kn1]\f$ \n
+/*!\brief List of fluid cells intersected by an interface triangle between times t-dt and t.
+ \details Let
+ \f$ C_1= grille[in][jn][kn]\f$ the cell where the interface triangle lies at time t and \f$ C_2= grille[in1][jn1][kn1]\f$ the cell where it lies at time t-dt. \n
+ Due to the fluid CFL condition, \f$ max(|in-in1 |, |jn-jn1 |, |kn-kn1 |)<=1 \f$. 
+ There are therefore at most 8 cells intersected by the prism with bases the interface triangle at times t-dt (\a Particule.triangles_prev)  and t (\a Particule.triangles) ):\n
+ -\f$ grille[in][jn][kn]\f$ \n
+ -\f$ grille[in1][jn][kn]\f$ \n
+ -\f$ grille[in][jn1][kn]\f$ \n
+ -\f$ grille[in][jn1][kn1]\f$ \n
+ -\f$ grille[in1][jn1][kn]\f$ \n
+ -\f$ grille[in1][jn][kn1]\f$ \n
+ -\f$ grille[in][jn1][kn1]\f$ \n
+ -\f$ grille[in1][jn1][kn1]\f$ \n
 
-*\param (in,jn,kn) index d'une Cellule (cellule o&ugrave; se trouve le triangle d'interface au temps t-dt (\a Particule.triangles_prev))
-*\param (in1,jn1,kn1) index d'une Cellule (cellule o&ugrave; se trouve le triangle d'interface au temps t (\a Particule.triangles))
-*\param box_cells vecteur de Box 3d
-*\param Cells vecteur de Cellule
-*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-*\return void
-*/
+ \param (in,jn,kn) index of a Cellule (cell where the interface triangle lies at time t-dt (\a Particule.triangles_prev))
+ \param (in1,jn1,kn1) index of a Cellule (cell where the interface triangle lies at time t (\a Particule.triangles))
+ \param box_cells vector of Box_3
+ \param Cells vector of Cellule
+ \warning <b> Specific coupling procedure ! </b>
+ \return void
+ */
 void Grille::cells_intersection_face(int& in,int& jn,int& kn,int& in1,int& jn1,int& kn1, std::vector<Bbox>& box_cells, std::vector<Cellule>& Cells){
 	
-	if((in!=in1 && jn==jn1 && kn==kn1)|| (in==in1 && jn!=jn1 && kn==kn1) || (in==in1 && jn==jn1 && kn!=kn1))
-	{
-		Cellule& c0 = grille[in][jn][kn];
-		Cellule& c1 = grille[in1][jn1][kn1];
-		Cells.push_back(c0); Cells.push_back(c1);
-		box_cells.push_back(Bbox(c0.x -c0.dx/2.,c0.y -c0.dy/2.,c0.z -c0.dz/2.,
-											c0.x +c0.dx/2.,c0.y +c0.dy/2.,c0.z + c0.dz/2.));
-		box_cells.push_back(Bbox(c1.x -c1.dx/2.,c1.y -c1.dy/2.,c1.z -c1.dz/2.,
-											c1.x +c1.dx/2.,c1.y +c1.dy/2.,c1.z + c1.dz/2.));
-	}
-	else if(in!=in1 && jn!=jn1 && kn==kn1){
+  if((in!=in1 && jn==jn1 && kn==kn1)|| (in==in1 && jn!=jn1 && kn==kn1) || (in==in1 && jn==jn1 && kn!=kn1))
+  {
+    Cellule& c0 = grille[in][jn][kn];
+    Cellule& c1 = grille[in1][jn1][kn1];
+    Cells.push_back(c0); Cells.push_back(c1);
+    box_cells.push_back(Bbox(c0.x -c0.dx/2.,c0.y -c0.dy/2.,c0.z -c0.dz/2.,
+			     c0.x +c0.dx/2.,c0.y +c0.dy/2.,c0.z + c0.dz/2.));
+    box_cells.push_back(Bbox(c1.x -c1.dx/2.,c1.y -c1.dy/2.,c1.z -c1.dz/2.,
+			     c1.x +c1.dx/2.,c1.y +c1.dy/2.,c1.z + c1.dz/2.));
+  }
+  else if(in!=in1 && jn!=jn1 && kn==kn1){
 		
-		Cellule& c0 = grille[in][jn][kn];
-		Cellule& c1 = grille[in1][jn1][kn1];
-		Cellule& c2 = grille[in1][jn][kn];
-		Cellule& c3 = grille[in][jn1][kn1];
+    Cellule& c0 = grille[in][jn][kn];
+    Cellule& c1 = grille[in1][jn1][kn1];
+    Cellule& c2 = grille[in1][jn][kn];
+    Cellule& c3 = grille[in][jn1][kn1];
 		
-		Cells.push_back(c0); Cells.push_back(c1); Cells.push_back(c2); Cells.push_back(c3);
+    Cells.push_back(c0); Cells.push_back(c1); Cells.push_back(c2); Cells.push_back(c3);
 		
-		box_cells.push_back(Bbox(c0.x -c0.dx/2.,c0.y -c0.dy/2.,c0.z -c0.dz/2.,
-														 c0.x +c0.dx/2.,c0.y +c0.dy/2.,c0.z + c0.dz/2.));
-		box_cells.push_back(Bbox(c1.x -c1.dx/2.,c1.y -c1.dy/2.,c1.z -c1.dz/2.,
-														 c1.x +c1.dx/2.,c1.y +c1.dy/2.,c1.z + c1.dz/2.));
-	  box_cells.push_back(Bbox(c2.x -c2.dx/2.,c2.y -c2.dy/2.,c2.z -c2.dz/2.,
-												     c2.x +c2.dx/2.,c2.y +c2.dy/2.,c2.z + c2.dz/2.));
+    box_cells.push_back(Bbox(c0.x -c0.dx/2.,c0.y -c0.dy/2.,c0.z -c0.dz/2.,
+			     c0.x +c0.dx/2.,c0.y +c0.dy/2.,c0.z + c0.dz/2.));
+    box_cells.push_back(Bbox(c1.x -c1.dx/2.,c1.y -c1.dy/2.,c1.z -c1.dz/2.,
+			     c1.x +c1.dx/2.,c1.y +c1.dy/2.,c1.z + c1.dz/2.));
+    box_cells.push_back(Bbox(c2.x -c2.dx/2.,c2.y -c2.dy/2.,c2.z -c2.dz/2.,
+			     c2.x +c2.dx/2.,c2.y +c2.dy/2.,c2.z + c2.dz/2.));
     box_cells.push_back(Bbox(c3.x -c3.dx/2.,c3.y -c3.dy/2.,c3.z -c3.dz/2.,
-														  c3.x +c3.dx/2.,c3.y +c3.dy/2.,c3.z + c3.dz/2.));
-	}
-	else if(in!=in1 && jn==jn1 && kn!=kn1){
+			     c3.x +c3.dx/2.,c3.y +c3.dy/2.,c3.z + c3.dz/2.));
+  }
+  else if(in!=in1 && jn==jn1 && kn!=kn1){
 		
-		Cellule& c0 = grille[in][jn][kn];
-		Cellule& c1 = grille[in1][jn1][kn1];
-		Cellule& c2 = grille[in][jn][kn1];
-		Cellule& c3 = grille[in1][jn1][kn];
+    Cellule& c0 = grille[in][jn][kn];
+    Cellule& c1 = grille[in1][jn1][kn1];
+    Cellule& c2 = grille[in][jn][kn1];
+    Cellule& c3 = grille[in1][jn1][kn];
 		
-		Cells.push_back(c0); Cells.push_back(c1); Cells.push_back(c2); Cells.push_back(c3);
+    Cells.push_back(c0); Cells.push_back(c1); Cells.push_back(c2); Cells.push_back(c3);
 		
-		box_cells.push_back(Bbox(c0.x -c0.dx/2.,c0.y -c0.dy/2.,c0.z -c0.dz/2.,
-														 c0.x +c0.dx/2.,c0.y +c0.dy/2.,c0.z + c0.dz/2.));
-		box_cells.push_back(Bbox(c1.x -c1.dx/2.,c1.y -c1.dy/2.,c1.z -c1.dz/2.,
-												     c1.x +c1.dx/2.,c1.y +c1.dy/2.,c1.z + c1.dz/2.));
-		box_cells.push_back(Bbox(c2.x -c2.dx/2.,c2.y -c2.dy/2.,c2.z -c2.dz/2.,
-														 c2.x +c2.dx/2.,c2.y +c2.dy/2.,c2.z + c2.dz/2.));
-		box_cells.push_back(Bbox(c3.x -c3.dx/2.,c3.y -c3.dy/2.,c3.z -c3.dz/2.,
-														 c3.x +c3.dx/2.,c3.y +c3.dy/2.,c3.z + c3.dz/2.));
-	}
-	else if(in==in1 && jn!=jn1 && kn!=kn1){
+    box_cells.push_back(Bbox(c0.x -c0.dx/2.,c0.y -c0.dy/2.,c0.z -c0.dz/2.,
+			     c0.x +c0.dx/2.,c0.y +c0.dy/2.,c0.z + c0.dz/2.));
+    box_cells.push_back(Bbox(c1.x -c1.dx/2.,c1.y -c1.dy/2.,c1.z -c1.dz/2.,
+			     c1.x +c1.dx/2.,c1.y +c1.dy/2.,c1.z + c1.dz/2.));
+    box_cells.push_back(Bbox(c2.x -c2.dx/2.,c2.y -c2.dy/2.,c2.z -c2.dz/2.,
+			     c2.x +c2.dx/2.,c2.y +c2.dy/2.,c2.z + c2.dz/2.));
+    box_cells.push_back(Bbox(c3.x -c3.dx/2.,c3.y -c3.dy/2.,c3.z -c3.dz/2.,
+			     c3.x +c3.dx/2.,c3.y +c3.dy/2.,c3.z + c3.dz/2.));
+  }
+  else if(in==in1 && jn!=jn1 && kn!=kn1){
 		
-		Cellule& c0 = grille[in][jn][kn];
-		Cellule& c1 = grille[in1][jn1][kn1];
-		Cellule& c2 = grille[in][jn1][kn];
-		Cellule& c3 = grille[in1][jn][kn1];
+    Cellule& c0 = grille[in][jn][kn];
+    Cellule& c1 = grille[in1][jn1][kn1];
+    Cellule& c2 = grille[in][jn1][kn];
+    Cellule& c3 = grille[in1][jn][kn1];
 		
-		Cells.push_back(c0); Cells.push_back(c1); Cells.push_back(c2); Cells.push_back(c3);
+    Cells.push_back(c0); Cells.push_back(c1); Cells.push_back(c2); Cells.push_back(c3);
 		
-		box_cells.push_back(Bbox(c0.x -c0.dx/2.,c0.y -c0.dy/2.,c0.z -c0.dz/2.,
-														 c0.x +c0.dx/2.,c0.y +c0.dy/2.,c0.z + c0.dz/2.));
-		box_cells.push_back(Bbox(c1.x -c1.dx/2.,c1.y -c1.dy/2.,c1.z -c1.dz/2.,
-														 c1.x +c1.dx/2.,c1.y +c1.dy/2.,c1.z + c1.dz/2.));
-		box_cells.push_back(Bbox(c2.x -c2.dx/2.,c2.y -c2.dy/2.,c2.z -c2.dz/2.,
-												c2.x +c2.dx/2.,c2.y +c2.dy/2.,c2.z + c2.dz/2.));
-		box_cells.push_back(Bbox(c3.x -c3.dx/2.,c3.y -c3.dy/2.,c3.z -c3.dz/2.,
-														 c3.x +c3.dx/2.,c3.y +c3.dy/2.,c3.z + c3.dz/2.));
-	}
-	else{
+    box_cells.push_back(Bbox(c0.x -c0.dx/2.,c0.y -c0.dy/2.,c0.z -c0.dz/2.,
+			     c0.x +c0.dx/2.,c0.y +c0.dy/2.,c0.z + c0.dz/2.));
+    box_cells.push_back(Bbox(c1.x -c1.dx/2.,c1.y -c1.dy/2.,c1.z -c1.dz/2.,
+			     c1.x +c1.dx/2.,c1.y +c1.dy/2.,c1.z + c1.dz/2.));
+    box_cells.push_back(Bbox(c2.x -c2.dx/2.,c2.y -c2.dy/2.,c2.z -c2.dz/2.,
+			     c2.x +c2.dx/2.,c2.y +c2.dy/2.,c2.z + c2.dz/2.));
+    box_cells.push_back(Bbox(c3.x -c3.dx/2.,c3.y -c3.dy/2.,c3.z -c3.dz/2.,
+			     c3.x +c3.dx/2.,c3.y +c3.dy/2.,c3.z + c3.dz/2.));
+  }
+  else{
 	
-		Cellule& c0 = grille[in][jn][kn];
-		Cellule& c1 = grille[in1][jn1][kn1];
-		Cellule& c2 = grille[in1][jn][kn];
-		Cellule& c3 = grille[in][jn1][kn];
-		Cellule& c4 = grille[in][jn][kn1];
-		Cellule& c5 = grille[in1][jn1][kn];
-		Cellule& c6 = grille[in1][jn][kn1];
-		Cellule& c7 = grille[in][jn1][kn1];
+    Cellule& c0 = grille[in][jn][kn];
+    Cellule& c1 = grille[in1][jn1][kn1];
+    Cellule& c2 = grille[in1][jn][kn];
+    Cellule& c3 = grille[in][jn1][kn];
+    Cellule& c4 = grille[in][jn][kn1];
+    Cellule& c5 = grille[in1][jn1][kn];
+    Cellule& c6 = grille[in1][jn][kn1];
+    Cellule& c7 = grille[in][jn1][kn1];
 		
 		
-		Cells.push_back(c0); Cells.push_back(c1); Cells.push_back(c2); Cells.push_back(c3);
-		Cells.push_back(c4); Cells.push_back(c5); Cells.push_back(c6); Cells.push_back(c7);
+    Cells.push_back(c0); Cells.push_back(c1); Cells.push_back(c2); Cells.push_back(c3);
+    Cells.push_back(c4); Cells.push_back(c5); Cells.push_back(c6); Cells.push_back(c7);
 		
-		box_cells.push_back(Bbox(c0.x -c0.dx/2.,c0.y -c0.dy/2.,c0.z -c0.dz/2.,
-							               c0.x +c0.dx/2.,c0.y +c0.dy/2.,c0.z + c0.dz/2.));
-		box_cells.push_back(Bbox(c1.x -c1.dx/2.,c1.y -c1.dy/2.,c1.z -c1.dz/2.,
-		                         c1.x +c1.dx/2.,c1.y +c1.dy/2.,c1.z + c1.dz/2.));
-		box_cells.push_back(Bbox(c2.x -c2.dx/2.,c2.y -c2.dy/2.,c2.z -c2.dz/2.,
-		                         c2.x +c2.dx/2.,c2.y +c2.dy/2.,c2.z + c2.dz/2.));
-		box_cells.push_back(Bbox(c3.x -c3.dx/2.,c3.y -c3.dy/2.,c3.z -c3.dz/2.,
-		                         c3.x +c3.dx/2.,c3.y +c3.dy/2.,c3.z + c3.dz/2.));
-		box_cells.push_back(Bbox(c4.x -c4.dx/2.,c4.y -c4.dy/2.,c4.z -c4.dz/2.,
-		                         c4.x +c4.dx/2.,c4.y +c4.dy/2.,c4.z + c4.dz/2.));
-		box_cells.push_back(Bbox(c5.x -c5.dx/2.,c5.y -c5.dy/2.,c5.z - c5.dz/2.,
-		                         c5.x +c5.dx/2.,c5.y +c5.dy/2.,c5.z + c5.dz/2.));
-		box_cells.push_back(Bbox(c6.x -c6.dx/2.,c6.y -c6.dy/2.,c6.z -c6.dz/2.,
-		                         c6.x +c6.dx/2.,c6.y +c6.dy/2.,c6.z + c6.dz/2.));
-		box_cells.push_back(Bbox(c7.x -c7.dx/2.,c7.y -c7.dy/2.,c7.z -c7.dz/2.,
-		                         c7.x +c7.dx/2.,c7.y +c7.dy/2.,c7.z + c7.dz/2.));
-	}
+    box_cells.push_back(Bbox(c0.x -c0.dx/2.,c0.y -c0.dy/2.,c0.z -c0.dz/2.,
+			     c0.x +c0.dx/2.,c0.y +c0.dy/2.,c0.z + c0.dz/2.));
+    box_cells.push_back(Bbox(c1.x -c1.dx/2.,c1.y -c1.dy/2.,c1.z -c1.dz/2.,
+			     c1.x +c1.dx/2.,c1.y +c1.dy/2.,c1.z + c1.dz/2.));
+    box_cells.push_back(Bbox(c2.x -c2.dx/2.,c2.y -c2.dy/2.,c2.z -c2.dz/2.,
+			     c2.x +c2.dx/2.,c2.y +c2.dy/2.,c2.z + c2.dz/2.));
+    box_cells.push_back(Bbox(c3.x -c3.dx/2.,c3.y -c3.dy/2.,c3.z -c3.dz/2.,
+			     c3.x +c3.dx/2.,c3.y +c3.dy/2.,c3.z + c3.dz/2.));
+    box_cells.push_back(Bbox(c4.x -c4.dx/2.,c4.y -c4.dy/2.,c4.z -c4.dz/2.,
+			     c4.x +c4.dx/2.,c4.y +c4.dy/2.,c4.z + c4.dz/2.));
+    box_cells.push_back(Bbox(c5.x -c5.dx/2.,c5.y -c5.dy/2.,c5.z - c5.dz/2.,
+			     c5.x +c5.dx/2.,c5.y +c5.dy/2.,c5.z + c5.dz/2.));
+    box_cells.push_back(Bbox(c6.x -c6.dx/2.,c6.y -c6.dy/2.,c6.z -c6.dz/2.,
+			     c6.x +c6.dx/2.,c6.y +c6.dy/2.,c6.z + c6.dz/2.));
+    box_cells.push_back(Bbox(c7.x -c7.dx/2.,c7.y -c7.dy/2.,c7.z -c7.dz/2.,
+			     c7.x +c7.dx/2.,c7.y +c7.dy/2.,c7.z + c7.dz/2.));
+  }
 
 }
-/*!
-*\fn void Grille::swap_face(Triangles& T3d_prev, Triangles& T3d_n, const double dt,  Particule & P)
-*\brief Calcul de la quantit&eacute; balay&eacute;e par un morceau de parois entre t et t-dt. Calcul du flux &agrave; la parois.
-*\details Algorithme:\n
-- Construction du vecteur des Box contenant les prismes ayant comme bases T3d_prev et T3d_n. Boucle sur les prismes ainsi obtenus:
-- On cherche l'index de la cellule qui contient T3d_prev(le triangle est enti&egrave;rement contenu dans une cellule) et celui de la cellule qui contient T3d_n(le triangle est enti&egrave;rement contenu dans une cellule).
-- Si le prisme est contenu dans une seule cellule on calcule le volume du prisme via la fonction volume_prisme(const Triangle_3&,const Triangle_3&) et la quantit&eacute; balay&eacute;e par la face (\a Particule.triangles) est donn&eacute;e par : \f$  volume\_prisme*U^n/volume\_cellule \f$. Sinon,
- - On liste les cellules fluide intersect&eacute;es par le prisme via la fonction \a cells_intersection_face(int& ,int& ,int& ,int& ,int& ,int& , std::vector<Bbox>& s, std::vector<Cellule>& s).
- - On d&eacute;coupe le prisme en  t&eacute;tra&egrave;dres: soit  \f$ T1(A_1,B_1,C_1)\f$  et \f$ T2(A_2,B_2,C_2)\f$  les bases du prisme, on d&eacute;finit les points: \f$ A = \frac{1}{4}(B_1 + B_2 + C_1 +C_2) \f$ , \f$ B = \frac{1}{4}(A_1 + A_2 + C_1 +C_2) \f$ et \f$ C = \frac{1}{4}(A_1 + A_2 + B_1 + B_2 ) \f$. Les t&eacute;tra&egrave;dres d&eacute;coupant \f$ A_1,B_1,C_1 A_2,B_2,C_2 \f$ sont: \f$ A_1 A_2 C B \f$, \f$ B_1 B_2 A C \f$, \f$ C_1 C_2 B A \f$, \f$ A_1 C C_1 B \f$, \f$ B_1 A C_1 C \f$, \f$ A C B C_1 \f$, \f$ A B C C_2 \f$, \f$ A B_2 C_2 C \f$, \f$ A_1 B_1 C_1 C \f$, \f$ A_2 C_2 C B \f$, \f$ A_2 B_2 C C_2. \f$
- - Intersections de ces  t&eacute;tra&egrave;dres avec les cellules fluide intersect&eacute;es par le prisme via la fonction intersect_cube_tetrahedron(Bbox&, Tetrahedron&). La quantité balayée par la face est donnée par la somme des: \f$  volume\_{intersection\_cellule\_tetrahedre}*U^n/volume\_cellule. \f$ \n
+/*!\brief Computation of the quantity of fluid swept by an interface triangle between t-dt and t, and computation of the boundary flux.
+ \details Algorithm:\n
+ - Construction of the Box vector containing the prisms with bases T3d_prev and T3d_n. Loop on the prisms obtained:
+ - We look for the indices of the cells containing T3d_prev (constructed to be fully contained in one cell) and T3d_n (idem).
+ - If the prism is contained in one single cell, compute the volume of the prism using function \a volume_prisme(const Triangle_3&,const Triangle_3&), and the swept quantity for the interface triangle \a Particule.triangles is given by: \f$  volume\_prisme*U^n/volume\_cellule \f$. Otherwise,
+ - List the fluid cells intersected by the prism using function \a cells_intersection_face(int& ,int& ,int& ,int& ,int& ,int& , std::vector<Bbox>& s, std::vector<Cellule>& s).
+ - Split the prism into tetrahedra: let  \f$ T1(A_1,B_1,C_1)\f$  and \f$ T2(A_2,B_2,C_2)\f$  the prism bases, define points: \f$ A = \frac{1}{4}(B_1 + B_2 + C_1 +C_2) \f$ , \f$ B = \frac{1}{4}(A_1 + A_2 + C_1 +C_2) \f$ and \f$ C = \frac{1}{4}(A_1 + A_2 + B_1 + B_2 ) \f$. The prism is split into the tetrahedra \f$ A_1,B_1,C_1 A_2,B_2,C_2 \f$ sont: \f$ A_1 A_2 C B \f$, \f$ B_1 B_2 A C \f$, \f$ C_1 C_2 B A \f$, \f$ A_1 C C_1 B \f$, \f$ B_1 A C_1 C \f$, \f$ A C B C_1 \f$, \f$ A B C C_2 \f$, \f$ A B_2 C_2 C \f$, \f$ A_1 B_1 C_1 C \f$, \f$ A_2 C_2 C B \f$, \f$ A_2 B_2 C C_2. \f$
+ - Intersect these tetrahedra with the fluid cells intersected by the prism using function \a intersect_cube_tetrahedron(Bbox&, Tetrahedron&). The swept quantity for the interface triangle is given by the sum of the following quantities: \f$  volume\_{intersection\_cellule\_tetrahedre}*U^n/volume\_cellule. \f$ \n
 
-Calcul du flux &agrave; la parois: soit \a f un morceau d'interface, le flux &agrave; la parois est donné par :
-\f{eqnarray*}{
-	\Phi_f  =  \left(0,  p^x \, A_f n^{x}_f, \, p^y \,A_f n^{y}_f, \, p^z \,A_f n^{z}_f, V_f \cdot \left( p^x \, A_f n^{x}_f,p^y \,A_f n^{y}_f,p^z \,A_f n^{z}_f \right)^t \right)^t
-	\f} \n
-	o&ugrave; \f$ A_f \f$ l'aire de l'interface f,  \f$ n_f \f$ la normale sortante &agrave; l'interface f, \f$ V_f \f$ la vitesse au centre de la parois calculée via la fonction \a vitesse_parois(Point_3& ) et \f$ p^x, p^y, p^z \f$ les pressions efficaces selon les directions x, y et z pendant le pas de temps (\a Cellule.pdtx, \a  Cellule.pdty et \a Cellule.pdtz).
+ Computation of the boundary fluxes: let \a f an interface triangle, the boundary flux is given by:
+ \f{eqnarray*}{
+ \Phi_f  =  \left(0,  p^x \, A_f n^{x}_f, \, p^y \,A_f n^{y}_f, \, p^z \,A_f n^{z}_f, V_f \cdot \left( p^x \, A_f n^{x}_f,p^y \,A_f n^{y}_f,p^z \,A_f n^{z}_f \right)^t \right)^t
+ \f} \n
+ where \f$ A_f \f$ is the area of f,  \f$ n_f \f$ is the exterior normal to f, \f$ V_f \f$ is the velocity at the center of f computed with function \a vitesse_parois(Point_3& ) and \f$ p^x, p^y, p^z \f$ are the effective pressures in the x, y and z direction during the time-step (\a Cellule.pdtx, \a  Cellule.pdty and \a Cellule.pdtz).
 
-*\param T3d_prev Triangles_3 (triangles d'interface au temps t: \a Particule.Triangles_interface)
-*\param T3d_n    Triangles_3 (triangles d'interface au temps t-dt: \a Particule.Triangles_interface_prev)
-*\param dt pas de temps
-*\param P Particule 
-*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-*\return void
-*/
+ \param T3d_prev Triangles_3 (interface triangles at time t: \a Particule.Triangles_interface)
+ \param T3d_n    Triangles_3 (interface triangles at time t-dt: \a Particule.Triangles_interface_prev)
+ \param dt Time-step
+ \param P Particule 
+ \warning <b> Specific coupling procedure ! </b>
+ \return void
+ */
 void Grille::swap_face(const Triangles& T3d_prev, const Triangles& T3d_n, const double dt, Particule & P, double & volume_test){
 	
-  //CGAL::Timer user_time, user_time2;
-  //double time=0.;
   std::vector<Bbox> box_prismes(T3d_prev.size());
   for (int i=0; i< T3d_prev.size(); i++){
     const Bbox& box_triangles_prev = T3d_prev[i].bbox();
@@ -1291,8 +1138,7 @@ void Grille::swap_face(const Triangles& T3d_prev, const Triangles& T3d_n, const 
     const Point_3& center_n= centroid(T3d_n[i].operator[](0),T3d_n[i].operator[](1),T3d_n[i].operator[](2));
     in_cell(center_prev, in, jn, kn, interieur);
     in_cell(center_n, in1, jn1, kn1, interieur);
-		
-    //Cellule c_cur= grille[in1][jn1][kn1];
+	
     if((std::abs(grille[in1][jn1][kn1].alpha -1.)<eps)  && (interieur==true)){
       double x= CGAL::to_double(center_n.operator[](0));
       double y= CGAL::to_double(center_n.operator[](1));
@@ -1319,21 +1165,20 @@ void Grille::swap_face(const Triangles& T3d_prev, const Triangles& T3d_n, const 
 	  }
 	}
       }
-    } // end if alpha==1
+    } 
 		  
     Cellule& c= grille[in1][jn1][kn1];
     double volume_cel = c.dx*c.dy*c.dz;  
     if ( (in==in1) && (jn==jn1) && (kn==kn1) && (interieur==true)){
-      // le prisme est contenu dans une seule cellule 
+      //The prism is contained in one single cell
       double volume_p=volume_prisme(T3d_prev[i],T3d_n[i]);
-      //calcul du volume
+      //Computation of the volume
       if( (std::abs(volume_p)>eps) && (std::abs(1.-c.alpha)>eps)){
 	c.delta_w[0] += volume_p*c.rho0/volume_cel; 
 	c.delta_w[1] += volume_p*c.impx0/volume_cel;
 	c.delta_w[2] += volume_p*c.impy0/volume_cel; 
 	c.delta_w[3] += volume_p*c.impz0/volume_cel; 
 	c.delta_w[4] += volume_p*c.rhoE0/volume_cel;
-	//grille[in1][jn1][kn1] = c;
       }
       volume_test += volume_p;
     }	
@@ -1342,7 +1187,7 @@ void Grille::swap_face(const Triangles& T3d_prev, const Triangles& T3d_n, const 
       std::vector<Cellule> Cells ;
       cells_intersection_face(in,jn,kn,in1,jn1,kn1,box_cells,Cells);
 
-      //definition Tetraedres 
+      //Definition of the tetrahedra 
       std::vector<Tetrahedron> vect_Tet;
       std::vector<Bbox> box_Tet;
       Point_3 e = centroid(T3d_prev[i].operator[](1),T3d_n[i].operator[](1), T3d_prev[i].operator[](2),T3d_n[i].operator[](2));
@@ -1350,21 +1195,18 @@ void Grille::swap_face(const Triangles& T3d_prev, const Triangles& T3d_n, const 
       Point_3 g = centroid(T3d_prev[i].operator[](0),T3d_n[i].operator[](0), T3d_prev[i].operator[](1),T3d_n[i].operator[](1));
 
       Tetrahedron tet0 (T3d_prev[i].operator[](0),T3d_n[i].operator[](0), g, f);
-      //if(!tet0.is_degenerate ()){
       if(abs(tet0.volume ())>eps){
 	vect_Tet.push_back(tet0);
 	box_Tet.push_back(tet0.bbox());
       }
 			
       Tetrahedron tet1 (T3d_prev[i].operator[](1),T3d_n[i].operator[](1), e, g);
-      //if(!tet1.is_degenerate ()){
       if(abs(tet1.volume ())>eps){
 	vect_Tet.push_back(tet1);
 	box_Tet.push_back(tet1.bbox());
       }
 
       Tetrahedron tet2 (T3d_prev[i].operator[](2),T3d_n[i].operator[](2), f, e);
-      //if(!tet2.is_degenerate ()){
       if(abs(tet2.volume ())>eps){
 	vect_Tet.push_back(tet2);
 	box_Tet.push_back(tet2.bbox());
@@ -1377,46 +1219,39 @@ void Grille::swap_face(const Triangles& T3d_prev, const Triangles& T3d_n, const 
       }
 
       Tetrahedron tet4 (T3d_prev[i].operator[](0), f, g, T3d_prev[i].operator[](2));
-      // 			if(!tet4.is_degenerate ()){
       if(abs(tet4.volume ())>eps){
 	vect_Tet.push_back(tet4);
 	box_Tet.push_back(tet4.bbox());
       }
       Tetrahedron tet5 (T3d_prev[i].operator[](1), g, e, T3d_prev[i].operator[](2));
-      //if(!tet5.is_degenerate ()){
       if(abs(tet5.volume ())>eps){
 	vect_Tet.push_back(tet5);
 	box_Tet.push_back(tet5.bbox());
       }
 
       Tetrahedron tet6 (e,g,f, T3d_prev[i].operator[](2));
-      //if(!tet6.is_degenerate ()){
       if(abs(tet6.volume ())>eps){
 	vect_Tet.push_back(tet6);
 	box_Tet.push_back(tet6.bbox());
       }
 
       Tetrahedron tet7 (e,f,g, T3d_n[i].operator[](2));
-      //if(!tet7.is_degenerate ()){
       if(abs(tet7.volume ())>eps){
 	vect_Tet.push_back(tet7);
 	box_Tet.push_back(tet7.bbox());
       }
       Tetrahedron tet8 (e, T3d_n[i].operator[](1),T3d_n[i].operator[](2), g);
-      //if(!tet8.is_degenerate ()){
       if(abs(tet8.volume ())>eps){
 	vect_Tet.push_back(tet8);
 	box_Tet.push_back(tet8.bbox());
       }
       Tetrahedron tet9 (T3d_n[i].operator[](0),T3d_n[i].operator[](2),g,f);
-      //if(!tet9.is_degenerate ()){
       if(abs(tet9.volume ())>eps){
 	vect_Tet.push_back(tet9);
 	box_Tet.push_back(tet9.bbox());
       }
 
       Tetrahedron tet10 (T3d_n[i].operator[](0),T3d_n[i].operator[](1), g, T3d_n[i].operator[](2));
-      //if(!tet10.is_degenerate ()){
       if(abs(tet10.volume ())>eps){
 	vect_Tet.push_back(tet10);
 	box_Tet.push_back(tet10.bbox());
@@ -1427,27 +1262,23 @@ void Grille::swap_face(const Triangles& T3d_prev, const Triangles& T3d_n, const 
 	double volume = 0.;
 			
 	if (CGAL::do_intersect(box_prismes[i], box_cells[iter]) ) {
-	  // test d'intersection des box_tetraedre avec les 8 cellules autour
+	  //Intersection test of the bounding boxes of the tetrahedra with the 8 neighbouring cells
 	  for(int it=0; it<box_Tet.size(); it++){
 	    if (CGAL::do_intersect(box_Tet[it],box_cells[iter]) ) {
-	      // test pour verifier si vect_Tet[it] est contenu dans la cellule "iter"
+	      //Test to check whethet vect_Tet[it] is contained in cell "iter"
 	      if (inside_box(box_cells[iter], vect_Tet[it].operator[](0)) &&  inside_box(box_cells[iter], vect_Tet[it].operator[](1))
 		  && inside_box(box_cells[iter], vect_Tet[it].operator[](2)) && inside_box(box_cells[iter], vect_Tet[it].operator[](3))){
 		volume += volume_tetra(vect_Tet[it]); 
 	      }
 	      else {
-		//calcul volume intersection
-		//user_time.start();
+		//Computation of the intersection volume
 		double temps_intersections=0.,temps_triangulation=0.;
 		volume += (intersect_cube_tetrahedron_bis(box_cells[iter], vect_Tet[it],temps_intersections,temps_triangulation) * sign(volume_tetra(vect_Tet[it])) );
-		//time+=user_time.time();
-		//user_time.reset();
 	      }
-	    } //if intersect Box_Tetra avec Box_Cell
-	  } // boucle sur tetra			
-	}//if inter box_cell inter box_prisme
+	    } 
+	  } 			
+	}
 			
-	//if(std::abs(volume)>eps){ //11 cotobre 2013
 	c.delta_w[0] += volume*Cells[iter].rho0/volume_cel; 
 	c.delta_w[1] += volume*Cells[iter].impx0/volume_cel;
 	c.delta_w[2] += volume*Cells[iter].impy0/volume_cel; 
@@ -1455,11 +1286,10 @@ void Grille::swap_face(const Triangles& T3d_prev, const Triangles& T3d_n, const 
 	c.delta_w[4] += volume*Cells[iter].rhoE0/volume_cel;
 	grille[in1][jn1][kn1] = c;
 				
-	//}
 	volume_test += volume;
-      } // boucle sur les box_cells
-    }//end else 
-    if (explicite){//explicit algo
+      } 
+    }
+    if (explicite){
       Vector_3 norm_prev= orthogonal_vector(T3d_prev[i].operator[](0),T3d_prev[i].operator[](1),T3d_prev[i].operator[](2));
       double norm2_prev= sqrt(CGAL::to_double(norm_prev*norm_prev));
       if(norm2_prev>eps){ 
@@ -1473,16 +1303,10 @@ void Grille::swap_face(const Triangles& T3d_prev, const Triangles& T3d_n, const 
 	Vector_3 V_f = P.vitesse_parois_prev(center_prev);
 	c.phi_v += aire_prev * (CGAL::to_double(c.pdtx*n_prev.x()*V_f.x()  + c.pdty*n_prev.y()*V_f.y()+
 						c.pdtz*n_prev.z()*V_f.z()))/volume_cel;
-	//test 11 octobre 2013
-	// 				if (abs(c.phi_x)<=eps) {c.phi_x = 0.;} 
-	// 				if (abs(c.phi_y)<=eps) {c.phi_y = 0.;} 
-	// 				if (abs(c.phi_z)<=eps) {c.phi_z = 0.;} 
-	// 				if (abs(c.phi_v)<=eps) {c.phi_v = 0.;} 
-	//fin test 11 octobre 2013
 	grille[in1][jn1][kn1] = c;
       }
-    }//explicit algo
-    else {//semi_implicit algo
+    }
+    else {
       Vector_3 norm= orthogonal_vector(T3d_n[i].operator[](0),T3d_n[i].operator[](1),T3d_n[i].operator[](2));
       double norm2= sqrt(CGAL::to_double(norm*norm));
       if(norm2>eps){ 
@@ -1493,54 +1317,42 @@ void Grille::swap_face(const Triangles& T3d_prev, const Triangles& T3d_n, const 
 	c.phi_z += c.pdtz * aire *( CGAL::to_double(n.z()))/(c.dx*c.dy*c.dz);
 	Vector_3 V_f = P.vitesse_parois(center_n);
 	c.phi_v += aire * (CGAL::to_double(c.pdtx*n.x()*V_f.x()  + c.pdty*n.y()*V_f.y() + c.pdtz*n.z()*V_f.z()))/(c.dx*c.dy*c.dz);
-	//test 11 octobre 2013
-	// 				if (abs(c.phi_x)<=eps) {c.phi_x = 0.;} 
-	// 				if (abs(c.phi_y)<=eps) {c.phi_y = 0.;} 
-	// 				if (abs(c.phi_z)<=eps) {c.phi_z = 0.;} 
-	// 				if (abs(c.phi_v)<=eps) {c.phi_v = 0.;} 
-	// test 11 octobre 2013
 	grille[in1][jn1][kn1] = c;
       }
-    } //semi_implicit algo
-		
-  } //end boucle sur les prismes
+    } 
+  } 
 }	
 
-/*!
-*\fn void Grille::swap_face_inexact(Triangle_3 Tr_prev, Triangle_3 Tr, Triangles& T3d_prev, Triangles& T3d_n, const double dt,  Particule & P)
-*\brief Calcul de la quantit&eacute; balay&eacute;e par un morceau de parois entre t et t-dt. Calcul du flux &agrave; la parois.
-*\details Algorithme:\n
-- Construction du vecteur des Box contenant les prismes ayant comme bases T3d_prev et T3d_n. Boucle sur les prismes ainsi obtenus:
-- On cherche l'index de la cellule qui contient T3d_prev(le triangle est enti&egrave;rement contenu dans une cellule) et celui de la cellule qui contient T3d_n(le triangle est enti&egrave;rement contenu dans une cellule).
-- Si le prisme est contenu dans une seule cellule on calcule le volume du prisme via la fonction volume_prisme(const Triangle_3&,const Triangle_3&) et la quantit&eacute; balay&eacute;e par la face (\a Particule.triangles) est donn&eacute;e par : \f$  volume\_prisme*U^n/volume\_cellule \f$. Sinon,
- - On liste les cellules fluide intersect&eacute;es par le prisme via la fonction \a cells_intersection_face(int& ,int& ,int& ,int& ,int& ,int& , std::vector<Bbox>& s, std::vector<Cellule>& s).
- - On d&eacute;coupe le prisme en  t&eacute;tra&egrave;dres: soit  \f$ T1(A_1,B_1,C_1)\f$  et \f$ T2(A_2,B_2,C_2)\f$  les bases du prisme, on d&eacute;finit les points: \f$ A = \frac{1}{4}(B_1 + B_2 + C_1 +C_2) \f$ , \f$ B = \frac{1}{4}(A_1 + A_2 + C_1 +C_2) \f$ et \f$ C = \frac{1}{4}(A_1 + A_2 + B_1 + B_2 ) \f$. Les t&eacute;tra&egrave;dres d&eacute;coupant \f$ A_1,B_1,C_1 A_2,B_2,C_2 \f$ sont: \f$ A_1 A_2 C B \f$, \f$ B_1 B_2 A C \f$, \f$ C_1 C_2 B A \f$, \f$ A_1 C C_1 B \f$, \f$ B_1 A C_1 C \f$, \f$ A C B C_1 \f$, \f$ A B C C_2 \f$, \f$ A B_2 C_2 C \f$, \f$ A_1 B_1 C_1 C \f$, \f$ A_2 C_2 C B \f$, \f$ A_2 B_2 C C_2. \f$
- - Intersections de ces  t&eacute;tra&egrave;dres avec les cellules fluide intersect&eacute;es par le prisme via la fonction intersect_cube_tetrahedron(Bbox&, Tetrahedron&). La quantité balayée par la face est donnée par la somme des: \f$  volume\_{intersection\_cellule\_tetrahedre}*U^n/volume\_cellule. \f$ \n
+/*!\brief Computation of the swept quantity for an interface triangle between times t-dt and t. Computation of the boundary flux.
+ \details Algorithm:\n
+ - Construction of the vector of the bounding boxes of the prisms with bases T3d_prev and T3d_n. Loop on the prisms obtained:
+ - Look for the indices of the cells containing T3d_prev (due to the construction, the triangle is fully contained in one single cell) and T3d_n (idem).
+ - If the prism is contained in one single cell, compute the prism volume using function \a volume_prisme(const Triangle_3&,const Triangle_3&), and the quantity swept by the interface triangle (\a Particule.triangles) is given by: \f$  volume\_prisme*U^n/volume\_cellule \f$. Otherwise,
+ - List fluid cells intersecting the prism using function \a cells_intersection_face(int& ,int& ,int& ,int& ,int& ,int& , std::vector<Bbox>& s, std::vector<Cellule>& s).
+ - Split the prism into tetrahedra: let  \f$ T1(A_1,B_1,C_1)\f$  and \f$ T2(A_2,B_2,C_2)\f$  the prism bases, and define points: \f$ A = \frac{1}{4}(B_1 + B_2 + C_1 +C_2) \f$ , \f$ B = \frac{1}{4}(A_1 + A_2 + C_1 +C_2) \f$ et \f$ C = \frac{1}{4}(A_1 + A_2 + B_1 + B_2 ) \f$. The prism is split into the prisms \f$ A_1,B_1,C_1 A_2,B_2,C_2 \f$ sont: \f$ A_1 A_2 C B \f$, \f$ B_1 B_2 A C \f$, \f$ C_1 C_2 B A \f$, \f$ A_1 C C_1 B \f$, \f$ B_1 A C_1 C \f$, \f$ A C B C_1 \f$, \f$ A B C C_2 \f$, \f$ A B_2 C_2 C \f$, \f$ A_1 B_1 C_1 C \f$, \f$ A_2 C_2 C B \f$, \f$ A_2 B_2 C C_2. \f$
+ - Intersection of these tetrahedra with the fluid cells intersected by the prism using function \a intersect_cube_tetrahedron(Bbox&, Tetrahedron&). The quantity swept by the interface triangle is given by the sum of the following terms: \f$  volume\_{intersection\_cellule\_tetrahedre}*U^n/volume\_cellule. \f$ \n
 
-Calcul du flux &agrave; la parois: soit \a f un morceau d'interface, le flux &agrave; la parois est donné par :
-\f{eqnarray*}{
-	\Phi_f  =  \left(0,  p^x \, A_f n^{x}_f, \, p^y \,A_f n^{y}_f, \, p^z \,A_f n^{z}_f, V_f \cdot \left( p^x \, A_f n^{x}_f,p^y \,A_f n^{y}_f,p^z \,A_f n^{z}_f \right)^t \right)^t
-	\f} \n
-	o&ugrave; \f$ A_f \f$ l'aire de l'interface f,  \f$ n_f \f$ la normale sortante &agrave; l'interface f, \f$ V_f \f$ la vitesse au centre de la parois calculée via la fonction \a vitesse_parois(Point_3& ) et \f$ p^x, p^y, p^z \f$ les pressions efficaces selon les directions x, y et z pendant le pas de temps (\a Cellule.pdtx, \a  Cellule.pdty et \a Cellule.pdtz).
+ Computation of the boundary flux: let \a f an interface triangle, the boundary flux is given by:
+ \f{eqnarray*}{
+ \Phi_f  =  \left(0,  p^x \, A_f n^{x}_f, \, p^y \,A_f n^{y}_f, \, p^z \,A_f n^{z}_f, V_f \cdot \left( p^x \, A_f n^{x}_f,p^y \,A_f n^{y}_f,p^z \,A_f n^{z}_f \right)^t \right)^t
+ \f} \n
+ where \f$ A_f \f$ is the area of f,  \f$ n_f \f$ is the exterior normal to f, \f$ V_f \f$ is the velocity at the center of \a f computed using function \a vitesse_parois(Point_3& ) and \f$ p^x, p^y, p^z \f$ are the effective pressures in the directions x, y and z during the time-step (\a Cellule.pdtx, \a  Cellule.pdty et \a Cellule.pdtz).
 
-*\param T3d_prev Triangles_3 (triangles d'interface au temps t: \a Particule.Triangles_interface)
-*\param T3d_n    Triangles_3 (triangles d'interface au temps t-dt: \a Particule.Triangles_interface_prev)
-*\param dt pas de temps
-*\param P Particule 
-*\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-*\return void
-*/
+ \param T3d_prev Triangles_3 (interface triangles at time t: \a Particule.Triangles_interface)
+ \param T3d_n    Triangles_3 (interface triangles at time t-dt: \a Particule.Triangles_interface_prev)
+ \param dt Time-step
+ \param P Particule 
+ \warning <b> Specific coupling procedure ! </b>
+ \return void
+ */
 void Grille::swap_face_inexact(const Triangle_3& Tr_prev, const Triangle_3& Tr, const Triangles& T3d_prev, const Triangles& T3d_n, const double dt, Particule & P, double & volume_test){
-  //cout << "debut swap inexact" << endl;
-  //CGAL::Timer user_time, user_time2;
-  //double time=0.;
   CGAL::Timer delta_time,total_time,boucle1_time,boucle2_time;
   delta_time.start();total_time.start();boucle1_time.start();boucle2_time.start();
   double temps_delta=0.,temps_total=0.,temps_boucle1=0.,temps_boucle2=0.,temps_intersections=0.,temps_triangulation=0.;
   delta_time.reset();
   Bbox box_prisme = Tr_prev.bbox()+Tr.bbox();
 
-  //definition Tetraedres 
+  //Definition tetrahedra 
   Tetrahedron Tet[11];
   Point_3 e = centroid(Tr_prev.operator[](1),Tr.operator[](1), Tr_prev.operator[](2),Tr.operator[](2));
   Point_3 f = centroid(Tr_prev.operator[](0),Tr.operator[](0), Tr_prev.operator[](2),Tr.operator[](2));
@@ -1563,30 +1375,22 @@ void Grille::swap_face_inexact(const Triangle_3& Tr_prev, const Triangle_3& Tr, 
   for(int l=0;l<11;l++){
     test2 += CGAL::to_double(Tet[l].volume());
   }
-  //cout << "volume_prisme=" << test << " volume_tetras=" << test2 << endl;
-  //getchar();
   
   double delta_w_tot[5];
   delta_w_tot[0] = delta_w_tot[1] = delta_w_tot[2] = delta_w_tot[3] = delta_w_tot[4] =0.;
   double volume_tot = 0.;
-  //Calcul de la quantite balayee par la face
+  //Computation of the quantity swept by the face
   for(int t=0;t<11;t++){
     double volume_tet = 0.;
     for(int i=0;i<Nx+2*marge;i++){
       for(int j=0;j<Ny+2*marge;j++){
 	for(int k=0;k<Nz+2*marge;k++){
 	  Cellule& c= grille[i][j][k];
-	  //double volume_cel = c.dx*c.dy*c.dz;  
 	  Bbox box_cell(c.x -c.dx/2.,c.y -c.dy/2.,c.z -c.dz/2.,c.x +c.dx/2.,c.y +c.dy/2.,c.z + c.dz/2.);
 	  
 	  if (CGAL::do_overlap(box_prisme, box_cell) ) {
 	    if(CGAL::do_overlap(Tet[t].bbox(), box_cell)){
-	      //double volume_bis = (intersect_cube_tetrahedron_bis(box_cell, Tet[t],temps_intersections,temps_triangulation) * sign(Tet[t].volume()) );
 	      double volume = (intersect_cube_tetrahedron(box_cell, Tet[t],temps_intersections,temps_triangulation) * sign(Tet[t].volume()) );
-	      /*if(volume!=volume_bis){
-		cout << "volume=" << volume << " volume_bis=" << volume_bis << endl;
-		getchar();
-		}*/
 	      
 	      volume_test += volume;
 	      volume_tot += volume;
@@ -1597,21 +1401,15 @@ void Grille::swap_face_inexact(const Triangle_3& Tr_prev, const Triangle_3& Tr, 
 	      delta_w_tot[3] += volume*c.impz0; 
 	      delta_w_tot[4] += volume*c.rhoE0;
 	    }
-	  }//if inter box_cell inter box_prisme
-	  
-	  //volume_test += volume_swept;
-	} // boucle sur les box_cells
-      }//end else 
+	  }
+	} 
+      } 
     }
-    //cout << "volume tet=" << volume_tet << " vrai volume=" << Tet[t].volume() << endl;
-    //getchar();
   }
   temps_delta += delta_time.time();
-  //cout << "volume_tot=" << volume_tot << " rho=" << delta_w_tot[0] << " impx=" << delta_w_tot[1] << " impy=" << delta_w_tot[2] << " impz="<< delta_w_tot[3] << " rhoE=" << delta_w_tot[4] << endl;
   
-  //Boucle preliminaire sur les morceaux de paroi
-  //Evaluation grossiere de la quantite balayee par chaque morceau de paroi
-  //cout << "debut boucle preliminaire" << endl;
+  //Preliminary loop on the interface triangles
+  //Rough evaluation of the swept quantity on each interface triangle
   boucle1_time.reset();
   double volume_eval = 0.;
   std::vector<Bbox> box_prismes(T3d_prev.size());
@@ -1621,15 +1419,14 @@ void Grille::swap_face_inexact(const Triangle_3& Tr_prev, const Triangle_3& Tr, 
     box_prismes[i]= box_triangles_prev + box_triangles_n;
   } 
   for (int i=0; i< box_prismes.size(); i++){
-    //double vol_test=0.; 
     int in=0, jn=0, kn=0, in1=0, jn1=0, kn1=0;
     bool interieur = true;
     const Point_3& center_prev= centroid(T3d_prev[i].operator[](0),T3d_prev[i].operator[](1),T3d_prev[i].operator[](2));
     const Point_3& center_n= centroid(T3d_n[i].operator[](0),T3d_n[i].operator[](1),T3d_n[i].operator[](2));
     in_cell(center_prev, in, jn, kn, interieur);
     in_cell(center_n, in1, jn1, kn1, interieur);
-		
-    //Cellule c_cur= grille[in1][jn1][kn1];
+
+    
     if((std::abs(grille[in1][jn1][kn1].alpha -1.)<eps)  && (interieur==true)){
       double x= CGAL::to_double(center_n.operator[](0));
       double y= CGAL::to_double(center_n.operator[](1));
@@ -1656,14 +1453,14 @@ void Grille::swap_face_inexact(const Triangle_3& Tr_prev, const Triangle_3& Tr, 
 	  }
 	}
       }
-    } // end if alpha==1
+    }
 		  
     Cellule& c= grille[in1][jn1][kn1];
     Cellule& c_prev= grille[in][jn][kn];
     double volume_cel = c.dx*c.dy*c.dz;  
     if ((interieur==true)){ 
       double volume_p=volume_prisme(T3d_prev[i],T3d_n[i]);
-      //Evaluation de la quantite balayee comme le produit du volume du prisme par la valeur dans la cellule
+      //Evaluation of the swept quantity as the product of the volume of the prism by the value of the fluid in the cell
       if( (std::abs(volume_p)>eps) && (std::abs(1.-c.alpha)>eps)){
 	c.delta_w[0] += volume_p*c_prev.rho0/volume_cel; 
 	c.delta_w[1] += volume_p*c_prev.impx0/volume_cel;
@@ -1676,15 +1473,13 @@ void Grille::swap_face_inexact(const Triangle_3& Tr_prev, const Triangle_3& Tr, 
 	delta_w_tot[2] -= volume_p*c_prev.impy0; 
 	delta_w_tot[3] -= volume_p*c_prev.impz0; 
 	delta_w_tot[4] -= volume_p*c_prev.rhoE0;
-	//grille[in1][jn1][kn1] = c;
       }
     }
 
-    if (explicite){//explicit algo
-    Vector_3 norm_prev= orthogonal_vector(T3d_prev[i].operator[](0),T3d_prev[i].operator[](1),T3d_prev[i].operator[](2));
-    double norm2_prev= sqrt(CGAL::to_double(norm_prev*norm_prev));
-    if(norm2_prev>eps){ 
-      //Cellule c_prev= grille[in][jn][kn];
+    if (explicite){
+      Vector_3 norm_prev= orthogonal_vector(T3d_prev[i].operator[](0),T3d_prev[i].operator[](1),T3d_prev[i].operator[](2));
+      double norm2_prev= sqrt(CGAL::to_double(norm_prev*norm_prev));
+      if(norm2_prev>eps){
 	Vector_3 n_prev = norm_prev/norm2_prev;
 	double aire_prev = sqrt(CGAL::to_double(T3d_prev[i].squared_area()));
 	c.phi_x += c_prev.pdtx * aire_prev *( CGAL::to_double(n_prev.x()))/volume_cel;
@@ -1694,16 +1489,9 @@ void Grille::swap_face_inexact(const Triangle_3& Tr_prev, const Triangle_3& Tr, 
 	Vector_3 V_f = P.vitesse_parois_prev(center_prev);
 	c.phi_v += aire_prev * (CGAL::to_double(c.pdtx*n_prev.x()*V_f.x()  + c.pdty*n_prev.y()*V_f.y()+
 						c.pdtz*n_prev.z()*V_f.z()))/volume_cel;
-	//test 11 octobre 2013
-	// 				if (abs(c.phi_x)<=eps) {c.phi_x = 0.;} 
-	// 				if (abs(c.phi_y)<=eps) {c.phi_y = 0.;} 
-	// 				if (abs(c.phi_z)<=eps) {c.phi_z = 0.;} 
-	// 				if (abs(c.phi_v)<=eps) {c.phi_v = 0.;} 
-	//fin test 11 octobre 2013
-	//grille[in1][jn1][kn1] = c;
       }
-    }//explicit algo
-    else {//semi_implicit algo
+    }
+    else {
       Vector_3 norm= orthogonal_vector(T3d_n[i].operator[](0),T3d_n[i].operator[](1),T3d_n[i].operator[](2));
       double norm2= sqrt(CGAL::to_double(norm*norm));
       if(norm2>eps){ 
@@ -1714,26 +1502,15 @@ void Grille::swap_face_inexact(const Triangle_3& Tr_prev, const Triangle_3& Tr, 
 	c.phi_z += c.pdtz * aire *( CGAL::to_double(n.z()))/(c.dx*c.dy*c.dz);
 	Vector_3 V_f = P.vitesse_parois(center_n);
 	c.phi_v += aire * (CGAL::to_double(c.pdtx*n.x()*V_f.x()  + c.pdty*n.y()*V_f.y() + c.pdtz*n.z()*V_f.z()))/(c.dx*c.dy*c.dz);
-	//test 11 octobre 2013
-	// 				if (abs(c.phi_x)<=eps) {c.phi_x = 0.;} 
-	// 				if (abs(c.phi_y)<=eps) {c.phi_y = 0.;} 
-	// 				if (abs(c.phi_z)<=eps) {c.phi_z = 0.;} 
-	// 				if (abs(c.phi_v)<=eps) {c.phi_v = 0.;} 
-	// test 11 octobre 2013
-	//grille[in1][jn1][kn1] = c;
+	
       }
-    } //semi_implicit algo
+    } 
   }
   temps_boucle1 += boucle1_time.time();
 
-  //cout << "volume_eval=" << volume_eval << " rho=" << delta_w_tot[0] << " impx=" << delta_w_tot[1] << " impy=" << delta_w_tot[2] << " impz="<< delta_w_tot[3] << " rhoE=" << delta_w_tot[4] << endl;
-  //getchar();
-  
-  //Deuxieme boucle sur les parois : repartit l'erreur sur la quantite balayee sur les cellules par importance du volume
-  //cout << "debut deuxieme boucle" << endl;
+  //Second loop on interface triangles: smoothes the error on swept quantity among cells according to their volume
   boucle2_time.reset();
   for (int i=0; i< box_prismes.size(); i++){
-    //double vol_test=0.; 
     int in=0, jn=0, kn=0, in1=0, jn1=0, kn1=0;
     bool interieur = true;
     const Point_3& center_prev= centroid(T3d_prev[i].operator[](0),T3d_prev[i].operator[](1),T3d_prev[i].operator[](2));
@@ -1741,7 +1518,6 @@ void Grille::swap_face_inexact(const Triangle_3& Tr_prev, const Triangle_3& Tr, 
     in_cell(center_prev, in, jn, kn, interieur);
     in_cell(center_n, in1, jn1, kn1, interieur);
 		
-    //Cellule c_cur= grille[in1][jn1][kn1];
     if((std::abs(grille[in1][jn1][kn1].alpha -1.)<eps)  && (interieur==true)){
       double x= CGAL::to_double(center_n.operator[](0));
       double y= CGAL::to_double(center_n.operator[](1));
@@ -1768,13 +1544,13 @@ void Grille::swap_face_inexact(const Triangle_3& Tr_prev, const Triangle_3& Tr, 
 	  }
 	}
       }
-    } // end if alpha==1
+    }
 		  
     Cellule& c= grille[in1][jn1][kn1];
     double volume_cel = c.dx*c.dy*c.dz;  
     if ((interieur==true)){ 
       double volume_p=volume_prisme(T3d_prev[i],T3d_n[i]);
-      //Evaluation de la quantite balayee comme le produit du volume du prisme par la valeur dans la cellule
+      //Evaluation of the swept quantity as the product of the volume of the prism by the value in the cell
       if( (std::abs(volume_p)>eps) && (std::abs(1.-c.alpha)>eps)){
 	for(int l=0;l<5;l++){
 	  c.delta_w[l] += abs(volume_p)/volume_eval*delta_w_tot[l]/volume_cel;
@@ -1783,36 +1559,22 @@ void Grille::swap_face_inexact(const Triangle_3& Tr_prev, const Triangle_3& Tr, 
     }
   }
   temps_boucle2 += boucle2_time.time();
-  
-  /*temps_total += total_time.time();
-  cout << "################# COUT SWAP INEXACT ##############" << endl;
-  cout << "temps_total=" << temps_total << "s" << endl;
-  cout << "delta=" << 100*temps_delta/temps_total << "%" << endl;
-  cout << "   intersections=" << 100*temps_intersections/temps_total << "%" << endl;
-  cout << "   triangulation=" << 100*temps_triangulation/temps_total << "%" << endl;
-  cout << "boucle1=" << 100*temps_boucle1/temps_total << "%" << endl;
-  cout << "boucle2=" << 100*temps_boucle2/temps_total << "%" << endl;
-  cout << "##########################################" << endl;
-  cout<<"volume balayee = "<< volume_test<<endl;
-  getchar();//*/
 }	
 
-/**
-\fn void Sous_Maillage_2d(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2& tri2)
-\brief Construction sous-maillage 2d d'une face 2d du Solide.
-\details Un d&eacute;coupage en triangles de la face aux temps t et t-dt tel que chaque triangle soit enti&egrave;rement contenu dans une cellule aux temps t et t-dt (pas n&eacute;cessairement la m&ecirc;me cellule).\n
-Algorithme:\n
-- On associe &agrave; chaque triangle un Box 2d (une bo&icirc;te contenant le triangle).  \n
-- Boucle sur les Box 2d.
-- Test d'intersection des Box via la fonction <b> CGAL::do_overlap(Bbox_2, Bbox_2)</b>. Si oui: \n
- - Test d'intersection des triangles contenues dans les Box via la fonction <b> CGAL::do_intersect(Triangle_2,Triangle_2)</b>. Si oui:  \n
-  - Calcul d'intersections entre les deux triangles via la fonction <b>CGAL::intersection(Triangle_2,Triangle_2)</b>. \n
-  - Si le r&eacute;sultat de l'intersection est un triangle on le rajoute dans le sous-maillage. Si le r&eacute;sultat de l'intersection est un  polygone (une liste de points) on le triangularise en utilisant la classe <b>CGAL::Triangulation</b>  et la fonction <b> CGAL::insert </b> de cette classe. (Si le r&eacute;sultat de l'intersection est un point ou un segment on ne fait rien car le volume balayé est nul.)
-\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-\param Tn Triangles_2 
-\param Tn1 Triangles_2
-\param tri2 Triangles_2
-\return void
+/*!\brief Construction of the 2d submesh of two meshes on a triangular 2d face of the solid.
+   \details The goal is to split the solid face into interface triangles such that each triangle is fully enclosed in one single cell at times t-dt and t (npt necessarily the same cell).\n
+   Algorithm:\n
+   - Construct the 2d bounding box for each triangle.  \n
+   - Loop on the bounding boxes.
+   - Test the intersection of the bounding boxes using function <b> CGAL::do_overlap(Bbox_2, Bbox_2)</b>. If the boxes intersect: \n
+   - Test the intersection of the triangles using function <b> CGAL::do_intersect(Triangle_2,Triangle_2)</b>. If the triangles intersect:  \n
+   - Compute the intersections between the two triangles using function <b>CGAL::intersection(Triangle_2,Triangle_2)</b>. \n
+   - If the intersection is a triangle, add it to the submesh. If the intersection is a polygon, triangulate it using class <b>CGAL::Triangulation</b> and function <b> CGAL::insert </b> in the class. If the intersection is a point or a segment, do nothing since the swept volume is null.
+   \warning <b> Specific coupling procedure ! </b>
+   \param Tn Triangles_2 
+   \param Tn1 Triangles_2
+   \param tri2 Triangles_2
+   \return void
 */
 void Sous_Maillage_2d(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2& tri2){
 	
@@ -1823,60 +1585,49 @@ void Sous_Maillage_2d(const Triangles_2& Tn, const Triangles_2& Tn1, Triangles_2
   user_time.start();
   for(Triangles_2::const_iterator t=Tn.begin(); t!=Tn.end(); t++){ 
     for(Triangles_2::const_iterator t1=Tn1.begin(); t1!=Tn1.end(); t1++){
-      if (CGAL::do_overlap((*t).bbox(),(*t1).bbox())){ //test d'intersection des Box 
-	if (CGAL::do_intersect(*t,*t1)){ // test d'intersection des triangles contenues dans les Box
-	  const CGAL::Object& result = CGAL::intersection(*t,*t1); //calcul d'intersection entre les deux triangles
+      if (CGAL::do_overlap((*t).bbox(),(*t1).bbox())){ //test the intersection of Bbox 
+	if (CGAL::do_intersect(*t,*t1)){ // test the intersection of the triangles
+	  const CGAL::Object& result = CGAL::intersection(*t,*t1); //Compute the intersection between two triangles
 	  if(CGAL::assign(tri,result)){ tri2.push_back(tri); }
 	  else if(CGAL::assign(vPoints,result)){
 	    Triangulation_2 T;
 	    T.insert(vPoints.begin(), vPoints.end());
-	    //if( (T.is_valid() ) && (T.dimension() == 2)){
-	      for (Triangulation_2::Finite_faces_iterator fit=T.finite_faces_begin(); fit!=T.finite_faces_end();++fit)
-	      { 
-		if(T.triangle(fit).area()>eps){
-		  tri2.push_back(T.triangle(fit));
-		}
+	    for (Triangulation_2::Finite_faces_iterator fit=T.finite_faces_begin(); fit!=T.finite_faces_end();++fit)
+	    { 
+	      if(T.triangle(fit).area()>eps){
+		tri2.push_back(T.triangle(fit));
 	      }
-	      //}
+	    }
 	  }
 	}
       }
     }
   }
-}	
-/**
-\fn void sous_maillage_faceTn_faceTn1_2d(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1)
-\brief D&eacute;coupage en triangles de la face aux temps t et t-dt
-\details A partir de la position de l'interface au temps t (\a Tn) et au temps t-dt (\a Tn1) on va d&eacute;couper cette face en triangles enti&egrave;rement contenues dans une cellule aux temps t et t-dt (pas n&eacute;cessairement la m&ecirc;me cellule). \n
-Algorithme:\n
-- Transformation barycentrique de \a tn via la fonction \a tr(Triangle_3, Triangle_3, Triangle_3) et transformation des triangles r&eacute;sultants en triangles 2d via la fonction \a tr(Triangle_3, Triangle_3).
-- Transformation de tn1 en triangles 2d via la fonction \a tr(Triangle_3, Triangle_3).
-- Construction du sous-maillage 2d de la face via la fonction \a Sous_Maillage_2d(const Triangles_2&, const Triangles_2&, Triangles_2&).
-- Transformation du sous-maillage 2d dans un sous-maillage 3d de la face via la fonction \a tr(Triangle_3, Triangle_2).
+}
 
-\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage!</b> 
-\param Tn Triangle_3 : interface au temps t-dt (\a Particule.triangles_prev)
-\param tn vecteur de Triangle_3 : triangulation de la face Tn (\a Particule.Triangles_interface_prev)
-\param Tn1 Triangle_3 interface au temps t (\a Particule.triangles)
-\param tn1 vecteur de Triangle_3 : triangulation de la face Tn1 (\a Particule.Triangles_interface)
-\param N   Vector_3 : normale sortante au Tn1 (\a Particule.normales)
-\param T3d_n vecteur de Triangle_3 : Sous-maillage triangulaire de la face \a Particule.Triangles_interface_prev au temps t-dt 
-\param T3d_n1 vecteur de Triangle_3 : Sous-maillage triangulaire de la face \a Particule.Triangles_interface au temps t 
-\return void
+/*!\brief Split the face into a submesh of the intersections of the solid face with the fluid grid at times t-dt and t
+   \details From the position of the interface at time t (\a Tn) and t-dt (\a Tn1), split the face into triangles fully contained in one single cell at times t and t-dt (not necessarily the same cell). \n
+   Algorithm:\n
+   - Barycentric transformation of \a Tn using function \a tr(Triangle_3, Triangle_3, Triangle_3) and transformation of the resulting triangles into 2d triangles using function \a tr(Triangle_3, Triangle_3).
+   - Transformation of tn1 into 2d triangles 2d using function \a tr(Triangle_3, Triangle_3).
+   - Construction of the 2d submesh of the face using function \a Sous_Maillage_2d(const Triangles_2&, const Triangles_2&, Triangles_2&).
+   - Transformation of the 2d submesh 2d into a 3d submesh of the face using function \a tr(Triangle_3, Triangle_2).
+
+   \warning <b> Specific coupling procedure !</b> 
+   \param Tn const Triangle_3: Interface triangle at time t-dt (\a Particule.triangles_prev)
+   \param tn const vector<Triangle_3>: Triangulation of face Tn (\a Particule.Triangles_interface_prev)
+   \param Tn1 const Triangle_3: Interface at time t (\a Particule.triangles)
+   \param tn1 const vector<Triangle_3>: Triangulation of face Tn1 (\a Particule.Triangles_interface)
+   \param N   const Vector_3: exterior normal vector to Tn1 (\a Particule.normales)
+   \param T3d_n vector of Triangle_3: Triangular submesh of face \a Particule.Triangles_interface_prev at time t-dt 
+   \param T3d_n1 vector of Triangle_3: Triangular submesh of face \a Particule.Triangles_interface at time t 
+   \return void
 */
 void sous_maillage_faceTn_faceTn1_2d(const Triangle_3& Tn, const Triangles& tn, const Triangle_3& Tn1, const Triangles& tn1, const Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1){
 	
   CGAL::Timer total_time,bary1_time,bary2_time,bary3_time,sous_maillage_time,time_2d_3d,time_2d_3d_bis;
   double temps_total=0.,temps_bary1=0.,temps_bary2=0.,temps_bary3=0.,temps_sous_maillage=0.,temps_2d_3d=0.,temps_2d_3d_bis=0.;	
   total_time.start();bary1_time.start();bary2_time.start();bary3_time.start();sous_maillage_time.start();time_2d_3d.start();time_2d_3d_bis.start();
-  
-  /*bary1_time.reset();
-  Triangles tn_n1(tn.size());
-  for(int i=0; i<tn.size(); i++){
-    tn_n1[i] = tr(Tn, Tn1, tn[i]); // transf barycentrique de tn 
-  }
-  //user_time.reset();
-  temps_bary1 += bary1_time.time();*/
   
   bary2_time.reset();
   Triangles_2 Tn_2(tn.size());
@@ -1898,72 +1649,41 @@ void sous_maillage_faceTn_faceTn1_2d(const Triangle_3& Tn, const Triangles& tn, 
   temps_sous_maillage += sous_maillage_time.time();
   
   time_2d_3d.reset();
-  //T3d_n1.resize(tri2.size());
   T3d_n1.clear();
-  //for(int i=0; i<T3d_n1.size(); i++){
   for(Triangles_2::const_iterator t2=tri2.begin();t2!=tri2.end();t2++){
-    //Triangle_3 Tri = tr(Tn1,tri2[i]);
     const Triangle_3& Tri = tr(Tn1,*t2);
     Vector_3 vect0(Tri.operator[](0),Tri.operator[](1));
     Vector_3 vect1(Tri.operator[](0),Tri.operator[](2));
     Vector_3 normale = CGAL::cross_product(vect0,vect1);
-    //if (normale*N > 0.){ T3d_n1[i] = Tri; }
     if (normale*N > 0.){ T3d_n1.push_back(Tri); }
-    //else{ T3d_n1[i] = Triangle_3(Tri.operator[](0),Tri.operator[](2),Tri.operator[](1));}
     else{ T3d_n1.push_back(Triangle_3(Tri.operator[](0),Tri.operator[](2),Tri.operator[](1)));}
   }
   temps_2d_3d += time_2d_3d.time();
   time_2d_3d_bis.reset();
-  //T3d_n.resize(T3d_n1.size());
   T3d_n.clear();
-  //for(int i=0; i<T3d_n1.size(); i++){
-  /*for(Triangles::const_iterator t=T3d_n1.begin();t!=T3d_n1.end();t++){
-    //T3d_n[i] = tr(Tn1,Tn,T3d_n1[i]);
-    T3d_n.push_back(tr(Tn1,Tn,*t));
-    }*/
   for(Triangles_2::const_iterator t2=tri2.begin();t2!=tri2.end();t2++){
-    //Triangle_3 Tri = tr(Tn1,tri2[i]);
     const Triangle_3& Tri = tr(Tn,*t2);
     Vector_3 vect0(Tri.operator[](0),Tri.operator[](1));
     Vector_3 vect1(Tri.operator[](0),Tri.operator[](2));
     Vector_3 normale = CGAL::cross_product(vect0,vect1);
-    //if (normale*N > 0.){ T3d_n1[i] = Tri; }
     if (normale*N > 0.){ T3d_n.push_back(Tri); }
-    //else{ T3d_n1[i] = Triangle_3(Tri.operator[](0),Tri.operator[](2),Tri.operator[](1));}
     else{ T3d_n.push_back(Triangle_3(Tri.operator[](0),Tri.operator[](2),Tri.operator[](1)));}
   }
   temps_2d_3d_bis += time_2d_3d_bis.time();
-  
-  /*temps_total += total_time.time();
-  cout << "################# COUT SOUS MAILLAGE ##############" << endl;
-  cout << "tn.size()=" << tn.size() << " tn1.size()=" << tn1.size() << " T3d_n.size()=" << T3d_n.size() << " T3d_n1.size()=" << T3d_n1.size() << endl;
-  cout << "bary1=" << 100*temps_bary1/temps_total << "%     t_moy=" << temps_bary1 << endl;
-  cout << "bary2=" << 100*temps_bary2/temps_total << "%     t_moy=" << temps_bary2 << endl;
-  cout << "bary3=" << 100*temps_bary3/temps_total << "%     t_moy=" << temps_bary3 << endl;
-  cout << "sous_maillage=" << 100*temps_sous_maillage/temps_total << "%     t_moy=" << temps_sous_maillage << endl;
-  cout << "2d_3d=" << 100*temps_2d_3d/temps_total << "%     t_moy=" << temps_2d_3d << endl;
-  cout << "2d_3d_bis=" << 100*temps_2d_3d_bis/temps_total << "%     t_moy=" << temps_2d_3d_bis << endl;
-  cout << "Reste=" << 100*(1.-(temps_bary1+temps_bary2+temps_bary3+temps_sous_maillage+temps_2d_3d+temps_2d_3d_bis)/temps_total) << "%" << endl;
-  cout << "###################################################" << endl;
-  getchar();//*/
 }
 
-/**
-\fn void Grille::Swap_2d(const double dt, Solide& S)
-\brief Calcul de la quantit&eacute; balay&eacute;e par le Solide entre t et t-dt.
-\details Algorithme:\n
-- Sous-découpage des faces du Solide (\a Particule.triangles et \a Particule.triangles_prev) en triangles contenues enti&egrave;rement dans une cellule au temps t et t-dt (pas nécessairement la m&ecirc;me cellule) via la fonction sous_maillage_faceTn_faceTn1_2d(Triangle_3&, Triangles&, Triangle_3&, Triangles&, Vector_3& ,Triangles& ,Triangles&).\n
-- Calcul de la quantité balayée par les faces et du flux &agrave; la parois via la fonction swap_face(Triangles&, Triangles&, const double ,  Particule &).
-\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b> 
-\param S Solide
-\param dt pas de temps
-\return void
+/*!\brief Computation of the quantity of fluid swept by the solid between times t-dt and t.
+   \details Algorithm:\n
+   - Split the solid faces (\a Particule.triangles and \a Particule.triangles_prev) into triangles fully contained in one single cell at times t-dt and t (not necessarily the same cell) using function \a sous_maillage_faceTn_faceTn1_2d(Triangle_3&, Triangles&, Triangle_3&, Triangles&, Vector_3& ,Triangles& ,Triangles&).\n
+   - Compute the swept quantity and the boundary flux using function \a swap_face(Triangles&, Triangles&, const double ,  Particule &).
+   \warning <b> Specific coupling procedure ! </b> 
+   \param S Solide
+   \param dt Time-step
+   \return void
 */
 
 void Grille::Swap_2d(const double dt, Solide& S){
 	
-  //CGAL::Timer user_time, user_time2;
-  //double time_1=0., time_2=0.;
   CGAL::Timer swap_face_time,total_time,sous_maillage_time;
   swap_face_time.start();total_time.start();sous_maillage_time.start();
   double temps_swap_face=0.,temps_total=0.,temps_sous_maillage=0.,nb=0.;
@@ -1973,24 +1693,18 @@ void Grille::Swap_2d(const double dt, Solide& S){
       if (S.solide[i].fluide[j]){
 	nb+=1.;
 	Triangles T3d_n,T3d_n1;
-	//user_time.start();
 	sous_maillage_time.reset();
 	sous_maillage_faceTn_faceTn1_2d(S.solide[i].triangles_prev[j], S.solide[i].Triangles_interface_prev[j], S.solide[i].triangles[j], S.solide[i].Triangles_interface[j], S.solide[i].normales[j], T3d_n, T3d_n1);
 	temps_sous_maillage += sous_maillage_time.time();
-	//time_1+=CGAL::to_double(user_time.time());
-	//user_time.reset();
-	//user_time2.start();
 	swap_face_time.reset();
 	if(exact_swap){
-	  //Swap exact
+	  //Exact swept quantity
 	  swap_face(T3d_n,T3d_n1,dt, S.solide[i],volume_test );
 	} else {
-	  //Swap inexact: calcul de la quantite balayee pour la face et repartition sur les morceaux de paroi
+	  //Inexact swept quantity: compute the swept quatity inexactly and distribute the default of fluid on the interface elements
 	  swap_face_inexact(S.solide[i].triangles_prev[j],S.solide[i].triangles[j],T3d_n,T3d_n1,dt,S.solide[i],volume_test);
 	}
 	temps_swap_face += swap_face_time.time();
-	//time_2+=CGAL::to_double(user_time2.time());
-	//user_time2.reset();
       }
     }
   }
@@ -2003,345 +1717,143 @@ void Grille::Swap_2d(const double dt, Solide& S){
   cout<<"volume balayee = "<< volume_test<<endl;
 }
 
-/**
-\fn CDT Sous_Maillage_3d(Triangles_2& Tn1, Triangles_2& Tn_n1, CDT &cdt)
-\brief Construction sous-maillage sous contrainte pour une face du Solide.
-\details Un d&eacute;coupage en triangles de la face aux temps t et t-dt tel que chaque triangle soit enti&egrave;rement contenu dans une cellule aux temps t et t-dt (pas n&eacute;cessairement la m&ecirc;me cellule).
-\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! Il  n'est pas n&eacute;cessaire de la re-coder car c'est une ancienne m&eacute;thode(plus co&ucirc;teuse que la nouvelle version)!!! </b> 
-\return CDT
-*/
-CDT Sous_Maillage_3d(Triangles_2& Tn1, Triangles_2& Tn_n1, CDT &cdt){
+
+/*!\brief Conservative mixing of small cut-cells.
+   \details We define a small cut-cell as a cell such that \f$ alpha > epsa \f$ (\a Cellule.alpha si the solid occupancy ratio in the cell, and \a epsa is the maximum value accepted for CFL stability reasons and is set in \a parametres.hpp ). In order not to modify the time-step while keeping the original CFL condition, the small cut-cells are merged with their neighbours.
+   \warning <b> Specific coupling procedure ! </b>
+   \return void
+ */
+void Grille::Mixage_cible(){
 	
-  std::vector<Bbox_2> boxesTn1, boxesTn_n1; //tres outil pour les intersections 
-	
-  for(Triangle2_iterator it= Tn1.begin(); it!= Tn1.end(); ++it){  //on associe a chaque triangle un Box(une boite contenant le triangle)
-    boxesTn1.push_back(Bbox_2(it->bbox()));
-  }
-	
-  for(Triangle2_iterator it= Tn_n1.begin(); it!= Tn_n1.end(); ++it){
-    boxesTn_n1.push_back(Bbox_2(it->bbox()));
-  }
-	
-  Triangle_2 t;
-  Point_2 P;
-  Segment_2 seg;
-  std::vector<Point_2> vPoints; 
-	
-  std::vector<Point_2> intPoints; //vector de Point_2 d'intersection
-  std::vector<Segment_2> intSeg;  //vector de Segment_2 d'intersection a conserver dans la triangularisation de la face 
-  CGAL::Timer user_time, user_time2;
-  user_time.start();
-  for(int i=0; i<boxesTn1.size(); i++ ){ 
-    for(int j=0; j<boxesTn_n1.size(); j++ ){
-      //cout<<"Triangle 1: "<<Tn1[i]<<" Triangle 2: "<<Tn_n1[j]<<endl;
-      if (CGAL::do_overlap( boxesTn1[i],boxesTn_n1[j]) ) //test d'intersection des Box 
-      {
-	if (CGAL::do_intersect(Tn1[i],Tn_n1[j]) ){ // test d'intersection des triangles contenues dans les Box
-					
-	  CGAL::Object result = CGAL::intersection(Tn1[i],Tn_n1[j]); //calcul d'intersection entre les deux triangles
-					
-	  if(CGAL::assign(P,result)){ 
-	    intPoints.push_back(P);
-	  }
-	  else if(CGAL::assign(seg,result)){
-	    intSeg.push_back(seg);
-						
-	  }
-	  else if(CGAL::assign(t,result)){
-	    Segment_2 s1(t.operator[](0), t.operator[](1));
-	    Segment_2 s2(t.operator[](1), t.operator[](2));
-	    Segment_2 s3(t.operator[](2), t.operator[](0));
-	    intSeg.push_back(s1);	
-	    intSeg.push_back(s2);	
-	    intSeg.push_back(s3);							
-	  }
-	  else if(CGAL::assign(vPoints,result)){ 
-	    for(int l= 0; l<vPoints.size(); l++)
-	    {
-	      intPoints.push_back(vPoints[l]);
-	    }
-						
-	  }
-	  else {cout<<"Intersection type: ? in sous_maillage_face"<<endl;
-	    cout<<"Triangle 1: "<<Tn1[i]<<" Triangle 2: "<<Tn_n1[j]<<endl;
-	  }
-					
-	}
+  for(int i=marge;i<Nx+marge;i++){
+    for(int j=marge;j<Ny+marge;j++){ 
+      for(int k=marge;k<Nz+marge;k++){
+				
+	grille[i][j][k].cible_alpha = 0.;
+	grille[i][j][k].cible_rho = 0.;
+	grille[i][j][k].cible_impx = 0.;
+	grille[i][j][k].cible_impy = 0.;
+	grille[i][j][k].cible_impz = 0.;
+	grille[i][j][k].cible_rhoE = 0.;
       }
     }
   }
-  //cout << "Intersection triangles 2d pour une face time is: " << user_time.time() << " seconds." <<"nb des triangles " <<boxesTn1.size()+boxesTn_n1.size() <<endl;
 	
-  user_time2.start();
-  cdt.insert(intPoints.begin(), intPoints.end()); //insertion des points d'intersection dans le maillage
-	
-  for(int i = 0; i<intSeg.size(); i++){
-    //construction du maillage 2d sous la contrainte "intSeg[i] est une arrete dans le maillage"
-    cdt.insert_constraint(intSeg[i].operator[](0), intSeg[i].operator[](1));
-  }
-  //cout << "construction sous-maillage sous contrainte pour une face time is: " << user_time2.time() << " seconds." <<endl;
-  return cdt;
-}	
-/**
-\fn void sous_maillage_faceTn_faceTn1_3d(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1)
-\brief D&eacute;coupage en triangles de la face aux temps t et t-dt.
-\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! Il  n'est pas n&eacute;cessaire de la re-coder car c'est une ancienne m&eacute;thode(plus co&ucirc;teuse que la nouvelle version)!!! </b> 
-\return void
-*/
-void sous_maillage_faceTn_faceTn1_3d(Triangle_3& Tn, Triangles& tn, Triangle_3& Tn1, Triangles& tn1, Vector_3& N,Triangles& T3d_n,Triangles& T3d_n1){
-	
-	CGAL::Timer user_time, user_time2, user_time3, user_time4 ;
-	double time=0.;	
-	user_time.start();
-	// transf barycentrique de tn 
-	Triangles tn_n1(tn.size());
-	for(int i=0; i<tn.size(); i++){		
-		tn_n1[i] = tr(Tn, Tn1, tn[i]);
-	}
-	//cout << "Mapping Tn vers Tn1 pour une face time is: " << user_time.time() << " seconds." << endl;
-	user_time.reset();
-	
-	user_time2.start();
-	Point_2 Ap(0., 0.); 
-	Point_2 Bp(1., 0.);
-	Point_2 Cp(0., 1.);
-	Triangle_2 Ref(Ap,Bp,Cp);
-	
-	// Transf du Triangles_3  tn_n1 en Triangle_2
-	Triangles_2 Tn_n1_2(1+tn_n1.size());
-	Tn_n1_2[0] = Ref;
-	for(int i=0; i<tn_n1.size(); i++){
-		Tn_n1_2[i+1] = tr(Tn1, tn_n1[i]);
-	}
-	
-	Triangles_2 Tn1_2(1+tn1.size());
-	Tn1_2[0] = Ref;
-	
-	// Transf du Triangles_3  tn1 en Triangle_2
-	for(int i=0; i<tn1.size(); i++){
-		Tn1_2[i+1] =tr(Tn1, tn1[i]);
-	}
-	//cout << "Passage 3d-2d pour une face time is: " << user_time2.time() << " seconds." << endl;
-	user_time2.reset();
-	
-	user_time3.start();
-	// sous maillage triangulaire de l'interface
-	CDT cdt;
-	cdt.insert(Ap); cdt.insert(Bp); cdt.insert(Cp);
-	Sous_Maillage_3d(Tn1_2, Tn_n1_2, cdt);
-	assert(cdt.is_valid());
-	//	cout << "Sous-maillage en 2d pour une face time is: " << user_time3.time() << " seconds." << endl;
-	user_time3.reset();
-	
-	Triangles_2 T2d; //recuperation faces du maillage Triangle_2
-	
-	
-	for (CDT::Finite_faces_iterator fit=cdt.finite_faces_begin();
-	fit!=cdt.finite_faces_end();++fit)
-	{ 
-		Point_2 s = fit->vertex(0)->point();
-		Point_2 v = fit->vertex(1)->point();
-		Point_2 r = fit->vertex(2)->point();
-		if(Triangle_2(s,v,r).area()>eps){
-			T2d.push_back(Triangle_2(s,v,r));
-		}
-	}
-	
-	user_time4.start();
-	//transf des Triangle_2 en Triangle_3
-	T3d_n1.resize(T2d.size());
-	for(int i=0; i<T2d.size(); i++){
-		Triangle_3 Tri = tr(Tn1,T2d[i]);
-		Vector_3 vect0(Tri.operator[](0),Tri.operator[](1));
-		Vector_3 vect1(Tri.operator[](0),Tri.operator[](2));
-		Vector_3 normale = CGAL::cross_product(vect0,vect1);
-		if (normale*N > 0.){ T3d_n1[i] =  Tri; }
-		else{ T3d_n1[i] = Triangle_3(Tri.operator[](0),Tri.operator[](2),Tri.operator[](1));} 
-	}
-	//cout << "Passage 2d-3d pour une face time is: " << user_time4.time() << " seconds." << endl;
-	user_time4.reset();
-	
-	//transf inverse 
-	T3d_n.resize(T3d_n1.size());
-	for(int i=0; i<T3d_n1.size(); i++){ 
-		T3d_n[i] = tr(Tn1,Tn,T3d_n1[i]);
-	}
-	
-}
-/**
-\fn void Grille::Swap_3d(const double dt, Solide& S)
-\brief Calcul de la quantit&eacute; balay&eacute;e
-\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! Il  n'est pas n&eacute;cessaire de la re-coder car c'est une ancienne m&eacute;thode(plus co&ucirc;teuse que la nouvelle version)!!! </b> 
-\return void
-*/
-void Grille::Swap_3d(const double dt, Solide& S){
-	//CGAL::Timer user_time, user_time2;
-	//double time_1=0., time_2=0.;
-	double volume_test=0.;
-	for(int i=0;i<S.solide.size();i++){
-		for (int j=0; j<S.solide[i].triangles.size(); j++){
-			if (S.solide[i].fluide[j]){
-				Triangles T3d_n,T3d_n1;
-				//user_time.start();
-				sous_maillage_faceTn_faceTn1_3d(S.solide[i].triangles_prev[j], S.solide[i].Triangles_interface_prev[j] ,
-																				S.solide[i].triangles[j], S.solide[i].Triangles_interface[j],
-																				S.solide[i].normales[j], T3d_n,T3d_n1);
-				 //time_1+=CGAL::to_double(user_time.time());
-				//user_time.reset();
-				// user_time2.start();
-				swap_face(T3d_n,T3d_n1,dt,S.solide[i], volume_test );
-				//time_2+=CGAL::to_double(user_time2.time());
-				// user_time2.reset();
-			}
-		}
-	}
-}
-/*!
-* \fn void Grille:: Mixage_cible()
-*  \brief M&eacute;lange conservatif de petites cellules coup&eacute;es.
-*  \details On d&eacute;finit une petite cellule tel que \f$ alpha > epsa \f$ (\a Cellule.alpha fraction occup&eacute;e par du solide dans la cellule, et \a epsa: fraction de cellule coup&eacute;e d&eacute;finit dans parametres.hpp ). Afin ne pas modifier le pas de temps tout en garantissant la condition de CFL, les petites cellules sont fusionn&eacute;es avec leurs voisines.
-	*	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-	*	\return void
-	*/
-void Grille::Mixage_cible(){
-	
-	for(int i=marge;i<Nx+marge;i++){
-		for(int j=marge;j<Ny+marge;j++){ 
-			for(int k=marge;k<Nz+marge;k++){
-				
-					grille[i][j][k].cible_alpha = 0.;
-					grille[i][j][k].cible_rho = 0.;
-					grille[i][j][k].cible_impx = 0.;
-					grille[i][j][k].cible_impy = 0.;
-					grille[i][j][k].cible_impz = 0.;
-					grille[i][j][k].cible_rhoE = 0.;
-			}
-		}
-	}
-	
-	for(int i=marge;i<Nx+marge;i++){
-		for(int j=marge;j<Ny+marge;j++){ 
-			for(int k=marge;k<Nz+marge;k++){
-				Cellule& cp = grille[i][j][k];
-				if((cp.alpha>epsa || cp.p<0. || cp.rho<0.) && abs(cp.alpha-1.)>eps && !cp.vide){
-				  std::vector< std::vector<int> > tab_cible; 
-					std::vector<int> poz(3); poz[0]= i; poz[1] = j; poz[2] = k; tab_cible.push_back(poz);
+  for(int i=marge;i<Nx+marge;i++){
+    for(int j=marge;j<Ny+marge;j++){ 
+      for(int k=marge;k<Nz+marge;k++){
+	Cellule& cp = grille[i][j][k];
+	if((cp.alpha>epsa || cp.p<0. || cp.rho<0.) && abs(cp.alpha-1.)>eps && !cp.vide){
+	  std::vector< std::vector<int> > tab_cible; 
+	  std::vector<int> poz(3); poz[0]= i; poz[1] = j; poz[2] = k; tab_cible.push_back(poz);
 
 
           Cellule cg = cible(grille[i][j][k], tab_cible);
 
-					cg.cible_alpha += (1.-cp.alpha);
-					cg.cible_rho  += (1.-cp.alpha)*cp.rho;
-					cg.cible_impx += (1.-cp.alpha)*cp.impx;
-					cg.cible_impy += (1.-cp.alpha)*cp.impy;
-					cg.cible_impz += (1.-cp.alpha)*cp.impz;
-					cg.cible_rhoE += (1.-cp.alpha)*cp.rhoE;
+	  cg.cible_alpha += (1.-cp.alpha);
+	  cg.cible_rho  += (1.-cp.alpha)*cp.rho;
+	  cg.cible_impx += (1.-cp.alpha)*cp.impx;
+	  cg.cible_impy += (1.-cp.alpha)*cp.impy;
+	  cg.cible_impz += (1.-cp.alpha)*cp.impz;
+	  cg.cible_rhoE += (1.-cp.alpha)*cp.rhoE;
 					
-					cp.cible_i= cg.i;
-					cp.cible_j = cg.j;
-					cp.cible_k = cg.k; 
-					
-					//grille[i][j][k] = cp;
-					//grille[cg.i][cg.j][cg.k] = cg;
-
-
-				}
-				else{
-					grille[i][j][k].cible_i = i;
-					grille[i][j][k].cible_j = j;
-					grille[i][j][k].cible_k = k;
-				}
-			}
-		}
-	}
+	  cp.cible_i= cg.i;
+	  cp.cible_j = cg.j;
+	  cp.cible_k = cg.k; 
 	
-	for(int i=marge;i<Nx+marge;i++){
-		for(int j=marge;j<Ny+marge;j++){ 
-			for(int k=marge;k<Nz+marge;k++){
-				Cellule& cp = grille[i][j][k];
-
-				if(std::abs(cp.cible_alpha)>0. && !cp.vide){
-					cp.rho = ((1.-cp.alpha)*cp.rho + cp.cible_rho)/((1.-cp.alpha) + cp.cible_alpha);
-					cp.impx = ((1.-cp.alpha)*cp.impx + cp.cible_impx)/((1.-cp.alpha) + cp.cible_alpha);
-					cp.impy = ((1.-cp.alpha)*cp.impy + cp.cible_impy)/((1.-cp.alpha) + cp.cible_alpha);
-					cp.impz = ((1.-cp.alpha)*cp.impz + cp.cible_impz)/((1.-cp.alpha) + cp.cible_alpha);
-					cp.rhoE = ((1.-cp.alpha)*cp.rhoE + cp.cible_rhoE)/((1.-cp.alpha) + cp.cible_alpha);
-					if(std::abs(cp.rho) > eps_vide){
-					cp.u = cp.impx/cp.rho;
-					cp.v = cp.impy/cp.rho;
-					cp.w = cp.impz/cp.rho;
-					cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-					if(std::abs(cp.p) < eps_vide){
-						cp.vide=true;
-					}
-				}
-					else{
-						cp.u = 0.;
-						cp.v = 0.;
-						cp.w = 0.;
-						cp.p = 0.;
-						cp.vide=true;
-					}
-					//grille[i][j][k] = cp;
-				}
-			}
-		}
 	}
-	bool test_fini = true;
-	for(int i=marge;i<Nx+marge;i++){
-		for(int j=marge;j<Ny+marge;j++){ 
-			for(int k=marge;k<Nz+marge;k++){
-				Cellule& cp = grille[i][j][k];
-				Cellule& cible=grille[cp.cible_i][cp.cible_j][cp.cible_k];
-					cp.rho = cible.rho;
-					cp.impx = cible.impx;
-					cp.impy = cible.impy;
-					cp.impz = cible.impz;
-					cp.rhoE = cible.rhoE;
-					if(std::abs(cp.rho) > eps_vide){
-					cp.u = cp.impx/cp.rho;
-					cp.v = cp.impy/cp.rho;
-					cp.w = cp.impz/cp.rho;
-					cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
-					if(std::abs(cp.p) < eps_vide){
-						cp.vide=true;
-					}
-				}
-					else{
-						cp.u = 0.;
-						cp.v = 0.;
-						cp.w = 0.;
-						cp.p = 0.;
-						cp.vide=true;
-					}
-					//grille[i][j][k] = cp;
-					
-					if((grille[i][j][k].p<0. || grille[i][j][k].rho<0.) && !cp.vide){
-					  cout << "test non fini x=" << grille[i][j][k].x << " y=" <<  grille[i][j][k].y << " z=" <<  grille[i][j][k].z << " p=" <<  grille[i][j][k].p << " rho=" <<  grille[i][j][k].rho << " cible x=" << cible.x << " y=" << cible.y << " z=" << cible.z << endl;
-					  test_fini = false;
-					}
-			}
-		}
+	else{
+	  grille[i][j][k].cible_i = i;
+	  grille[i][j][k].cible_j = j;
+	  grille[i][j][k].cible_k = k;
 	}
+      }
+    }
+  }
 	
-	if(!test_fini){
-		cout<<" non test_fini "<<endl;
-		Mixage_cible();
+  for(int i=marge;i<Nx+marge;i++){
+    for(int j=marge;j<Ny+marge;j++){ 
+      for(int k=marge;k<Nz+marge;k++){
+	Cellule& cp = grille[i][j][k];
+
+	if(std::abs(cp.cible_alpha)>0. && !cp.vide){
+	  cp.rho = ((1.-cp.alpha)*cp.rho + cp.cible_rho)/((1.-cp.alpha) + cp.cible_alpha);
+	  cp.impx = ((1.-cp.alpha)*cp.impx + cp.cible_impx)/((1.-cp.alpha) + cp.cible_alpha);
+	  cp.impy = ((1.-cp.alpha)*cp.impy + cp.cible_impy)/((1.-cp.alpha) + cp.cible_alpha);
+	  cp.impz = ((1.-cp.alpha)*cp.impz + cp.cible_impz)/((1.-cp.alpha) + cp.cible_alpha);
+	  cp.rhoE = ((1.-cp.alpha)*cp.rhoE + cp.cible_rhoE)/((1.-cp.alpha) + cp.cible_alpha);
+	  if(std::abs(cp.rho) > eps_vide){
+	    cp.u = cp.impx/cp.rho;
+	    cp.v = cp.impy/cp.rho;
+	    cp.w = cp.impz/cp.rho;
+	    cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
+	    if(std::abs(cp.p) < eps_vide){
+	      cp.vide=true;
+	    }
+	  }
+	  else{
+	    cp.u = 0.;
+	    cp.v = 0.;
+	    cp.w = 0.;
+	    cp.p = 0.;
+	    cp.vide=true;
+	  }
 	}
+      }
+    }
+  }
+  bool test_fini = true;
+  for(int i=marge;i<Nx+marge;i++){
+    for(int j=marge;j<Ny+marge;j++){ 
+      for(int k=marge;k<Nz+marge;k++){
+	Cellule& cp = grille[i][j][k];
+	Cellule& cible=grille[cp.cible_i][cp.cible_j][cp.cible_k];
+	cp.rho = cible.rho;
+	cp.impx = cible.impx;
+	cp.impy = cible.impy;
+	cp.impz = cible.impz;
+	cp.rhoE = cible.rhoE;
+	if(std::abs(cp.rho) > eps_vide){
+	  cp.u = cp.impx/cp.rho;
+	  cp.v = cp.impy/cp.rho;
+	  cp.w = cp.impz/cp.rho;
+	  cp.p = (gam-1.)*(cp.rhoE-cp.rho*cp.u*cp.u/2.-cp.rho*cp.v*cp.v/2. - cp.rho*cp.w*cp.w/2.);
+	  if(std::abs(cp.p) < eps_vide){
+	    cp.vide=true;
+	  }
+	}
+	else{
+	  cp.u = 0.;
+	  cp.v = 0.;
+	  cp.w = 0.;
+	  cp.p = 0.;
+	  cp.vide=true;
+	}
+					
+	if((grille[i][j][k].p<0. || grille[i][j][k].rho<0.) && !cp.vide){
+	  cout << "Unfinished test x=" << grille[i][j][k].x << " y=" <<  grille[i][j][k].y << " z=" <<  grille[i][j][k].z << " p=" <<  grille[i][j][k].p << " rho=" <<  grille[i][j][k].rho << " target x=" << cible.x << " y=" << cible.y << " z=" << cible.z << endl;
+	  test_fini = false;
+	}
+      }
+    }
+  }
+	
+  if(!test_fini){
+    cout<<" Mixing is not completed "<<endl;
+    Mixage_cible();
+  }
 }
 
-/*!
-* \fn bool Grille:: Mixage_cible2()
-*  \brief M&eacute;lange conservatif de petites cellules coup&eacute;es.
-*  \details On d&eacute;finit une petite cellule tel que \f$ alpha > epsa \f$ (\a Cellule.alpha fraction occup&eacute;e par du solide dans la cellule, et \a epsa: fraction de cellule coup&eacute;e d&eacute;finit dans parametres.hpp ). Afin ne pas modifier le pas de temps tout en garantissant la condition de CFL, les petites cellules sont fusionn&eacute;es avec leurs voisines.
-	*	\warning <b> Proc&eacute;dure sp&eacute;cifique au couplage! </b>
-	*	\return void
-	*/
+/*!\brief Conservative mixing of small cut-cells.
+   \details We define a small cut-cell as a cell such that \f$ alpha > epsa \f$ (\a Cellule.alpha si the solid occupancy ratio in the cell, and \a epsa is the maximum value accepted for CFL stability reasons and is set in \a parametres.hpp ). In order not to modify the time-step while keeping the original CFL condition, the small cut-cells are merged with their neighbours. This is an alternative version of \a Grille::Mixage_cible()
+   \warning <b> Specific coupling procedure ! </b>
+   \return void
+ */
 bool Grille::Mixage_cible2(){
-  //Test pour savoir si apres mixage, on a toujours des valeurs negatives
+  //Test whether there are still negative densities or pressure after mixing
   bool test_fini = true;
   cout << "Mixage_cible2" << endl;
-  //Etape 0 : tout initialiser
+  //Step 0: initialize
   for(int i=0;i<Nx+2*marge;i++){
     for(int j=0;j<Ny+2*marge;j++){ 
       for(int k=0;k<Nz+2*marge;k++){
@@ -2357,13 +1869,13 @@ bool Grille::Mixage_cible2(){
       }
     }
   }
-  //Premier pas : definir la cible dans le voisinage de chaque cellule (on garde la cellule comme cible si pas de pb). On utilise pour cela les fonctions voisin_fluide (voisin entierement fluide, p>0, rho>0, kappa minimal), voisin_mixt (alpha_cible<alpha, p>0, rho>0, kappa minimal) et voisin (p et rho >0 si possible, kappa minimal)
+  //Step 1: Define the target in a neighbourhood of each cell (keep the cell itself as target if it has no issue). We use to that end functions \a voisin_fluide (fully fluid neighbour, p>0, rho>0, minimal kappa), voisin_mixt (alpha_cible<alpha, p>0, rho>0, minimal kappa) and voisin (p and rho >0 if possible, minimal kappa)
   for(int i=marge;i<Nx+marge;i++){
     for(int j=marge;j<Ny+marge;j++){
       for(int k=marge;k<Nz+marge;k++){
 	Cellule& cp = grille[i][j][k];
 	if((cp.alpha>epsa || cp.p<0. || cp.rho<0.) && abs(cp.alpha-1.)>eps && !cp.vide){
-	  //Recherche avec voisin_fluide
+	  //Search for a candidate target cell with voisin_fluide
 	  bool target = true;
 	  Cellule cell_cible;
 	  cell_cible = voisin_fluide(cp, target);
@@ -2372,7 +1884,7 @@ bool Grille::Mixage_cible2(){
 	    cp.cible_j = cell_cible.j;
 	    cp.cible_k = cell_cible.k;
 	  } else {
-	    //Recherche avec voisin_mixt
+	    //Search for a candidate target cell with voisin_mixt
 	    target = true;
 	    cell_cible= voisin_mixt(cp,target);
 	    if(target){
@@ -2380,7 +1892,7 @@ bool Grille::Mixage_cible2(){
 	      cp.cible_j = cell_cible.j;
 	      cp.cible_k = cell_cible.k;
 	    } else {
-	      //Recherche avec voisin
+	      //Search for a candidate target cell with voisin
 	      cell_cible= voisin(cp);
 	      cp.cible_i = cell_cible.i;
 	      cp.cible_j = cell_cible.j;
@@ -2388,17 +1900,16 @@ bool Grille::Mixage_cible2(){
 	    }
 	  }
 	}
-	//grille[i][j][k] = cp;
       }
     }
   }
-  //Deuxieme pas : on determine les cibles de chaque cellule en suivant la cible de la cible. Bien sur, on s'arrete des qu'on ne bouge plus ou qu'on tourne en rond. On met ensuite a jour les quantites equivalentes pour la cellule cible apres melange
+  //Step 2: Determine the end target of each cell by following recursively the target of the target. Of course, stop as soon as there is no movement or a cycle. Then, update the equivalent quantities for the target cell after mixing
   for(int i=marge;i<Nx+marge;i++){
     for(int j=marge;j<Ny+marge;j++){
       for(int k=marge;k<Nz+marge;k++){
 	Cellule& cp = grille[i][j][k];
 	if((cp.alpha>epsa || cp.p<0. || cp.rho<0.) && abs(cp.alpha-1.)>eps && !cp.vide){
-	  //Liste des points parcourus
+	  //List of traveled points
 	  std::vector< std::vector<int> > tab_cible; 
 	  std::vector<int> poz(3); poz[0]= i; poz[1] = j; poz[2] = k; tab_cible.push_back(poz);
 	  int l=cp.cible_i;
@@ -2410,21 +1921,21 @@ bool Grille::Mixage_cible2(){
 	    poz[0] = l;
 	    poz[1] = m;
 	    poz[2] = n;
-	    //Test pour verifier si la cible pointe vers une cellule deja visitee
+	    //Test to check whether the target points to an already visited cell
 	    for(int iter=0;iter<tab_cible.size() && test;iter++){
-	      //Si une cellule a ete visitee, on met le test a false
+	      //If a cell has already been visited, put the test to false
 	      if(abs(tab_cible[iter][0]-l)+abs(tab_cible[iter][1]-m)+abs(tab_cible[iter][2]-n)<eps){
 		test = false;
 	      }
 	    }
-	    //Si la cellule cible n'a jamais ete visitee, on la prend comme suivante 
+	    //If the cell has never been visited, take it as a target cell
 	    if(test){
 	      tab_cible.push_back(poz);
 	      l = cible.cible_i;
 	      m = cible.cible_j;
 	      n = cible.cible_k;
 	    }
-	    //Sinon, on la prend comme cellule cible pour toutes les cellules visitees pour couper la boucle
+	    //Otherwise, take it as the target cell for all previously visited cells in the loop
 	    else {
 	      for(int iter=0;iter<tab_cible.size() && test;iter++){
 		grille[tab_cible[iter][0]][tab_cible[iter][1]][tab_cible[iter][2]].cible_i = l;
@@ -2442,11 +1953,10 @@ bool Grille::Mixage_cible2(){
 	  cp.cible_k = n;
 	  
 	}
-	//grille[i][j][k] = cp;
       }
     }
   }
-  //Troisieme pas : on met a jour les valeurs des cellules cibles (pointent vers elle-memes)
+  //Step 3: Update the values of the target cells (which point to themselves)
   for(int i=marge;i<Nx+marge;i++){
     for(int j=marge;j<Ny+marge;j++){
       for(int k=marge;k<Nz+marge;k++){
@@ -2457,10 +1967,7 @@ bool Grille::Mixage_cible2(){
 	cg.cible_impx += (1.-cp.alpha)*cp.impx;
 	cg.cible_impy += (1.-cp.alpha)*cp.impy;
 	cg.cible_impz += (1.-cp.alpha)*cp.impz;
-	cg.cible_rhoE += (1.-cp.alpha)*cp.rhoE;
-	//grille[i][j][k] = cp;
-	//grille[cp.cible_i][cp.cible_j][cp.cible_k] = cg;
-      }
+	cg.cible_rhoE += (1.-cp.alpha)*cp.rhoE;      }
     }
   }
   for(int i=marge;i<Nx+marge;i++){
@@ -2491,33 +1998,32 @@ bool Grille::Mixage_cible2(){
 	  }
 	  if(cp.rho<0. || cp.p<0.){
 	    Cellule& cible = grille[cp.cible_i][cp.cible_j][cp.cible_k];
-	    cout << "test non fini x=" << cp.x << " y=" <<  cp.y << " z=" <<  cp.z << " p=" <<  cp.p << " rho=" <<  cp.rho << " alpha=" << cp.alpha << " cible x=" << cible.x << " y=" << cible.y << " z=" << cible.z << " p=" << cible.p << " rho=" << cible.rho << " alpha=" << cible.alpha << " cible_alpha=" << cp.cible_alpha << " cible_rho=" << cp.cible_rho << " cible_rhoE" << cp.cible_rhoE << endl;
+	    cout << "Unfinished test x=" << cp.x << " y=" <<  cp.y << " z=" <<  cp.z << " p=" <<  cp.p << " rho=" <<  cp.rho << " alpha=" << cp.alpha << " target x=" << cible.x << " y=" << cible.y << " z=" << cible.z << " p=" << cible.p << " rho=" << cible.rho << " alpha=" << cible.alpha << " cible_alpha=" << cp.cible_alpha << " cible_rho=" << cp.cible_rho << " cible_rhoE" << cp.cible_rhoE << endl;
 	    test_fini = false;
-	    //Recherche avec voisin_fluide
+	    //Search for a possible target cell with voisin_fluide
 	    bool target = true;
 	    Cellule cell_cible;
 	    cell_cible = voisin_fluide(cp, target);
 	    if(target){ 
 	      cout << "voisin_fluide x=" << cell_cible.x << " y=" << cell_cible.y << " z=" << cell_cible.z << " rho=" << cell_cible.rho << " p=" << cell_cible.p << " alpha=" << cell_cible.alpha << endl;
 	    } else {
-	      //Recherche avec voisin_mixt
+	      //Search for a possible target cell with voisin_mixt
 	      target = true;
 	      cell_cible= voisin_mixt(cp,target);
 	      if(target){
 		cout << "voisin_mixt x=" << cell_cible.x << " y=" << cell_cible.y << " z=" << cell_cible.z << " rho=" << cell_cible.rho << " p=" << cell_cible.p << " alpha=" << cell_cible.alpha << endl;
 	      } else {
-		//Recherche avec voisin
+		//Search for a possible target cell with voisin
 		cell_cible= voisin(cp);
 		cout << "voisin x=" << cell_cible.x << " y=" << cell_cible.y << " z=" << cell_cible.z << " rho=" << cell_cible.rho << " p=" << cell_cible.p << " alpha=" << cell_cible.alpha << endl;
 	      }
 	    }
 	  }
 	}
-	//grille[i][j][k] = cp;
       }
     }
   }
-  //Quatrieme et dernier pas : on met la valeur de la cible dans chaque cellule
+  //Step 4: put the value of the target in each cell
   for(int i=marge;i<Nx+marge;i++){
     for(int j=marge;j<Ny+marge;j++){
       for(int k=marge;k<Nz+marge;k++){
@@ -2535,14 +2041,8 @@ bool Grille::Mixage_cible2(){
 	  cp.p = cg.p;
 	  cp.vide = cg.vide;
 	}
-	//grille[i][j][k] = cp;
       }
     }
   }
-  //S'il y avait toujours de valeurs negatives, on recommence !
-  //if(!test_fini){
-  //  cout << "test non fini" << endl;
-  //  Mixage_cible2();
-  //}
   return test_fini;
 }

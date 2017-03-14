@@ -7,80 +7,81 @@
 #define PARAMETRES_H
 
 /*!
- \file parametres.hpp
-\brief Param&egrave;tres du probl&egrave;me. Les param&egrave;tres sp&eacute;cifiques au couplage sont pr&eacute;c&egrave;des d'un "warning"
+ \file
+\authors Laurent Monasse and Maria Adela Puscas
+\brief Parameters of the problem. The parameters specific to coupling are preceded by a "warning" sign
  */
 
 using std::string;
 
-//! \brief Flag pour une reprise &eacute;ventuelle : false si on ne reprend pas, true si on reprend. \a rep indique si on part de conditions 
-//! initiales (false) ou si on reprend &agrave; partir d'un temps donn&eacute; (true). Dans ce dernier cas, le num&eacute;ro des fichiers de reprise est donn&eacute; par  numrep. 
+//! \brief Flag for a potential restart from a previous recovery file: false if the simulation is not restarted, true if it is. \a rep indicates whether initial conditions (false) 
+//! are used or a certain time output is used to restart the simulation (true). In the latter case, the index of the recovery file is given by \a numrep. 
 int rep = false;
-int numrep = 18;  //!<  Num&eacute;ro de la reprise 
+int numrep = 18;  //!<  Index of the recovery file
 
 
 /*! 
- * \warning  <b> Param&egrave;tre sp&eacute;cifique au  couplage! </b>
+ * \warning  <b> Specific coupling parameter ! </b>
  */
-//! \brief  Flag pour le type de sch&egrave;ma : true pour un couplage explicite et false pour un couplage semi-implicite. 
+//! \brief  Flag for the type of scheme used: true for an explicit coupling and false for a semi-implicit coupling. 
 
 bool explicite = true;
 /*! 
- * \warning  <b> Param&egrave;tre sp&eacute;cifique au  couplage! </b>
+ * \warning  <b> Specific coupling parameter ! </b>
  */
 
 bool flag_2d = false;
 bool couplage1d=false;
 const bool exact_swap=false;
 
-//Parametres pour le fluide
-const double gam = 1.4;                   //constante des gaz parfaits 
-const double eps =  0.00000000000001;     //constante proche de 0 pour le controle 
-const double epsa = 0.5;                  //fraction de cellule coupee
-const int ordremax = 11;                  //ordre maximal du schema
-const int marge = 6;                      //marge de cellules a appliquer au debut et a la fin du tableau des cellules  
+//Fluid parameters
+const double gam = 1.4;                   //!<Perfect gas constant 
+const double eps =  0.00000000000001;     //!<Numerical stabilization 
+const double epsa = 0.5;                  //!<Limit of the size of small cut-cells
+const int ordremax = 11;                  //!<Maximal order of the scheme
+const int marge = 6;                      //!<Margin of cells on each side of the grid  
 const double eps_vide =  0.0000000001;     
 const int N_dim=3;
 
-const double X0 = 0;              //pozition de l'origine
+const double X0 = 0;              //!<Position of the origin of the grid
 const double Y0 = 0;
 const double Z0 = 0;
 
-const int Nx =18;                 //nombre de cellules de fluide selon x
-const int Ny =18;                 //nombre de cellules de fluide selon y
-const int Nz =18;                 //nombre de cellules de fluide selon z
+const int Nx =18;                 //!<Number of fluid cells in x
+const int Ny =18;                 //!<Number of fluid cells in y
+const int Nz =18;                 //!<Number of fluid cells in z
 
-const double domainex = 0.3;            //Largeur du domaine fluide selon x
-const double domainey = 0.3;          //Largeur du domaine fluide selon y
-const double domainez = 0.3;          //Largeur du domaine fluide selon z
+const double domainex = 0.3;            //!<Fluid domain size in x
+const double domainey = 0.3;          //!<Fluid domain size in y
+const double domainez = 0.3;          //!<Fluid domain size in z
 
-const double deltax = domainex/Nx;      //Pas d'espace pour le fluide selon x
-const double deltay = domainey/Ny;       //Pas d'espace pour le fluide selon y
-const double deltaz = domainez/Nz;       //Pas d'espace pour le fluide selon z
+const double deltax = domainex/Nx;      //!<Spatial discretization step in x
+const double deltay = domainey/Ny;       //!<Spatial discretization step in y
+const double deltaz = domainez/Nz;       //!<Spatial discretization step in z
 
-//Parametres solides
-const double rhos = 2698.9; //Densite du solide 
-const double nu = 0.; //Coefficient de Poisson du materiau
-const double E = 5.; //Module d'Young du materiau
-const double k_max = 0.01; 
+//Solid parameters
+const double rhos = 2698.9; //!<Solid density 
+const double nu = 0.; //!<Poisson's ratio
+const double E = 5.; //!<Young's modulus
+const double k_max = 0.01; //!<Elongation at break
 
 //Parametres temprels
-const double T = 0.1;             //temps total de simulation
-const double cfl = 0.5;            //valeur de la cfl fluide
-const double cfls = 0.5;           //Valeur de la cfl solide
-const int nimp = 10;                //Nombre d'impressions
-const double dtimp = T/nimp;        //Pas de temps entre deux impressions
-const int Nmax = 1000000;           //nombre maximal d'iterations en temps
+const double T = 0.1;             //!<Total simulation time
+const double cfl = 0.5;            //!<Fluid CFL condition
+const double cfls = 0.5;           //!<Solid CFL condition
+const int nimp = 10;                //!<Number of outputs
+const double dtimp = T/nimp;        //!<Time-step between two consecutive outputs
+const int Nmax = 1000000;           //!<Maximal number of time iterations
 
-//Conditions aux limites
-//Type de CL :  1 = reflecting ("miroir"); 2 = periodic("periodique"); 3= outflow("transmisibles"); 
+//!Boundary conditions
+//!Types of BC:  1 = reflecting; 2 = periodic; 3= outflow; 
 
-const int BC_x_in =  2;                 // Inner Boundary Condition for x
-const int BC_x_out = 2;                 // Outer Boundary Condition for x
-const int BC_y_in =  2;                 // Inner Boundary Condition for y
-const int BC_y_out = 2;                 // Outer Boundary Condition for y
-const int BC_z_in =  2;                 // Inner Boundary Condition for z
-const int BC_z_out = 2;                 // Outer Boundary Condition for z
+const int BC_x_in =  2;                 //!< Inner Boundary Condition for x
+const int BC_x_out = 2;                 //!< Outer Boundary Condition for x
+const int BC_y_in =  2;                 //!< Inner Boundary Condition for y
+const int BC_y_out = 2;                 //!< Outer Boundary Condition for y
+const int BC_z_in =  2;                 //!< Inner Boundary Condition for z
+const int BC_z_out = 2;                 //!< Outer Boundary Condition for z
 
 double Rho(double x = 0.,double y = 0., double z = 0.);
 
